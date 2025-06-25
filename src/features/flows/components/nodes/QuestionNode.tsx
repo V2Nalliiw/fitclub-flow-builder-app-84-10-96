@@ -22,6 +22,9 @@ export const QuestionNode = ({ data, selected }: { data: any; selected?: boolean
     }
   };
 
+  const isMultipleChoice = data.tipoResposta === 'multipla-escolha';
+  const opcoes = data.opcoes || [];
+
   return (
     <div className={`px-4 py-3 shadow-md rounded-lg bg-purple-500 text-white border-2 transition-all duration-200 min-w-[200px] ${
       selected ? 'border-white shadow-lg scale-105' : 'border-purple-600'
@@ -35,13 +38,30 @@ export const QuestionNode = ({ data, selected }: { data: any; selected?: boolean
         <span>{getTypeLabel()}</span>
       </div>
       {data.pergunta && (
-        <div className="text-xs opacity-80 truncate">
+        <div className="text-xs opacity-80 truncate mb-2">
           {data.pergunta}
         </div>
       )}
-      {data.opcoes && data.opcoes.length > 0 && (
+      
+      {/* Mostrar opções para múltipla escolha */}
+      {isMultipleChoice && opcoes.length > 0 && (
+        <div className="space-y-1 mb-2">
+          {opcoes.slice(0, 3).map((opcao: string, index: number) => (
+            <div key={index} className="text-xs opacity-70 truncate">
+              • {opcao}
+            </div>
+          ))}
+          {opcoes.length > 3 && (
+            <div className="text-xs opacity-60">
+              +{opcoes.length - 3} mais...
+            </div>
+          )}
+        </div>
+      )}
+      
+      {opcoes.length > 0 && !isMultipleChoice && (
         <div className="text-xs opacity-70 mt-1">
-          {data.opcoes.length} opções
+          {opcoes.length} opções
         </div>
       )}
       
@@ -50,11 +70,40 @@ export const QuestionNode = ({ data, selected }: { data: any; selected?: boolean
         position={Position.Top}
         className="w-3 h-3 bg-purple-500 border-2 border-white"
       />
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        className="w-3 h-3 bg-purple-500 border-2 border-white"
-      />
+      
+      {/* Handle padrão para saída única ou texto livre */}
+      {(!isMultipleChoice || opcoes.length === 0) && (
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          className="w-3 h-3 bg-purple-500 border-2 border-white"
+        />
+      )}
+      
+      {/* Handles múltiplos para múltipla escolha */}
+      {isMultipleChoice && opcoes.length > 0 && (
+        <div className="flex justify-around mt-2">
+          {opcoes.map((opcao: string, index: number) => (
+            <div key={index} className="relative">
+              <Handle
+                type="source"
+                position={Position.Bottom}
+                id={`opcao-${index}`}
+                className="w-3 h-3 bg-purple-500 border-2 border-white"
+                style={{ 
+                  position: 'relative',
+                  left: 0,
+                  bottom: 0,
+                  transform: 'none'
+                }}
+              />
+              <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs opacity-70 whitespace-nowrap">
+                {opcao.substring(0, 8)}{opcao.length > 8 ? '...' : ''}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Save, Settings } from 'lucide-react';
+import { Plus, Save, Settings, Trash2, Eraser } from 'lucide-react';
 import { StartNode } from './nodes/StartNode';
 import { EndNode } from './nodes/EndNode';
 import { FormStartNode } from './nodes/FormStartNode';
@@ -74,6 +74,21 @@ export const FlowBuilder = () => {
     setNodes((nds) => [...nds, newNode]);
   };
 
+  const deleteNode = (nodeId: string) => {
+    setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+    setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+  };
+
+  const clearAllNodes = () => {
+    const startNode = nodes.find(n => n.type === 'start');
+    if (startNode) {
+      setNodes([startNode]);
+    } else {
+      setNodes(initialNodes);
+    }
+    setEdges([]);
+  };
+
   const getNodeLabel = (type: FlowNode['type']) => {
     switch (type) {
       case 'end': return 'Fim do Fluxo';
@@ -90,6 +105,13 @@ export const FlowBuilder = () => {
     setIsConfigModalOpen(true);
   };
 
+  const onNodeClick = (event: React.MouseEvent, node: Node) => {
+    // Previne que o clique duplo seja disparado
+    if (event.detail === 1) {
+      setSelectedNode(node);
+    }
+  };
+
   const handleNodeConfigSave = (nodeData: Partial<Node['data']>) => {
     if (!selectedNode) return;
 
@@ -97,6 +119,25 @@ export const FlowBuilder = () => {
       nds.map((node) =>
         node.id === selectedNode.id
           ? { ...node, data: { ...node.data, ...nodeData } }
+          : node
+      )
+    );
+
+    // Se for nó de pergunta com múltipla escolha, atualizar as conexões
+    if (selectedNode.type === 'question' && nodeData.tipoResposta === 'multipla-escolha' && nodeData.opcoes) {
+      updateQuestionNodeHandles(selectedNode.id, nodeData.opcoes as string[]);
+    }
+  };
+
+  const updateQuestionNodeHandles = (nodeId: string, opcoes: string[]) => {
+    // Remove arestas antigas do nó
+    setEdges((eds) => eds.filter((e) => e.source !== nodeId));
+    
+    // Atualiza o nó com as novas opções
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, opcoes } }
           : node
       )
     );
@@ -109,7 +150,7 @@ export const FlowBuilder = () => {
       type: node.type as FlowNode['type'],
       position: node.position,
       data: {
-        label: String(node.data.label || ''),
+        label: String(node.data?.label || ''),
         ...node.data
       }
     }));
@@ -198,6 +239,33 @@ export const FlowBuilder = () => {
             </div>
           </div>
 
+          {/* Seção de gerenciamento de nós */}
+          <div className="pt-4 border-t">
+            <Label className="text-sm font-medium mb-3 block">Gerenciar Nós</Label>
+            <div className="space-y-2">
+              {selectedNode && selectedNode.type !== 'start' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => deleteNode(selectedNode.id)}
+                  className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-3 w-3 mr-2" />
+                  Excluir Nó Selecionado
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearAllNodes}
+                className="w-full justify-start text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+              >
+                <Eraser className="h-3 w-3 mr-2" />
+                Limpar Todos os Nós
+              </Button>
+            </div>
+          </div>
+
           <div className="pt-4 border-t">
             <p className="text-xs text-muted-foreground mb-3">
               💡 Dica: Clique duas vezes em um nó para configurá-lo
@@ -219,6 +287,7 @@ export const FlowBuilder = () => {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onNodeDoubleClick={onNodeDoubleClick}
+          onNodeClick={onNodeClick}
           nodeTypes={nodeTypes}
           fitView
           className="bg-background"
