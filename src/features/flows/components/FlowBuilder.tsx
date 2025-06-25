@@ -3,6 +3,7 @@ import React from 'react';
 import { FlowBuilderSidebar } from './FlowBuilderSidebar';
 import { FlowBuilderCanvas } from './FlowBuilderCanvas';
 import { NodeConfigModal } from './NodeConfigModal';
+import { FlowPreviewModal } from './FlowPreviewModal';
 import { useFlowBuilder } from '../hooks/useFlowBuilder';
 
 export const FlowBuilder = () => {
@@ -12,6 +13,7 @@ export const FlowBuilder = () => {
     flowName,
     selectedNode,
     isConfigModalOpen,
+    isPreviewModalOpen,
     onNodesChange,
     onEdgesChange,
     onConnect,
@@ -25,6 +27,8 @@ export const FlowBuilder = () => {
     onNodeClick,
     handleNodeConfigSave,
     saveFlow,
+    openPreview,
+    closePreview,
   } = useFlowBuilder();
 
   return (
@@ -37,6 +41,7 @@ export const FlowBuilder = () => {
         onDeleteNode={deleteNode}
         onClearAllNodes={clearAllNodes}
         onSaveFlow={saveFlow}
+        onPreviewFlow={openPreview}
       />
 
       <FlowBuilderCanvas
@@ -57,6 +62,14 @@ export const FlowBuilder = () => {
         }}
         node={selectedNode}
         onSave={handleNodeConfigSave}
+      />
+
+      <FlowPreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={closePreview}
+        nodes={nodes}
+        edges={edges}
+        flowName={flowName}
       />
     </div>
   );

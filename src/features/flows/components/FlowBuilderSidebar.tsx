@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Save, Settings } from 'lucide-react';
+import { Plus, Save, Settings, Eye } from 'lucide-react';
 import { FlowBuilderToolbar } from './FlowBuilderToolbar';
 import { FlowNode } from '@/types/flow';
 import { Node } from '@xyflow/react';
@@ -17,6 +17,7 @@ interface FlowBuilderSidebarProps {
   onDeleteNode: (nodeId: string) => void;
   onClearAllNodes: () => void;
   onSaveFlow: () => void;
+  onPreviewFlow: () => void;
 }
 
 export const FlowBuilderSidebar: React.FC<FlowBuilderSidebarProps> = ({
@@ -27,6 +28,7 @@ export const FlowBuilderSidebar: React.FC<FlowBuilderSidebarProps> = ({
   onDeleteNode,
   onClearAllNodes,
   onSaveFlow,
+  onPreviewFlow,
 }) => {
   return (
     <Card className="w-80 h-fit">
@@ -109,10 +111,22 @@ export const FlowBuilderSidebar: React.FC<FlowBuilderSidebarProps> = ({
           <p className="text-xs text-muted-foreground mb-3">
             💡 Dica: Clique duas vezes em um nó para configurá-lo
           </p>
-          <Button onClick={onSaveFlow} className="w-full bg-[#5D8701] hover:bg-[#4a6e01]">
-            <Save className="h-4 w-4 mr-2" />
-            Salvar Fluxo
-          </Button>
+          
+          <div className="space-y-2">
+            <Button 
+              onClick={onPreviewFlow} 
+              variant="outline" 
+              className="w-full"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Visualizar Formulário
+            </Button>
+            
+            <Button onClick={onSaveFlow} className="w-full bg-[#5D8701] hover:bg-[#4a6e01]">
+              <Save className="h-4 w-4 mr-2" />
+              Salvar Fluxo
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

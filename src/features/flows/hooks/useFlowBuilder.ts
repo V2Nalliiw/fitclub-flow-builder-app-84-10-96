@@ -20,6 +20,7 @@ export const useFlowBuilder = () => {
   const [flowName, setFlowName] = useState('Novo Fluxo');
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -106,6 +107,14 @@ export const useFlowBuilder = () => {
     );
   };
 
+  const openPreview = () => {
+    setIsPreviewModalOpen(true);
+  };
+
+  const closePreview = () => {
+    setIsPreviewModalOpen(false);
+  };
+
   const saveFlow = () => {
     const flowNodes: FlowNode[] = nodes.map(node => ({
       id: node.id,
@@ -133,6 +142,7 @@ export const useFlowBuilder = () => {
     flowName,
     selectedNode,
     isConfigModalOpen,
+    isPreviewModalOpen,
     onNodesChange,
     onEdgesChange,
     onConnect,
@@ -146,5 +156,7 @@ export const useFlowBuilder = () => {
     onNodeClick,
     handleNodeConfigSave,
     saveFlow,
+    openPreview,
+    closePreview,
   };
 };
