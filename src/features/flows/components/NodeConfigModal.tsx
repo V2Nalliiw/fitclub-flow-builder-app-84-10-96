@@ -13,13 +13,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2, Save } from 'lucide-react';
-import { FlowNode } from '@/types/flow';
+import { Node } from '@xyflow/react';
 
 interface NodeConfigModalProps {
   isOpen: boolean;
   onClose: () => void;
-  node: FlowNode | null;
-  onSave: (nodeData: Partial<FlowNode['data']>) => void;
+  node: Node | null;
+  onSave: (nodeData: Partial<Node['data']>) => void;
 }
 
 export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
@@ -28,7 +28,7 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
   node,
   onSave,
 }) => {
-  const [config, setConfig] = useState<Partial<FlowNode['data']>>({});
+  const [config, setConfig] = useState<Partial<Node['data']>>({});
   const [opcoes, setOpcoes] = useState<string[]>([]);
 
   useEffect(() => {

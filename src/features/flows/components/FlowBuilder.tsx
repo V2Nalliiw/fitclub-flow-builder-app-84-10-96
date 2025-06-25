@@ -25,6 +25,7 @@ import { FormEndNode } from './nodes/FormEndNode';
 import { DelayNode } from './nodes/DelayNode';
 import { QuestionNode } from './nodes/QuestionNode';
 import { NodeConfigModal } from './NodeConfigModal';
+import { FlowNode } from '@/types/flow';
 
 const nodeTypes = {
   start: StartNode,
@@ -58,7 +59,7 @@ export const FlowBuilder = () => {
     [setEdges]
   );
 
-  const addNode = (type: string) => {
+  const addNode = (type: FlowNode['type']) => {
     const newNode: Node = {
       id: `${Date.now()}`,
       type,
@@ -73,7 +74,7 @@ export const FlowBuilder = () => {
     setNodes((nds) => [...nds, newNode]);
   };
 
-  const getNodeLabel = (type: string) => {
+  const getNodeLabel = (type: FlowNode['type']) => {
     switch (type) {
       case 'end': return 'Fim do Fluxo';
       case 'formStart': return 'Início de Formulário';
@@ -102,9 +103,20 @@ export const FlowBuilder = () => {
   };
 
   const saveFlow = () => {
+    // Convert React Flow nodes to FlowNodes for saving
+    const flowNodes: FlowNode[] = nodes.map(node => ({
+      id: node.id,
+      type: node.type as FlowNode['type'],
+      position: node.position,
+      data: {
+        label: node.data.label,
+        ...node.data
+      }
+    }));
+
     const flowData = {
       nome: flowName,
-      nodes: nodes,
+      nodes: flowNodes,
       edges: edges,
       timestamp: new Date().toISOString(),
     };
