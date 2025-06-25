@@ -109,7 +109,7 @@ export const FlowBuilder = () => {
       type: node.type as FlowNode['type'],
       position: node.position,
       data: {
-        label: node.data.label,
+        label: String(node.data.label || ''),
         ...node.data
       }
     }));

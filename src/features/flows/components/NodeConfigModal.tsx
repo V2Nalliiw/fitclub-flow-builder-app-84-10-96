@@ -28,13 +28,13 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
   node,
   onSave,
 }) => {
-  const [config, setConfig] = useState<Partial<Node['data']>>({});
+  const [config, setConfig] = useState<Record<string, any>>({});
   const [opcoes, setOpcoes] = useState<string[]>([]);
 
   useEffect(() => {
     if (node) {
-      setConfig(node.data);
-      setOpcoes(node.data.opcoes || []);
+      setConfig(node.data || {});
+      setOpcoes((node.data?.opcoes as string[]) || []);
     }
   }, [node]);
 
@@ -81,7 +81,7 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
               <Label htmlFor="mensagemFinal">Mensagem Final (Opcional)</Label>
               <Textarea
                 id="mensagemFinal"
-                value={config.mensagemFinal || ''}
+                value={String(config.mensagemFinal || '')}
                 onChange={(e) => setConfig({ ...config, mensagemFinal: e.target.value })}
                 placeholder="Mensagem de encerramento do fluxo..."
                 className="mt-1"
@@ -97,7 +97,7 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
               <Label htmlFor="titulo">Título do Formulário *</Label>
               <Input
                 id="titulo"
-                value={config.titulo || ''}
+                value={String(config.titulo || '')}
                 onChange={(e) => setConfig({ ...config, titulo: e.target.value })}
                 placeholder="Ex: Formulário do Dia 1"
                 className="mt-1"
@@ -107,7 +107,7 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
               <Label htmlFor="descricao">Descrição</Label>
               <Textarea
                 id="descricao"
-                value={config.descricao || ''}
+                value={String(config.descricao || '')}
                 onChange={(e) => setConfig({ ...config, descricao: e.target.value })}
                 placeholder="Introdução ou instruções para o paciente..."
                 className="mt-1"
@@ -133,7 +133,7 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
               <Label htmlFor="mensagemFinal">Mensagem de Conclusão</Label>
               <Textarea
                 id="mensagemFinal"
-                value={config.mensagemFinal || ''}
+                value={String(config.mensagemFinal || '')}
                 onChange={(e) => setConfig({ ...config, mensagemFinal: e.target.value })}
                 placeholder="Obrigado por responder o formulário!"
                 className="mt-1"
@@ -142,8 +142,8 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
             <div>
               <Label htmlFor="tipoConteudo">Tipo de Conteúdo</Label>
               <Select
-                value={config.tipoConteudo || ''}
-                onValueChange={(value) => setConfig({ ...config, tipoConteudo: value as any })}
+                value={String(config.tipoConteudo || '')}
+                onValueChange={(value) => setConfig({ ...config, tipoConteudo: value })}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Selecione o tipo de conteúdo" />
@@ -171,7 +171,7 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
               />
               {config.arquivo && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Arquivo atual: {config.arquivo}
+                  Arquivo atual: {String(config.arquivo)}
                 </p>
               )}
             </div>
@@ -184,8 +184,8 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
             <div>
               <Label htmlFor="tipoIntervalo">Tipo de Intervalo</Label>
               <Select
-                value={config.tipoIntervalo || ''}
-                onValueChange={(value) => setConfig({ ...config, tipoIntervalo: value as any })}
+                value={String(config.tipoIntervalo || '')}
+                onValueChange={(value) => setConfig({ ...config, tipoIntervalo: value })}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Selecione o tipo" />
@@ -203,8 +203,8 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
                 id="quantidade"
                 type="number"
                 min="1"
-                value={config.quantidade || ''}
-                onChange={(e) => setConfig({ ...config, quantidade: parseInt(e.target.value) })}
+                value={String(config.quantidade || '')}
+                onChange={(e) => setConfig({ ...config, quantidade: parseInt(e.target.value) || 1 })}
                 placeholder="1"
                 className="mt-1"
               />
@@ -219,7 +219,7 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
               <Label htmlFor="pergunta">Texto da Pergunta *</Label>
               <Textarea
                 id="pergunta"
-                value={config.pergunta || ''}
+                value={String(config.pergunta || '')}
                 onChange={(e) => setConfig({ ...config, pergunta: e.target.value })}
                 placeholder="Digite sua pergunta aqui..."
                 className="mt-1"
@@ -228,8 +228,8 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
             <div>
               <Label htmlFor="tipoResposta">Tipo de Resposta</Label>
               <Select
-                value={config.tipoResposta || ''}
-                onValueChange={(value) => setConfig({ ...config, tipoResposta: value as any })}
+                value={String(config.tipoResposta || '')}
+                onValueChange={(value) => setConfig({ ...config, tipoResposta: value })}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Selecione o tipo" />
@@ -290,7 +290,7 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            Configurar {node.data.label}
+            Configurar {String(node.data?.label || '')}
           </DialogTitle>
         </DialogHeader>
         
