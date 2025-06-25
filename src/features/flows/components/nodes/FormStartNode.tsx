@@ -1,19 +1,28 @@
 
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { FileText, MessageSquare } from 'lucide-react';
+import { FileText, MessageSquare, Send } from 'lucide-react';
 
-export const FormStartNode = ({ data }: { data: any }) => {
+export const FormStartNode = ({ data, selected }: { data: any; selected?: boolean }) => {
   return (
-    <div className="px-4 py-3 shadow-md rounded-md bg-blue-500 text-white border-2 border-blue-600 min-w-[180px]">
+    <div className={`px-4 py-3 shadow-md rounded-lg bg-blue-500 text-white border-2 transition-all duration-200 min-w-[200px] ${
+      selected ? 'border-white shadow-lg scale-105' : 'border-blue-600'
+    }`}>
       <div className="flex items-center gap-2 mb-1">
-        <FileText className="h-4 w-4" />
-        <div className="text-sm font-medium">{data.label}</div>
+        <FileText className="h-5 w-5" />
+        <div className="text-sm font-medium">
+          {data.titulo || 'Início de Formulário'}
+        </div>
       </div>
-      <div className="flex items-center gap-1 text-xs opacity-90">
-        <MessageSquare className="h-3 w-3" />
-        <span>Envia WhatsApp</span>
+      <div className="flex items-center gap-1 text-xs opacity-90 mb-1">
+        <Send className="h-3 w-3" />
+        <span>Envia WhatsApp com link</span>
       </div>
+      {data.descricao && (
+        <div className="text-xs opacity-80 truncate">
+          {data.descricao}
+        </div>
+      )}
       
       <Handle
         type="target"

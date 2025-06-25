@@ -17,27 +17,28 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Save } from 'lucide-react';
-import { FlowStartNode } from './nodes/FlowStartNode';
-import { FlowEndNode } from './nodes/FlowEndNode';
+import { Plus, Save, Settings } from 'lucide-react';
+import { StartNode } from './nodes/StartNode';
+import { EndNode } from './nodes/EndNode';
 import { FormStartNode } from './nodes/FormStartNode';
 import { FormEndNode } from './nodes/FormEndNode';
-import { TimeNode } from './nodes/TimeNode';
+import { DelayNode } from './nodes/DelayNode';
 import { QuestionNode } from './nodes/QuestionNode';
+import { NodeConfigModal } from './NodeConfigModal';
 
 const nodeTypes = {
-  flowStart: FlowStartNode,
-  flowEnd: FlowEndNode,
+  start: StartNode,
+  end: EndNode,
   formStart: FormStartNode,
   formEnd: FormEndNode,
-  time: TimeNode,
+  delay: DelayNode,
   question: QuestionNode,
 };
 
 const initialNodes: Node[] = [
   {
     id: '1',
-    type: 'flowStart',
+    type: 'start',
     position: { x: 250, y: 25 },
     data: { label: 'Início do Fluxo' },
   },
@@ -49,6 +50,8 @@ export const FlowBuilder = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [flowName, setFlowName] = useState('Novo Fluxo');
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -57,13 +60,14 @@ export const FlowBuilder = () => {
 
   const addNode = (type: string) => {
     const newNode: Node = {
-      id: `${nodes.length + 1}`,
+      id: `${Date.now()}`,
       type,
-      position: { x: Math.random() * 400, y: Math.random() * 400 + 100 },
+      position: { 
+        x: Math.random() * 400 + 100, 
+        y: Math.random() * 400 + 200 
+      },
       data: { 
         label: getNodeLabel(type),
-        content: '',
-        options: [],
       },
     };
     setNodes((nds) => [...nds, newNode]);
@@ -71,17 +75,41 @@ export const FlowBuilder = () => {
 
   const getNodeLabel = (type: string) => {
     switch (type) {
-      case 'flowEnd': return 'Fim do Fluxo';
+      case 'end': return 'Fim do Fluxo';
       case 'formStart': return 'Início de Formulário';
       case 'formEnd': return 'Fim de Formulário';
-      case 'time': return 'Tempo';
+      case 'delay': return 'Aguardar Tempo';
       case 'question': return 'Pergunta';
       default: return 'Novo Nó';
     }
   };
 
+  const onNodeDoubleClick = (event: React.MouseEvent, node: Node) => {
+    setSelectedNode(node);
+    setIsConfigModalOpen(true);
+  };
+
+  const handleNodeConfigSave = (nodeData: Partial<Node['data']>) => {
+    if (!selectedNode) return;
+
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === selectedNode.id
+          ? { ...node, data: { ...node.data, ...nodeData } }
+          : node
+      )
+    );
+  };
+
   const saveFlow = () => {
-    console.log('Salvando fluxo:', { name: flowName, nodes, edges });
+    const flowData = {
+      nome: flowName,
+      nodes: nodes,
+      edges: edges,
+      timestamp: new Date().toISOString(),
+    };
+    
+    console.log('Salvando fluxo:', flowData);
     // Aqui integraria com Supabase para salvar
   };
 
@@ -90,9 +118,12 @@ export const FlowBuilder = () => {
       {/* Sidebar com ferramentas */}
       <Card className="w-80 h-fit">
         <CardHeader>
-          <CardTitle>Construtor de Fluxos</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Construtor de Fluxos
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <div>
             <Label htmlFor="flowName">Nome do Fluxo</Label>
             <Input
@@ -100,55 +131,70 @@ export const FlowBuilder = () => {
               value={flowName}
               onChange={(e) => setFlowName(e.target.value)}
               className="mt-1"
+              placeholder="Digite o nome do fluxo..."
             />
           </div>
 
           <div>
-            <Label className="text-sm font-medium">Adicionar Nós</Label>
-            <div className="grid grid-cols-2 gap-2 mt-2">
+            <Label className="text-sm font-medium mb-3 block">Adicionar Nós</Label>
+            <div className="grid grid-cols-1 gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => addNode('formStart')}
-                className="text-xs"
+                className="justify-start text-xs h-9"
               >
-                <Plus className="h-3 w-3 mr-1" />
-                Formulário
+                <Plus className="h-3 w-3 mr-2" />
+                Início de Formulário
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => addNode('formEnd')}
+                className="justify-start text-xs h-9"
+              >
+                <Plus className="h-3 w-3 mr-2" />
+                Fim de Formulário
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => addNode('question')}
-                className="text-xs"
+                className="justify-start text-xs h-9"
               >
-                <Plus className="h-3 w-3 mr-1" />
+                <Plus className="h-3 w-3 mr-2" />
                 Pergunta
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => addNode('time')}
-                className="text-xs"
+                onClick={() => addNode('delay')}
+                className="justify-start text-xs h-9"
               >
-                <Plus className="h-3 w-3 mr-1" />
-                Tempo
+                <Plus className="h-3 w-3 mr-2" />
+                Aguardar Tempo
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => addNode('flowEnd')}
-                className="text-xs"
+                onClick={() => addNode('end')}
+                className="justify-start text-xs h-9"
               >
-                <Plus className="h-3 w-3 mr-1" />
-                Fim
+                <Plus className="h-3 w-3 mr-2" />
+                Fim do Fluxo
               </Button>
             </div>
           </div>
 
-          <Button onClick={saveFlow} className="w-full bg-[#5D8701] hover:bg-[#4a6e01]">
-            <Save className="h-4 w-4 mr-2" />
-            Salvar Fluxo
-          </Button>
+          <div className="pt-4 border-t">
+            <p className="text-xs text-muted-foreground mb-3">
+              💡 Dica: Clique duas vezes em um nó para configurá-lo
+            </p>
+            <Button onClick={saveFlow} className="w-full bg-[#5D8701] hover:bg-[#4a6e01]">
+              <Save className="h-4 w-4 mr-2" />
+              Salvar Fluxo
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -160,15 +206,31 @@ export const FlowBuilder = () => {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onNodeDoubleClick={onNodeDoubleClick}
           nodeTypes={nodeTypes}
           fitView
           className="bg-background"
         >
           <Controls />
-          <MiniMap />
+          <MiniMap 
+            nodeStrokeColor="#5D8701"
+            nodeColor="#5D8701"
+            nodeBorderRadius={8}
+          />
           <Background gap={12} size={1} />
         </ReactFlow>
       </div>
+
+      {/* Modal de Configuração */}
+      <NodeConfigModal
+        isOpen={isConfigModalOpen}
+        onClose={() => {
+          setIsConfigModalOpen(false);
+          setSelectedNode(null);
+        }}
+        node={selectedNode}
+        onSave={handleNodeConfigSave}
+      />
     </div>
   );
 };
