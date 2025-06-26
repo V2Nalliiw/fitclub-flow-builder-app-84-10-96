@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { FlowBuilderCanvas } from './FlowBuilderCanvas';
 import { NodeConfigModal } from './NodeConfigModal';
 import { FlowPreviewModal } from './FlowPreviewModal';
@@ -8,6 +8,8 @@ import { TopToolbar } from './TopToolbar';
 import { useFlowBuilder } from '../hooks/useFlowBuilder';
 
 export const FlowBuilder = () => {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  
   const {
     nodes,
     edges,
@@ -34,8 +36,12 @@ export const FlowBuilder = () => {
     closePreview,
   } = useFlowBuilder();
 
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
   return (
-    <div className="relative w-full h-screen overflow-hidden">
+    <div className={`relative overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50 bg-background' : 'w-full h-screen'}`}>
       <FlowBuilderCanvas
         nodes={nodes}
         edges={edges}
@@ -59,6 +65,7 @@ export const FlowBuilder = () => {
         onAutoArrangeNodes={autoArrangeNodes}
         onSaveFlow={saveFlow}
         onPreviewFlow={openPreview}
+        onToggleFullscreen={toggleFullscreen}
       />
 
       <NodeConfigModal

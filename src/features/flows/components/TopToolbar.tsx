@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Save, Eye, Trash2, Settings, Eraser, LayoutGrid } from 'lucide-react';
+import { Save, Eye, Eraser, LayoutGrid, Settings, Expand } from 'lucide-react';
 import { Node } from '@xyflow/react';
 
 interface TopToolbarProps {
@@ -14,6 +14,7 @@ interface TopToolbarProps {
   onAutoArrangeNodes: () => void;
   onSaveFlow: () => void;
   onPreviewFlow: () => void;
+  onToggleFullscreen?: () => void;
 }
 
 export const TopToolbar: React.FC<TopToolbarProps> = ({
@@ -25,6 +26,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
   onAutoArrangeNodes,
   onSaveFlow,
   onPreviewFlow,
+  onToggleFullscreen,
 }) => {
   return (
     <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-40 bg-card rounded-lg shadow-lg border p-3">
@@ -46,41 +48,51 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
             onClick={onAutoArrangeNodes}
             variant="outline"
             size="sm"
-            className="h-8"
+            className="h-8 w-8 p-0"
             title="Organizar nós automaticamente"
           >
-            <LayoutGrid className="h-3 w-3 mr-1" />
-            Organizar
+            <LayoutGrid className="h-4 w-4" />
           </Button>
           
           <Button
             onClick={onClearAllNodes}
             variant="outline"
             size="sm"
-            className="h-8 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950"
+            className="h-8 w-8 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950"
             title="Limpar todos os nós"
           >
-            <Eraser className="h-3 w-3 mr-1" />
-            Limpar
+            <Eraser className="h-4 w-4" />
           </Button>
+          
+          {onToggleFullscreen && (
+            <Button
+              onClick={onToggleFullscreen}
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0"
+              title="Expandir para tela cheia"
+            >
+              <Expand className="h-4 w-4" />
+            </Button>
+          )}
           
           <Button
             onClick={onPreviewFlow}
             variant="outline"
             size="sm"
-            className="h-8"
+            className="h-8 w-8 p-0"
+            title="Visualizar fluxo"
           >
-            <Eye className="h-3 w-3 mr-1" />
-            Visualizar
+            <Eye className="h-4 w-4" />
           </Button>
           
           <Button
             onClick={onSaveFlow}
             size="sm"
-            className="h-8"
+            className="h-8 w-8 p-0"
+            title="Salvar fluxo"
           >
-            <Save className="h-3 w-3 mr-1" />
-            Salvar
+            <Save className="h-4 w-4" />
           </Button>
         </div>
       </div>

@@ -2,8 +2,17 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { HelpCircle, CheckSquare, Circle, Type, List } from 'lucide-react';
+import { NodeActions } from '../NodeActions';
 
-export const QuestionNode = ({ data, selected }: { data: any; selected?: boolean }) => {
+interface QuestionNodeProps {
+  data: any;
+  selected?: boolean;
+  id: string;
+  onDelete?: (nodeId: string) => void;
+  onDuplicate?: (nodeId: string) => void;
+}
+
+export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, onDelete, onDuplicate }) => {
   const getQuestionIcon = () => {
     switch (data.tipoResposta) {
       case 'escolha-unica': return <Circle className="h-3 w-3" />;
@@ -26,7 +35,7 @@ export const QuestionNode = ({ data, selected }: { data: any; selected?: boolean
   const opcoes = data.opcoes || [];
 
   return (
-    <div className={`px-4 py-3 shadow-md rounded-lg bg-purple-500 text-white border-2 transition-all duration-200 min-w-[200px] ${
+    <div className={`group relative px-4 py-3 shadow-md rounded-lg bg-purple-500 text-white border-2 transition-all duration-200 min-w-[200px] ${
       selected ? 'border-white shadow-lg scale-105' : 'border-purple-600'
     }`}>
       <div className="flex items-center gap-2 mb-1">
@@ -64,6 +73,14 @@ export const QuestionNode = ({ data, selected }: { data: any; selected?: boolean
           {opcoes.length} opções
         </div>
       )}
+      
+      <NodeActions
+        nodeId={id}
+        nodeType="question"
+        onDelete={onDelete || (() => {})}
+        onDuplicate={onDuplicate || (() => {})}
+        visible={true}
+      />
       
       <Handle
         type="target"
