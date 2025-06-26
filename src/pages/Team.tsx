@@ -24,7 +24,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Plus, Search, Edit, Trash2, UserPlus, Mail } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, UserPlus, Mail, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -32,10 +32,12 @@ interface TeamMember {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'therapist' | 'assistant';
+  role: 'admin' | 'therapist' | 'assistant' | 'super_admin';
   status: 'active' | 'pending' | 'inactive';
   avatar?: string;
   invited_at: string;
+  clinic_name?: string;
+  clinic_id?: string;
 }
 
 const mockTeamMembers: TeamMember[] = [
@@ -46,7 +48,9 @@ const mockTeamMembers: TeamMember[] = [
     role: 'admin',
     status: 'active',
     avatar: '',
-    invited_at: '2024-01-10T10:00:00Z'
+    invited_at: '2024-01-10T10:00:00Z',
+    clinic_name: 'Clínica Fisio+',
+    clinic_id: 'clinic-1'
   },
   {
     id: '2',
@@ -55,7 +59,9 @@ const mockTeamMembers: TeamMember[] = [
     role: 'therapist',
     status: 'active',
     avatar: '',
-    invited_at: '2024-01-15T14:00:00Z'
+    invited_at: '2024-01-15T14:00:00Z',
+    clinic_name: 'Centro de Reabilitação Vida',
+    clinic_id: 'clinic-2'
   },
   {
     id: '3',
@@ -64,7 +70,18 @@ const mockTeamMembers: TeamMember[] = [
     role: 'assistant',
     status: 'pending',
     avatar: '',
-    invited_at: '2024-01-20T09:00:00Z'
+    invited_at: '2024-01-20T09:00:00Z',
+    clinic_name: 'Clínica Movimento',
+    clinic_id: 'clinic-3'
+  },
+  {
+    id: '4',
+    name: 'Ana Rodriguez',
+    email: 'ana@fitclub.com',
+    role: 'super_admin',
+    status: 'active',
+    avatar: '',
+    invited_at: '2024-01-01T08:00:00Z'
   }
 ];
 
@@ -73,18 +90,30 @@ export const Team = () => {
   const { toast } = useToast();
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(mockTeamMembers);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterRole, setFilterRole] = useState<string>('all');
+  const [filterClinic, setFilterClinic] = useState<string>('all');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [inviteData, setInviteData] = useState({
     name: '',
     email: '',
     role: 'assistant' as TeamMember['role'],
+    clinic_id: '',
   });
 
-  const filteredMembers = teamMembers.filter(member =>
-    member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredMembers = teamMembers.filter(member => {
+    const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         member.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = filterRole === 'all' || member.role === filterRole;
+    const matchesClinic = filterClinic === 'all' || member.clinic_id === filterClinic;
+    
+    // Para usuários de clínica, mostrar apenas membros da mesma clínica
+    if (user?.role === 'clinic') {
+      return matchesSearch && matchesRole && member.clinic_id === user.clinic_id;
+    }
+    
+    return matchesSearch && matchesRole && matchesClinic;
+  });
 
   const handleInputChange = (field: string, value: string) => {
     setInviteData(prev => ({
@@ -98,6 +127,7 @@ export const Team = () => {
       name: '',
       email: '',
       role: 'assistant',
+      clinic_id: '',
     });
   };
 
@@ -113,7 +143,9 @@ export const Team = () => {
         role: inviteData.role,
         status: 'pending',
         avatar: '',
-        invited_at: new Date().toISOString()
+        invited_at: new Date().toISOString(),
+        clinic_id: inviteData.clinic_id || undefined,
+        clinic_name: inviteData.clinic_id ? 'Clínica Exemplo' : undefined
       };
 
       setTeamMembers(prev => [...prev, newMember]);
@@ -153,6 +185,7 @@ export const Team = () => {
 
   const getRoleBadge = (role: TeamMember['role']) => {
     const roleConfig = {
+      super_admin: { label: 'Super Admin', variant: 'destructive' as const },
       admin: { label: 'Administrador', variant: 'default' as const },
       therapist: { label: 'Terapeuta', variant: 'secondary' as const },
       assistant: { label: 'Assistente', variant: 'outline' as const },
@@ -180,14 +213,16 @@ export const Team = () => {
   };
 
   const getPageTitle = () => {
-    return user?.role === 'super_admin' ? 'Colaboradores' : 'Equipe da Clínica';
+    return user?.role === 'super_admin' ? 'Colaboradores Globais' : 'Equipe da Clínica';
   };
 
   const getPageDescription = () => {
     return user?.role === 'super_admin' 
-      ? 'Gerencie colaboradores de todas as clínicas'
+      ? 'Gerencie colaboradores de todas as clínicas do sistema'
       : 'Gerencie a equipe da sua clínica';
   };
+
+  const uniqueClinics = Array.from(new Set(teamMembers.map(m => m.clinic_name).filter(Boolean)));
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -244,9 +279,31 @@ export const Team = () => {
                     <SelectItem value="assistant">Assistente</SelectItem>
                     <SelectItem value="therapist">Terapeuta</SelectItem>
                     <SelectItem value="admin">Administrador</SelectItem>
+                    {user?.role === 'super_admin' && (
+                      <SelectItem value="super_admin">Super Admin</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
+              {user?.role === 'super_admin' && (
+                <div>
+                  <Label htmlFor="invite-clinic">Clínica (opcional)</Label>
+                  <Select
+                    value={inviteData.clinic_id}
+                    onValueChange={(value) => handleInputChange('clinic_id', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma clínica" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Nenhuma clínica específica</SelectItem>
+                      <SelectItem value="clinic-1">Clínica Fisio+</SelectItem>
+                      <SelectItem value="clinic-2">Centro de Reabilitação Vida</SelectItem>
+                      <SelectItem value="clinic-3">Clínica Movimento</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsInviteModalOpen(false)}>
@@ -260,18 +317,10 @@ export const Team = () => {
         </Dialog>
       </div>
 
+      {/* Filtros */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserPlus className="h-5 w-5" />
-            Membros da Equipe
-          </CardTitle>
-          <CardDescription>
-            {teamMembers.length} membro(s) na equipe
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
+        <CardContent className="p-4">
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -281,8 +330,51 @@ export const Team = () => {
                 className="pl-8"
               />
             </div>
-          </div>
+            
+            <Select value={filterRole} onValueChange={setFilterRole}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filtrar por função" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as funções</SelectItem>
+                <SelectItem value="super_admin">Super Admin</SelectItem>
+                <SelectItem value="admin">Administrador</SelectItem>
+                <SelectItem value="therapist">Terapeuta</SelectItem>
+                <SelectItem value="assistant">Assistente</SelectItem>
+              </SelectContent>
+            </Select>
 
+            {user?.role === 'super_admin' && (
+              <Select value={filterClinic} onValueChange={setFilterClinic}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filtrar por clínica" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as clínicas</SelectItem>
+                  <SelectItem value="">Sem clínica</SelectItem>
+                  {uniqueClinics.map((clinic) => (
+                    <SelectItem key={clinic} value={clinic || ''}>
+                      {clinic}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5" />
+            Membros da Equipe
+          </CardTitle>
+          <CardDescription>
+            {teamMembers.length} membro(s) no sistema
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
@@ -290,6 +382,7 @@ export const Team = () => {
                 <TableHead>Email</TableHead>
                 <TableHead>Função</TableHead>
                 <TableHead>Status</TableHead>
+                {user?.role === 'super_admin' && <TableHead>Clínica</TableHead>}
                 <TableHead>Convidado em</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -309,6 +402,18 @@ export const Team = () => {
                   <TableCell>{member.email}</TableCell>
                   <TableCell>{getRoleBadge(member.role)}</TableCell>
                   <TableCell>{getStatusBadge(member.status)}</TableCell>
+                  {user?.role === 'super_admin' && (
+                    <TableCell>
+                      {member.clinic_name ? (
+                        <div className="flex items-center gap-1">
+                          <Building2 className="h-3 w-3" />
+                          <span className="text-sm">{member.clinic_name}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Global</span>
+                      )}
+                    </TableCell>
+                  )}
                   <TableCell>
                     {new Date(member.invited_at).toLocaleDateString('pt-BR')}
                   </TableCell>

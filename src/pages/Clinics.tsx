@@ -3,12 +3,24 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Building2, Search, Plus, Users, Settings, BarChart3 } from 'lucide-react';
+import { FileUpload } from '@/components/ui/file-upload';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Building2, Search, Plus, Users, Settings, BarChart3, Edit, Trash2, Eye } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { Clinic } from '@/types';
 
-// Mock data
+// Mock data expandido
 const mockClinics: Clinic[] = [
   {
     id: '1',
@@ -23,16 +35,113 @@ const mockClinics: Clinic[] = [
     logo: '',
     chief_user_id: 'user-2',
     created_at: '2024-01-15T14:00:00Z'
+  },
+  {
+    id: '3',
+    name: 'Clínica Movimento',
+    logo: '',
+    chief_user_id: 'user-3',
+    created_at: '2024-01-20T09:00:00Z'
   }
 ];
 
+interface ClinicFormData {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  chiefName: string;
+  chiefEmail: string;
+  logo: File[];
+}
+
 export const Clinics = () => {
+  const { toast } = useToast();
   const [clinics, setClinics] = useState<Clinic[]>(mockClinics);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<ClinicFormData>({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    chiefName: '',
+    chiefEmail: '',
+    logo: []
+  });
 
   const filteredClinics = clinics.filter(clinic =>
     clinic.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleInputChange = (field: keyof ClinicFormData, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      address: '',
+      chiefName: '',
+      chiefEmail: '',
+      logo: []
+    });
+  };
+
+  const handleAddClinic = async () => {
+    setLoading(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const newClinic: Clinic = {
+        id: Date.now().toString(),
+        name: formData.name,
+        logo: formData.logo.length > 0 ? URL.createObjectURL(formData.logo[0]) : '',
+        chief_user_id: Date.now().toString(),
+        created_at: new Date().toISOString()
+      };
+
+      setClinics(prev => [...prev, newClinic]);
+      setIsAddModalOpen(false);
+      resetForm();
+      
+      toast({
+        title: "Clínica adicionada",
+        description: `${formData.name} foi criada com sucesso.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível criar a clínica.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteClinic = async (clinicId: string, clinicName: string) => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setClinics(prev => prev.filter(clinic => clinic.id !== clinicId));
+      toast({
+        title: "Clínica removida",
+        description: `${clinicName} foi removida do sistema.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível remover a clínica.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -42,10 +151,106 @@ export const Clinics = () => {
           <p className="text-muted-foreground">Administre todas as clínicas do sistema</p>
         </div>
         
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Clínica
-        </Button>
+        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Clínica
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Criar Nova Clínica</DialogTitle>
+              <DialogDescription>
+                Preencha os dados para criar uma nova clínica no sistema
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="clinic-name">Nome da Clínica</Label>
+                  <Input
+                    id="clinic-name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    placeholder="Digite o nome da clínica"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="clinic-email">Email da Clínica</Label>
+                  <Input
+                    id="clinic-email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="contato@clinica.com"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="clinic-phone">Telefone</Label>
+                  <Input
+                    id="clinic-phone"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    placeholder="(11) 99999-9999"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="clinic-address">Endereço</Label>
+                  <Input
+                    id="clinic-address"
+                    value={formData.address}
+                    onChange={(e) => handleInputChange('address', e.target.value)}
+                    placeholder="Rua, número, bairro, cidade"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="chief-name">Nome do Responsável</Label>
+                  <Input
+                    id="chief-name"
+                    value={formData.chiefName}
+                    onChange={(e) => handleInputChange('chiefName', e.target.value)}
+                    placeholder="Nome do administrador"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="chief-email">Email do Responsável</Label>
+                  <Input
+                    id="chief-email"
+                    type="email"
+                    value={formData.chiefEmail}
+                    onChange={(e) => handleInputChange('chiefEmail', e.target.value)}
+                    placeholder="admin@clinica.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Logo da Clínica</Label>
+                <FileUpload
+                  onFilesChange={(files) => setFormData(prev => ({ ...prev, logo: files }))}
+                  maxFiles={1}
+                  accept={{ 'image/*': ['.png', '.jpg', '.jpeg', '.svg'] }}
+                  className="mt-2"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddClinic} disabled={loading}>
+                {loading ? 'Criando...' : 'Criar Clínica'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
@@ -137,15 +342,23 @@ export const Clinics = () => {
                       </p>
                       
                       <div className="flex items-center gap-2 mt-2">
-                        <Badge variant="secondary">Ativa</Badge>
+                        <Badge variant="default">Ativa</Badge>
                       </div>
                       
                       <div className="flex gap-2 mt-4">
                         <Button variant="outline" size="sm" className="flex-1">
-                          Ver Detalhes
+                          <Eye className="h-3 w-3 mr-1" />
+                          Ver
                         </Button>
                         <Button variant="ghost" size="sm">
-                          <Settings className="h-4 w-4" />
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleDeleteClinic(clinic.id, clinic.name)}
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>

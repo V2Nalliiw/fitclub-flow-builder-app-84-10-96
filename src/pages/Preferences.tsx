@@ -7,7 +7,18 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Settings, Save, Shield, Database, Bell, Globe } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  Settings, 
+  Save, 
+  Bell, 
+  Shield, 
+  Database, 
+  Globe, 
+  Mail,
+  Clock,
+  AlertTriangle
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export const Preferences = () => {
@@ -15,39 +26,55 @@ export const Preferences = () => {
   const [loading, setLoading] = useState(false);
   
   const [preferences, setPreferences] = useState({
-    // Sistema
-    language: 'pt-BR',
+    // Configurações Gerais
+    systemName: 'FitClub System',
+    defaultLanguage: 'pt-BR',
     timezone: 'America/Sao_Paulo',
-    dateFormat: 'dd/mm/yyyy',
-    timeFormat: '24h',
+    dateFormat: 'dd/MM/yyyy',
+    
+    // Notificações
+    emailNotifications: true,
+    smsNotifications: false,
+    pushNotifications: true,
+    notificationFrequency: 'immediate',
     
     // Segurança
-    twoFactorAuth: false,
     sessionTimeout: '30',
-    passwordExpiry: '90',
-    loginAttempts: '5',
+    passwordMinLength: '8',
+    requirePasswordChange: true,
+    passwordChangeInterval: '90',
+    twoFactorAuth: false,
     
-    // Base de Dados
+    // Backup e Manutenção
     autoBackup: true,
     backupFrequency: 'daily',
-    retentionDays: '30',
+    backupRetention: '30',
+    maintenanceWindow: '02:00',
     
-    // Notificações Globais
-    systemMaintenance: true,
-    securityAlerts: true,
-    newUserRegistration: true,
-    systemUpdates: false,
+    // Integrações
+    allowApiAccess: true,
+    maxApiRequests: '1000',
+    webhookUrl: '',
     
-    // Email
-    smtpServer: '',
+    // Logs e Auditoria
+    logLevel: 'info',
+    auditLogging: true,
+    logRetention: '90',
+    
+    // Configurações de Email
+    smtpServer: 'smtp.gmail.com',
     smtpPort: '587',
     smtpUsername: '',
     smtpPassword: '',
-    fromEmail: '',
-    fromName: 'Sistema FitClub',
+    fromEmail: 'noreply@fitclub.com',
+    
+    // Limites do Sistema
+    maxUsersPerClinic: '100',
+    maxFlowsPerClinic: '50',
+    maxStoragePerClinic: '5',
   });
 
-  const handleInputChange = (field: string, value: string | boolean) => {
+  const handleInputChange = (field: string, value: string | boolean | number) => {
     setPreferences(prev => ({
       ...prev,
       [field]: value
@@ -60,7 +87,7 @@ export const Preferences = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast({
         title: "Preferências salvas",
-        description: "Todas as configurações foram atualizadas com sucesso.",
+        description: "As configurações do sistema foram atualizadas.",
       });
     } catch (error) {
       toast({
@@ -73,6 +100,22 @@ export const Preferences = () => {
     }
   };
 
+  const testEmailConnection = async () => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      toast({
+        title: "Conexão testada",
+        description: "Email de teste enviado com sucesso!",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro na conexão",
+        description: "Não foi possível conectar ao servidor SMTP.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div>
@@ -80,22 +123,34 @@ export const Preferences = () => {
         <p className="text-muted-foreground">Configure as preferências globais do sistema</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6">
         {/* Configurações Gerais */}
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Globe className="h-5 w-5" />
+              <Settings className="h-5 w-5" />
               <CardTitle>Configurações Gerais</CardTitle>
             </div>
             <CardDescription>
-              Configure idioma, fuso horário e formatos
+              Configurações básicas do sistema
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="language">Idioma</Label>
-              <Select value={preferences.language} onValueChange={(value) => handleInputChange('language', value)}>
+              <Label htmlFor="system-name">Nome do Sistema</Label>
+              <Input
+                id="system-name"
+                value={preferences.systemName}
+                onChange={(e) => handleInputChange('systemName', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="default-language">Idioma Padrão</Label>
+              <Select
+                value={preferences.defaultLanguage}
+                onValueChange={(value) => handleInputChange('defaultLanguage', value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -109,43 +164,103 @@ export const Preferences = () => {
 
             <div>
               <Label htmlFor="timezone">Fuso Horário</Label>
-              <Select value={preferences.timezone} onValueChange={(value) => handleInputChange('timezone', value)}>
+              <Select
+                value={preferences.timezone}
+                onValueChange={(value) => handleInputChange('timezone', value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="America/Sao_Paulo">São Paulo (UTC-3)</SelectItem>
-                  <SelectItem value="America/New_York">New York (UTC-5)</SelectItem>
-                  <SelectItem value="Europe/London">London (UTC+0)</SelectItem>
+                  <SelectItem value="America/Sao_Paulo">São Paulo (GMT-3)</SelectItem>
+                  <SelectItem value="America/New_York">New York (GMT-5)</SelectItem>
+                  <SelectItem value="Europe/London">London (GMT+0)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
               <Label htmlFor="date-format">Formato de Data</Label>
-              <Select value={preferences.dateFormat} onValueChange={(value) => handleInputChange('dateFormat', value)}>
+              <Select
+                value={preferences.dateFormat}
+                onValueChange={(value) => handleInputChange('dateFormat', value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="dd/mm/yyyy">DD/MM/AAAA</SelectItem>
-                  <SelectItem value="mm/dd/yyyy">MM/DD/AAAA</SelectItem>
-                  <SelectItem value="yyyy-mm-dd">AAAA-MM-DD</SelectItem>
+                  <SelectItem value="dd/MM/yyyy">DD/MM/AAAA</SelectItem>
+                  <SelectItem value="MM/dd/yyyy">MM/DD/AAAA</SelectItem>
+                  <SelectItem value="yyyy-MM-dd">AAAA-MM-DD</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+          </CardContent>
+        </Card>
 
-            <div>
-              <Label htmlFor="time-format">Formato de Hora</Label>
-              <Select value={preferences.timeFormat} onValueChange={(value) => handleInputChange('timeFormat', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="24h">24 horas</SelectItem>
-                  <SelectItem value="12h">12 horas (AM/PM)</SelectItem>
-                </SelectContent>
-              </Select>
+        {/* Notificações */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              <CardTitle>Notificações</CardTitle>
+            </div>
+            <CardDescription>
+              Configure como o sistema enviará notificações
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Notificações por Email</Label>
+                  <p className="text-sm text-muted-foreground">Enviar alertas por email</p>
+                </div>
+                <Switch
+                  checked={preferences.emailNotifications}
+                  onCheckedChange={(value) => handleInputChange('emailNotifications', value)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Notificações SMS</Label>
+                  <p className="text-sm text-muted-foreground">Enviar alertas por SMS</p>
+                </div>
+                <Switch
+                  checked={preferences.smsNotifications}
+                  onCheckedChange={(value) => handleInputChange('smsNotifications', value)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Notificações Push</Label>
+                  <p className="text-sm text-muted-foreground">Enviar notificações push</p>
+                </div>
+                <Switch
+                  checked={preferences.pushNotifications}
+                  onCheckedChange={(value) => handleInputChange('pushNotifications', value)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="notification-frequency">Frequência</Label>
+                <Select
+                  value={preferences.notificationFrequency}
+                  onValueChange={(value) => handleInputChange('notificationFrequency', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="immediate">Imediato</SelectItem>
+                    <SelectItem value="hourly">A cada hora</SelectItem>
+                    <SelectItem value="daily">Diário</SelectItem>
+                    <SelectItem value="weekly">Semanal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -158,178 +273,77 @@ export const Preferences = () => {
               <CardTitle>Segurança</CardTitle>
             </div>
             <CardDescription>
-              Configure políticas de segurança do sistema
+              Configurações de segurança e autenticação
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label htmlFor="session-timeout">Timeout de Sessão (minutos)</Label>
+              <Input
+                id="session-timeout"
+                type="number"
+                value={preferences.sessionTimeout}
+                onChange={(e) => handleInputChange('sessionTimeout', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="password-min-length">Tamanho Mínimo da Senha</Label>
+              <Input
+                id="password-min-length"
+                type="number"
+                value={preferences.passwordMinLength}
+                onChange={(e) => handleInputChange('passwordMinLength', e.target.value)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Exigir Troca de Senha</Label>
+                <p className="text-sm text-muted-foreground">Forçar troca periódica</p>
+              </div>
+              <Switch
+                checked={preferences.requirePasswordChange}
+                onCheckedChange={(value) => handleInputChange('requirePasswordChange', value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="password-change-interval">Intervalo de Troca (dias)</Label>
+              <Input
+                id="password-change-interval"
+                type="number"
+                value={preferences.passwordChangeInterval}
+                onChange={(e) => handleInputChange('passwordChangeInterval', e.target.value)}
+                disabled={!preferences.requirePasswordChange}
+              />
+            </div>
+
             <div className="flex items-center justify-between">
               <div>
                 <Label>Autenticação de Dois Fatores</Label>
-                <p className="text-sm text-muted-foreground">Obrigar 2FA para todos os usuários</p>
+                <p className="text-sm text-muted-foreground">Exigir 2FA para todos</p>
               </div>
               <Switch
                 checked={preferences.twoFactorAuth}
                 onCheckedChange={(value) => handleInputChange('twoFactorAuth', value)}
               />
             </div>
-
-            <Separator />
-
-            <div>
-              <Label htmlFor="session-timeout">Timeout da Sessão (minutos)</Label>
-              <Input
-                id="session-timeout"
-                value={preferences.sessionTimeout}
-                onChange={(e) => handleInputChange('sessionTimeout', e.target.value)}
-                placeholder="30"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="password-expiry">Expiração de Senha (dias)</Label>
-              <Input
-                id="password-expiry"
-                value={preferences.passwordExpiry}
-                onChange={(e) => handleInputChange('passwordExpiry', e.target.value)}
-                placeholder="90"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="login-attempts">Máximo de Tentativas de Login</Label>
-              <Input
-                id="login-attempts"
-                value={preferences.loginAttempts}
-                onChange={(e) => handleInputChange('loginAttempts', e.target.value)}
-                placeholder="5"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Base de Dados */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              <CardTitle>Base de Dados</CardTitle>
-            </div>
-            <CardDescription>
-              Configure backup e manutenção da base de dados
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Backup Automático</Label>
-                <p className="text-sm text-muted-foreground">Executar backups automáticos</p>
-              </div>
-              <Switch
-                checked={preferences.autoBackup}
-                onCheckedChange={(value) => handleInputChange('autoBackup', value)}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="backup-frequency">Frequência do Backup</Label>
-              <Select value={preferences.backupFrequency} onValueChange={(value) => handleInputChange('backupFrequency', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hourly">A cada hora</SelectItem>
-                  <SelectItem value="daily">Diariamente</SelectItem>
-                  <SelectItem value="weekly">Semanalmente</SelectItem>
-                  <SelectItem value="monthly">Mensalmente</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="retention-days">Retenção de Backups (dias)</Label>
-              <Input
-                id="retention-days"
-                value={preferences.retentionDays}
-                onChange={(e) => handleInputChange('retentionDays', e.target.value)}
-                placeholder="30"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Notificações */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              <CardTitle>Notificações do Sistema</CardTitle>
-            </div>
-            <CardDescription>
-              Configure notificações globais do sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Manutenção do Sistema</Label>
-                <p className="text-sm text-muted-foreground">Alertas de manutenção programada</p>
-              </div>
-              <Switch
-                checked={preferences.systemMaintenance}
-                onCheckedChange={(value) => handleInputChange('systemMaintenance', value)}
-              />
-            </div>
-
-            <Separator />
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Alertas de Segurança</Label>
-                <p className="text-sm text-muted-foreground">Notificações de segurança críticas</p>
-              </div>
-              <Switch
-                checked={preferences.securityAlerts}
-                onCheckedChange={(value) => handleInputChange('securityAlerts', value)}
-              />
-            </div>
-
-            <Separator />
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Novos Usuários</Label>
-                <p className="text-sm text-muted-foreground">Notificar sobre novos registros</p>
-              </div>
-              <Switch
-                checked={preferences.newUserRegistration}
-                onCheckedChange={(value) => handleInputChange('newUserRegistration', value)}
-              />
-            </div>
-
-            <Separator />
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Atualizações do Sistema</Label>
-                <p className="text-sm text-muted-foreground">Notificações sobre atualizações</p>
-              </div>
-              <Switch
-                checked={preferences.systemUpdates}
-                onCheckedChange={(value) => handleInputChange('systemUpdates', value)}
-              />
-            </div>
           </CardContent>
         </Card>
 
         {/* Configurações de Email */}
-        <Card className="lg:col-span-2">
+        <Card>
           <CardHeader>
-            <CardTitle>Configurações de Email</CardTitle>
+            <div className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              <CardTitle>Configurações de Email</CardTitle>
+            </div>
             <CardDescription>
               Configure o servidor SMTP para envio de emails
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <Label htmlFor="smtp-server">Servidor SMTP</Label>
@@ -357,7 +371,7 @@ export const Preferences = () => {
                   id="smtp-username"
                   value={preferences.smtpUsername}
                   onChange={(e) => handleInputChange('smtpUsername', e.target.value)}
-                  placeholder="usuario@gmail.com"
+                  placeholder="seu-email@gmail.com"
                 />
               </div>
 
@@ -372,25 +386,66 @@ export const Preferences = () => {
                 />
               </div>
 
-              <div>
+              <div className="md:col-span-2">
                 <Label htmlFor="from-email">Email Remetente</Label>
                 <Input
                   id="from-email"
+                  type="email"
                   value={preferences.fromEmail}
                   onChange={(e) => handleInputChange('fromEmail', e.target.value)}
                   placeholder="noreply@fitclub.com"
                 />
               </div>
+            </div>
 
-              <div>
-                <Label htmlFor="from-name">Nome Remetente</Label>
-                <Input
-                  id="from-name"
-                  value={preferences.fromName}
-                  onChange={(e) => handleInputChange('fromName', e.target.value)}
-                  placeholder="Sistema FitClub"
-                />
-              </div>
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={testEmailConnection}>
+                Testar Conexão
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Limites do Sistema */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              <CardTitle>Limites do Sistema</CardTitle>
+            </div>
+            <CardDescription>
+              Configure limites de uso para clínicas
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-3">
+            <div>
+              <Label htmlFor="max-users">Máximo de Usuários por Clínica</Label>
+              <Input
+                id="max-users"
+                type="number"
+                value={preferences.maxUsersPerClinic}
+                onChange={(e) => handleInputChange('maxUsersPerClinic', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="max-flows">Máximo de Fluxos por Clínica</Label>
+              <Input
+                id="max-flows"
+                type="number"
+                value={preferences.maxFlowsPerClinic}
+                onChange={(e) => handleInputChange('maxFlowsPerClinic', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="max-storage">Armazenamento por Clínica (GB)</Label>
+              <Input
+                id="max-storage"
+                type="number"
+                value={preferences.maxStoragePerClinic}
+                onChange={(e) => handleInputChange('maxStoragePerClinic', e.target.value)}
+              />
             </div>
           </CardContent>
         </Card>
