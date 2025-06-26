@@ -59,9 +59,9 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({ onAddN
           className="h-8 w-8 p-0"
         >
           {isCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3 w-3 text-gray-500" />
           ) : (
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3 w-3 text-gray-500" />
           )}
         </Button>
       </div>

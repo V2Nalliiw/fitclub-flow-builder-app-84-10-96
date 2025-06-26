@@ -61,7 +61,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
     animated: true,
     type: 'deleteButton',
     style: {
-      stroke: 'hsl(var(--muted-foreground))',
+      stroke: '#9CA3AF',
       strokeWidth: 2,
     },
   }));
@@ -76,7 +76,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
   }));
 
   return (
-    <div className={`relative w-full h-screen bg-white dark:bg-gray-800`}>
+    <div className={`relative w-full h-screen bg-white dark:bg-[#0E0E0E]`}>
       <ReactFlow
         nodes={enhancedNodes}
         edges={animatedEdges}
@@ -88,12 +88,12 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        className="bg-white dark:bg-gray-800"
+        className="bg-white dark:bg-[#0E0E0E]"
         defaultEdgeOptions={{
           animated: true,
           type: 'deleteButton',
           style: {
-            stroke: 'hsl(var(--muted-foreground))',
+            stroke: '#9CA3AF',
             strokeWidth: 2,
           },
         }}
@@ -107,14 +107,14 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
           nodeColor="hsl(var(--primary))"
           nodeBorderRadius={8}
           position="bottom-left"
-          className="bg-card border border-border rounded-lg shadow-lg !w-40 !h-32"
+          className="bg-card border border-border rounded-lg shadow-lg !w-48 !h-36"
           maskColor="hsl(var(--background) / 0.8)"
         />
         <Background 
           gap={16} 
           size={1} 
-          color="hsl(var(--muted-foreground) / 0.4)" 
-          className="bg-white dark:bg-gray-800"
+          color="#D1D5DB" 
+          className="bg-white dark:bg-[#0E0E0E] dark:[--xy-background-pattern-color:#374151]"
         />
       </ReactFlow>
     </div>
