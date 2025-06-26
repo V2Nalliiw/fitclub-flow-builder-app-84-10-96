@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -19,6 +18,7 @@ import { Node } from '@xyflow/react';
 import { useFormManager } from '@/features/forms/hooks/useFormManager';
 import { useFormIntegration } from '../hooks/useFormIntegration';
 import { toast } from '@/hooks/use-toast';
+import { WhatsAppNodeConfig } from './WhatsAppNodeConfig';
 
 interface NodeConfigModalProps {
   isOpen: boolean;
@@ -400,47 +400,12 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
                   </Button>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="sendToWhatsApp">Enviar por WhatsApp</Label>
-                    <Switch
-                      id="sendToWhatsApp"
-                      checked={Boolean(config.sendToWhatsApp)}
-                      onCheckedChange={(checked) => setConfig({ ...config, sendToWhatsApp: checked })}
-                    />
-                  </div>
-                  
-                  {config.sendToWhatsApp && (
-                    <div>
-                      <Label htmlFor="whatsAppMessage">Mensagem do WhatsApp</Label>
-                      <Textarea
-                        id="whatsAppMessage"
-                        value={String(config.whatsAppMessage || '')}
-                        onChange={(e) => setConfig({ ...config, whatsAppMessage: e.target.value })}
-                        placeholder="Personalize a mensagem que será enviada..."
-                        className="mt-1 text-sm"
-                        rows={4}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        A URL do formulário será incluída automaticamente.
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <Card className="bg-green-50 border-green-200">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm text-green-800 flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4" />
-                      Ação Automática
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <p className="text-xs text-green-700">
-                      Ao atingir este nó, será enviada automaticamente uma mensagem no WhatsApp com o link do formulário selecionado.
-                    </p>
-                  </CardContent>
-                </Card>
+                <WhatsAppNodeConfig
+                  config={config}
+                  setConfig={setConfig}
+                  formName={config.formName}
+                  formId={config.formId}
+                />
               </>
             )}
           </div>

@@ -1,6 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { useFormManager } from '@/features/forms/hooks/useFormManager';
+import { useWhatsApp } from '@/hooks/useWhatsApp';
 import { toast } from '@/hooks/use-toast';
 import { Node } from '@xyflow/react';
 
@@ -14,10 +15,16 @@ export interface FormNodeData {
   redirectUrl?: string;
   sendToWhatsApp?: boolean;
   whatsAppMessage?: string;
+  mediaToSend?: {
+    type: 'pdf' | 'image' | 'video' | 'document';
+    url: string;
+    name: string;
+  };
 }
 
 export const useFormIntegration = () => {
   const { forms } = useFormManager();
+  const { sendFormLink, sendMedia, isConnected } = useWhatsApp();
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionResults, setExecutionResults] = useState<Record<string, any>>({});
 
@@ -44,11 +51,19 @@ export const useFormIntegration = () => {
     if (nodeData.redirectOnComplete && !nodeData.redirectUrl) {
       errors.push('URL de redirecionamento não informada');
     }
+
+    if (nodeData.sendToWhatsApp && !isConnected) {
+      errors.push('WhatsApp não está conectado');
+    }
     
     return errors;
-  }, [getFormById]);
+  }, [getFormById, isConnected]);
 
-  const executeFormNode = useCallback(async (nodeId: string, nodeData: FormNodeData) => {
+  const executeFormNode = useCallback(async (
+    nodeId: string, 
+    nodeData: FormNodeData, 
+    patientPhone?: string
+  ) => {
     const errors = validateFormNode(nodeData);
     if (errors.length > 0) {
       toast({
@@ -67,7 +82,7 @@ export const useFormIntegration = () => {
         throw new Error('Formulário não encontrado');
       }
 
-      // Simular execução do formulário
+      // Dados da execução
       const executionData = {
         nodeId,
         formId: nodeData.formId,
@@ -75,24 +90,33 @@ export const useFormIntegration = () => {
         executedAt: new Date().toISOString(),
         status: 'pending',
         autoSend: nodeData.autoSend,
-        whatsAppMessage: nodeData.whatsAppMessage,
+        whatsAppSent: false,
       };
+
+      // Enviar via WhatsApp se configurado e telefone disponível
+      if (nodeData.sendToWhatsApp && patientPhone && isConnected) {
+        const success = await sendFormLink(
+          patientPhone,
+          form.name,
+          generateFormUrl(nodeData.formId!),
+          nodeData.whatsAppMessage
+        );
+
+        executionData.whatsAppSent = success.success;
+        
+        if (success.success) {
+          toast({
+            title: "Formulário enviado",
+            description: `Link enviado via WhatsApp para ${patientPhone}`,
+          });
+        }
+      }
 
       // Armazenar resultado da execução
       setExecutionResults(prev => ({
         ...prev,
         [nodeId]: executionData
       }));
-
-      // Simular envio para WhatsApp se configurado
-      if (nodeData.sendToWhatsApp) {
-        await simulateWhatsAppSend(nodeData.whatsAppMessage || `Formulário disponível: ${form.name}`);
-      }
-
-      toast({
-        title: "Formulário executado",
-        description: `O formulário "${form.name}" foi executado com sucesso.`,
-      });
 
       return executionData;
     } catch (error) {
@@ -105,13 +129,41 @@ export const useFormIntegration = () => {
     } finally {
       setIsExecuting(false);
     }
-  }, [getFormById, validateFormNode]);
+  }, [getFormById, validateFormNode, sendFormLink, isConnected]);
 
-  const simulateWhatsAppSend = async (message: string) => {
-    // Simular delay de envio
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log('WhatsApp message sent:', message);
-  };
+  const handleFormCompletion = useCallback(async (
+    formId: string,
+    patientPhone: string,
+    responses: Record<string, any>
+  ) => {
+    // Encontrar nós que usam este formulário
+    const relevantResults = Object.values(executionResults).filter(
+      result => result.formId === formId
+    );
+
+    for (const result of relevantResults) {
+      const nodeData = result.nodeData as FormNodeData;
+      
+      // Enviar mídia se configurado
+      if (nodeData?.mediaToSend && patientPhone && isConnected) {
+        try {
+          await sendMedia(
+            patientPhone,
+            nodeData.mediaToSend.url,
+            nodeData.mediaToSend.type,
+            `🎉 Parabéns por completar o formulário!\n\nAqui está seu conteúdo exclusivo: ${nodeData.mediaToSend.name}\n\n_Obrigado pela participação!_`
+          );
+        } catch (error) {
+          console.error('Error sending completion media:', error);
+        }
+      }
+    }
+
+    toast({
+      title: "Formulário concluído",
+      description: "Respostas registradas e conteúdo enviado automaticamente",
+    });
+  }, [executionResults, sendMedia, isConnected]);
 
   const getExecutionResult = useCallback((nodeId: string) => {
     return executionResults[nodeId];
@@ -122,7 +174,6 @@ export const useFormIntegration = () => {
   }, []);
 
   const generateFormUrl = useCallback((formId: string) => {
-    // Gerar URL do formulário baseado no ID
     return `${window.location.origin}/forms/${formId}`;
   }, []);
 
@@ -137,7 +188,7 @@ export const useFormIntegration = () => {
       formDescription: form.description,
       autoSend: true,
       sendToWhatsApp: true,
-      whatsAppMessage: `📋 Formulário disponível: ${form.name}\n\n${form.description || 'Clique no link para responder.'}\n\n🔗 ${generateFormUrl(formId)}`,
+      whatsAppMessage: `📋 *${form.name}*\n\n${form.description || 'Clique no link para responder.'}\n\n🔗 ${generateFormUrl(formId)}`,
     };
   }, [getFormById, generateFormUrl]);
 
@@ -155,6 +206,7 @@ export const useFormIntegration = () => {
     executeFormNode,
     getExecutionResult,
     clearExecutionResults,
+    handleFormCompletion,
     
     // Utilitários
     generateFormUrl,
