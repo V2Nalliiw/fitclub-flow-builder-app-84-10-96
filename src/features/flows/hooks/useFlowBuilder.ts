@@ -119,6 +119,7 @@ export const useFlowBuilder = () => {
       case 'end': return 'Fim do Fluxo';
       case 'formStart': return 'Início de Formulário';
       case 'formEnd': return 'Fim de Formulário';
+      case 'formSelect': return 'Formulário Salvo';
       case 'delay': return 'Aguardar Tempo';
       case 'question': return 'Pergunta';
       default: return 'Novo Nó';

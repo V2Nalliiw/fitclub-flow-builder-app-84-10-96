@@ -1,7 +1,6 @@
-
 export interface FlowNode {
   id: string;
-  type: 'start' | 'end' | 'formStart' | 'formEnd' | 'delay' | 'question';
+  type: 'start' | 'end' | 'formStart' | 'formEnd' | 'formSelect' | 'delay' | 'question';
   position: { x: number; y: number };
   data: {
     label: string;
@@ -16,6 +15,9 @@ export interface FlowNode {
     opcoes?: string[];
     tipoIntervalo?: 'minutos' | 'horas' | 'dias';
     quantidade?: number;
+    // Campos para formulário selecionado
+    formId?: string;
+    formName?: string;
   };
 }
 

@@ -14,6 +14,7 @@ import { StartNode } from './nodes/StartNode';
 import { EndNode } from './nodes/EndNode';
 import { FormStartNode } from './nodes/FormStartNode';
 import { FormEndNode } from './nodes/FormEndNode';
+import { FormSelectNode } from './nodes/FormSelectNode';
 import { DelayNode } from './nodes/DelayNode';
 import { QuestionNode } from './nodes/QuestionNode';
 import { DeleteEdgeButton } from './DeleteEdgeButton';
@@ -23,6 +24,7 @@ const nodeTypes = {
   end: EndNode,
   formStart: FormStartNode,
   formEnd: FormEndNode,
+  formSelect: FormSelectNode,
   delay: DelayNode,
   question: QuestionNode,
 };

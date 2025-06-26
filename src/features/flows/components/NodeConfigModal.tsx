@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -14,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2, Save } from 'lucide-react';
 import { Node } from '@xyflow/react';
+import { useFormManager } from '@/features/forms/hooks/useFormManager';
 
 interface NodeConfigModalProps {
   isOpen: boolean;
@@ -28,6 +28,7 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
   node,
   onSave,
 }) => {
+  const { forms } = useFormManager();
   const [config, setConfig] = useState<Record<string, any>>({});
   const [opcoes, setOpcoes] = useState<string[]>([]);
 
@@ -276,6 +277,60 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
                   ))}
                 </div>
               </div>
+            )}
+          </div>
+        );
+
+      case 'formSelect':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="formId">Selecionar Formulário *</Label>
+              <Select
+                value={String(config.formId || '')}
+                onValueChange={(value) => {
+                  const selectedForm = forms.find(f => f.id === value);
+                  setConfig({ 
+                    ...config, 
+                    formId: value,
+                    formName: selectedForm?.name || '',
+                  });
+                }}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Escolha um formulário salvo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {forms.filter(form => form.status === 'active').map((form) => (
+                    <SelectItem key={form.id} value={form.id}>
+                      <div className="flex flex-col">
+                        <span>{form.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {form.fields.length} campos • {form.responses} respostas
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {forms.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Nenhum formulário disponível. Crie um formulário primeiro.
+                </p>
+              )}
+            </div>
+            
+            {config.formId && (
+              <Card className="bg-green-50 border-green-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm text-green-800">Ação Automática</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-xs text-green-700">
+                    Ao atingir este nó, será enviada automaticamente uma mensagem no WhatsApp com o link do formulário selecionado.
+                  </p>
+                </CardContent>
+              </Card>
             )}
           </div>
         );
