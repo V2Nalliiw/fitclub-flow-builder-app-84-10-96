@@ -157,15 +157,12 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         />
       </ReactFlow>
 
+      {/* FloatingNodeToolbar positioned strategically */}
       <div 
         className={`absolute z-20 ${
           isMobile 
-            ? 'left-1/2 transform -translate-x-1/2' 
-            : 'left-[4%]'
-        } ${
-          isMobile 
-            ? 'top-[calc(4rem+calc(100vw-2rem)+2vh)]' 
-            : 'top-[calc(4%+3rem)]'
+            ? 'right-4 top-1/2 transform -translate-y-1/2' 
+            : 'left-4 top-1/2 transform -translate-y-1/2'
         }`}
       >
         <FloatingNodeToolbar onAddNode={onAddNode} />
