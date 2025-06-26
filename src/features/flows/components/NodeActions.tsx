@@ -5,9 +5,9 @@ import { Trash2, Copy } from 'lucide-react';
 
 interface NodeActionsProps {
   nodeId: string;
-  nodeType: string;
-  onDelete: (nodeId: string) => void;
-  onDuplicate: (nodeId: string) => void;
+  nodeType?: string;
+  onDelete?: (nodeId: string) => void;
+  onDuplicate?: (nodeId: string) => void;
   visible?: boolean;
 }
 
@@ -18,7 +18,7 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
   onDuplicate,
   visible = false,
 }) => {
-  if (!visible || nodeType === 'start') {
+  if (!visible || nodeType === 'start' || !onDelete || !onDuplicate) {
     return null;
   }
 
