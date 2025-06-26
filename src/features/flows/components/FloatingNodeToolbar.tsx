@@ -30,42 +30,42 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
       icon: Square,
       label: 'Fim',
       description: 'Finaliza o fluxo',
-      color: 'bg-red-100 text-red-700 hover:bg-red-200',
+      color: 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-gray-800 dark:text-red-400 dark:hover:bg-gray-700',
     },
     {
       type: 'formStart' as FlowNode['type'],
       icon: FileText,
       label: 'Início Form',
       description: 'Inicia formulário',
-      color: 'bg-blue-100 text-blue-700 hover:bg-blue-200',
+      color: 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-gray-800 dark:text-blue-400 dark:hover:bg-gray-700',
     },
     {
       type: 'formEnd' as FlowNode['type'],
       icon: FileText,
       label: 'Fim Form',
       description: 'Finaliza formulário',
-      color: 'bg-blue-100 text-blue-700 hover:bg-blue-200',
+      color: 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-gray-800 dark:text-blue-400 dark:hover:bg-gray-700',
     },
     {
       type: 'formSelect' as FlowNode['type'],
       icon: FormInput,
       label: 'Form Salvo',
       description: 'Usa formulário salvo',
-      color: 'bg-purple-100 text-purple-700 hover:bg-purple-200',
+      color: 'bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-gray-800 dark:text-purple-400 dark:hover:bg-gray-700',
     },
     {
       type: 'delay' as FlowNode['type'],
       icon: Clock,
       label: 'Aguardar',
       description: 'Pausa no fluxo',
-      color: 'bg-orange-100 text-orange-700 hover:bg-orange-200',
+      color: 'bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-gray-800 dark:text-orange-400 dark:hover:bg-gray-700',
     },
     {
       type: 'question' as FlowNode['type'],
       icon: HelpCircle,
       label: 'Pergunta',
       description: 'Faz uma pergunta',
-      color: 'bg-green-100 text-green-700 hover:bg-green-200',
+      color: 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-gray-700',
     },
   ];
 
@@ -77,21 +77,21 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
             variant="outline"
             size="sm"
             onClick={() => setIsExpanded(true)}
-            className="h-10 w-10 p-0 border-0"
+            className="h-10 w-10 p-0 border-0 dark:bg-gray-800 dark:hover:bg-gray-700"
           >
             <Plus className="h-4 w-4" />
           </Button>
         ) : (
           <div className="p-2 space-y-2">
             <div className="flex items-center justify-between mb-2">
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-xs dark:bg-gray-800">
                 Adicionar Nós
               </Badge>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsExpanded(false)}
-                className="h-6 w-6 p-0"
+                className="h-6 w-6 p-0 dark:hover:bg-gray-700"
               >
                 <X className="h-3 w-3" />
               </Button>
