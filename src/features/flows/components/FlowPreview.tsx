@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -146,12 +145,14 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
                   <Button 
                     onClick={() => {
                       const selectedOptions: string[] = [];
-                      data.opcoes.forEach((opcao: string, index: number) => {
-                        const checkbox = document.getElementById(`multi-option-${index}`) as HTMLInputElement;
-                        if (checkbox?.checked) {
-                          selectedOptions.push(opcao);
-                        }
-                      });
+                      if (Array.isArray(data.opcoes)) {
+                        data.opcoes.forEach((opcao: string, index: number) => {
+                          const checkbox = document.getElementById(`multi-option-${index}`) as HTMLInputElement;
+                          if (checkbox?.checked) {
+                            selectedOptions.push(opcao);
+                          }
+                        });
+                      }
                       handleNext(selectedOptions);
                     }}
                     className="w-full mt-4"

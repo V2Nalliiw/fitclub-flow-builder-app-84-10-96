@@ -49,13 +49,13 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
     ...edge,
     animated: true,
     style: {
-      stroke: '#5D8701',
+      stroke: 'hsl(var(--primary))',
       strokeWidth: 2,
     },
   }));
 
   return (
-    <div className="w-full h-screen bg-background">
+    <div className="relative w-full h-screen bg-background">
       <ReactFlow
         nodes={nodes}
         edges={animatedEdges}
@@ -70,20 +70,20 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         defaultEdgeOptions={{
           animated: true,
           style: {
-            stroke: '#5D8701',
+            stroke: 'hsl(var(--primary))',
             strokeWidth: 2,
           },
         }}
       >
         <Controls position="bottom-right" />
         <MiniMap 
-          nodeStrokeColor="#5D8701"
-          nodeColor="#5D8701"
+          nodeStrokeColor="hsl(var(--primary))"
+          nodeColor="hsl(var(--primary))"
           nodeBorderRadius={8}
           position="bottom-left"
-          className="bg-white rounded-lg shadow-lg"
+          className="bg-card rounded-lg shadow-lg"
         />
-        <Background gap={16} size={1} color="#e5e7eb" />
+        <Background gap={16} size={1} color="hsl(var(--border))" />
       </ReactFlow>
     </div>
   );

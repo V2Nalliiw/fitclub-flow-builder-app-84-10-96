@@ -25,10 +25,10 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
   onPreviewFlow,
 }) => {
   return (
-    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 bg-white rounded-lg shadow-lg border p-3">
+    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-40 bg-card rounded-lg shadow-lg border p-3">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <Settings className="h-4 w-4 text-gray-600" />
+          <Settings className="h-4 w-4 text-muted-foreground" />
           <Input
             value={flowName}
             onChange={(e) => onFlowNameChange(e.target.value)}
@@ -37,7 +37,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
           />
         </div>
         
-        <div className="h-6 w-px bg-gray-300" />
+        <div className="h-6 w-px bg-border" />
         
         <div className="flex items-center space-x-2">
           {selectedNode && selectedNode.type !== 'start' && (
@@ -45,7 +45,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
               variant="outline"
               size="sm"
               onClick={() => onDeleteNode(selectedNode.id)}
-              className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
             >
               <Trash2 className="h-3 w-3 mr-1" />
               Excluir
@@ -65,7 +65,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
           <Button
             onClick={onSaveFlow}
             size="sm"
-            className="h-8 bg-[#5D8701] hover:bg-[#4a6e01]"
+            className="h-8"
           >
             <Save className="h-3 w-3 mr-1" />
             Salvar
