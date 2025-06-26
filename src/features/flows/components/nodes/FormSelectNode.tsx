@@ -14,11 +14,13 @@ interface FormSelectNodeData extends Record<string, unknown> {
   onDuplicate?: (nodeId: string) => void;
 }
 
-export const FormSelectNode: React.FC<NodeProps<FormSelectNodeData>> = ({ 
+export const FormSelectNode: React.FC<NodeProps> = ({ 
   id, 
   data, 
   selected 
 }) => {
+  const nodeData = data as FormSelectNodeData;
+
   return (
     <div className="group relative">
       <Card className={`min-w-[200px] transition-all ${selected ? 'ring-2 ring-primary' : ''}`}>
@@ -31,10 +33,10 @@ export const FormSelectNode: React.FC<NodeProps<FormSelectNodeData>> = ({
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          {data.formId && data.formName ? (
+          {nodeData.formId && nodeData.formName ? (
             <div className="space-y-2">
               <Badge variant="secondary" className="text-xs">
-                {data.formName}
+                {nodeData.formName}
               </Badge>
               <p className="text-xs text-muted-foreground">
                 Formulário será enviado quando o fluxo atingir este nó
@@ -62,8 +64,8 @@ export const FormSelectNode: React.FC<NodeProps<FormSelectNodeData>> = ({
       <NodeActions
         nodeId={id}
         nodeType="formSelect"
-        onDelete={data.onDelete}
-        onDuplicate={data.onDuplicate}
+        onDelete={nodeData.onDelete}
+        onDuplicate={nodeData.onDuplicate}
         visible={selected}
       />
     </div>
