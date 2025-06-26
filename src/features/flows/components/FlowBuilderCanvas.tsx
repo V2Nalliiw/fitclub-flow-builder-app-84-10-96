@@ -83,13 +83,15 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
     }
   }));
 
-  const canvasHeight = isMobile 
-    ? 'calc(100vh - 64px - 80px - env(safe-area-inset-top) - env(safe-area-inset-bottom))'
-    : 'calc(100vh - 4rem)';
+  const canvasHeight = isFullscreen 
+    ? '100vh'
+    : isMobile 
+      ? 'calc(100vh - 64px - 80px - env(safe-area-inset-top) - env(safe-area-inset-bottom))'
+      : 'calc(100vh - 4rem)';
 
   return (
     <div 
-      className="relative w-full bg-white dark:bg-[#0E0E0E]" 
+      className="relative w-full bg-white dark:bg-[#0E0E0E] overflow-hidden" 
       style={{ height: canvasHeight }}
     >
       <ReactFlow
@@ -115,6 +117,13 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         minZoom={isMobile ? 0.3 : 0.5}
         maxZoom={isMobile ? 1.5 : 2}
         attributionPosition="bottom-right"
+        panOnScroll={false}
+        panOnScrollMode="free"
+        panOnDrag={true}
+        zoomOnScroll={false}
+        zoomOnPinch={true}
+        zoomOnDoubleClick={false}
+        preventScrolling={true}
       >
         <Controls 
           position={isMobile ? "bottom-left" : "bottom-right"}
@@ -144,8 +153,8 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         <Background 
           gap={16} 
           size={1} 
-          color="hsl(var(--border))" 
-          className="bg-white dark:bg-[#0E0E0E] opacity-60"
+          color="hsl(var(--muted-foreground) / 0.4)" 
+          className="bg-gray-50 dark:bg-[#0E0E0E] opacity-80"
         />
       </ReactFlow>
 

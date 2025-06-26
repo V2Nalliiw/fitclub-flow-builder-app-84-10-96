@@ -40,13 +40,13 @@ export const DeleteEdgeButton: React.FC<EdgeProps> = ({
       <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
       <EdgeLabelRenderer>
         <div
-          className="absolute pointer-events-all group"
+          className="absolute pointer-events-all"
           style={{
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
           }}
         >
           <button
-            className="w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xs shadow-md"
+            className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-75 hover:opacity-100 transition-all duration-200 text-xs shadow-lg border-2 border-white dark:border-gray-800 hover:scale-110"
             onClick={onEdgeClick}
             title="Desconectar"
           >

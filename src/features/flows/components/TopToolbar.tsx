@@ -31,7 +31,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
   isFullscreen = false,
 }) => {
   return (
-    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-40 bg-card rounded-lg shadow-lg border p-2 w-[calc(100vw-2rem)] max-w-2xl">
+    <div className={`absolute top-4 left-1/2 transform -translate-x-1/2 z-40 bg-card rounded-lg shadow-lg border p-2 w-[calc(100vw-2rem)] max-w-2xl ${isFullscreen ? 'fixed' : ''}`}>
       <div className="flex items-center gap-2 md:gap-4 justify-center">
         <div className="flex items-center gap-1 md:gap-2 min-w-0">
           <Settings className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
@@ -50,7 +50,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
             onClick={onAutoArrangeNodes}
             variant="outline"
             size="sm"
-            className="h-7 w-7 md:h-8 md:w-8 p-0 flex-shrink-0"
+            className="h-7 w-7 md:h-8 md:w-8 p-0 flex-shrink-0 hover:bg-accent"
             title="Organizar nós automaticamente"
           >
             <LayoutGrid className="h-3 w-3 md:h-4 md:w-4" />
@@ -71,7 +71,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
               onClick={onToggleFullscreen}
               variant="outline"
               size="sm"
-              className="h-7 w-7 md:h-8 md:w-8 p-0 flex-shrink-0"
+              className="h-7 w-7 md:h-8 md:w-8 p-0 flex-shrink-0 hover:bg-accent"
               title={isFullscreen ? "Sair da tela cheia" : "Expandir para tela cheia"}
             >
               {isFullscreen ? <Minimize className="h-3 w-3 md:h-4 md:w-4" /> : <Expand className="h-3 w-3 md:h-4 md:w-4" />}
@@ -82,7 +82,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
             onClick={onPreviewFlow}
             variant="outline"
             size="sm"
-            className="h-7 w-7 md:h-8 md:w-8 p-0 flex-shrink-0"
+            className="h-7 w-7 md:h-8 md:w-8 p-0 flex-shrink-0 hover:bg-accent"
             title="Visualizar fluxo"
           >
             <Eye className="h-3 w-3 md:h-4 md:w-4" />
@@ -91,7 +91,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
           <Button
             onClick={onSaveFlow}
             size="sm"
-            className="h-7 w-7 md:h-8 md:w-8 p-0 flex-shrink-0"
+            className="h-7 w-7 md:h-8 md:w-8 p-0 flex-shrink-0 bg-primary hover:bg-primary/90"
             title="Salvar fluxo"
           >
             <Save className="h-3 w-3 md:h-4 md:w-4" />
