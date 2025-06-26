@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   ReactFlow,
@@ -88,8 +89,8 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
   // Posicionamento estratégico do FloatingNodeToolbar
   const getToolbarPosition = () => {
     if (isMobile) {
-      // Mobile: Próximo ao TopToolbar, logo abaixo com pequeno espaçamento
-      return 'top-[calc(4rem+2%+3.5rem)] left-4';
+      // Mobile: Próximo ao TopToolbar, logo abaixo com 2% de espaçamento
+      return 'top-[calc(4rem+2%+2%)] left-4';
     } else if (isTablet) {
       // Tablet: Entre o meio e o topo na lateral esquerda
       return 'top-[30%] left-4';
