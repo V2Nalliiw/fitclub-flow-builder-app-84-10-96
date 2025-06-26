@@ -67,7 +67,7 @@ export const FlowBuilder = () => {
   const containerClasses = isFullscreen 
     ? 'fixed inset-0 z-50 bg-background' 
     : isMobile 
-      ? 'w-full h-screen -mx-6 -my-6' 
+      ? 'w-full h-screen flex flex-col items-center justify-center -mx-6 -my-6' 
       : 'w-full h-screen';
 
   return (

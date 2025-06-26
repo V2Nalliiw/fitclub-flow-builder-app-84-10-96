@@ -86,13 +86,18 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
   const canvasHeight = isFullscreen 
     ? '100vh'
     : isMobile 
-      ? '100vh'
+      ? '75vh'
       : 'calc(100vh - 4rem)';
+
+  const canvasWidth = isMobile ? '90%' : '100%';
 
   return (
     <div 
-      className={`relative w-full bg-white dark:bg-[#0E0E0E] ${isMobile ? 'h-screen' : ''}`}
-      style={{ height: canvasHeight }}
+      className={`relative bg-white dark:bg-[#0E0E0E] ${isMobile ? 'mx-auto' : ''}`}
+      style={{ 
+        height: canvasHeight,
+        width: canvasWidth
+      }}
     >
       <ReactFlow
         nodes={enhancedNodes}
