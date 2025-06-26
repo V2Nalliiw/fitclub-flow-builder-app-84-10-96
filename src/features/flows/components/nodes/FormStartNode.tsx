@@ -14,21 +14,21 @@ interface FormStartNodeProps {
 
 export const FormStartNode: React.FC<FormStartNodeProps> = ({ data, selected, id, onDelete, onDuplicate }) => {
   return (
-    <div className={`group relative px-4 py-3 shadow-md rounded-lg bg-blue-500 text-white border-2 transition-all duration-200 min-w-[200px] ${
-      selected ? 'border-white shadow-lg scale-105' : 'border-blue-600'
+    <div className={`group relative px-4 py-3 shadow-md rounded-lg bg-white dark:bg-white/10 text-foreground border transition-all duration-200 min-w-[200px] ${
+      selected ? 'border-primary shadow-lg scale-105' : 'border-border'
     }`}>
       <div className="flex items-center gap-2 mb-1">
-        <FileText className="h-5 w-5" />
+        <FileText className="h-5 w-5 text-blue-500" />
         <div className="text-sm font-medium">
           {data.titulo || 'Início de Formulário'}
         </div>
       </div>
-      <div className="flex items-center gap-1 text-xs opacity-90 mb-1">
+      <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
         <Send className="h-3 w-3" />
         <span>Envia WhatsApp com link</span>
       </div>
       {data.descricao && (
-        <div className="text-xs opacity-80 truncate">
+        <div className="text-xs text-muted-foreground truncate">
           {data.descricao}
         </div>
       )}

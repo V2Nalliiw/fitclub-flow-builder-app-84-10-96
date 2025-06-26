@@ -14,14 +14,14 @@ interface StartNodeProps {
 
 export const StartNode: React.FC<StartNodeProps> = ({ data, selected, id, onDelete, onDuplicate }) => {
   return (
-    <div className={`group relative px-4 py-3 shadow-md rounded-lg bg-[#5D8701] text-white border-2 transition-all duration-200 min-w-[160px] ${
-      selected ? 'border-white shadow-lg scale-105' : 'border-[#4a6e01]'
+    <div className={`group relative px-4 py-3 shadow-md rounded-lg bg-white text-foreground border transition-all duration-200 min-w-[160px] ${
+      selected ? 'border-primary shadow-lg scale-105' : 'border-border'
     }`}>
       <div className="flex items-center gap-2">
-        <Play className="h-5 w-5" />
+        <Play className="h-5 w-5 text-[#5D8701]" />
         <div className="text-sm font-medium">Início do Fluxo</div>
       </div>
-      <div className="text-xs opacity-90 mt-1">
+      <div className="text-xs text-muted-foreground mt-1">
         Execução automática
       </div>
       

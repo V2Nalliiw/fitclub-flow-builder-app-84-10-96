@@ -35,19 +35,19 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
   const opcoes = data.opcoes || [];
 
   return (
-    <div className={`group relative px-4 py-3 shadow-md rounded-lg bg-purple-500 text-white border-2 transition-all duration-200 min-w-[200px] ${
-      selected ? 'border-white shadow-lg scale-105' : 'border-purple-600'
+    <div className={`group relative px-4 py-3 shadow-md rounded-lg bg-white dark:bg-white/10 text-foreground border transition-all duration-200 min-w-[200px] ${
+      selected ? 'border-primary shadow-lg scale-105' : 'border-border'
     }`}>
       <div className="flex items-center gap-2 mb-1">
-        <HelpCircle className="h-5 w-5" />
+        <HelpCircle className="h-5 w-5 text-purple-500" />
         <div className="text-sm font-medium">Pergunta</div>
       </div>
-      <div className="flex items-center gap-1 text-xs opacity-90 mb-1">
+      <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
         {getQuestionIcon()}
         <span>{getTypeLabel()}</span>
       </div>
       {data.pergunta && (
-        <div className="text-xs opacity-80 truncate mb-2">
+        <div className="text-xs text-muted-foreground truncate mb-2">
           {data.pergunta}
         </div>
       )}
@@ -56,12 +56,12 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
       {isEscolhaUnica && opcoes.length > 0 && (
         <div className="space-y-1 mb-2">
           {opcoes.slice(0, 3).map((opcao: string, index: number) => (
-            <div key={index} className="text-xs opacity-70 truncate">
+            <div key={index} className="text-xs text-muted-foreground truncate">
               • {opcao}
             </div>
           ))}
           {opcoes.length > 3 && (
-            <div className="text-xs opacity-60">
+            <div className="text-xs text-muted-foreground">
               +{opcoes.length - 3} mais...
             </div>
           )}
@@ -69,7 +69,7 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
       )}
       
       {opcoes.length > 0 && !isEscolhaUnica && (
-        <div className="text-xs opacity-70 mt-1">
+        <div className="text-xs text-muted-foreground mt-1">
           {opcoes.length} opções
         </div>
       )}
@@ -114,7 +114,7 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
                   transform: 'none'
                 }}
               />
-              <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs opacity-70 whitespace-nowrap">
+              <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-muted-foreground whitespace-nowrap">
                 {opcao.substring(0, 8)}{opcao.length > 8 ? '...' : ''}
               </div>
             </div>

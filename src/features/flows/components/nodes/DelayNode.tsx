@@ -21,14 +21,14 @@ export const DelayNode: React.FC<DelayNodeProps> = ({ data, selected, id, onDele
   };
 
   return (
-    <div className={`group relative px-4 py-3 shadow-md rounded-lg bg-orange-500 text-white border-2 transition-all duration-200 min-w-[160px] ${
-      selected ? 'border-white shadow-lg scale-105' : 'border-orange-600'
+    <div className={`group relative px-4 py-3 shadow-md rounded-lg bg-white dark:bg-white/10 text-foreground border transition-all duration-200 min-w-[160px] ${
+      selected ? 'border-primary shadow-lg scale-105' : 'border-border'
     }`}>
       <div className="flex items-center gap-2 mb-1">
-        <Clock className="h-5 w-5" />
+        <Clock className="h-5 w-5 text-orange-500" />
         <div className="text-sm font-medium">Aguardar</div>
       </div>
-      <div className="flex items-center gap-1 text-xs opacity-90">
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">
         <Timer className="h-3 w-3" />
         <span>{getTimeLabel()}</span>
       </div>
