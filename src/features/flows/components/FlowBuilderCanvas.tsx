@@ -91,7 +91,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
 
   return (
     <div 
-      className="relative w-full bg-white dark:bg-[#0E0E0E] overflow-hidden" 
+      className="relative w-full bg-white dark:bg-[#0E0E0E]" 
       style={{ height: canvasHeight }}
     >
       <ReactFlow
@@ -105,7 +105,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        className="bg-white dark:bg-[#0E0E0E] touch-none"
+        className="bg-white dark:bg-[#0E0E0E]"
         defaultEdgeOptions={{
           animated: true,
           type: 'deleteButton',
@@ -117,13 +117,12 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         minZoom={isMobile ? 0.3 : 0.5}
         maxZoom={isMobile ? 1.5 : 2}
         attributionPosition="bottom-right"
-        panOnScroll={false}
-        panOnScrollMode="free"
+        panOnScroll={true}
+        panOnScrollSpeed={0.5}
         panOnDrag={true}
-        zoomOnScroll={false}
+        zoomOnScroll={true}
         zoomOnPinch={true}
         zoomOnDoubleClick={false}
-        preventScrolling={true}
       >
         <Controls 
           position={isMobile ? "bottom-left" : "bottom-right"}
@@ -153,22 +152,14 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         <Background 
           gap={16} 
           size={1} 
-          color="hsl(var(--muted-foreground) / 0.4)" 
-          className="bg-gray-50 dark:bg-[#0E0E0E] opacity-80"
+          color="hsl(var(--muted-foreground) / 0.3)" 
+          className="bg-gray-50/50 dark:bg-[#0E0E0E]"
         />
       </ReactFlow>
 
-      {!isMobile && (
-        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20">
-          <FloatingNodeToolbar onAddNode={onAddNode} />
-        </div>
-      )}
-
-      {isMobile && (
-        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20">
-          <FloatingNodeToolbar onAddNode={onAddNode} />
-        </div>
-      )}
+      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20">
+        <FloatingNodeToolbar onAddNode={onAddNode} />
+      </div>
     </div>
   );
 };

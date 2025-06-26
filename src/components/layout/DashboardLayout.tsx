@@ -66,7 +66,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
         {/* Main Content */}
         <main className={cn(
-          "flex-1 transition-all duration-300 p-0 pb-20 md:pb-6",
+          "flex-1 transition-all duration-300 pb-20 md:pb-6",
           "animate-fade-in"
         )}>
           {children}

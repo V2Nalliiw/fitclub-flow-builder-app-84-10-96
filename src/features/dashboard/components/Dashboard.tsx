@@ -37,7 +37,7 @@ export const Dashboard = () => {
   const cards = getDashboardCards();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-6 py-6">
       <div>
         <h1 className="text-3xl font-bold">
           Bem-vindo, {user?.name}!
