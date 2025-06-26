@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,9 +33,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Plus, Search, Edit, Trash2, Eye, UserPlus } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Plus, Search, Edit, Trash2, Eye, UserPlus, MoreVertical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Patient } from '@/types';
+import { useBreakpoints } from '@/hooks/use-breakpoints';
 
 // Mock data
 const mockPatients: Patient[] = [
@@ -62,6 +67,7 @@ const mockPatients: Patient[] = [
 
 export const Patients = () => {
   const { toast } = useToast();
+  const { isMobile, isTablet } = useBreakpoints();
   const [patients, setPatients] = useState<Patient[]>(mockPatients);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -195,6 +201,182 @@ export const Patients = () => {
     setIsEditModalOpen(true);
   };
 
+  const renderMobileTable = () => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Paciente</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead className="text-right">Ações</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {filteredPatients.map((patient) => (
+          <TableRow key={patient.id}>
+            <TableCell>
+              <div className="flex items-center gap-3">
+                <Avatar>
+                  <AvatarImage src={patient.avatar} />
+                  <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <span className="font-medium">{patient.name}</span>
+              </div>
+            </TableCell>
+            <TableCell>
+              <Badge variant="secondary">Ativo</Badge>
+            </TableCell>
+            <TableCell className="text-right">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48" align="end">
+                  <div className="space-y-2">
+                    <div className="px-3 py-2 text-sm font-medium border-b">
+                      Informações do Paciente
+                    </div>
+                    <div className="px-3 py-1">
+                      <div className="text-xs text-muted-foreground">Email</div>
+                      <div className="text-sm">{patient.email}</div>
+                    </div>
+                    <div className="px-3 py-1">
+                      <div className="text-xs text-muted-foreground">Telefone</div>
+                      <div className="text-sm">{patient.phone}</div>
+                    </div>
+                    <div className="px-3 py-1">
+                      <div className="text-xs text-muted-foreground">Cadastrado em</div>
+                      <div className="text-sm">{new Date(patient.created_at).toLocaleDateString('pt-BR')}</div>
+                    </div>
+                    <div className="border-t pt-2 space-y-1">
+                      <Button variant="ghost" size="sm" className="w-full justify-start">
+                        <Eye className="h-4 w-4 mr-2" />
+                        Visualizar
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start"
+                        onClick={() => openEditModal(patient)}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Editar
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="w-full justify-start text-destructive">
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Remover
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Remover Paciente</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja remover o paciente "{patient.name}"?
+                              Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeletePatient(patient.id)}
+                              className="bg-destructive text-destructive-foreground"
+                            >
+                              Remover
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+
+  const renderDesktopTable = () => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Paciente</TableHead>
+          <TableHead>Email</TableHead>
+          <TableHead>Telefone</TableHead>
+          <TableHead>Cadastrado em</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead className="text-right">Ações</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {filteredPatients.map((patient) => (
+          <TableRow key={patient.id}>
+            <TableCell>
+              <div className="flex items-center gap-3">
+                <Avatar>
+                  <AvatarImage src={patient.avatar} />
+                  <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <span className="font-medium">{patient.name}</span>
+              </div>
+            </TableCell>
+            <TableCell>{patient.email}</TableCell>
+            <TableCell>{patient.phone}</TableCell>
+            <TableCell>
+              {new Date(patient.created_at).toLocaleDateString('pt-BR')}
+            </TableCell>
+            <TableCell>
+              <Badge variant="secondary">Ativo</Badge>
+            </TableCell>
+            <TableCell className="text-right">
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" size="icon">
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => openEditModal(patient)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Remover Paciente</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja remover o paciente "{patient.name}"?
+                        Esta ação não pode ser desfeita.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDeletePatient(patient.id)}
+                        className="bg-destructive text-destructive-foreground"
+                      >
+                        Remover
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -282,80 +464,7 @@ export const Patients = () => {
             </div>
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Paciente</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Cadastrado em</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPatients.map((patient) => (
-                <TableRow key={patient.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={patient.avatar} />
-                        <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium">{patient.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{patient.email}</TableCell>
-                  <TableCell>{patient.phone}</TableCell>
-                  <TableCell>
-                    {new Date(patient.created_at).toLocaleDateString('pt-BR')}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">Ativo</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openEditModal(patient)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Remover Paciente</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Tem certeza que deseja remover o paciente "{patient.name}"?
-                              Esta ação não pode ser desfeita.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeletePatient(patient.id)}
-                              className="bg-destructive text-destructive-foreground"
-                            >
-                              Remover
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {isMobile || isTablet ? renderMobileTable() : renderDesktopTable()}
 
           {filteredPatients.length === 0 && (
             <div className="text-center py-8">
