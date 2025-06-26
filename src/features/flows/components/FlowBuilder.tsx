@@ -6,9 +6,11 @@ import { FlowPreviewModal } from './FlowPreviewModal';
 import { TopToolbar } from './TopToolbar';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useFlowBuilder } from '../hooks/useFlowBuilder';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const FlowBuilder = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const isMobile = useIsMobile();
   
   const {
     nodes,
@@ -62,8 +64,14 @@ export const FlowBuilder = () => {
     };
   }, [isFullscreen]);
 
+  const containerClasses = isFullscreen 
+    ? 'fixed inset-0 z-50 bg-background' 
+    : isMobile 
+      ? 'w-full h-screen -mx-6 -my-6' 
+      : 'w-full h-screen';
+
   return (
-    <div className={`relative overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50 bg-background' : 'w-full h-screen'}`}>
+    <div className={`relative overflow-hidden ${containerClasses}`}>
       <FlowBuilderCanvas
         nodes={nodes}
         edges={edges}

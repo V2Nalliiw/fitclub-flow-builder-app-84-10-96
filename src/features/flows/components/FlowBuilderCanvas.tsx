@@ -86,12 +86,12 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
   const canvasHeight = isFullscreen 
     ? '100vh'
     : isMobile 
-      ? 'calc(100vh - 64px - 80px - env(safe-area-inset-top) - env(safe-area-inset-bottom))'
+      ? '100vh'
       : 'calc(100vh - 4rem)';
 
   return (
     <div 
-      className="relative w-full bg-white dark:bg-[#0E0E0E]" 
+      className={`relative w-full bg-white dark:bg-[#0E0E0E] ${isMobile ? 'h-screen' : ''}`}
       style={{ height: canvasHeight }}
     >
       <ReactFlow
