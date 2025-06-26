@@ -27,7 +27,10 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         />
       </div>
       
-      <div className="flex-1 flex flex-col">
+      <div className={cn(
+        "flex-1 flex flex-col transition-all duration-300",
+        sidebarCollapsed ? "md:ml-16" : "md:ml-64"
+      )}>
         {/* Top Bar */}
         <header className="h-16 border-b border-border bg-card px-6 flex items-center justify-between">
           <div className="flex items-center gap-4">

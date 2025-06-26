@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Home, 
@@ -67,11 +68,11 @@ export const Sidebar = ({ isCollapsed, onToggle }: SidebarProps) => {
 
   return (
     <div className={cn(
-      "bg-card border-r border-border transition-all duration-300 flex flex-col",
+      "bg-card border-r border-border transition-all duration-300 flex flex-col fixed left-0 top-0 h-screen z-40",
       isCollapsed ? "w-16" : "w-64"
     )}>
       {/* Header */}
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-border flex-shrink-0">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <img 
@@ -95,8 +96,8 @@ export const Sidebar = ({ isCollapsed, onToggle }: SidebarProps) => {
         </div>
       </div>
 
-      {/* Navigation Items */}
-      <nav className="flex-1 p-2">
+      {/* Navigation Items - Scrollable */}
+      <nav className="flex-1 p-2 overflow-y-auto">
         <div className="space-y-1">
           {sidebarItems.map((item) => (
             <NavLink
@@ -118,8 +119,8 @@ export const Sidebar = ({ isCollapsed, onToggle }: SidebarProps) => {
         </div>
       </nav>
 
-      {/* User Info & Logout */}
-      <div className="p-2 border-t border-border">
+      {/* User Info & Logout - Fixed at bottom */}
+      <div className="p-2 border-t border-border flex-shrink-0">
         {!isCollapsed && user && (
           <div className="px-2 py-1 mb-2">
             <p className="text-sm font-medium">{user.name}</p>
