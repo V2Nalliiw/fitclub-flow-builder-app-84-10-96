@@ -89,11 +89,11 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
   // Posicionamento estratégico do FloatingNodeToolbar
   const getToolbarPosition = () => {
     if (isMobile) {
-      // Mobile: Alinhado com a lateral esquerda do TopToolbar, com 5px de espaçamento
-      return 'top-[calc(4rem+2%+5px)] left-4';
+      // Mobile: Lado direito, entre meio e topo, com 4% de margem direita
+      return 'top-[25%] right-[4%]';
     } else if (isTablet) {
-      // Tablet: Alinhado com a lateral esquerda do TopToolbar, com 5px de espaçamento
-      return 'top-[calc(4rem+2%+5px)] left-4';
+      // Tablet: Lado direito, entre meio e topo, com 4% de margem direita
+      return 'top-[25%] right-[4%]';
     } else {
       // Desktop: Alinhado verticalmente com o TopToolbar, lateral esquerda
       return 'top-[calc(4%+0.5rem)] left-[2%]';
