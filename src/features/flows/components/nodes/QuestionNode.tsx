@@ -22,7 +22,7 @@ export const QuestionNode = ({ data, selected }: { data: any; selected?: boolean
     }
   };
 
-  const isMultipleChoice = data.tipoResposta === 'multipla-escolha';
+  const isEscolhaUnica = data.tipoResposta === 'escolha-unica';
   const opcoes = data.opcoes || [];
 
   return (
@@ -43,8 +43,8 @@ export const QuestionNode = ({ data, selected }: { data: any; selected?: boolean
         </div>
       )}
       
-      {/* Mostrar opções para múltipla escolha */}
-      {isMultipleChoice && opcoes.length > 0 && (
+      {/* Mostrar opções para escolha única */}
+      {isEscolhaUnica && opcoes.length > 0 && (
         <div className="space-y-1 mb-2">
           {opcoes.slice(0, 3).map((opcao: string, index: number) => (
             <div key={index} className="text-xs opacity-70 truncate">
@@ -59,7 +59,7 @@ export const QuestionNode = ({ data, selected }: { data: any; selected?: boolean
         </div>
       )}
       
-      {opcoes.length > 0 && !isMultipleChoice && (
+      {opcoes.length > 0 && !isEscolhaUnica && (
         <div className="text-xs opacity-70 mt-1">
           {opcoes.length} opções
         </div>
@@ -71,8 +71,8 @@ export const QuestionNode = ({ data, selected }: { data: any; selected?: boolean
         className="w-3 h-3 bg-purple-500 border-2 border-white"
       />
       
-      {/* Handle padrão para saída única ou texto livre */}
-      {(!isMultipleChoice || opcoes.length === 0) && (
+      {/* Handle padrão para múltipla escolha, texto livre ou quando não há opções */}
+      {(!isEscolhaUnica || opcoes.length === 0) && (
         <Handle
           type="source"
           position={Position.Bottom}
@@ -80,8 +80,8 @@ export const QuestionNode = ({ data, selected }: { data: any; selected?: boolean
         />
       )}
       
-      {/* Handles múltiplos para múltipla escolha */}
-      {isMultipleChoice && opcoes.length > 0 && (
+      {/* Handles múltiplos para escolha única */}
+      {isEscolhaUnica && opcoes.length > 0 && (
         <div className="flex justify-around mt-2">
           {opcoes.map((opcao: string, index: number) => (
             <div key={index} className="relative">

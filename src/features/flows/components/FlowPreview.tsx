@@ -39,8 +39,8 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
   const getNextNode = (currentId: string, selectedOption?: string) => {
     const currentNode = nodes.find(node => node.id === currentId);
     
-    // Para perguntas de múltipla escolha, usa o handle específico
-    if (currentNode?.type === 'question' && currentNode.data.tipoResposta === 'multipla-escolha' && selectedOption) {
+    // Para perguntas de escolha única, usa o handle específico
+    if (currentNode?.type === 'question' && currentNode.data.tipoResposta === 'escolha-unica' && selectedOption) {
       const opcoes = Array.isArray(currentNode.data.opcoes) ? currentNode.data.opcoes : [];
       const optionIndex = opcoes.indexOf(selectedOption);
       const nextEdge = edges.find(edge => 
@@ -136,18 +136,29 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
               )}
 
               {data?.tipoResposta === 'multipla-escolha' && Array.isArray(data.opcoes) && (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {data.opcoes.map((opcao: string, index: number) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      className="w-full justify-start"
-                      onClick={() => handleNext(opcao)}
-                    >
-                      {opcao}
-                      <ArrowRight className="ml-auto h-4 w-4" />
-                    </Button>
+                    <div key={index} className="flex items-center space-x-2">
+                      <Checkbox id={`multi-option-${index}`} />
+                      <Label htmlFor={`multi-option-${index}`}>{opcao}</Label>
+                    </div>
                   ))}
+                  <Button 
+                    onClick={() => {
+                      const selectedOptions: string[] = [];
+                      data.opcoes.forEach((opcao: string, index: number) => {
+                        const checkbox = document.getElementById(`multi-option-${index}`) as HTMLInputElement;
+                        if (checkbox?.checked) {
+                          selectedOptions.push(opcao);
+                        }
+                      });
+                      handleNext(selectedOptions);
+                    }}
+                    className="w-full mt-4"
+                  >
+                    Continuar
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </div>
               )}
 

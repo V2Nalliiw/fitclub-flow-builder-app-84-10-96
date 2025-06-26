@@ -45,11 +45,20 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
   onNodeDoubleClick,
   onNodeClick,
 }) => {
+  const animatedEdges = edges.map(edge => ({
+    ...edge,
+    animated: true,
+    style: {
+      stroke: '#5D8701',
+      strokeWidth: 2,
+    },
+  }));
+
   return (
-    <div className="flex-1 h-[600px] border rounded-lg bg-background">
+    <div className="w-full h-screen bg-background">
       <ReactFlow
         nodes={nodes}
-        edges={edges}
+        edges={animatedEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
@@ -58,14 +67,23 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         nodeTypes={nodeTypes}
         fitView
         className="bg-background"
+        defaultEdgeOptions={{
+          animated: true,
+          style: {
+            stroke: '#5D8701',
+            strokeWidth: 2,
+          },
+        }}
       >
-        <Controls />
+        <Controls position="bottom-right" />
         <MiniMap 
           nodeStrokeColor="#5D8701"
           nodeColor="#5D8701"
           nodeBorderRadius={8}
+          position="bottom-left"
+          className="bg-white rounded-lg shadow-lg"
         />
-        <Background gap={12} size={1} />
+        <Background gap={16} size={1} color="#e5e7eb" />
       </ReactFlow>
     </div>
   );

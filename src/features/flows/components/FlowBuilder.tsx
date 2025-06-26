@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { FlowBuilderSidebar } from './FlowBuilderSidebar';
 import { FlowBuilderCanvas } from './FlowBuilderCanvas';
 import { NodeConfigModal } from './NodeConfigModal';
 import { FlowPreviewModal } from './FlowPreviewModal';
+import { FloatingNodeToolbar } from './FloatingNodeToolbar';
+import { TopToolbar } from './TopToolbar';
 import { useFlowBuilder } from '../hooks/useFlowBuilder';
 
 export const FlowBuilder = () => {
@@ -32,18 +33,7 @@ export const FlowBuilder = () => {
   } = useFlowBuilder();
 
   return (
-    <div className="h-full flex gap-4">
-      <FlowBuilderSidebar
-        flowName={flowName}
-        selectedNode={selectedNode}
-        onFlowNameChange={setFlowName}
-        onAddNode={addNode}
-        onDeleteNode={deleteNode}
-        onClearAllNodes={clearAllNodes}
-        onSaveFlow={saveFlow}
-        onPreviewFlow={openPreview}
-      />
-
+    <div className="relative w-full h-screen overflow-hidden">
       <FlowBuilderCanvas
         nodes={nodes}
         edges={edges}
@@ -52,6 +42,18 @@ export const FlowBuilder = () => {
         onConnect={onConnect}
         onNodeDoubleClick={onNodeDoubleClick}
         onNodeClick={onNodeClick}
+      />
+
+      <FloatingNodeToolbar onAddNode={addNode} />
+
+      <TopToolbar
+        flowName={flowName}
+        selectedNode={selectedNode}
+        onFlowNameChange={setFlowName}
+        onDeleteNode={deleteNode}
+        onClearAllNodes={clearAllNodes}
+        onSaveFlow={saveFlow}
+        onPreviewFlow={openPreview}
       />
 
       <NodeConfigModal

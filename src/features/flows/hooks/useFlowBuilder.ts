@@ -90,14 +90,17 @@ export const useFlowBuilder = () => {
       )
     );
 
-    if (selectedNode.type === 'question' && nodeData.tipoResposta === 'multipla-escolha' && nodeData.opcoes) {
+    // Atualizar handles para escolha única (múltiplas saídas)
+    if (selectedNode.type === 'question' && nodeData.tipoResposta === 'escolha-unica' && nodeData.opcoes) {
       updateQuestionNodeHandles(selectedNode.id, nodeData.opcoes as string[]);
     }
   };
 
   const updateQuestionNodeHandles = (nodeId: string, opcoes: string[]) => {
+    // Remove conexões existentes do nó
     setEdges((eds) => eds.filter((e) => e.source !== nodeId));
     
+    // Atualiza o nó com as novas opções
     setNodes((nds) =>
       nds.map((node) =>
         node.id === nodeId
