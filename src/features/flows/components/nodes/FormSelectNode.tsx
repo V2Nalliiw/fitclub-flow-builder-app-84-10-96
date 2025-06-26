@@ -31,7 +31,7 @@ export const FormSelectNode: React.FC<NodeProps<FormSelectNodeData>> = ({
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          {data?.formId && data?.formName ? (
+          {data.formId && data.formName ? (
             <div className="space-y-2">
               <Badge variant="secondary" className="text-xs">
                 {data.formName}
@@ -62,8 +62,8 @@ export const FormSelectNode: React.FC<NodeProps<FormSelectNodeData>> = ({
       <NodeActions
         nodeId={id}
         nodeType="formSelect"
-        onDelete={data?.onDelete || (() => {})}
-        onDuplicate={data?.onDuplicate || (() => {})}
+        onDelete={data.onDelete}
+        onDuplicate={data.onDuplicate}
         visible={selected}
       />
     </div>
