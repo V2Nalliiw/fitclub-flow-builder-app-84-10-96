@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Save, ExternalLink, MessageSquare, AlertCircle, CheckCircle } from 'lucide-react';
 import { Node } from '@xyflow/react';
 import { useFormManager } from '@/features/forms/hooks/useFormManager';
