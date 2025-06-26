@@ -70,56 +70,54 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
   ];
 
   return (
-    <div className="fixed left-4 top-1/2 -translate-y-1/2 z-50">
-      <Card className="shadow-lg">
-        <CardContent className="p-2">
-          {!isExpanded ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsExpanded(true)}
-              className="h-10 w-10 p-0"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          ) : (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between mb-2">
-                <Badge variant="secondary" className="text-xs">
-                  Adicionar Nós
-                </Badge>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsExpanded(false)}
-                  className="h-6 w-6 p-0"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-              
-              <div className="grid gap-1 w-32">
-                {nodeTypes.map((nodeType) => {
-                  const IconComponent = nodeType.icon;
-                  return (
-                    <Button
-                      key={nodeType.type}
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onAddNode(nodeType.type)}
-                      className={`justify-start h-8 px-2 text-xs ${nodeType.color}`}
-                      title={nodeType.description}
-                    >
-                      <IconComponent className="h-3 w-3 mr-1 flex-shrink-0" />
-                      <span className="truncate">{nodeType.label}</span>
-                    </Button>
-                  );
-                })}
-              </div>
+    <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+      <div className="border border-border rounded-lg bg-background">
+        {!isExpanded ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsExpanded(true)}
+            className="h-10 w-10 p-0 border-0"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        ) : (
+          <div className="p-2 space-y-2">
+            <div className="flex items-center justify-between mb-2">
+              <Badge variant="secondary" className="text-xs">
+                Adicionar Nós
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsExpanded(false)}
+                className="h-6 w-6 p-0"
+              >
+                <X className="h-3 w-3" />
+              </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            
+            <div className="grid gap-1 w-32">
+              {nodeTypes.map((nodeType) => {
+                const IconComponent = nodeType.icon;
+                return (
+                  <Button
+                    key={nodeType.type}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onAddNode(nodeType.type)}
+                    className={`justify-start h-8 px-2 text-xs ${nodeType.color}`}
+                    title={nodeType.description}
+                  >
+                    <IconComponent className="h-3 w-3 mr-1 flex-shrink-0" />
+                    <span className="truncate">{nodeType.label}</span>
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
