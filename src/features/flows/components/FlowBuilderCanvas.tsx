@@ -83,17 +83,12 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
     }
   }));
 
-  const canvasHeight = isFullscreen 
-    ? '100vh'
-    : isMobile 
-      ? '70vh'
-      : 'calc(100vh - 4rem)';
-
-  const canvasWidth = isMobile ? '90%' : '100%';
+  const canvasHeight = isFullscreen || isMobile ? '100vh' : 'calc(100vh - 4rem)';
+  const canvasWidth = '100%';
 
   return (
     <div 
-      className={`relative bg-white dark:bg-[#0E0E0E] ${isMobile ? 'mx-auto' : ''}`}
+      className="relative bg-white dark:bg-[#0E0E0E]"
       style={{ 
         height: canvasHeight,
         width: canvasWidth
@@ -133,7 +128,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
           position={isMobile ? "bottom-left" : "bottom-right"}
           className={`bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-xl [&_button]:bg-card/80 [&_button]:border-border [&_button]:text-foreground hover:[&_button]:bg-accent/90 [&_button]:backdrop-blur-sm [&_button]:transition-all [&_button]:duration-200 ${isMobile ? 'scale-90' : ''}`}
           style={isMobile ? { 
-            bottom: '20px', 
+            bottom: '80px', 
             left: '12px',
             zIndex: 10
           } : {}}
@@ -148,7 +143,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
           pannable
           zoomable
           style={isMobile ? { 
-            bottom: '20px',
+            bottom: '80px',
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 10
@@ -162,7 +157,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         />
       </ReactFlow>
 
-      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20">
+      <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
         <FloatingNodeToolbar onAddNode={onAddNode} />
       </div>
     </div>

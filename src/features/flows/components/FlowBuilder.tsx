@@ -67,7 +67,7 @@ export const FlowBuilder = () => {
   const containerClasses = isFullscreen 
     ? 'fixed inset-0 z-50 bg-background' 
     : isMobile 
-      ? 'w-full h-screen flex flex-col items-center justify-center -mx-6 -my-6 px-4' 
+      ? 'fixed inset-0 bg-background' 
       : 'w-full h-screen';
 
   return (
@@ -86,18 +86,20 @@ export const FlowBuilder = () => {
         isFullscreen={isFullscreen}
       />
 
-      <TopToolbar
-        flowName={flowName}
-        selectedNode={selectedNode}
-        onFlowNameChange={setFlowName}
-        onDeleteNode={deleteNode}
-        onClearAllNodes={clearAllNodes}
-        onAutoArrangeNodes={autoArrangeNodes}
-        onSaveFlow={saveFlow}
-        onPreviewFlow={openPreview}
-        onToggleFullscreen={toggleFullscreen}
-        isFullscreen={isFullscreen}
-      />
+      {!isMobile && (
+        <TopToolbar
+          flowName={flowName}
+          selectedNode={selectedNode}
+          onFlowNameChange={setFlowName}
+          onDeleteNode={deleteNode}
+          onClearAllNodes={clearAllNodes}
+          onAutoArrangeNodes={autoArrangeNodes}
+          onSaveFlow={saveFlow}
+          onPreviewFlow={openPreview}
+          onToggleFullscreen={toggleFullscreen}
+          isFullscreen={isFullscreen}
+        />
+      )}
 
       <NodeConfigModal
         isOpen={isConfigModalOpen}

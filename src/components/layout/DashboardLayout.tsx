@@ -8,6 +8,8 @@ import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { NotificationCenter } from '@/features/notifications/components/NotificationCenter';
+import { useLocation } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -16,6 +18,10 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const location = useLocation();
+  const isMobile = useIsMobile();
+  
+  const isFlowsPage = location.pathname === '/flows';
 
   return (
     <div className="min-h-screen bg-background flex w-full">
@@ -32,7 +38,10 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         sidebarCollapsed ? "md:ml-16" : "md:ml-64"
       )}>
         {/* Top Bar */}
-        <header className="h-16 border-b border-border bg-card px-6 flex items-center justify-between">
+        <header className={cn(
+          "h-16 border-b border-border bg-card px-6 flex items-center justify-between",
+          isMobile && isFlowsPage && "fixed top-0 left-0 right-0 z-40"
+        )}>
           <div className="flex items-center gap-4">
             {/* Logo apenas no mobile, sem funcionalidade de menu */}
             <div className="md:hidden">
@@ -66,8 +75,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
         {/* Main Content */}
         <main className={cn(
-          "flex-1 transition-all duration-300 pb-20 md:pb-6",
-          "animate-fade-in"
+          "flex-1 transition-all duration-300 animate-fade-in",
+          isMobile && isFlowsPage ? "pt-0" : "pb-20 md:pb-6"
         )}>
           {children}
         </main>
