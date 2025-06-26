@@ -4,6 +4,7 @@ import { FlowBuilderCanvas } from './FlowBuilderCanvas';
 import { NodeConfigModal } from './NodeConfigModal';
 import { FlowPreviewModal } from './FlowPreviewModal';
 import { TopToolbar } from './TopToolbar';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useFlowBuilder } from '../hooks/useFlowBuilder';
 
 export const FlowBuilder = () => {
@@ -16,6 +17,7 @@ export const FlowBuilder = () => {
     selectedNode,
     isConfigModalOpen,
     isPreviewModalOpen,
+    isLoading,
     onNodesChange,
     onEdgesChange,
     onConnect,
@@ -85,6 +87,18 @@ export const FlowBuilder = () => {
         edges={edges}
         flowName={flowName}
       />
+
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <LoadingSpinner size="lg" />
+            <div className="text-sm text-muted-foreground">
+              Processando operação...
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

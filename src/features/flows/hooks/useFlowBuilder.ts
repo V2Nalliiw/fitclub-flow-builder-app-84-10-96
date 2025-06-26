@@ -22,9 +22,16 @@ export const useFlowBuilder = () => {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    (params: Connection) => {
+      setEdges((eds) => addEdge(params, eds));
+      toast({
+        title: "Conexão criada",
+        description: "Os nós foram conectados com sucesso.",
+      });
+    },
     [setEdges]
   );
 
@@ -33,13 +40,11 @@ export const useFlowBuilder = () => {
       return { x: 250, y: 150 };
     }
 
-    // Encontrar o último nó adicionado (maior ID numérico)
     const sortedNodes = existingNodes
-      .filter(node => node.id !== '1') // Excluir o nó inicial
+      .filter(node => node.id !== '1')
       .sort((a, b) => parseInt(b.id) - parseInt(a.id));
     
     if (sortedNodes.length === 0) {
-      // Se só existe o nó inicial, posicionar abaixo dele
       const startNode = existingNodes.find(node => node.id === '1');
       return {
         x: startNode ? startNode.position.x : 250,
@@ -49,7 +54,6 @@ export const useFlowBuilder = () => {
 
     const lastNode = sortedNodes[0];
     
-    // Posicionar o novo nó abaixo e um pouco à direita do último
     return {
       x: lastNode.position.x + 50,
       y: lastNode.position.y + 120
@@ -57,88 +61,142 @@ export const useFlowBuilder = () => {
   };
 
   const addNode = (type: FlowNode['type']) => {
-    const position = calculateSmartPosition(nodes);
+    setIsLoading(true);
     
-    const newNode: Node = {
-      id: `${Date.now()}`,
-      type,
-      position,
-      data: { 
-        label: getNodeLabel(type),
-      },
-    };
-    setNodes((nds) => [...nds, newNode]);
-    toast({
-      title: "Nó adicionado",
-      description: `${getNodeLabel(type)} foi adicionado ao fluxo.`,
-    });
+    setTimeout(() => {
+      const position = calculateSmartPosition(nodes);
+      
+      const newNode: Node = {
+        id: `${Date.now()}`,
+        type,
+        position,
+        data: { 
+          label: getNodeLabel(type),
+        },
+      };
+      setNodes((nds) => [...nds, newNode]);
+      setIsLoading(false);
+      
+      toast({
+        title: "Nó adicionado",
+        description: `${getNodeLabel(type)} foi adicionado ao fluxo.`,
+      });
+    }, 300);
   };
 
   const deleteNode = (nodeId: string) => {
-    setNodes((nds) => nds.filter((n) => n.id !== nodeId));
-    setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
-    if (selectedNode?.id === nodeId) {
-      setSelectedNode(null);
+    const nodeToDelete = nodes.find(n => n.id === nodeId);
+    if (!nodeToDelete) return;
+
+    // Mostrar confirmação apenas para nós que não sejam o inicial
+    if (nodeId !== '1') {
+      const confirmDelete = window.confirm(
+        `Tem certeza que deseja remover o nó "${nodeToDelete.data?.label || 'Sem nome'}"?\n\nEsta ação não pode ser desfeita.`
+      );
+      
+      if (!confirmDelete) return;
     }
-    toast({
-      title: "Nó removido",
-      description: "O nó foi removido do fluxo.",
-      variant: "destructive",
-    });
+
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+      setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+      if (selectedNode?.id === nodeId) {
+        setSelectedNode(null);
+      }
+      setIsLoading(false);
+      
+      toast({
+        title: "Nó removido",
+        description: `O nó "${nodeToDelete.data?.label || 'Sem nome'}" foi removido do fluxo.`,
+        variant: "destructive",
+      });
+    }, 200);
   };
 
   const duplicateNode = (nodeId: string) => {
     const nodeToDuplicate = nodes.find(n => n.id === nodeId);
     if (!nodeToDuplicate) return;
 
-    const newNode: Node = {
-      ...nodeToDuplicate,
-      id: `${Date.now()}`,
-      position: {
-        x: nodeToDuplicate.position.x + 50,
-        y: nodeToDuplicate.position.y + 50,
-      },
-      data: {
-        ...nodeToDuplicate.data,
-        label: `${nodeToDuplicate.data?.label || ''} (Cópia)`,
-      },
-    };
-    setNodes((nds) => [...nds, newNode]);
-    toast({
-      title: "Nó duplicado",
-      description: "O nó foi duplicado com sucesso.",
-    });
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      const newNode: Node = {
+        ...nodeToDuplicate,
+        id: `${Date.now()}`,
+        position: {
+          x: nodeToDuplicate.position.x + 50,
+          y: nodeToDuplicate.position.y + 50,
+        },
+        data: {
+          ...nodeToDuplicate.data,
+          label: `${nodeToDuplicate.data?.label || ''} (Cópia)`,
+        },
+      };
+      setNodes((nds) => [...nds, newNode]);
+      setIsLoading(false);
+      
+      toast({
+        title: "Nó duplicado",
+        description: `O nó "${nodeToDuplicate.data?.label || 'Sem nome'}" foi duplicado com sucesso.`,
+      });
+    }, 300);
   };
 
   const autoArrangeNodes = () => {
-    const arrangedNodes = nodes.map((node, index) => ({
-      ...node,
-      position: {
-        x: (index % 4) * 250 + 100,
-        y: Math.floor(index / 4) * 150 + 50,
-      },
-    }));
-    setNodes(arrangedNodes);
-    toast({
-      title: "Nós organizados",
-      description: "Os nós foram organizados automaticamente.",
-    });
+    const confirmArrange = window.confirm(
+      "Tem certeza que deseja reorganizar automaticamente todos os nós?\n\nAs posições atuais serão perdidas."
+    );
+    
+    if (!confirmArrange) return;
+
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      const arrangedNodes = nodes.map((node, index) => ({
+        ...node,
+        position: {
+          x: (index % 4) * 250 + 100,
+          y: Math.floor(index / 4) * 150 + 50,
+        },
+      }));
+      setNodes(arrangedNodes);
+      setIsLoading(false);
+      
+      toast({
+        title: "Nós organizados",
+        description: "Os nós foram reorganizados automaticamente.",
+      });
+    }, 500);
   };
 
   const clearAllNodes = () => {
-    const startNode = nodes.find(n => n.type === 'start');
-    if (startNode) {
-      setNodes([startNode]);
-    } else {
-      setNodes(initialNodes);
-    }
-    setEdges([]);
-    setSelectedNode(null);
-    toast({
-      title: "Fluxo limpo",
-      description: "Todos os nós foram removidos, exceto o nó inicial.",
-      variant: "destructive",
-    });
+    const confirmClear = window.confirm(
+      "Tem certeza que deseja limpar todo o fluxo?\n\nTodos os nós (exceto o inicial) e conexões serão removidos. Esta ação não pode ser desfeita."
+    );
+    
+    if (!confirmClear) return;
+
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      const startNode = nodes.find(n => n.type === 'start');
+      if (startNode) {
+        setNodes([startNode]);
+      } else {
+        setNodes(initialNodes);
+      }
+      setEdges([]);
+      setSelectedNode(null);
+      setIsLoading(false);
+      
+      toast({
+        title: "Fluxo limpo",
+        description: "Todos os nós foram removidos, exceto o nó inicial.",
+        variant: "destructive",
+      });
+    }, 300);
   };
 
   const getNodeLabel = (type: FlowNode['type']) => {
@@ -146,7 +204,7 @@ export const useFlowBuilder = () => {
       case 'end': return 'Fim do Fluxo';
       case 'formStart': return 'Início de Formulário';
       case 'formEnd': return 'Fim de Formulário';
-      case 'formSelect': return 'Formulário Salvo';
+      case 'formSelect': return 'Formulário Selecionado';
       case 'delay': return 'Aguardar Tempo';
       case 'question': return 'Pergunta';
       default: return 'Novo Nó';
@@ -156,6 +214,11 @@ export const useFlowBuilder = () => {
   const onNodeDoubleClick = (event: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
     setIsConfigModalOpen(true);
+    
+    toast({
+      title: "Configuração aberta",
+      description: `Configurando o nó "${node.data?.label || 'Sem nome'}".`,
+    });
   };
 
   const onNodeClick = (event: React.MouseEvent, node: Node) => {
@@ -167,30 +230,33 @@ export const useFlowBuilder = () => {
   const handleNodeConfigSave = (nodeData: Partial<Node['data']>) => {
     if (!selectedNode) return;
 
-    setNodes((nds) =>
-      nds.map((node) =>
-        node.id === selectedNode.id
-          ? { ...node, data: { ...node.data, ...nodeData } }
-          : node
-      )
-    );
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      setNodes((nds) =>
+        nds.map((node) =>
+          node.id === selectedNode.id
+            ? { ...node, data: { ...node.data, ...nodeData } }
+            : node
+        )
+      );
 
-    // Atualizar handles para escolha única (múltiplas saídas)
-    if (selectedNode.type === 'question' && nodeData.tipoResposta === 'escolha-unica' && nodeData.opcoes) {
-      updateQuestionNodeHandles(selectedNode.id, nodeData.opcoes as string[]);
-    }
+      if (selectedNode.type === 'question' && nodeData.tipoResposta === 'escolha-unica' && nodeData.opcoes) {
+        updateQuestionNodeHandles(selectedNode.id, nodeData.opcoes as string[]);
+      }
 
-    toast({
-      title: "Configuração salva",
-      description: "As configurações do nó foram atualizadas.",
-    });
+      setIsLoading(false);
+      
+      toast({
+        title: "Configuração salva",
+        description: `As configurações do nó "${selectedNode.data?.label || 'Sem nome'}" foram atualizadas.`,
+      });
+    }, 200);
   };
 
   const updateQuestionNodeHandles = (nodeId: string, opcoes: string[]) => {
-    // Remove conexões existentes do nó
     setEdges((eds) => eds.filter((e) => e.source !== nodeId));
     
-    // Atualiza o nó com as novas opções
     setNodes((nds) =>
       nds.map((node) =>
         node.id === nodeId
@@ -202,6 +268,10 @@ export const useFlowBuilder = () => {
 
   const openPreview = () => {
     setIsPreviewModalOpen(true);
+    toast({
+      title: "Visualização aberta",
+      description: "Visualizando o fluxo criado.",
+    });
   };
 
   const closePreview = () => {
@@ -209,29 +279,34 @@ export const useFlowBuilder = () => {
   };
 
   const saveFlow = () => {
-    const flowNodes: FlowNode[] = nodes.map(node => ({
-      id: node.id,
-      type: node.type as FlowNode['type'],
-      position: node.position,
-      data: {
-        label: String(node.data?.label || ''),
-        ...node.data
-      }
-    }));
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      const flowNodes: FlowNode[] = nodes.map(node => ({
+        id: node.id,
+        type: node.type as FlowNode['type'],
+        position: node.position,
+        data: {
+          label: String(node.data?.label || ''),
+          ...node.data
+        }
+      }));
 
-    const flowData = {
-      nome: flowName,
-      nodes: flowNodes,
-      edges: edges,
-      timestamp: new Date().toISOString(),
-    };
-    
-    console.log('Salvando fluxo:', flowData);
-    
-    toast({
-      title: "Fluxo salvo",
-      description: `O fluxo "${flowName}" foi salvo com sucesso.`,
-    });
+      const flowData = {
+        nome: flowName,
+        nodes: flowNodes,
+        edges: edges,
+        timestamp: new Date().toISOString(),
+      };
+      
+      console.log('Salvando fluxo:', flowData);
+      setIsLoading(false);
+      
+      toast({
+        title: "Fluxo salvo",
+        description: `O fluxo "${flowName}" foi salvo com sucesso.`,
+      });
+    }, 800);
   };
 
   return {
@@ -241,6 +316,7 @@ export const useFlowBuilder = () => {
     selectedNode,
     isConfigModalOpen,
     isPreviewModalOpen,
+    isLoading,
     onNodesChange,
     onEdgesChange,
     onConnect,

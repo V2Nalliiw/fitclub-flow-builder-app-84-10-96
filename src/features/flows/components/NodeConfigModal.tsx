@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -11,9 +12,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, Save } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Plus, Trash2, Save, ExternalLink, MessageSquare, AlertCircle, CheckCircle } from 'lucide-react';
 import { Node } from '@xyflow/react';
 import { useFormManager } from '@/features/forms/hooks/useFormManager';
+import { useFormIntegration } from '../hooks/useFormIntegration';
+import { toast } from '@/hooks/use-toast';
 
 interface NodeConfigModalProps {
   isOpen: boolean;
@@ -29,8 +33,10 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
   onSave,
 }) => {
   const { forms } = useFormManager();
+  const { getFormById, generateFormUrl, updateFormNodeData, validateFormNode } = useFormIntegration();
   const [config, setConfig] = useState<Record<string, any>>({});
   const [opcoes, setOpcoes] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (node) {
@@ -39,13 +45,46 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
     }
   }, [node]);
 
-  const handleSave = () => {
-    const finalConfig = {
-      ...config,
-      opcoes: node?.type === 'question' ? opcoes : undefined,
-    };
-    onSave(finalConfig);
-    onClose();
+  const handleSave = async () => {
+    if (!node) return;
+
+    setIsLoading(true);
+    
+    try {
+      let finalConfig = {
+        ...config,
+        opcoes: node?.type === 'question' ? opcoes : undefined,
+      };
+
+      // Validação específica para nós de formulário
+      if (node.type === 'formSelect' && config.formId) {
+        const errors = validateFormNode(config);
+        if (errors.length > 0) {
+          toast({
+            title: "Erro na configuração",
+            description: errors.join(', '),
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Simular delay de salvamento
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      onSave(finalConfig);
+      onClose();
+      
+    } catch (error) {
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar a configuração.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const addOpcao = () => {
@@ -62,6 +101,26 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
     setOpcoes(opcoes.filter((_, i) => i !== index));
   };
 
+  const handleFormSelect = (formId: string) => {
+    const form = getFormById(formId);
+    if (form) {
+      const updatedData = updateFormNodeData(node!, formId);
+      setConfig({ ...config, ...updatedData });
+      
+      toast({
+        title: "Formulário selecionado",
+        description: `Formulário "${form.name}" foi configurado com sucesso.`,
+      });
+    }
+  };
+
+  const handlePreviewForm = () => {
+    if (config.formId) {
+      const url = generateFormUrl(config.formId);
+      window.open(url, '_blank');
+    }
+  };
+
   if (!node) return null;
 
   const renderNodeConfig = () => {
@@ -69,9 +128,15 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
       case 'start':
         return (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Este nó inicia automaticamente a execução do fluxo. Não possui configurações adicionais.
-            </p>
+            <div className="flex items-center gap-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <CheckCircle className="h-5 w-5 text-blue-600" />
+              <div>
+                <p className="text-sm font-medium text-blue-800">Nó Inicial</p>
+                <p className="text-xs text-blue-600">
+                  Este nó inicia automaticamente a execução do fluxo. Não possui configurações adicionais.
+                </p>
+              </div>
+            </div>
           </div>
         );
 
@@ -116,7 +181,10 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
             </div>
             <Card className="bg-blue-50 border-blue-200">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-blue-800">Ação Automática</CardTitle>
+                <CardTitle className="text-sm text-blue-800 flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Ação Automática
+                </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
                 <p className="text-xs text-blue-700">
@@ -283,19 +351,12 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
 
       case 'formSelect':
         return (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
               <Label htmlFor="formId">Selecionar Formulário *</Label>
               <Select
                 value={String(config.formId || '')}
-                onValueChange={(value) => {
-                  const selectedForm = forms.find(f => f.id === value);
-                  setConfig({ 
-                    ...config, 
-                    formId: value,
-                    formName: selectedForm?.name || '',
-                  });
-                }}
+                onValueChange={handleFormSelect}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Escolha um formulário salvo" />
@@ -313,24 +374,73 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
                   ))}
                 </SelectContent>
               </Select>
-              {forms.length === 0 && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Nenhum formulário disponível. Crie um formulário primeiro.
-                </p>
+              {forms.filter(form => form.status === 'active').length === 0 && (
+                <div className="flex items-center gap-2 mt-2 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                  <AlertCircle className="h-4 w-4 text-orange-600" />
+                  <p className="text-xs text-orange-700">
+                    Nenhum formulário ativo disponível. Crie um formulário primeiro.
+                  </p>
+                </div>
               )}
             </div>
             
             {config.formId && (
-              <Card className="bg-green-50 border-green-200">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm text-green-800">Ação Automática</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-xs text-green-700">
-                    Ao atingir este nó, será enviada automaticamente uma mensagem no WhatsApp com o link do formulário selecionado.
-                  </p>
-                </CardContent>
-              </Card>
+              <>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePreviewForm}
+                    className="flex-1"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Visualizar Formulário
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="sendToWhatsApp">Enviar por WhatsApp</Label>
+                    <Switch
+                      id="sendToWhatsApp"
+                      checked={Boolean(config.sendToWhatsApp)}
+                      onCheckedChange={(checked) => setConfig({ ...config, sendToWhatsApp: checked })}
+                    />
+                  </div>
+                  
+                  {config.sendToWhatsApp && (
+                    <div>
+                      <Label htmlFor="whatsAppMessage">Mensagem do WhatsApp</Label>
+                      <Textarea
+                        id="whatsAppMessage"
+                        value={String(config.whatsAppMessage || '')}
+                        onChange={(e) => setConfig({ ...config, whatsAppMessage: e.target.value })}
+                        placeholder="Personalize a mensagem que será enviada..."
+                        className="mt-1 text-sm"
+                        rows={4}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        A URL do formulário será incluída automaticamente.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <Card className="bg-green-50 border-green-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm text-green-800 flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4" />
+                      Ação Automática
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-xs text-green-700">
+                      Ao atingir este nó, será enviada automaticamente uma mensagem no WhatsApp com o link do formulário selecionado.
+                    </p>
+                  </CardContent>
+                </Card>
+              </>
             )}
           </div>
         );
@@ -342,10 +452,15 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            Configurar {String(node.data?.label || '')}
+          <DialogTitle className="flex items-center gap-2">
+            Configurar {String(node?.data?.label || '')}
+            {node?.type === 'formSelect' && config.formId && (
+              <Badge variant="secondary" className="text-xs">
+                Formulário Selecionado
+              </Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
         
@@ -353,12 +468,22 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
           {renderNodeConfig()}
           
           <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose} disabled={isLoading}>
               Cancelar
             </Button>
-            <Button onClick={handleSave} className="bg-[#5D8701] hover:bg-[#4a6e01]">
-              <Save className="h-4 w-4 mr-2" />
-              Salvar Configuração
+            <Button 
+              onClick={handleSave} 
+              className="bg-[#5D8701] hover:bg-[#4a6e01]"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>Salvando...</>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Salvar Configuração
+                </>
+              )}
             </Button>
           </div>
         </div>
