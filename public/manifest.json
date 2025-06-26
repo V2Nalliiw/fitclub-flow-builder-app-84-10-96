@@ -6,8 +6,12 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "theme_color": "#5D8701",
   "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "pt-BR",
+  "categories": ["medical", "productivity", "business"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/lovable-uploads/f205f390-c668-44cc-9a73-ee3d49cb0a6c.png",
@@ -20,6 +24,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "display_override": ["window-controls-overlay", "standalone"],
+  "shortcuts": [
+    {
+      "name": "Criar Fluxo",
+      "short_name": "Novo Fluxo",
+      "description": "Criar um novo fluxo rapidamente",
+      "url": "/flows?action=create"
+    },
+    {
+      "name": "Pacientes",
+      "short_name": "Pacientes",
+      "description": "Ver lista de pacientes",
+      "url": "/patients"
     }
   ]
 }
