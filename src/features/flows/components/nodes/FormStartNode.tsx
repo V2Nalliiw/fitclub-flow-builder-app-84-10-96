@@ -1,11 +1,20 @@
 
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { FileText, MessageSquare, Send } from 'lucide-react';
+import { FileText, Send } from 'lucide-react';
+import { NodeActions } from '../NodeActions';
 
-export const FormStartNode = ({ data, selected }: { data: any; selected?: boolean }) => {
+interface FormStartNodeProps {
+  data: any;
+  selected?: boolean;
+  id: string;
+  onDelete?: (nodeId: string) => void;
+  onDuplicate?: (nodeId: string) => void;
+}
+
+export const FormStartNode: React.FC<FormStartNodeProps> = ({ data, selected, id, onDelete, onDuplicate }) => {
   return (
-    <div className={`px-4 py-3 shadow-md rounded-lg bg-blue-500 text-white border-2 transition-all duration-200 min-w-[200px] ${
+    <div className={`group relative px-4 py-3 shadow-md rounded-lg bg-blue-500 text-white border-2 transition-all duration-200 min-w-[200px] ${
       selected ? 'border-white shadow-lg scale-105' : 'border-blue-600'
     }`}>
       <div className="flex items-center gap-2 mb-1">
@@ -23,6 +32,14 @@ export const FormStartNode = ({ data, selected }: { data: any; selected?: boolea
           {data.descricao}
         </div>
       )}
+      
+      <NodeActions
+        nodeId={id}
+        nodeType="formStart"
+        onDelete={onDelete || (() => {})}
+        onDuplicate={onDuplicate || (() => {})}
+        visible={true}
+      />
       
       <Handle
         type="target"

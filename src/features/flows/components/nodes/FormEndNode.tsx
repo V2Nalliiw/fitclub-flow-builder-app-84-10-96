@@ -2,8 +2,17 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { FileCheck, Send, FileImage, FileVideo, File } from 'lucide-react';
+import { NodeActions } from '../NodeActions';
 
-export const FormEndNode = ({ data, selected }: { data: any; selected?: boolean }) => {
+interface FormEndNodeProps {
+  data: any;
+  selected?: boolean;
+  id: string;
+  onDelete?: (nodeId: string) => void;
+  onDuplicate?: (nodeId: string) => void;
+}
+
+export const FormEndNode: React.FC<FormEndNodeProps> = ({ data, selected, id, onDelete, onDuplicate }) => {
   const getContentIcon = () => {
     switch (data.tipoConteudo) {
       case 'imagem': return <FileImage className="h-3 w-3" />;
@@ -15,7 +24,7 @@ export const FormEndNode = ({ data, selected }: { data: any; selected?: boolean 
   };
 
   return (
-    <div className={`px-4 py-3 shadow-md rounded-lg bg-green-500 text-white border-2 transition-all duration-200 min-w-[200px] ${
+    <div className={`group relative px-4 py-3 shadow-md rounded-lg bg-green-500 text-white border-2 transition-all duration-200 min-w-[200px] ${
       selected ? 'border-white shadow-lg scale-105' : 'border-green-600'
     }`}>
       <div className="flex items-center gap-2 mb-1">
@@ -33,6 +42,14 @@ export const FormEndNode = ({ data, selected }: { data: any; selected?: boolean 
           📎 {data.arquivo}
         </div>
       )}
+      
+      <NodeActions
+        nodeId={id}
+        nodeType="formEnd"
+        onDelete={onDelete || (() => {})}
+        onDuplicate={onDuplicate || (() => {})}
+        visible={true}
+      />
       
       <Handle
         type="target"

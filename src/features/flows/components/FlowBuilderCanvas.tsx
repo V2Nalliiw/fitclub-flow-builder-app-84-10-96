@@ -16,6 +16,7 @@ import { FormStartNode } from './nodes/FormStartNode';
 import { FormEndNode } from './nodes/FormEndNode';
 import { DelayNode } from './nodes/DelayNode';
 import { QuestionNode } from './nodes/QuestionNode';
+import { DeleteEdgeButton } from './DeleteEdgeButton';
 
 const nodeTypes = {
   start: StartNode,
@@ -26,6 +27,10 @@ const nodeTypes = {
   question: QuestionNode,
 };
 
+const edgeTypes = {
+  deleteButton: DeleteEdgeButton,
+};
+
 interface FlowBuilderCanvasProps {
   nodes: Node[];
   edges: Edge[];
@@ -34,6 +39,8 @@ interface FlowBuilderCanvasProps {
   onConnect: (params: Connection) => void;
   onNodeDoubleClick: (event: React.MouseEvent, node: Node) => void;
   onNodeClick: (event: React.MouseEvent, node: Node) => void;
+  onDeleteNode: (nodeId: string) => void;
+  onDuplicateNode: (nodeId: string) => void;
 }
 
 export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
@@ -44,20 +51,32 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
   onConnect,
   onNodeDoubleClick,
   onNodeClick,
+  onDeleteNode,
+  onDuplicateNode,
 }) => {
   const animatedEdges = edges.map(edge => ({
     ...edge,
     animated: true,
+    type: 'deleteButton',
     style: {
       stroke: 'hsl(var(--primary))',
       strokeWidth: 2,
     },
   }));
 
+  const enhancedNodes = nodes.map(node => ({
+    ...node,
+    data: {
+      ...node.data,
+      onDelete: onDeleteNode,
+      onDuplicate: onDuplicateNode,
+    }
+  }));
+
   return (
     <div className="relative w-full h-screen bg-background">
       <ReactFlow
-        nodes={nodes}
+        nodes={enhancedNodes}
         edges={animatedEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
@@ -65,25 +84,36 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         onNodeDoubleClick={onNodeDoubleClick}
         onNodeClick={onNodeClick}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
         className="bg-background"
         defaultEdgeOptions={{
           animated: true,
+          type: 'deleteButton',
           style: {
             stroke: 'hsl(var(--primary))',
             strokeWidth: 2,
           },
         }}
       >
-        <Controls position="bottom-right" />
+        <Controls 
+          position="bottom-right" 
+          className="bg-card border border-border rounded-lg shadow-lg [&_button]:bg-card [&_button]:border-border [&_button]:text-foreground hover:[&_button]:bg-accent"
+        />
         <MiniMap 
           nodeStrokeColor="hsl(var(--primary))"
           nodeColor="hsl(var(--primary))"
           nodeBorderRadius={8}
           position="bottom-left"
-          className="bg-card rounded-lg shadow-lg"
+          className="bg-card border border-border rounded-lg shadow-lg"
+          maskColor="hsl(var(--background) / 0.8)"
         />
-        <Background gap={16} size={1} color="hsl(var(--border))" />
+        <Background 
+          gap={16} 
+          size={1} 
+          color="hsl(var(--border))" 
+          className="bg-background"
+        />
       </ReactFlow>
     </div>
   );

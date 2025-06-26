@@ -23,6 +23,8 @@ export const FlowBuilder = () => {
     setIsConfigModalOpen,
     addNode,
     deleteNode,
+    duplicateNode,
+    autoArrangeNodes,
     clearAllNodes,
     onNodeDoubleClick,
     onNodeClick,
@@ -42,6 +44,8 @@ export const FlowBuilder = () => {
         onConnect={onConnect}
         onNodeDoubleClick={onNodeDoubleClick}
         onNodeClick={onNodeClick}
+        onDeleteNode={deleteNode}
+        onDuplicateNode={duplicateNode}
       />
 
       <FloatingNodeToolbar onAddNode={addNode} />
@@ -52,6 +56,7 @@ export const FlowBuilder = () => {
         onFlowNameChange={setFlowName}
         onDeleteNode={deleteNode}
         onClearAllNodes={clearAllNodes}
+        onAutoArrangeNodes={autoArrangeNodes}
         onSaveFlow={saveFlow}
         onPreviewFlow={openPreview}
       />

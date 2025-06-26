@@ -1,4 +1,3 @@
-
 import { useCallback, useState } from 'react';
 import { useNodesState, useEdgesState, addEdge, Connection, Edge, Node } from '@xyflow/react';
 import { FlowNode } from '@/types/flow';
@@ -45,6 +44,39 @@ export const useFlowBuilder = () => {
   const deleteNode = (nodeId: string) => {
     setNodes((nds) => nds.filter((n) => n.id !== nodeId));
     setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+    if (selectedNode?.id === nodeId) {
+      setSelectedNode(null);
+    }
+  };
+
+  const duplicateNode = (nodeId: string) => {
+    const nodeToDuplicate = nodes.find(n => n.id === nodeId);
+    if (!nodeToDuplicate) return;
+
+    const newNode: Node = {
+      ...nodeToDuplicate,
+      id: `${Date.now()}`,
+      position: {
+        x: nodeToDuplicate.position.x + 50,
+        y: nodeToDuplicate.position.y + 50,
+      },
+      data: {
+        ...nodeToDuplicate.data,
+        label: `${nodeToDuplicate.data?.label || ''} (Cópia)`,
+      },
+    };
+    setNodes((nds) => [...nds, newNode]);
+  };
+
+  const autoArrangeNodes = () => {
+    const arrangedNodes = nodes.map((node, index) => ({
+      ...node,
+      position: {
+        x: (index % 4) * 250 + 100,
+        y: Math.floor(index / 4) * 150 + 50,
+      },
+    }));
+    setNodes(arrangedNodes);
   };
 
   const clearAllNodes = () => {
@@ -55,6 +87,7 @@ export const useFlowBuilder = () => {
       setNodes(initialNodes);
     }
     setEdges([]);
+    setSelectedNode(null);
   };
 
   const getNodeLabel = (type: FlowNode['type']) => {
@@ -154,6 +187,8 @@ export const useFlowBuilder = () => {
     setIsConfigModalOpen,
     addNode,
     deleteNode,
+    duplicateNode,
+    autoArrangeNodes,
     clearAllNodes,
     onNodeDoubleClick,
     onNodeClick,
