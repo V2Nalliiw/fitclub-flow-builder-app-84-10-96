@@ -28,34 +28,36 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
     setIsExpanded(false);
   };
 
-  // Calcular posições em semicírculo de 180 graus à direita, centralizado no botão principal
+  // Calcular posições em semicírculo de 180 graus perfeitamente centralizado
   const getIconPosition = (index: number, total: number) => {
-    // Criar semicírculo de 180 graus à direita (de -90° até +90°) centrado no botão principal
+    // Semicírculo de 180 graus (de -90° até +90°) centrado no botão principal
     const startAngle = -Math.PI / 2; // -90 graus (topo)
     const endAngle = Math.PI / 2;    // +90 graus (baixo)
     const angleStep = (endAngle - startAngle) / (total - 1);
     const angle = startAngle + (angleStep * index);
     
     // Raio responsivo: maior no desktop, menor no mobile
-    const radius = isMobile ? 70 : 100;
+    const radius = isMobile ? 80 : 120;
     
+    // Calcular posições a partir do centro do botão principal (0,0)
     const x = Math.cos(angle) * radius;
     const y = Math.sin(angle) * radius;
+    
     return { x, y };
   };
 
   // Tamanhos responsivos para os botões
   const buttonSizes = {
-    main: isMobile ? 'h-10 w-10' : 'h-12 w-12',
-    secondary: isMobile ? 'h-8 w-8' : 'h-10 w-10',
-    icon: isMobile ? 'h-4 w-4' : 'h-5 w-5',
-    secondaryIcon: isMobile ? 'h-3 w-3' : 'h-4 w-4',
+    main: isMobile ? 'h-12 w-12' : 'h-14 w-14',
+    secondary: isMobile ? 'h-9 w-9' : 'h-11 w-11',
+    icon: isMobile ? 'h-5 w-5' : 'h-6 w-6',
+    secondaryIcon: isMobile ? 'h-4 w-4' : 'h-5 w-5',
   };
 
   return (
     <div className="relative">
       {isExpanded && (
-        <div className="absolute">
+        <div className="absolute inset-0">
           {nodeTypes.map(({ type, icon: Icon, label, color }, index) => {
             const { x, y } = getIconPosition(index, nodeTypes.length);
             return (
@@ -64,11 +66,12 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
                 onClick={() => handleAddNode(type)}
                 variant="outline"
                 size="sm"
-                className={`absolute bg-card border border-border shadow-lg hover:bg-accent ${buttonSizes.secondary} p-0 transition-all duration-200`}
+                className={`absolute bg-card/95 backdrop-blur-sm border-2 border-border shadow-xl hover:bg-accent/90 hover:scale-110 ${buttonSizes.secondary} p-0 transition-all duration-300 ease-out hover:shadow-2xl`}
                 style={{
                   left: `${x}px`,
                   top: `${y}px`,
                   transform: 'translate(-50%, -50%)',
+                  animation: `fadeInScale 0.3s ease-out ${index * 0.05}s both`,
                 }}
                 title={label}
               >
@@ -82,10 +85,23 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
       <Button
         onClick={() => setIsExpanded(!isExpanded)}
         size="sm"
-        className={`bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 ${buttonSizes.main} rounded-full p-0 relative z-10`}
+        className={`bg-primary text-primary-foreground shadow-xl hover:bg-primary/90 hover:shadow-2xl hover:scale-105 ${buttonSizes.main} rounded-full p-0 relative z-10 transition-all duration-300 ease-out`}
       >
-        <Plus className={`${buttonSizes.icon} ${isExpanded ? 'rotate-45' : ''} transition-transform`} />
+        <Plus className={`${buttonSizes.icon} ${isExpanded ? 'rotate-45' : ''} transition-transform duration-300 ease-out`} />
       </Button>
+
+      <style jsx>{`
+        @keyframes fadeInScale {
+          0% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.8);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+          }
+        }
+      `}</style>
     </div>
   );
 };

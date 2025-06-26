@@ -108,16 +108,18 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
       >
         <Controls 
           position={isMobile ? "bottom-left" : "bottom-right"}
-          className={`bg-card border border-border rounded-lg shadow-lg [&_button]:bg-card [&_button]:border-border [&_button]:text-foreground hover:[&_button]:bg-accent ${isMobile ? 'scale-75 origin-bottom-left' : ''}`}
+          className={`bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-xl [&_button]:bg-card/80 [&_button]:border-border [&_button]:text-foreground hover:[&_button]:bg-accent/90 [&_button]:backdrop-blur-sm [&_button]:transition-all [&_button]:duration-200 ${isMobile ? 'scale-75 origin-bottom-left' : ''}`}
           style={isMobile ? { left: '12px', bottom: '12px' } : {}}
         />
         <MiniMap 
           nodeStrokeColor="hsl(var(--primary))"
-          nodeColor="hsl(var(--primary))"
-          nodeBorderRadius={8}
+          nodeColor="hsl(var(--primary)/0.8)"
+          nodeBorderRadius={12}
           position={isMobile ? "bottom-center" : "bottom-left"}
-          className={`bg-card border border-border rounded-lg shadow-lg ${isMobile ? '!w-24 !h-16' : '!w-48 !h-36'}`}
-          maskColor="hsl(var(--background) / 0.8)"
+          className={`bg-card/95 backdrop-blur-sm border-2 border-border/50 rounded-xl shadow-xl overflow-hidden ${isMobile ? '!w-32 !h-20' : '!w-56 !h-40'}`}
+          maskColor="hsl(var(--background) / 0.7)"
+          pannable
+          zoomable
           style={isMobile ? { 
             left: '50%', 
             transform: 'translateX(-50%)',
@@ -127,8 +129,8 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         <Background 
           gap={16} 
           size={1} 
-          color="#D1D5DB" 
-          className="bg-white dark:bg-[#0E0E0E] dark:[--xy-background-pattern-color:#374151]"
+          color="hsl(var(--border))" 
+          className="bg-white dark:bg-[#0E0E0E] opacity-60"
         />
       </ReactFlow>
 
