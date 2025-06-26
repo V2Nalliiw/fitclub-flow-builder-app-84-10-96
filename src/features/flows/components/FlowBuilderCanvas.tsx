@@ -108,7 +108,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
       >
         <Controls 
           position={isMobile ? "bottom-left" : "bottom-right"}
-          className={`bg-card border border-border rounded-lg shadow-lg [&_button]:bg-card [&_button]:border-border [&_button]:text-foreground hover:[&_button]:bg-accent ${isMobile ? '[&_button]:h-7 [&_button]:w-7 [&_button]:text-xs' : ''}`}
+          className={`bg-card border border-border rounded-lg shadow-lg [&_button]:bg-card [&_button]:border-border [&_button]:text-foreground hover:[&_button]:bg-accent ${isMobile ? '[&_button]:h-6 [&_button]:w-6 [&_button]:text-xs' : ''}`}
           style={isMobile ? { left: '16px', bottom: '16px' } : {}}
         />
         <MiniMap 
@@ -116,7 +116,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
           nodeColor="hsl(var(--primary))"
           nodeBorderRadius={8}
           position={isMobile ? "bottom-center" : "bottom-left"}
-          className="bg-card border border-border rounded-lg shadow-lg !w-48 !h-36"
+          className={`bg-card border border-border rounded-lg shadow-lg ${isMobile ? '!w-32 !h-24' : '!w-48 !h-36'}`}
           maskColor="hsl(var(--background) / 0.8)"
           style={isMobile ? { 
             left: '50%', 

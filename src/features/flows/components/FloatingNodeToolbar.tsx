@@ -26,14 +26,14 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
     setIsExpanded(false);
   };
 
-  // Calcular posições em semicírculo à direita
+  // Calcular posições em semicírculo de 180 graus à direita
   const getIconPosition = (index: number, total: number) => {
-    // Criar semicírculo à direita (de -45° até +45°)
-    const startAngle = -Math.PI / 4; // -45 graus
-    const endAngle = Math.PI / 4;    // +45 graus
+    // Criar semicírculo de 180 graus à direita (de -90° até +90°)
+    const startAngle = -Math.PI / 2; // -90 graus (topo)
+    const endAngle = Math.PI / 2;    // +90 graus (baixo)
     const angleStep = (endAngle - startAngle) / (total - 1);
     const angle = startAngle + (angleStep * index);
-    const radius = 70;
+    const radius = 80; // Aumentar raio para evitar sobreposição
     const x = Math.cos(angle) * radius;
     const y = Math.sin(angle) * radius;
     return { x, y };
