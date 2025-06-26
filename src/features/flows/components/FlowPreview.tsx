@@ -41,7 +41,7 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
     
     // Para perguntas de múltipla escolha, usa o handle específico
     if (currentNode?.type === 'question' && currentNode.data.tipoResposta === 'multipla-escolha' && selectedOption) {
-      const opcoes = currentNode.data.opcoes || [];
+      const opcoes = Array.isArray(currentNode.data.opcoes) ? currentNode.data.opcoes : [];
       const optionIndex = opcoes.indexOf(selectedOption);
       const nextEdge = edges.find(edge => 
         edge.source === currentId && edge.sourceHandle === `opcao-${optionIndex}`
@@ -103,9 +103,9 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
               <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                 <FileText className="h-6 w-6 text-blue-600" />
               </div>
-              <CardTitle className="text-xl">{data.titulo || 'Formulário'}</CardTitle>
-              {data.descricao && (
-                <p className="text-muted-foreground">{data.descricao}</p>
+              <CardTitle className="text-xl">{String(data?.titulo || 'Formulário')}</CardTitle>
+              {data?.descricao && (
+                <p className="text-muted-foreground">{String(data.descricao)}</p>
               )}
             </CardHeader>
             <CardContent>
@@ -121,10 +121,10 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
         return (
           <Card className="w-full max-w-md mx-auto">
             <CardHeader>
-              <CardTitle className="text-lg">{data.pergunta || 'Pergunta'}</CardTitle>
+              <CardTitle className="text-lg">{String(data?.pergunta || 'Pergunta')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {data.tipoResposta === 'escolha-unica' && data.opcoes && (
+              {data?.tipoResposta === 'escolha-unica' && Array.isArray(data.opcoes) && (
                 <RadioGroup onValueChange={(value) => handleNext(value)}>
                   {data.opcoes.map((opcao: string, index: number) => (
                     <div key={index} className="flex items-center space-x-2">
@@ -135,7 +135,7 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
                 </RadioGroup>
               )}
 
-              {data.tipoResposta === 'multipla-escolha' && data.opcoes && (
+              {data?.tipoResposta === 'multipla-escolha' && Array.isArray(data.opcoes) && (
                 <div className="space-y-3">
                   {data.opcoes.map((opcao: string, index: number) => (
                     <Button
@@ -151,7 +151,7 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
                 </div>
               )}
 
-              {data.tipoResposta === 'texto-livre' && (
+              {data?.tipoResposta === 'texto-livre' && (
                 <div className="space-y-3">
                   <Textarea 
                     placeholder="Digite sua resposta..."
@@ -182,7 +182,7 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
               </div>
               <CardTitle className="text-lg">Aguardando...</CardTitle>
               <p className="text-muted-foreground">
-                Aguarde {data.quantidade} {data.tipoIntervalo} para continuar
+                Aguarde {String(data?.quantidade || '1')} {String(data?.tipoIntervalo || 'minutos')} para continuar
               </p>
             </CardHeader>
             <CardContent>
@@ -202,15 +202,15 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
                 <Check className="h-6 w-6 text-green-600" />
               </div>
               <CardTitle className="text-xl">Conteúdo Disponível</CardTitle>
-              {data.mensagemFinal && (
-                <p className="text-muted-foreground">{data.mensagemFinal}</p>
+              {data?.mensagemFinal && (
+                <p className="text-muted-foreground">{String(data.mensagemFinal)}</p>
               )}
             </CardHeader>
             <CardContent className="text-center">
-              {data.arquivo && (
+              {data?.arquivo && (
                 <div className="p-4 border rounded-lg mb-4">
-                  <p className="text-sm text-muted-foreground">Arquivo: {data.tipoConteudo}</p>
-                  <p className="font-medium">{data.arquivo}</p>
+                  <p className="text-sm text-muted-foreground">Arquivo: {String(data?.tipoConteudo || 'Arquivo')}</p>
+                  <p className="font-medium">{String(data.arquivo)}</p>
                 </div>
               )}
               <Button onClick={() => handleNext()} className="w-full">
@@ -275,7 +275,7 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
                   return (
                     <div key={nodeId} className="p-2 bg-muted rounded">
                       <p className="text-sm font-medium">
-                        {node?.data?.pergunta || `Nó ${nodeId}`}
+                        {String(node?.data?.pergunta || `Nó ${nodeId}`)}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {typeof response === 'string' ? response : JSON.stringify(response)}
