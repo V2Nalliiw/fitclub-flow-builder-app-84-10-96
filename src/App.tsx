@@ -11,6 +11,13 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Dashboard } from "@/features/dashboard/components/Dashboard";
 import { FlowBuilder } from "@/features/flows/components/FlowBuilder";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Profile } from "@/pages/Profile";
+import { Patients } from "@/pages/Patients";
+import { Settings } from "@/pages/Settings";
+import { Team } from "@/pages/Team";
+import { Clinics } from "@/pages/Clinics";
+import { Customization } from "@/pages/Customization";
+import { Preferences } from "@/pages/Preferences";
 
 const queryClient = new QueryClient();
 
@@ -59,13 +66,58 @@ const AppRoutes = () => {
         } 
       />
       <Route 
+        path="/profile" 
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
         path="/patients" 
         element={
           <ProtectedRoute>
-            <div className="p-8 text-center">
-              <h1 className="text-2xl font-bold">Gerenciar Pacientes</h1>
-              <p className="text-muted-foreground mt-2">Em desenvolvimento...</p>
-            </div>
+            <Patients />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/settings" 
+        element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/team" 
+        element={
+          <ProtectedRoute>
+            <Team />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/clinics" 
+        element={
+          <ProtectedRoute>
+            <Clinics />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/customization" 
+        element={
+          <ProtectedRoute>
+            <Customization />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/preferences" 
+        element={
+          <ProtectedRoute>
+            <Preferences />
           </ProtectedRoute>
         } 
       />

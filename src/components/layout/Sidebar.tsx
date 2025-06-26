@@ -8,12 +8,14 @@ import {
   Building2, 
   GitBranch,
   UserCog,
-  Shield,
-  Palette
+  Palette,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { NavLink, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -22,6 +24,7 @@ interface SidebarProps {
 
 export const Sidebar = ({ isCollapsed, onToggle }: SidebarProps) => {
   const { user, logout } = useAuth();
+  const location = useLocation();
 
   const getSidebarItems = () => {
     switch (user?.role) {
@@ -76,7 +79,11 @@ export const Sidebar = ({ isCollapsed, onToggle }: SidebarProps) => {
             onClick={onToggle}
             className="ml-auto"
           >
-            <Shield className="h-4 w-4" />
+            {isCollapsed ? (
+              <ChevronRight className="h-3 w-3 text-gray-500" />
+            ) : (
+              <ChevronLeft className="h-3 w-3 text-gray-500" />
+            )}
           </Button>
         </div>
       </div>
@@ -85,18 +92,21 @@ export const Sidebar = ({ isCollapsed, onToggle }: SidebarProps) => {
       <nav className="flex-1 p-2">
         <div className="space-y-1">
           {sidebarItems.map((item) => (
-            <Button
+            <NavLink
               key={item.href}
-              variant="ghost"
-              className={cn(
-                "w-full justify-start h-10",
-                isCollapsed && "px-2"
-              )}
-              onClick={() => console.log(`Navigate to ${item.href}`)}
+              to={item.href}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center w-full h-10 px-2 py-2 text-sm font-medium rounded-md transition-colors",
+                  "hover:bg-accent hover:text-accent-foreground",
+                  isActive && "bg-accent text-accent-foreground",
+                  isCollapsed && "justify-center"
+                )
+              }
             >
               <item.icon className={cn("h-4 w-4", !isCollapsed && "mr-3")} />
               {!isCollapsed && <span>{item.label}</span>}
-            </Button>
+            </NavLink>
           ))}
         </div>
       </nav>
