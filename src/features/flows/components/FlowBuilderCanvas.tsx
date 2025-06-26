@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   ReactFlow,
@@ -19,7 +18,7 @@ import { DelayNode } from './nodes/DelayNode';
 import { QuestionNode } from './nodes/QuestionNode';
 import { DeleteEdgeButton } from './DeleteEdgeButton';
 import { FloatingNodeToolbar } from './FloatingNodeToolbar';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useBreakpoints } from '@/hooks/use-breakpoints';
 
 const nodeTypes = {
   start: StartNode,
@@ -62,7 +61,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
   onAddNode,
   isFullscreen = false,
 }) => {
-  const isMobile = useIsMobile();
+  const { isMobile, isTablet, isDesktop } = useBreakpoints();
 
   const animatedEdges = edges.map(edge => ({
     ...edge,
@@ -85,6 +84,20 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
 
   const canvasHeight = isFullscreen || isMobile ? '100vh' : 'calc(100vh - 4rem)';
   const canvasWidth = '100%';
+
+  // Posicionamento estratégico do FloatingNodeToolbar
+  const getToolbarPosition = () => {
+    if (isMobile) {
+      // Mobile: Próximo ao TopToolbar, logo abaixo com pequeno espaçamento
+      return 'top-[calc(4rem+2%+3.5rem)] left-4';
+    } else if (isTablet) {
+      // Tablet: Entre o meio e o topo na lateral esquerda
+      return 'top-[30%] left-4';
+    } else {
+      // Desktop: Mesma linha do TopToolbar, lateral esquerda, centralizado
+      return 'top-[4%] left-[2%]';
+    }
+  };
 
   return (
     <div 
@@ -159,11 +172,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
 
       {/* FloatingNodeToolbar positioned strategically */}
       <div 
-        className={`absolute z-20 ${
-          isMobile 
-            ? 'right-4 top-1/2 transform -translate-y-1/2' 
-            : 'left-4 top-1/2 transform -translate-y-1/2'
-        }`}
+        className={`absolute z-20 ${getToolbarPosition()}`}
       >
         <FloatingNodeToolbar onAddNode={onAddNode} />
       </div>
