@@ -108,7 +108,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
       >
         <Controls 
           position={isMobile ? "bottom-left" : "bottom-right"}
-          className="bg-card border border-border rounded-lg shadow-lg [&_button]:bg-card [&_button]:border-border [&_button]:text-foreground hover:[&_button]:bg-accent"
+          className={`bg-card border border-border rounded-lg shadow-lg [&_button]:bg-card [&_button]:border-border [&_button]:text-foreground hover:[&_button]:bg-accent ${isMobile ? '[&_button]:h-7 [&_button]:w-7 [&_button]:text-xs' : ''}`}
           style={isMobile ? { left: '16px', bottom: '16px' } : {}}
         />
         <MiniMap 
@@ -132,7 +132,9 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         />
       </ReactFlow>
 
-      <FloatingNodeToolbar onAddNode={onAddNode} />
+      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20">
+        <FloatingNodeToolbar onAddNode={onAddNode} />
+      </div>
     </div>
   );
 };
