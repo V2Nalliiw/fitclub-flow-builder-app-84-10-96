@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileText } from 'lucide-react';
 import { NodeActions } from '../NodeActions';
 
-interface FormSelectNodeData {
+interface FormSelectNodeData extends Record<string, unknown> {
   label: string;
   formId?: string;
   formName?: string;
