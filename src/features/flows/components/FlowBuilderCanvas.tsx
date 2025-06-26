@@ -95,8 +95,8 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
       // Tablet: Entre o meio e o topo na lateral esquerda
       return 'top-[30%] left-4';
     } else {
-      // Desktop: Mesma linha do TopToolbar, lateral esquerda, centralizado
-      return 'top-[4%] left-[2%]';
+      // Desktop: Alinhado verticalmente com o TopToolbar, lateral esquerda
+      return 'top-[calc(4%+0.5rem)] left-[2%]';
     }
   };
 
