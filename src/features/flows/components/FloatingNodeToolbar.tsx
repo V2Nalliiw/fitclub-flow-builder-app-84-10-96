@@ -29,27 +29,20 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
   };
 
   return (
-    <div className={`fixed z-50 ${
-      isMobile 
-        ? 'bottom-24 left-1/2 transform -translate-x-1/2' 
-        : 'bottom-6 right-6'
-    }`}>
+    <div className="fixed left-6 top-1/2 transform -translate-y-1/2 z-50">
       <div className="flex flex-col items-center gap-2">
         {isExpanded && (
-          <div className={`flex ${isMobile ? 'flex-row gap-2' : 'flex-col gap-2'} mb-2`}>
+          <div className="flex flex-col gap-2 mb-2">
             {nodeTypes.map(({ type, icon: Icon, label }) => (
               <Button
                 key={type}
                 onClick={() => handleAddNode(type)}
                 variant="outline"
                 size="sm"
-                className={`bg-card border border-border shadow-lg hover:bg-accent ${
-                  isMobile ? 'h-10 w-10 p-0' : 'h-10 w-auto px-3'
-                }`}
+                className="bg-card border border-border shadow-lg hover:bg-accent h-10 w-10 p-0"
                 title={label}
               >
                 <Icon className="h-4 w-4" />
-                {!isMobile && <span className="ml-2 text-xs">{label}</span>}
               </Button>
             ))}
           </div>
@@ -58,11 +51,9 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
         <Button
           onClick={() => setIsExpanded(!isExpanded)}
           size="sm"
-          className={`bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 ${
-            isMobile ? 'h-12 w-12 rounded-full' : 'h-10 w-10'
-          } p-0`}
+          className="bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 h-12 w-12 rounded-full p-0"
         >
-          <Plus className={`${isMobile ? 'h-6 w-6' : 'h-4 w-4'} ${isExpanded ? 'rotate-45' : ''} transition-transform`} />
+          <Plus className={`h-6 w-6 ${isExpanded ? 'rotate-45' : ''} transition-transform`} />
         </Button>
       </div>
     </div>
