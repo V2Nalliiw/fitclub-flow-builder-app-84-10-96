@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Home, 
@@ -10,7 +9,10 @@ import {
   UserCog,
   Palette,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  BarChart3,
+  Shield,
+  FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -33,6 +35,8 @@ export const Sidebar = ({ isCollapsed, onToggle }: SidebarProps) => {
           { icon: Home, label: 'Dashboard', href: '/dashboard' },
           { icon: Building2, label: 'Gerenciar Clínicas', href: '/clinics' },
           { icon: UserCog, label: 'Colaboradores', href: '/team' },
+          { icon: BarChart3, label: 'Analytics', href: '/analytics' },
+          { icon: Shield, label: 'Permissões', href: '/permissions' },
           { icon: Palette, label: 'Personalização', href: '/customization' },
           { icon: Settings, label: 'Preferências', href: '/preferences' },
           { icon: User, label: 'Editar Perfil', href: '/profile' },
@@ -42,7 +46,10 @@ export const Sidebar = ({ isCollapsed, onToggle }: SidebarProps) => {
           { icon: Home, label: 'Dashboard', href: '/dashboard' },
           { icon: Users, label: 'Pacientes', href: '/patients' },
           { icon: GitBranch, label: 'Fluxos', href: '/flows' },
+          { icon: FileText, label: 'Formulários', href: '/forms' },
+          { icon: BarChart3, label: 'Analytics', href: '/analytics' },
           { icon: UserCog, label: 'Colaboradores', href: '/team' },
+          { icon: Shield, label: 'Permissões', href: '/permissions' },
           { icon: Settings, label: 'Configurações', href: '/settings' },
           { icon: User, label: 'Editar Perfil', href: '/profile' },
         ];

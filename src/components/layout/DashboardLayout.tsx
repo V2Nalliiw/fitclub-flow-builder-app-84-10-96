@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Bell, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { NotificationCenter } from '@/features/notifications/components/NotificationCenter';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -12,6 +12,7 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -35,9 +36,21 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
           
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon">
-              <Bell className="h-4 w-4" />
-            </Button>
+            <div className="relative">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setNotificationsOpen(!notificationsOpen)}
+              >
+                <Bell className="h-4 w-4" />
+              </Button>
+              
+              {notificationsOpen && (
+                <div className="absolute top-12 right-0 z-50">
+                  <NotificationCenter onClose={() => setNotificationsOpen(false)} />
+                </div>
+              )}
+            </div>
             <ThemeToggle />
           </div>
         </header>

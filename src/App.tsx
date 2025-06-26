@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +17,9 @@ import { Team } from "@/pages/Team";
 import { Clinics } from "@/pages/Clinics";
 import { Customization } from "@/pages/Customization";
 import { Preferences } from "@/pages/Preferences";
+import { Analytics } from "@/pages/Analytics";
+import { Permissions } from "@/pages/Permissions";
+import { Forms } from "@/pages/Forms";
 
 const queryClient = new QueryClient();
 
@@ -118,6 +120,30 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Preferences />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/analytics" 
+        element={
+          <ProtectedRoute>
+            <Analytics />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/permissions" 
+        element={
+          <ProtectedRoute>
+            <Permissions />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/forms" 
+        element={
+          <ProtectedRoute>
+            <Forms />
           </ProtectedRoute>
         } 
       />
