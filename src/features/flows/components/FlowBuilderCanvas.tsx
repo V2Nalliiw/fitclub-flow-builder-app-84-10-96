@@ -86,7 +86,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
   const canvasHeight = isFullscreen 
     ? '100vh'
     : isMobile 
-      ? '75vh'
+      ? '70vh'
       : 'calc(100vh - 4rem)';
 
   const canvasWidth = isMobile ? '90%' : '100%';
@@ -122,7 +122,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         minZoom={isMobile ? 0.3 : 0.5}
         maxZoom={isMobile ? 1.5 : 2}
         attributionPosition="bottom-right"
-        panOnScroll={true}
+        panOnScroll={false}
         panOnScrollSpeed={0.5}
         panOnDrag={true}
         zoomOnScroll={true}
