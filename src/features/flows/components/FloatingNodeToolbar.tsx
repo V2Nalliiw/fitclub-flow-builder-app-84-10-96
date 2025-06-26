@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, FormInput, Timer, HelpCircle, Square } from 'lucide-react';
 import { FlowNode } from '@/types/flow';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FloatingNodeToolbarProps {
   onAddNode: (type: FlowNode['type']) => void;
@@ -12,6 +13,7 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
   onAddNode,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const isMobile = useIsMobile();
 
   const nodeTypes = [
     { type: 'formStart' as const, icon: FormInput, label: 'Início', color: 'text-green-600' },
@@ -26,17 +28,28 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
     setIsExpanded(false);
   };
 
-  // Calcular posições em semicírculo de 180 graus à direita
+  // Calcular posições em semicírculo de 180 graus à direita, centralizado no botão principal
   const getIconPosition = (index: number, total: number) => {
-    // Criar semicírculo de 180 graus à direita (de -90° até +90°)
+    // Criar semicírculo de 180 graus à direita (de -90° até +90°) centrado no botão principal
     const startAngle = -Math.PI / 2; // -90 graus (topo)
     const endAngle = Math.PI / 2;    // +90 graus (baixo)
     const angleStep = (endAngle - startAngle) / (total - 1);
     const angle = startAngle + (angleStep * index);
-    const radius = 80; // Aumentar raio para evitar sobreposição
+    
+    // Raio responsivo: maior no desktop, menor no mobile
+    const radius = isMobile ? 70 : 100;
+    
     const x = Math.cos(angle) * radius;
     const y = Math.sin(angle) * radius;
     return { x, y };
+  };
+
+  // Tamanhos responsivos para os botões
+  const buttonSizes = {
+    main: isMobile ? 'h-10 w-10' : 'h-12 w-12',
+    secondary: isMobile ? 'h-8 w-8' : 'h-10 w-10',
+    icon: isMobile ? 'h-4 w-4' : 'h-5 w-5',
+    secondaryIcon: isMobile ? 'h-3 w-3' : 'h-4 w-4',
   };
 
   return (
@@ -51,7 +64,7 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
                 onClick={() => handleAddNode(type)}
                 variant="outline"
                 size="sm"
-                className="absolute bg-card border border-border shadow-lg hover:bg-accent h-8 w-8 p-0 transition-all duration-200"
+                className={`absolute bg-card border border-border shadow-lg hover:bg-accent ${buttonSizes.secondary} p-0 transition-all duration-200`}
                 style={{
                   left: `${x}px`,
                   top: `${y}px`,
@@ -59,7 +72,7 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
                 }}
                 title={label}
               >
-                <Icon className={`h-3 w-3 ${color}`} />
+                <Icon className={`${buttonSizes.secondaryIcon} ${color}`} />
               </Button>
             );
           })}
@@ -69,9 +82,9 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
       <Button
         onClick={() => setIsExpanded(!isExpanded)}
         size="sm"
-        className="bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 h-8 w-8 rounded-full p-0 relative z-10"
+        className={`bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 ${buttonSizes.main} rounded-full p-0 relative z-10`}
       >
-        <Plus className={`h-4 w-4 ${isExpanded ? 'rotate-45' : ''} transition-transform`} />
+        <Plus className={`${buttonSizes.icon} ${isExpanded ? 'rotate-45' : ''} transition-transform`} />
       </Button>
     </div>
   );
