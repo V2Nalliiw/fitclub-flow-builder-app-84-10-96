@@ -34,8 +34,8 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
   const isMobile = useIsMobile();
 
   const toolbarClasses = isMobile 
-    ? 'fixed top-16 left-1/2 transform -translate-x-1/2 z-40 bg-card rounded-lg shadow-lg border p-2 w-[calc(100vw-2rem)] max-w-sm'
-    : `absolute top-4 left-1/2 transform -translate-x-1/2 z-40 bg-card rounded-lg shadow-lg border p-2 w-[calc(100vw-2rem)] max-w-2xl ${isFullscreen ? 'fixed' : ''}`;
+    ? 'fixed top-[calc(4rem+2%)] left-1/2 transform -translate-x-1/2 z-40 bg-card rounded-lg shadow-lg border p-2 w-[calc(100vw-2rem)] max-w-sm'
+    : `absolute top-[4%] left-1/2 transform -translate-x-1/2 z-40 bg-card rounded-lg shadow-lg border p-2 w-[calc(100vw-2rem)] max-w-2xl ${isFullscreen ? 'fixed' : ''}`;
 
   return (
     <div className={toolbarClasses}>
