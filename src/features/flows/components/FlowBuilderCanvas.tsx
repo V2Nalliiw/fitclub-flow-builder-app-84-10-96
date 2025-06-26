@@ -18,6 +18,7 @@ import { FormSelectNode } from './nodes/FormSelectNode';
 import { DelayNode } from './nodes/DelayNode';
 import { QuestionNode } from './nodes/QuestionNode';
 import { DeleteEdgeButton } from './DeleteEdgeButton';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const nodeTypes = {
   start: StartNode,
@@ -58,6 +59,8 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
   onDuplicateNode,
   isFullscreen = false,
 }) => {
+  const isMobile = useIsMobile();
+
   const animatedEdges = edges.map(edge => ({
     ...edge,
     animated: true,
@@ -101,16 +104,22 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         }}
       >
         <Controls 
-          position="bottom-right" 
+          position={isMobile ? "bottom-left" : "bottom-right"}
           className="bg-card border border-border rounded-lg shadow-lg [&_button]:bg-card [&_button]:border-border [&_button]:text-foreground hover:[&_button]:bg-accent"
+          style={isMobile ? { left: '16px', bottom: '16px' } : {}}
         />
         <MiniMap 
           nodeStrokeColor="hsl(var(--primary))"
           nodeColor="hsl(var(--primary))"
           nodeBorderRadius={8}
-          position="bottom-left"
+          position={isMobile ? "bottom-center" : "bottom-left"}
           className="bg-card border border-border rounded-lg shadow-lg !w-48 !h-36"
           maskColor="hsl(var(--background) / 0.8)"
+          style={isMobile ? { 
+            left: '50%', 
+            transform: 'translateX(-50%)',
+            bottom: '16px'
+          } : {}}
         />
         <Background 
           gap={16} 
