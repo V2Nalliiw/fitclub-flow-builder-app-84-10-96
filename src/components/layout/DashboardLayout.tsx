@@ -34,18 +34,14 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         {/* Top Bar */}
         <header className="h-16 border-b border-border bg-card px-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden p-1"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            >
+            {/* Logo apenas no mobile, sem funcionalidade de menu */}
+            <div className="md:hidden">
               <img 
-                src="/lovable-uploads/09cb65b5-4986-4722-af8b-77c3ee47d7d5.png" 
+                src="/lovable-uploads/f205f390-c668-44cc-9a73-ee3d49cb0a6c.png" 
                 alt="FitClub" 
                 className="h-8 w-8"
               />
-            </Button>
+            </div>
           </div>
           
           <div className="flex items-center gap-2">
