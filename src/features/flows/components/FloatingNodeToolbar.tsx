@@ -70,8 +70,8 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
   ];
 
   return (
-    <div className="absolute left-4 top-1/4 z-10">
-      <div className="border border-border rounded-lg bg-background">
+    <div className="absolute left-2 md:left-4 top-1/4 z-[100]">
+      <div className="border border-border rounded-lg bg-background shadow-lg">
         {!isExpanded ? (
           <Button
             variant="outline"

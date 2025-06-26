@@ -78,7 +78,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
   }));
 
   return (
-    <div className={`relative w-full h-screen bg-white dark:bg-[#0E0E0E]`}>
+    <div className="relative w-full h-[calc(100vh-4rem)] md:h-[calc(100vh-4rem)] bg-white dark:bg-[#0E0E0E]">
       <ReactFlow
         nodes={enhancedNodes}
         edges={animatedEdges}

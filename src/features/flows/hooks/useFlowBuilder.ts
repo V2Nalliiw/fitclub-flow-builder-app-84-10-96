@@ -28,14 +28,41 @@ export const useFlowBuilder = () => {
     [setEdges]
   );
 
+  const calculateSmartPosition = (existingNodes: Node[]) => {
+    if (existingNodes.length <= 1) {
+      return { x: 250, y: 150 };
+    }
+
+    // Encontrar o último nó adicionado (maior ID numérico)
+    const sortedNodes = existingNodes
+      .filter(node => node.id !== '1') // Excluir o nó inicial
+      .sort((a, b) => parseInt(b.id) - parseInt(a.id));
+    
+    if (sortedNodes.length === 0) {
+      // Se só existe o nó inicial, posicionar abaixo dele
+      const startNode = existingNodes.find(node => node.id === '1');
+      return {
+        x: startNode ? startNode.position.x : 250,
+        y: startNode ? startNode.position.y + 150 : 150
+      };
+    }
+
+    const lastNode = sortedNodes[0];
+    
+    // Posicionar o novo nó abaixo e um pouco à direita do último
+    return {
+      x: lastNode.position.x + 50,
+      y: lastNode.position.y + 120
+    };
+  };
+
   const addNode = (type: FlowNode['type']) => {
+    const position = calculateSmartPosition(nodes);
+    
     const newNode: Node = {
       id: `${Date.now()}`,
       type,
-      position: { 
-        x: Math.random() * 400 + 100, 
-        y: Math.random() * 400 + 200 
-      },
+      position,
       data: { 
         label: getNodeLabel(type),
       },

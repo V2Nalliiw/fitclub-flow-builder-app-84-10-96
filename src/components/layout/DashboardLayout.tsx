@@ -4,7 +4,7 @@ import { Sidebar } from './Sidebar';
 import { MobileNavigation } from './MobileNavigation';
 import { MobileDrawer } from './MobileDrawer';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { Bell, Menu } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { NotificationCenter } from '@/features/notifications/components/NotificationCenter';
@@ -18,7 +18,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex w-full">
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
         <Sidebar 
@@ -37,10 +37,14 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
+              className="md:hidden p-1"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             >
-              <Menu className="h-4 w-4" />
+              <img 
+                src="/lovable-uploads/09cb65b5-4986-4722-af8b-77c3ee47d7d5.png" 
+                alt="FitClub" 
+                className="h-8 w-8"
+              />
             </Button>
           </div>
           
@@ -66,7 +70,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
         {/* Main Content */}
         <main className={cn(
-          "flex-1 transition-all duration-300 p-6 pb-20 md:pb-6",
+          "flex-1 transition-all duration-300 p-0 pb-20 md:pb-6",
           "animate-fade-in"
         )}>
           {children}

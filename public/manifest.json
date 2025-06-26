@@ -1,0 +1,25 @@
+
+{
+  "name": "FitClub Flow Builder",
+  "short_name": "FitClub",
+  "description": "Construtor de fluxos para clínicas e pacientes",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/lovable-uploads/09cb65b5-4986-4722-af8b-77c3ee47d7d5.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/lovable-uploads/09cb65b5-4986-4722-af8b-77c3ee47d7d5.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
