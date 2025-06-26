@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Save, Eye, Eraser, LayoutGrid, Settings, Expand } from 'lucide-react';
+import { Save, Eye, Eraser, LayoutGrid, Settings, Expand, Minimize } from 'lucide-react';
 import { Node } from '@xyflow/react';
 
 interface TopToolbarProps {
@@ -15,6 +15,7 @@ interface TopToolbarProps {
   onSaveFlow: () => void;
   onPreviewFlow: () => void;
   onToggleFullscreen?: () => void;
+  isFullscreen?: boolean;
 }
 
 export const TopToolbar: React.FC<TopToolbarProps> = ({
@@ -27,6 +28,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
   onSaveFlow,
   onPreviewFlow,
   onToggleFullscreen,
+  isFullscreen = false,
 }) => {
   return (
     <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-40 bg-card rounded-lg shadow-lg border p-3">
@@ -70,9 +72,9 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
               variant="outline"
               size="sm"
               className="h-8 w-8 p-0"
-              title="Expandir para tela cheia"
+              title={isFullscreen ? "Sair da tela cheia" : "Expandir para tela cheia"}
             >
-              <Expand className="h-4 w-4" />
+              {isFullscreen ? <Minimize className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
             </Button>
           )}
           

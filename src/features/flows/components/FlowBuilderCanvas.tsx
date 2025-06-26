@@ -41,6 +41,7 @@ interface FlowBuilderCanvasProps {
   onNodeClick: (event: React.MouseEvent, node: Node) => void;
   onDeleteNode: (nodeId: string) => void;
   onDuplicateNode: (nodeId: string) => void;
+  isFullscreen?: boolean;
 }
 
 export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
@@ -53,6 +54,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
   onNodeClick,
   onDeleteNode,
   onDuplicateNode,
+  isFullscreen = false,
 }) => {
   const animatedEdges = edges.map(edge => ({
     ...edge,
@@ -74,7 +76,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
   }));
 
   return (
-    <div className="relative w-full h-screen bg-background">
+    <div className={`relative w-full h-screen ${isFullscreen ? 'bg-gray-50 dark:bg-gray-900' : 'bg-gray-50 dark:bg-background'}`}>
       <ReactFlow
         nodes={enhancedNodes}
         edges={animatedEdges}
@@ -86,7 +88,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        className="bg-background"
+        className="bg-gray-50 dark:bg-gray-900"
         defaultEdgeOptions={{
           animated: true,
           type: 'deleteButton',
@@ -105,14 +107,14 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
           nodeColor="hsl(var(--primary))"
           nodeBorderRadius={8}
           position="bottom-left"
-          className="bg-card border border-border rounded-lg shadow-lg"
+          className="bg-card border border-border rounded-lg shadow-lg !w-32 !h-24"
           maskColor="hsl(var(--background) / 0.8)"
         />
         <Background 
           gap={16} 
           size={1} 
           color="hsl(var(--border))" 
-          className="bg-background"
+          className="bg-gray-50 dark:bg-gray-900"
         />
       </ReactFlow>
     </div>

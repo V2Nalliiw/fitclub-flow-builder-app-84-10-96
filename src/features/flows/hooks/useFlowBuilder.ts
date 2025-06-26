@@ -1,6 +1,8 @@
+
 import { useCallback, useState } from 'react';
 import { useNodesState, useEdgesState, addEdge, Connection, Edge, Node } from '@xyflow/react';
 import { FlowNode } from '@/types/flow';
+import { toast } from '@/hooks/use-toast';
 
 const initialNodes: Node[] = [
   {
@@ -39,6 +41,10 @@ export const useFlowBuilder = () => {
       },
     };
     setNodes((nds) => [...nds, newNode]);
+    toast({
+      title: "Nó adicionado",
+      description: `${getNodeLabel(type)} foi adicionado ao fluxo.`,
+    });
   };
 
   const deleteNode = (nodeId: string) => {
@@ -47,6 +53,11 @@ export const useFlowBuilder = () => {
     if (selectedNode?.id === nodeId) {
       setSelectedNode(null);
     }
+    toast({
+      title: "Nó removido",
+      description: "O nó foi removido do fluxo.",
+      variant: "destructive",
+    });
   };
 
   const duplicateNode = (nodeId: string) => {
@@ -66,6 +77,10 @@ export const useFlowBuilder = () => {
       },
     };
     setNodes((nds) => [...nds, newNode]);
+    toast({
+      title: "Nó duplicado",
+      description: "O nó foi duplicado com sucesso.",
+    });
   };
 
   const autoArrangeNodes = () => {
@@ -77,6 +92,10 @@ export const useFlowBuilder = () => {
       },
     }));
     setNodes(arrangedNodes);
+    toast({
+      title: "Nós organizados",
+      description: "Os nós foram organizados automaticamente.",
+    });
   };
 
   const clearAllNodes = () => {
@@ -88,6 +107,11 @@ export const useFlowBuilder = () => {
     }
     setEdges([]);
     setSelectedNode(null);
+    toast({
+      title: "Fluxo limpo",
+      description: "Todos os nós foram removidos, exceto o nó inicial.",
+      variant: "destructive",
+    });
   };
 
   const getNodeLabel = (type: FlowNode['type']) => {
@@ -127,6 +151,11 @@ export const useFlowBuilder = () => {
     if (selectedNode.type === 'question' && nodeData.tipoResposta === 'escolha-unica' && nodeData.opcoes) {
       updateQuestionNodeHandles(selectedNode.id, nodeData.opcoes as string[]);
     }
+
+    toast({
+      title: "Configuração salva",
+      description: "As configurações do nó foram atualizadas.",
+    });
   };
 
   const updateQuestionNodeHandles = (nodeId: string, opcoes: string[]) => {
@@ -170,6 +199,11 @@ export const useFlowBuilder = () => {
     };
     
     console.log('Salvando fluxo:', flowData);
+    
+    toast({
+      title: "Fluxo salvo",
+      description: `O fluxo "${flowName}" foi salvo com sucesso.`,
+    });
   };
 
   return {
