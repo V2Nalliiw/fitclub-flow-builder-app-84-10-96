@@ -37,9 +37,9 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
     const angle = startAngle + (angleStep * index);
     
     // Raio responsivo: maior no desktop, menor no mobile
-    const radius = isMobile ? 80 : 120;
+    const radius = isMobile ? 90 : 130;
     
-    // Calcular posições a partir do centro do botão principal (0,0)
+    // Calcular posições a partir do centro do botão principal
     const x = Math.cos(angle) * radius;
     const y = Math.sin(angle) * radius;
     
@@ -48,10 +48,10 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
 
   // Tamanhos responsivos para os botões
   const buttonSizes = {
-    main: isMobile ? 'h-12 w-12' : 'h-14 w-14',
-    secondary: isMobile ? 'h-9 w-9' : 'h-11 w-11',
-    icon: isMobile ? 'h-5 w-5' : 'h-6 w-6',
-    secondaryIcon: isMobile ? 'h-4 w-4' : 'h-5 w-5',
+    main: isMobile ? 'h-12 w-12' : 'h-16 w-16',
+    secondary: isMobile ? 'h-10 w-10' : 'h-12 w-12',
+    icon: isMobile ? 'h-5 w-5' : 'h-7 w-7',
+    secondaryIcon: isMobile ? 'h-4 w-4' : 'h-6 w-6',
   };
 
   return (
@@ -70,7 +70,6 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
                 style={{
                   left: `${x}px`,
                   top: `${y}px`,
-                  transform: 'translate(-50%, -50%)',
                   animation: `fadeInScale 0.3s ease-out ${index * 0.05}s both`,
                 }}
                 title={label}
@@ -90,15 +89,15 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
         <Plus className={`${buttonSizes.icon} ${isExpanded ? 'rotate-45' : ''} transition-transform duration-300 ease-out`} />
       </Button>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeInScale {
           0% {
             opacity: 0;
-            transform: translate(-50%, -50%) scale(0.8);
+            transform: scale(0.8);
           }
           100% {
             opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
+            transform: scale(1);
           }
         }
       `}</style>
