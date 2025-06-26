@@ -160,7 +160,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
       <div 
         className={`absolute z-20 ${
           isMobile 
-            ? 'left-[2%] top-[calc(6rem+4%+2rem)]' 
+            ? 'left-[4%] top-[calc(6rem+4%+2rem)]' 
             : 'right-[4%] top-[4%]'
         }`}
       >
