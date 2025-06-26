@@ -86,20 +86,18 @@ export const FlowBuilder = () => {
         isFullscreen={isFullscreen}
       />
 
-      {!isMobile && (
-        <TopToolbar
-          flowName={flowName}
-          selectedNode={selectedNode}
-          onFlowNameChange={setFlowName}
-          onDeleteNode={deleteNode}
-          onClearAllNodes={clearAllNodes}
-          onAutoArrangeNodes={autoArrangeNodes}
-          onSaveFlow={saveFlow}
-          onPreviewFlow={openPreview}
-          onToggleFullscreen={toggleFullscreen}
-          isFullscreen={isFullscreen}
-        />
-      )}
+      <TopToolbar
+        flowName={flowName}
+        selectedNode={selectedNode}
+        onFlowNameChange={setFlowName}
+        onDeleteNode={deleteNode}
+        onClearAllNodes={clearAllNodes}
+        onAutoArrangeNodes={autoArrangeNodes}
+        onSaveFlow={saveFlow}
+        onPreviewFlow={openPreview}
+        onToggleFullscreen={toggleFullscreen}
+        isFullscreen={isFullscreen}
+      />
 
       <NodeConfigModal
         isOpen={isConfigModalOpen}

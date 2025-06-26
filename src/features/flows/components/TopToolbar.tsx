@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Save, Eye, Eraser, LayoutGrid, Settings, Expand, Minimize } from 'lucide-react';
 import { Node } from '@xyflow/react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TopToolbarProps {
   flowName: string;
@@ -30,8 +31,14 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
   onToggleFullscreen,
   isFullscreen = false,
 }) => {
+  const isMobile = useIsMobile();
+
+  const toolbarClasses = isMobile 
+    ? 'fixed top-16 left-1/2 transform -translate-x-1/2 z-40 bg-card rounded-lg shadow-lg border p-2 w-[calc(100vw-2rem)] max-w-sm'
+    : `absolute top-4 left-1/2 transform -translate-x-1/2 z-40 bg-card rounded-lg shadow-lg border p-2 w-[calc(100vw-2rem)] max-w-2xl ${isFullscreen ? 'fixed' : ''}`;
+
   return (
-    <div className={`absolute top-4 left-1/2 transform -translate-x-1/2 z-40 bg-card rounded-lg shadow-lg border p-2 w-[calc(100vw-2rem)] max-w-2xl ${isFullscreen ? 'fixed' : ''}`}>
+    <div className={toolbarClasses}>
       <div className="flex items-center gap-2 md:gap-4 justify-center">
         <div className="flex items-center gap-1 md:gap-2 min-w-0">
           <Settings className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
@@ -66,7 +73,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
             <Eraser className="h-3 w-3 md:h-4 md:w-4" />
           </Button>
           
-          {onToggleFullscreen && (
+          {onToggleFullscreen && !isMobile && (
             <Button
               onClick={onToggleFullscreen}
               variant="outline"

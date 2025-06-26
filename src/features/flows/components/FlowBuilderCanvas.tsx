@@ -157,7 +157,13 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         />
       </ReactFlow>
 
-      <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
+      <div 
+        className={`absolute z-20 ${
+          isMobile 
+            ? 'left-4 top-1/3 transform -translate-y-1/2' 
+            : 'left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2'
+        }`}
+      >
         <FloatingNodeToolbar onAddNode={onAddNode} />
       </div>
     </div>

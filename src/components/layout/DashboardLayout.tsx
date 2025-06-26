@@ -39,8 +39,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       )}>
         {/* Top Bar */}
         <header className={cn(
-          "h-16 border-b border-border bg-card px-6 flex items-center justify-between",
-          isMobile && isFlowsPage && "fixed top-0 left-0 right-0 z-40"
+          "h-16 border-b border-border bg-card px-6 flex items-center justify-between relative z-30",
+          isMobile && isFlowsPage && "fixed top-0 left-0 right-0"
         )}>
           <div className="flex items-center gap-4">
             {/* Logo apenas no mobile, sem funcionalidade de menu */}
