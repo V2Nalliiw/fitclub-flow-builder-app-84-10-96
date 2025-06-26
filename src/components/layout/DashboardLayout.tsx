@@ -1,5 +1,8 @@
+
 import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
+import { MobileNavigation } from './MobileNavigation';
+import { MobileDrawer } from './MobileDrawer';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Bell, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,10 +19,13 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <Sidebar 
-        isCollapsed={sidebarCollapsed} 
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
-      />
+      {/* Desktop Sidebar */}
+      <div className="hidden md:block">
+        <Sidebar 
+          isCollapsed={sidebarCollapsed} 
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+        />
+      </div>
       
       <div className="flex-1 flex flex-col">
         {/* Top Bar */}
@@ -57,12 +63,16 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
         {/* Main Content */}
         <main className={cn(
-          "flex-1 transition-all duration-300 p-6",
-          sidebarCollapsed ? "ml-0" : "ml-0"
+          "flex-1 transition-all duration-300 p-6 pb-20 md:pb-6",
+          "animate-fade-in"
         )}>
           {children}
         </main>
       </div>
+
+      {/* Mobile Navigation */}
+      <MobileNavigation />
+      <MobileDrawer />
     </div>
   );
 };

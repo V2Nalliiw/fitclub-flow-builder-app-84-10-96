@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +11,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Dashboard } from "@/features/dashboard/components/Dashboard";
 import { FlowBuilder } from "@/features/flows/components/FlowBuilder";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { Profile } from "@/pages/Profile";
 import { Patients } from "@/pages/Patients";
 import { Settings } from "@/pages/Settings";
@@ -21,7 +23,14 @@ import { Analytics } from "@/pages/Analytics";
 import { Permissions } from "@/pages/Permissions";
 import { Forms } from "@/pages/Forms";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 3,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth();
@@ -38,7 +47,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <LoginForm />;
   }
 
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return (
+    <ErrorBoundary>
+      <DashboardLayout>{children}</DashboardLayout>
+    </ErrorBoundary>
+  );
 };
 
 const AppRoutes = () => {
@@ -156,13 +169,15 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </TooltipProvider>
+        <ErrorBoundary>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </TooltipProvider>
+        </ErrorBoundary>
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
