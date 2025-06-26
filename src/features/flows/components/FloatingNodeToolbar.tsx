@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, FormInput, Timer, HelpCircle, Square } from 'lucide-react';
 import { FlowNode } from '@/types/flow';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FloatingNodeToolbarProps {
   onAddNode: (type: FlowNode['type']) => void;
@@ -13,7 +12,6 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
   onAddNode,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const isMobile = useIsMobile();
 
   const nodeTypes = [
     { type: 'formStart' as const, icon: FormInput, label: 'Início' },
@@ -28,32 +26,49 @@ export const FloatingNodeToolbar: React.FC<FloatingNodeToolbarProps> = ({
     setIsExpanded(false);
   };
 
+  // Calcular posições em semicírculo
+  const getIconPosition = (index: number, total: number) => {
+    const angle = (Math.PI / (total + 1)) * (index + 1);
+    const radius = 70;
+    const x = Math.cos(angle) * radius;
+    const y = -Math.sin(angle) * radius;
+    return { x, y };
+  };
+
   return (
-    <div className="fixed left-6 top-1/2 transform -translate-y-1/2 z-50">
-      <div className="flex flex-col items-center gap-2">
+    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-30">
+      <div className="relative">
         {isExpanded && (
-          <div className="flex flex-col gap-2 mb-2">
-            {nodeTypes.map(({ type, icon: Icon, label }) => (
-              <Button
-                key={type}
-                onClick={() => handleAddNode(type)}
-                variant="outline"
-                size="sm"
-                className="bg-card border border-border shadow-lg hover:bg-accent h-10 w-10 p-0"
-                title={label}
-              >
-                <Icon className="h-4 w-4" />
-              </Button>
-            ))}
+          <div className="absolute">
+            {nodeTypes.map(({ type, icon: Icon, label }, index) => {
+              const { x, y } = getIconPosition(index, nodeTypes.length);
+              return (
+                <Button
+                  key={type}
+                  onClick={() => handleAddNode(type)}
+                  variant="outline"
+                  size="sm"
+                  className="absolute bg-card border border-border shadow-lg hover:bg-accent h-8 w-8 p-0 transition-all duration-200"
+                  style={{
+                    left: `${x}px`,
+                    top: `${y}px`,
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                  title={label}
+                >
+                  <Icon className="h-3 w-3" />
+                </Button>
+              );
+            })}
           </div>
         )}
         
         <Button
           onClick={() => setIsExpanded(!isExpanded)}
           size="sm"
-          className="bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 h-12 w-12 rounded-full p-0"
+          className="bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 h-10 w-10 rounded-full p-0 relative z-10"
         >
-          <Plus className={`h-6 w-6 ${isExpanded ? 'rotate-45' : ''} transition-transform`} />
+          <Plus className={`h-5 w-5 ${isExpanded ? 'rotate-45' : ''} transition-transform`} />
         </Button>
       </div>
     </div>

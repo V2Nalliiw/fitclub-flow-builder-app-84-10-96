@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { FlowBuilderCanvas } from './FlowBuilderCanvas';
 import { NodeConfigModal } from './NodeConfigModal';
 import { FlowPreviewModal } from './FlowPreviewModal';
-import { FloatingNodeToolbar } from './FloatingNodeToolbar';
 import { TopToolbar } from './TopToolbar';
 import { useFlowBuilder } from '../hooks/useFlowBuilder';
 
@@ -52,10 +51,9 @@ export const FlowBuilder = () => {
         onNodeClick={onNodeClick}
         onDeleteNode={deleteNode}
         onDuplicateNode={duplicateNode}
+        onAddNode={addNode}
         isFullscreen={isFullscreen}
       />
-
-      <FloatingNodeToolbar onAddNode={addNode} />
 
       <TopToolbar
         flowName={flowName}

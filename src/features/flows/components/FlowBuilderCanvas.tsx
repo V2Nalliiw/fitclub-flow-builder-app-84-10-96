@@ -18,6 +18,7 @@ import { FormSelectNode } from './nodes/FormSelectNode';
 import { DelayNode } from './nodes/DelayNode';
 import { QuestionNode } from './nodes/QuestionNode';
 import { DeleteEdgeButton } from './DeleteEdgeButton';
+import { FloatingNodeToolbar } from './FloatingNodeToolbar';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const nodeTypes = {
@@ -44,6 +45,7 @@ interface FlowBuilderCanvasProps {
   onNodeClick: (event: React.MouseEvent, node: Node) => void;
   onDeleteNode: (nodeId: string) => void;
   onDuplicateNode: (nodeId: string) => void;
+  onAddNode: (type: any) => void;
   isFullscreen?: boolean;
 }
 
@@ -57,6 +59,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
   onNodeClick,
   onDeleteNode,
   onDuplicateNode,
+  onAddNode,
   isFullscreen = false,
 }) => {
   const isMobile = useIsMobile();
@@ -128,6 +131,8 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
           className="bg-white dark:bg-[#0E0E0E] dark:[--xy-background-pattern-color:#374151]"
         />
       </ReactFlow>
+
+      <FloatingNodeToolbar onAddNode={onAddNode} />
     </div>
   );
 };
