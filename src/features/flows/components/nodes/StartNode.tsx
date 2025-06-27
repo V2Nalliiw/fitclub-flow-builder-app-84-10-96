@@ -2,7 +2,7 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Play } from 'lucide-react';
-import { NodeActions } from '../NodeActions';
+import { SimpleNodeActions } from '../SimpleNodeActions';
 
 interface StartNodeProps {
   data: any;
@@ -35,12 +35,11 @@ export const StartNode: React.FC<StartNodeProps> = ({ data, selected, id }) => {
         </div>
       </div>
       
-      <NodeActions
+      <SimpleNodeActions
         nodeId={id}
         nodeType="start"
         onDelete={data?.onDelete}
-        onDuplicate={data?.onDuplicate}
-        visible={selected}
+        show={selected}
       />
       
       <Handle

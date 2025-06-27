@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   ReactFlow,
@@ -16,7 +17,7 @@ import { FormEndNode } from './nodes/FormEndNode';
 import { FormSelectNode } from './nodes/FormSelectNode';
 import { DelayNode } from './nodes/DelayNode';
 import { QuestionNode } from './nodes/QuestionNode';
-import { DeleteEdgeButton } from './DeleteEdgeButton';
+import { SimpleDeleteEdge } from './SimpleDeleteEdge';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
 
 const nodeTypes = {
@@ -30,7 +31,7 @@ const nodeTypes = {
 };
 
 const edgeTypes = {
-  deleteButton: DeleteEdgeButton,
+  deleteButton: SimpleDeleteEdge,
 };
 
 interface FlowBuilderCanvasProps {
@@ -60,7 +61,8 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
 }) => {
   const { isMobile, isTablet, isDesktop } = useBreakpoints();
 
-  const animatedEdges = edges.map(edge => ({
+  // Configurar edges com o tipo correto
+  const enhancedEdges = edges.map(edge => ({
     ...edge,
     animated: true,
     type: 'deleteButton',
@@ -70,13 +72,12 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
     },
   }));
 
-  // Ensure functions are passed correctly to each node
+  // Passar as funções para os nós
   const enhancedNodes = nodes.map(node => {
     console.log('FlowBuilderCanvas - Preparing node:', {
       id: node.id,
       type: node.type,
-      hasDeleteFunction: !!onDeleteNode,
-      hasDuplicateFunction: !!onDuplicateNode
+      hasDeleteFunction: !!onDeleteNode
     });
     
     return {
@@ -84,7 +85,6 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
       data: {
         ...node.data,
         onDelete: onDeleteNode,
-        onDuplicate: onDuplicateNode,
       }
     };
   });
@@ -102,7 +102,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
     >
       <ReactFlow
         nodes={enhancedNodes}
-        edges={animatedEdges}
+        edges={enhancedEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
