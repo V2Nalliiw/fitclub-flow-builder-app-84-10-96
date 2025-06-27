@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { LoginForm } from "@/features/auth/components/LoginForm";
+import { AuthForm } from "@/features/auth/components/AuthForm";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Dashboard } from "@/features/dashboard/components/Dashboard";
 import { FlowBuilder } from "@/features/flows/components/FlowBuilder";
@@ -44,7 +45,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user) {
-    return <LoginForm />;
+    return <AuthForm />;
   }
 
   return (
@@ -58,7 +59,7 @@ const AppRoutes = () => {
   const { user } = useAuth();
 
   if (!user) {
-    return <LoginForm />;
+    return <AuthForm />;
   }
 
   return (
