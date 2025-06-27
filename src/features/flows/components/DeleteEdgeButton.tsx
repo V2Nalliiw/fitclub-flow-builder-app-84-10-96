@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   BaseEdge,
   EdgeLabelRenderer,
@@ -33,6 +33,8 @@ export const DeleteEdgeButton: React.FC<EdgeProps> = ({
 
   const onEdgeClick = (event: React.MouseEvent) => {
     event.stopPropagation();
+    event.preventDefault();
+    console.log('Removendo edge:', id);
     setEdges((edges) => edges.filter((edge) => edge.id !== id));
   };
 
@@ -51,6 +53,7 @@ export const DeleteEdgeButton: React.FC<EdgeProps> = ({
               className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-75 hover:opacity-100 transition-all duration-200 text-xs shadow-lg border-2 border-white dark:border-gray-800 hover:scale-110"
               onClick={onEdgeClick}
               title="Desconectar"
+              type="button"
             >
               <X className="h-3 w-3" />
             </button>

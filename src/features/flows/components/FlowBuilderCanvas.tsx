@@ -71,6 +71,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
     },
   }));
 
+  // Passar as funções para cada nó através do data
   const enhancedNodes = nodes.map(node => ({
     ...node,
     data: {

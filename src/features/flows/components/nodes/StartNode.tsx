@@ -8,11 +8,9 @@ interface StartNodeProps {
   data: any;
   selected?: boolean;
   id: string;
-  onDelete?: (nodeId: string) => void;
-  onDuplicate?: (nodeId: string) => void;
 }
 
-export const StartNode: React.FC<StartNodeProps> = ({ data, selected, id, onDelete, onDuplicate }) => {
+export const StartNode: React.FC<StartNodeProps> = ({ data, selected, id }) => {
   return (
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
@@ -40,8 +38,8 @@ export const StartNode: React.FC<StartNodeProps> = ({ data, selected, id, onDele
       <NodeActions
         nodeId={id}
         nodeType="start"
-        onDelete={onDelete || (() => {})}
-        onDuplicate={onDuplicate || (() => {})}
+        onDelete={data.onDelete}
+        onDuplicate={data.onDuplicate}
         visible={selected}
       />
       

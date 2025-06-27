@@ -8,11 +8,9 @@ interface EndNodeProps {
   data: any;
   selected?: boolean;
   id: string;
-  onDelete?: (nodeId: string) => void;
-  onDuplicate?: (nodeId: string) => void;
 }
 
-export const EndNode: React.FC<EndNodeProps> = ({ data, selected, id, onDelete, onDuplicate }) => {
+export const EndNode: React.FC<EndNodeProps> = ({ data, selected, id }) => {
   return (
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
@@ -47,8 +45,8 @@ export const EndNode: React.FC<EndNodeProps> = ({ data, selected, id, onDelete, 
       <NodeActions
         nodeId={id}
         nodeType="end"
-        onDelete={onDelete || (() => {})}
-        onDuplicate={onDuplicate || (() => {})}
+        onDelete={data.onDelete}
+        onDuplicate={data.onDuplicate}
         visible={selected}
       />
       

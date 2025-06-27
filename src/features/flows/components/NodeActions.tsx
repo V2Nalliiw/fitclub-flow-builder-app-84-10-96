@@ -21,7 +21,7 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
 }) => {
   const isMobile = useIsMobile();
 
-  // Não mostrar ações se não há funcões definidas ou se não estiver visível
+  // Não mostrar ações se não há funções definidas ou se não estiver visível
   if (!visible || !onDelete || !onDuplicate) {
     return null;
   }
@@ -32,12 +32,14 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
+    console.log('Deletando nó:', nodeId);
     onDelete(nodeId);
   };
 
   const handleDuplicate = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
+    console.log('Duplicando nó:', nodeId);
     onDuplicate(nodeId);
   };
 
