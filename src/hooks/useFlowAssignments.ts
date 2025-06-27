@@ -9,7 +9,7 @@ export interface FlowAssignment {
   flow_id: string;
   patient_id: string;
   assigned_by: string;
-  status: 'assigned' | 'started' | 'completed' | 'cancelled';
+  status: string;
   assigned_at: string;
   started_at?: string;
   completed_at?: string;

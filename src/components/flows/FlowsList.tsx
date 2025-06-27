@@ -135,8 +135,8 @@ export const FlowsList = () => {
       )}
 
       <CreateFlowDialog
-        isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
       />
 
       <FlowAssignmentModal

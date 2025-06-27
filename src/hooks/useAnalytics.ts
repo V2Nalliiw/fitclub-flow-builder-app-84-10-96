@@ -2,12 +2,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { Json } from '@/integrations/supabase/types';
 
 interface AnalyticsEvent {
   id: string;
   user_id: string;
   event_type: string;
-  event_data: Record<string, any>;
+  event_data: Json;
   created_at: string;
 }
 
