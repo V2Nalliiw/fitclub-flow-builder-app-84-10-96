@@ -10,6 +10,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export const AuthForm = () => {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
@@ -20,6 +21,7 @@ export const AuthForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login, signup } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +45,7 @@ export const AuthForm = () => {
         result = await login(email, password);
         if (!result.error) {
           toast.success('Login realizado com sucesso!');
+          navigate('/dashboard');
         }
       } else {
         result = await signup(email, password, { name, role });

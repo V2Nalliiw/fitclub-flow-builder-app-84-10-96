@@ -6,6 +6,8 @@ import { PatientFlowDashboard } from '@/features/patient/components/PatientFlowD
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import { QuickActions } from '@/components/dashboard/QuickActions';
+import { SystemTester } from '@/components/system/SystemTester';
+import { FileUploadTester } from '@/components/system/FileUploadTester';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 
 export const Dashboard = () => {
@@ -159,6 +161,12 @@ export const Dashboard = () => {
             isLoading={isLoading}
           />
         ))}
+      </div>
+
+      {/* Sistema de Testes para Diagnóstico */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <SystemTester />
+        <FileUploadTester />
       </div>
 
       {/* Layout em grid para ações rápidas e atividades */}
