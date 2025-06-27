@@ -65,9 +65,9 @@ export const useFlowBuilder = () => {
       return { isValid: false, message: 'Nós de início não podem receber conexões.' };
     }
 
-    // Verificar se o nó alvo já tem uma entrada (a não ser que seja question com múltiplas opções)
+    // Verificar se o nó alvo já tem uma entrada (EXCETO para nós do tipo 'end' que podem receber múltiplas)
     const existingInputConnection = edges.find(edge => edge.target === target);
-    if (existingInputConnection && targetNode.type !== 'question') {
+    if (existingInputConnection && targetNode.type !== 'end') {
       return { isValid: false, message: 'Este nó já possui uma conexão de entrada.' };
     }
 

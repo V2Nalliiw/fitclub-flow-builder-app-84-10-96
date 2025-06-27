@@ -38,7 +38,7 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-40 h-24 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200 relative overflow-hidden ${
+      <div className={`w-40 h-24 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200 relative overflow-visible ${
         selected 
           ? 'border-[#5D8701] shadow-[0_0_0_2px_rgba(93,135,1,0.2)]' 
           : 'border-gray-200 dark:border-gray-700'
@@ -95,25 +95,43 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
           {opcoes.map((opcao: string, index: number) => {
             // Calcular posição vertical baseada no número de opções
             const totalOpcoes = opcoes.length;
-            const offsetY = totalOpcoes > 1 ? (index - (totalOpcoes - 1) / 2) * 20 : 0;
+            const offsetY = totalOpcoes > 1 ? (index - (totalOpcoes - 1) / 2) * 24 : 0;
             
             return (
-              <div key={index} className="absolute" style={{
-                right: '-7px',
-                top: '50%',
-                transform: `translateY(${offsetY}px)`,
-                zIndex: 10
-              }}>
-                <Handle
-                  type="source"
-                  position={Position.Right}
-                  id={`opcao-${index}`}
-                  className="w-3.5 h-3.5 bg-[#5D8701] border-2 border-white shadow-md !static !transform-none"
-                />
-                
-                {/* Tooltip com nome da opção */}
-                <div className="absolute left-5 top-1/2 transform -translate-y-1/2 text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-2 py-1 rounded-md opacity-0 hover:opacity-100 transition-opacity z-20 border border-gray-200 dark:border-gray-700 pointer-events-none">
-                  {opcao.substring(0, 20)}{opcao.length > 20 ? '...' : ''}
+              <Handle
+                key={index}
+                type="source"
+                position={Position.Right}
+                id={`opcao-${index}`}
+                className="w-3.5 h-3.5 bg-[#5D8701] border-2 border-white shadow-md"
+                style={{
+                  right: '-7px',
+                  top: '50%',
+                  transform: `translate(50%, calc(-50% + ${offsetY}px))`,
+                  position: 'absolute',
+                  zIndex: 10
+                }}
+              />
+            );
+          })}
+          
+          {/* Tooltips separados para não interferir com os handles */}
+          {opcoes.map((opcao: string, index: number) => {
+            const totalOpcoes = opcoes.length;
+            const offsetY = totalOpcoes > 1 ? (index - (totalOpcoes - 1) / 2) * 24 : 0;
+            
+            return (
+              <div 
+                key={`tooltip-${index}`}
+                className="absolute pointer-events-none opacity-0 hover:opacity-100 transition-opacity z-20"
+                style={{
+                  right: '-120px',
+                  top: '50%',
+                  transform: `translateY(calc(-50% + ${offsetY}px))`,
+                }}
+              >
+                <div className="text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm">
+                  {opcao.length > 20 ? `${opcao.substring(0, 20)}...` : opcao}
                 </div>
               </div>
             );
