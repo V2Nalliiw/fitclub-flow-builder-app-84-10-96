@@ -18,7 +18,6 @@ import { FormSelectNode } from './nodes/FormSelectNode';
 import { DelayNode } from './nodes/DelayNode';
 import { QuestionNode } from './nodes/QuestionNode';
 import { DeleteEdgeButton } from './DeleteEdgeButton';
-import { FloatingNodeToolbar } from './FloatingNodeToolbar';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
 
 const nodeTypes = {
@@ -45,7 +44,6 @@ interface FlowBuilderCanvasProps {
   onNodeClick: (event: React.MouseEvent, node: Node) => void;
   onDeleteNode: (nodeId: string) => void;
   onDuplicateNode: (nodeId: string) => void;
-  onAddNode: (type: any) => void;
   isFullscreen?: boolean;
 }
 
@@ -59,7 +57,6 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
   onNodeClick,
   onDeleteNode,
   onDuplicateNode,
-  onAddNode,
   isFullscreen = false,
 }) => {
   const { isMobile, isTablet, isDesktop } = useBreakpoints();
@@ -85,20 +82,6 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
 
   const canvasHeight = isFullscreen || isMobile ? '100vh' : 'calc(100vh - 4rem)';
   const canvasWidth = '100%';
-
-  // Posicionamento estratégico do FloatingNodeToolbar
-  const getToolbarPosition = () => {
-    if (isMobile) {
-      // Mobile: Lado direito, entre meio e topo (subido 7%), com 4% de margem direita
-      return 'top-[18%] right-[4%]';
-    } else if (isTablet) {
-      // Tablet: Lado direito, entre meio e topo (subido 7%), com 4% de margem direita
-      return 'top-[18%] right-[4%]';
-    } else {
-      // Desktop: Alinhado verticalmente com o TopToolbar, lateral esquerda
-      return 'top-[calc(4%+0.5rem)] left-[2%]';
-    }
-  };
 
   return (
     <div 
@@ -170,13 +153,6 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
           className="bg-gray-50/50 dark:bg-[#0E0E0E]"
         />
       </ReactFlow>
-
-      {/* FloatingNodeToolbar positioned strategically */}
-      <div 
-        className={`absolute z-20 ${getToolbarPosition()}`}
-      >
-        <FloatingNodeToolbar onAddNode={onAddNode} />
-      </div>
     </div>
   );
 };

@@ -82,7 +82,6 @@ export const FlowBuilder = () => {
         onNodeClick={onNodeClick}
         onDeleteNode={deleteNode}
         onDuplicateNode={duplicateNode}
-        onAddNode={addNode}
         isFullscreen={isFullscreen}
       />
 
@@ -97,6 +96,7 @@ export const FlowBuilder = () => {
         onPreviewFlow={openPreview}
         onToggleFullscreen={toggleFullscreen}
         isFullscreen={isFullscreen}
+        onAddNode={addNode}
       />
 
       <NodeConfigModal
