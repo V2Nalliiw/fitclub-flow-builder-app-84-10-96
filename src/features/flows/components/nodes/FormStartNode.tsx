@@ -17,34 +17,22 @@ export const FormStartNode: React.FC<FormStartNodeProps> = ({ data, selected, id
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-36 h-32 rounded-[15px] bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden border border-blue-500/20 ${
+      <div className={`w-36 h-32 rounded-[15px] bg-white border shadow-sm transition-all duration-200 flex flex-col items-center justify-center relative overflow-hidden ${
         selected 
-          ? 'shadow-[0_0_0_3px_rgba(59,130,246,0.3),0_8px_25px_rgba(59,130,246,0.2)]' 
-          : 'shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+          ? 'border-[#5D8701] shadow-[0_0_0_2px_rgba(93,135,1,0.2)]' 
+          : 'border-gray-200'
       }`}>
-        {/* Glow effect interno */}
-        <div className="absolute inset-0 rounded-[15px] bg-gradient-to-t from-transparent to-white/10" />
-        
-        {/* Padrão de grid sutil no fundo */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="grid grid-cols-6 gap-1 h-full p-2">
-            {Array.from({ length: 24 }).map((_, i) => (
-              <div key={i} className="bg-white/20 rounded-sm"></div>
-            ))}
-          </div>
-        </div>
-        
-        <FileText className="h-6 w-6 mb-1 relative z-10" />
-        <div className="text-xs font-semibold text-center relative z-10 tracking-tight mb-1">
+        <FileText className="h-6 w-6 mb-1 text-[#5D8701]" />
+        <div className="text-xs font-semibold text-center text-[#5D8701] tracking-tight mb-1">
           Formulário
         </div>
         
-        <div className="flex items-center gap-1 text-[10px] opacity-90 relative z-10 mb-1">
+        <div className="flex items-center gap-1 text-[10px] text-gray-500 mb-1">
           <Send className="h-2.5 w-2.5" />
           <span>Envia WhatsApp</span>
         </div>
         
-        <div className="flex items-center gap-1 text-[10px] opacity-80 relative z-10">
+        <div className="flex items-center gap-1 text-[10px] text-gray-400">
           <ExternalLink className="h-2.5 w-2.5" />
           <span>com link</span>
         </div>
@@ -61,12 +49,12 @@ export const FormStartNode: React.FC<FormStartNodeProps> = ({ data, selected, id
       <Handle
         type="target"
         position={Position.Left}
-        className="w-3.5 h-3.5 bg-blue-500 border-2 border-white shadow-md !left-0 !transform !-translate-x-1/2 !-translate-y-1/2"
+        className="w-3.5 h-3.5 bg-[#5D8701] border-2 border-white shadow-md !left-0 !transform !-translate-x-1/2 !-translate-y-1/2"
       />
       <Handle
         type="source"
         position={Position.Right}
-        className="w-3.5 h-3.5 bg-blue-500 border-2 border-white shadow-md !right-0 !transform !translate-x-1/2 !-translate-y-1/2"
+        className="w-3.5 h-3.5 bg-[#5D8701] border-2 border-white shadow-md !right-0 !transform !translate-x-1/2 !-translate-y-1/2"
       />
     </div>
   );

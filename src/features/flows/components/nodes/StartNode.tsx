@@ -17,19 +17,16 @@ export const StartNode: React.FC<StartNodeProps> = ({ data, selected, id, onDele
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-28 h-28 rounded-[15px] bg-gradient-to-br from-[#5D8701] to-[#4a6e01] shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden border border-[#5D8701]/20 ${
+      <div className={`w-28 h-28 rounded-[15px] bg-white border shadow-sm transition-all duration-200 flex flex-col items-center justify-center relative overflow-hidden ${
         selected 
-          ? 'shadow-[0_0_0_3px_rgba(93,135,1,0.3),0_8px_25px_rgba(93,135,1,0.2)]' 
-          : 'shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+          ? 'border-[#5D8701] shadow-[0_0_0_2px_rgba(93,135,1,0.2)]' 
+          : 'border-gray-200'
       }`}>
-        {/* Glow effect interno */}
-        <div className="absolute inset-0 rounded-[15px] bg-gradient-to-t from-transparent to-white/10" />
-        
-        <Play className="h-6 w-6 mb-1 relative z-10" fill="currentColor" />
-        <div className="text-xs font-semibold text-center relative z-10 tracking-tight">
+        <Play className="h-6 w-6 mb-1 text-[#5D8701]" fill="currentColor" />
+        <div className="text-xs font-semibold text-center text-[#5D8701] tracking-tight">
           Início
         </div>
-        <div className="text-[10px] opacity-80 text-center relative z-10 font-medium">
+        <div className="text-[10px] text-gray-500 text-center font-medium">
           Automático
         </div>
       </div>

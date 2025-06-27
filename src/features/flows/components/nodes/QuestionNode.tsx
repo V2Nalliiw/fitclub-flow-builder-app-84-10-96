@@ -40,36 +40,24 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-36 rounded-[15px] bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden border border-purple-500/20 ${
+      <div className={`w-36 rounded-[15px] bg-white border shadow-sm transition-all duration-200 flex flex-col items-center justify-center relative overflow-hidden ${
         selected 
-          ? 'shadow-[0_0_0_3px_rgba(147,51,234,0.3),0_8px_25px_rgba(147,51,234,0.2)]' 
-          : 'shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+          ? 'border-[#5D8701] shadow-[0_0_0_2px_rgba(93,135,1,0.2)]' 
+          : 'border-gray-200'
       }`}
       style={{ minHeight: `${minHeight * 4}px` }}>
-        {/* Glow effect interno */}
-        <div className="absolute inset-0 rounded-[15px] bg-gradient-to-t from-transparent to-white/10" />
-        
-        {/* Padrão de balão de conversa no fundo */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="flex flex-col gap-1 p-2">
-            <div className="bg-white/20 rounded-full h-2 w-3/4"></div>
-            <div className="bg-white/20 rounded-full h-2 w-1/2"></div>
-            <div className="bg-white/20 rounded-full h-2 w-2/3"></div>
-          </div>
-        </div>
-        
-        <HelpCircle className="h-6 w-6 mb-1 relative z-10" />
-        <div className="text-xs font-semibold text-center relative z-10 tracking-tight mb-1">
+        <HelpCircle className="h-6 w-6 mb-1 text-[#5D8701]" />
+        <div className="text-xs font-semibold text-center text-[#5D8701] tracking-tight mb-1">
           Pergunta
         </div>
         
-        <div className="flex items-center gap-1 text-[10px] opacity-90 relative z-10">
+        <div className="flex items-center gap-1 text-[10px] text-gray-500">
           {getQuestionIcon()}
           <span>{getTypeLabel()}</span>
         </div>
         
         {opcoes.length > 0 && (
-          <div className="text-[10px] opacity-80 text-center relative z-10 mt-1">
+          <div className="text-[10px] text-gray-400 text-center mt-1">
             {opcoes.length} opções
           </div>
         )}
@@ -86,7 +74,7 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
       <Handle
         type="target"
         position={Position.Left}
-        className="w-3.5 h-3.5 bg-purple-500 border-2 border-white shadow-md !left-0 !transform !-translate-x-1/2 !-translate-y-1/2"
+        className="w-3.5 h-3.5 bg-[#5D8701] border-2 border-white shadow-md !left-0 !transform !-translate-x-1/2 !-translate-y-1/2"
       />
       
       {/* Handle padrão para múltipla escolha, texto livre ou quando não há opções */}
@@ -94,7 +82,7 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
         <Handle
           type="source"
           position={Position.Right}
-          className="w-3.5 h-3.5 bg-purple-500 border-2 border-white shadow-md !right-0 !transform !translate-x-1/2 !-translate-y-1/2"
+          className="w-3.5 h-3.5 bg-[#5D8701] border-2 border-white shadow-md !right-0 !transform !translate-x-1/2 !-translate-y-1/2"
         />
       )}
       
@@ -107,9 +95,9 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
                 type="source"
                 position={Position.Right}
                 id={`opcao-${index}`}
-                className="w-3.5 h-3.5 bg-purple-500 border-2 border-white shadow-md relative !static !transform-none"
+                className="w-3.5 h-3.5 bg-[#5D8701] border-2 border-white shadow-md relative !static !transform-none"
               />
-              <div className="absolute left-5 top-1/2 transform -translate-y-1/2 text-[10px] text-purple-600 dark:text-purple-400 whitespace-nowrap bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-2 py-1 rounded-md opacity-0 group-hover/handle:opacity-100 transition-opacity z-20 border border-purple-200 dark:border-purple-700">
+              <div className="absolute left-5 top-1/2 transform -translate-y-1/2 text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-2 py-1 rounded-md opacity-0 group-hover/handle:opacity-100 transition-opacity z-20 border border-gray-200 dark:border-gray-700">
                 {opcao.substring(0, 20)}{opcao.length > 20 ? '...' : ''}
               </div>
             </div>
