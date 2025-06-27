@@ -134,12 +134,12 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
           nodeStrokeColor="hsl(var(--primary))"
           nodeColor="hsl(var(--primary)/0.8)"
           nodeBorderRadius={12}
-          position={isMobile ? "bottom-center" : "bottom-left"}
+          position={isMobile || isTablet ? "bottom-center" : "bottom-left"}
           className={`bg-card/95 backdrop-blur-sm border-2 border-border/50 rounded-xl shadow-xl overflow-hidden ${isMobile ? '!w-32 !h-20' : '!w-56 !h-40'}`}
           maskColor="hsl(var(--background) / 0.7)"
           pannable
           zoomable
-          style={isMobile ? { 
+          style={(isMobile || isTablet) ? { 
             bottom: '80px',
             left: '50%',
             transform: 'translateX(-50%)',

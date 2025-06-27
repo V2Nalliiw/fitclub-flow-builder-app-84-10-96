@@ -1,8 +1,7 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Save, Eye, Eraser, LayoutGrid, Settings, Expand, Minimize, Play, Square, FormInput, FileText, Clock, HelpCircle } from 'lucide-react';
+import { Save, Eye, Eraser, LayoutGrid, Settings, Expand, Minimize, Play, Square, FormInput, FileText, Clock, HelpCircle, Plus, Minus } from 'lucide-react';
 import { Node } from '@xyflow/react';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
 
@@ -34,6 +33,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
   onAddNode,
 }) => {
   const { isDesktop } = useBreakpoints();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const nodeTypes = [
     { type: 'start', icon: Play, label: 'Início', color: 'text-green-600' },
@@ -143,13 +143,41 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
     );
   }
 
-  // Mobile/Tablet Layout (two lines)
+  // Mobile/Tablet Layout
+  if (!isExpanded) {
+    // Collapsed state - single centered button
+    return (
+      <div className="fixed top-[calc(4rem+2%)] left-1/2 transform -translate-x-1/2 z-40">
+        <Button
+          onClick={() => setIsExpanded(true)}
+          size="sm"
+          className="h-10 w-10 p-0 bg-primary hover:bg-primary/90 rounded-full shadow-lg"
+          title="Expandir ferramentas"
+        >
+          <Plus className="h-5 w-5" />
+        </Button>
+      </div>
+    );
+  }
+
+  // Expanded state - full toolbar
   const toolbarClasses = 'fixed top-[calc(4rem+2%)] left-1/2 transform -translate-x-1/2 z-40 bg-card rounded-lg shadow-lg border p-3 w-[calc(100vw-1rem)] max-w-sm';
 
   return (
     <div className={toolbarClasses}>
       {/* Primeira Linha - Controles Principais */}
       <div className="flex items-center gap-2 justify-center mb-3">
+        {/* Botão de colapsar */}
+        <Button
+          onClick={() => setIsExpanded(false)}
+          variant="outline"
+          size="sm"
+          className="h-7 w-7 p-0 flex-shrink-0 hover:bg-accent"
+          title="Recolher ferramentas"
+        >
+          <Minus className="h-3 w-3" />
+        </Button>
+
         <div className="flex items-center gap-1 min-w-0">
           <Settings className="h-3 w-3 text-muted-foreground flex-shrink-0" />
           <Input
