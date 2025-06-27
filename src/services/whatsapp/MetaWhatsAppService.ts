@@ -145,6 +145,10 @@ export class MetaWhatsAppService {
 
   private async uploadMedia(mediaUrl: string, mediaType: string): Promise<SendMessageResponse & { mediaId?: string }> {
     try {
+      const formData = new FormData();
+      formData.append('file', mediaUrl);
+      formData.append('type', mediaType);
+
       const response = await fetch(
         `https://graph.facebook.com/v18.0/${this.config!.phone_number}/media`,
         {
@@ -152,7 +156,7 @@ export class MetaWhatsAppService {
           headers: {
             'Authorization': `Bearer ${this.config!.access_token}`,
           },
-          body: new FormData().append('file', mediaUrl).append('type', mediaType),
+          body: formData,
         }
       );
 

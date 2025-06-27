@@ -53,7 +53,9 @@ export const useWhatsAppSettings = () => {
         return;
       }
 
-      setSettings(data);
+      if (data) {
+        setSettings(data as WhatsAppSettings);
+      }
     } catch (error) {
       console.error('Erro inesperado:', error);
       toast({
@@ -95,7 +97,7 @@ export const useWhatsAppSettings = () => {
         // Create new settings
         result = await supabase
           .from('whatsapp_settings')
-          .insert([dataToSave])
+          .insert(dataToSave)
           .select()
           .single();
       }
@@ -110,7 +112,7 @@ export const useWhatsAppSettings = () => {
         return false;
       }
 
-      setSettings(result.data);
+      setSettings(result.data as WhatsAppSettings);
       toast({
         title: "Configurações salvas",
         description: "As configurações do WhatsApp foram salvas com sucesso",
@@ -142,6 +144,7 @@ export const useWhatsAppSettings = () => {
       access_token: settings.access_token,
       business_account_id: settings.business_account_id,
       webhook_url: settings.webhook_url,
+      is_active: settings.is_active,
     };
   };
 

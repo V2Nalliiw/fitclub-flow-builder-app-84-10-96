@@ -9,25 +9,27 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { MessageSquare, CheckCircle, AlertCircle, TestTube, Save } from 'lucide-react';
 import { useWhatsApp } from '@/hooks/useWhatsApp';
-import { WhatsAppConfig } from '@/services/whatsapp/types';
+import { useWhatsAppSettings } from '@/hooks/useWhatsAppSettings';
+import { WhatsAppSettings as WhatsAppSettingsType } from '@/hooks/useWhatsAppSettings';
 
 export const WhatsAppSettings = () => {
-  const { config, isConnected, isLoading, updateConfig, testConnection } = useWhatsApp();
-  const [formConfig, setFormConfig] = useState<WhatsAppConfig>({
+  const { isConnected, isLoading, testConnection } = useWhatsApp();
+  const { settings, saveSettings } = useWhatsAppSettings();
+  const [formConfig, setFormConfig] = useState<Partial<WhatsAppSettingsType>>({
     provider: 'evolution',
-    active: false,
+    is_active: false,
   });
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (config) {
-      setFormConfig(config);
+    if (settings) {
+      setFormConfig(settings);
     }
-  }, [config]);
+  }, [settings]);
 
   const handleSave = async () => {
     setIsSaving(true);
-    await updateConfig(formConfig);
+    await saveSettings(formConfig);
     setIsSaving(false);
   };
 
@@ -98,8 +100,8 @@ export const WhatsAppSettings = () => {
                   <Label htmlFor="baseUrl">URL Base da API *</Label>
                   <Input
                     id="baseUrl"
-                    value={formConfig.baseUrl || ''}
-                    onChange={(e) => setFormConfig({ ...formConfig, baseUrl: e.target.value })}
+                    value={formConfig.base_url || ''}
+                    onChange={(e) => setFormConfig({ ...formConfig, base_url: e.target.value })}
                     placeholder="https://evolution.suaapi.com"
                   />
                 </div>
@@ -108,8 +110,8 @@ export const WhatsAppSettings = () => {
                   <Input
                     id="apiKey"
                     type="password"
-                    value={formConfig.apiKey || ''}
-                    onChange={(e) => setFormConfig({ ...formConfig, apiKey: e.target.value })}
+                    value={formConfig.api_key || ''}
+                    onChange={(e) => setFormConfig({ ...formConfig, api_key: e.target.value })}
                     placeholder="Sua chave da API"
                   />
                 </div>
@@ -117,8 +119,8 @@ export const WhatsAppSettings = () => {
                   <Label htmlFor="sessionName">Nome da Sessão *</Label>
                   <Input
                     id="sessionName"
-                    value={formConfig.sessionName || ''}
-                    onChange={(e) => setFormConfig({ ...formConfig, sessionName: e.target.value })}
+                    value={formConfig.session_name || ''}
+                    onChange={(e) => setFormConfig({ ...formConfig, session_name: e.target.value })}
                     placeholder="minha-sessao-whatsapp"
                   />
                 </div>
@@ -131,8 +133,8 @@ export const WhatsAppSettings = () => {
                   <Label htmlFor="accountSid">Account SID *</Label>
                   <Input
                     id="accountSid"
-                    value={formConfig.accountSid || ''}
-                    onChange={(e) => setFormConfig({ ...formConfig, accountSid: e.target.value })}
+                    value={formConfig.account_sid || ''}
+                    onChange={(e) => setFormConfig({ ...formConfig, account_sid: e.target.value })}
                     placeholder="Seu Account SID do Twilio"
                   />
                 </div>
@@ -141,8 +143,8 @@ export const WhatsAppSettings = () => {
                   <Input
                     id="authToken"
                     type="password"
-                    value={formConfig.authToken || ''}
-                    onChange={(e) => setFormConfig({ ...formConfig, authToken: e.target.value })}
+                    value={formConfig.auth_token || ''}
+                    onChange={(e) => setFormConfig({ ...formConfig, auth_token: e.target.value })}
                     placeholder="Seu Auth Token"
                   />
                 </div>
@@ -150,8 +152,8 @@ export const WhatsAppSettings = () => {
                   <Label htmlFor="phoneNumber">Número WhatsApp *</Label>
                   <Input
                     id="phoneNumber"
-                    value={formConfig.phoneNumber || ''}
-                    onChange={(e) => setFormConfig({ ...formConfig, phoneNumber: e.target.value })}
+                    value={formConfig.phone_number || ''}
+                    onChange={(e) => setFormConfig({ ...formConfig, phone_number: e.target.value })}
                     placeholder="whatsapp:+5511999999999"
                   />
                 </div>
@@ -195,7 +197,7 @@ export const WhatsAppSettings = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Sessão:</span>
-                <span className="text-sm font-medium">{formConfig.sessionName || 'Não configurada'}</span>
+                <span className="text-sm font-medium">{formConfig.session_name || 'Não configurada'}</span>
               </div>
             </div>
 

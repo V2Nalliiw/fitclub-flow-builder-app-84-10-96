@@ -1,16 +1,16 @@
 
 export interface WhatsAppConfig {
   provider: 'evolution' | 'twilio' | 'meta';
-  baseUrl?: string;
-  apiKey?: string;
-  sessionName?: string;
-  accountSid?: string;
-  authToken?: string;
-  phoneNumber?: string;
-  accessToken?: string;
-  businessAccountId?: string;
-  webhookUrl?: string;
-  active: boolean;
+  base_url?: string;
+  api_key?: string;
+  session_name?: string;
+  account_sid?: string;
+  auth_token?: string;
+  phone_number?: string;
+  access_token?: string;
+  business_account_id?: string;
+  webhook_url?: string;
+  is_active?: boolean;
 }
 
 export interface WhatsAppMessage {

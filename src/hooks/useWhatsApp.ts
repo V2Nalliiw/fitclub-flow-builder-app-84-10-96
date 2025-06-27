@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { whatsappService } from '@/services/whatsapp/WhatsAppService';
 import { WhatsAppConfig, SendMessageResponse } from '@/services/whatsapp/types';
 import { useToast } from '@/hooks/use-toast';
@@ -8,9 +8,27 @@ import { useAnalytics } from './useAnalytics';
 
 export const useWhatsApp = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   const { toast } = useToast();
   const { getWhatsAppConfig } = useWhatsAppSettings();
   const { trackWhatsAppSent } = useAnalytics();
+
+  const checkConnection = useCallback(async () => {
+    const config = getWhatsAppConfig();
+    if (!config) {
+      setIsConnected(false);
+      return false;
+    }
+
+    whatsappService.setConfig(config);
+    const connected = await whatsappService.testConnection();
+    setIsConnected(connected);
+    return connected;
+  }, [getWhatsAppConfig]);
+
+  useEffect(() => {
+    checkConnection();
+  }, [checkConnection]);
 
   const sendFormLink = useCallback(async (
     phoneNumber: string, 
@@ -163,6 +181,7 @@ export const useWhatsApp = () => {
     
     try {
       const connected = await whatsappService.testConnection();
+      setIsConnected(connected);
       
       toast({
         title: connected ? "Conexão OK" : "Sem conexão",
@@ -180,6 +199,7 @@ export const useWhatsApp = () => {
 
   return {
     isLoading,
+    isConnected,
     sendFormLink,
     sendMedia,
     sendMessage,
