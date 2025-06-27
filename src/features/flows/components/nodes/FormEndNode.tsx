@@ -17,19 +17,26 @@ export const FormEndNode: React.FC<FormEndNodeProps> = ({ data, selected, id, on
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-36 h-32 rounded-[15px] bg-white border shadow-sm transition-all duration-200 flex flex-col items-center justify-center relative overflow-hidden ${
+      <div className={`w-40 h-20 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200 relative overflow-hidden ${
         selected 
           ? 'border-[#5D8701] shadow-[0_0_0_2px_rgba(93,135,1,0.2)]' 
-          : 'border-gray-200'
+          : 'border-gray-200 dark:border-gray-700'
       }`}>
-        <FileCheck className="h-6 w-6 mb-1 text-[#5D8701]" />
-        <div className="text-xs font-semibold text-center text-[#5D8701] tracking-tight mb-1">
-          Fim Formulário
+        {/* Header Section */}
+        <div className="flex items-center gap-2 px-3 py-2">
+          <FileCheck className="h-4 w-4 text-[#5D8701]" />
+          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Fim Formulário</span>
         </div>
         
-        <div className="flex items-center gap-1 text-[10px] text-gray-500">
-          <Download className="h-2.5 w-2.5" />
-          <span>Entrega {data.tipoConteudo || 'conteúdo'}</span>
+        {/* Divider */}
+        <div className="border-t border-gray-200 dark:border-gray-600"></div>
+        
+        {/* Content Section */}
+        <div className="px-3 py-2">
+          <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+            <Download className="h-3 w-3" />
+            <span>Entrega {data.tipoConteudo || 'conteúdo'}</span>
+          </div>
         </div>
       </div>
       

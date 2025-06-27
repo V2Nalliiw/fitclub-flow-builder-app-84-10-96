@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
-import { FileText, ExternalLink, Database, AlertCircle, CheckCircle } from 'lucide-react';
+import { FileText, Database, AlertCircle, CheckCircle } from 'lucide-react';
 import { NodeActions } from '../NodeActions';
 import { useFormIntegration } from '../../hooks/useFormIntegration';
 
@@ -30,47 +30,38 @@ export const FormSelectNode: React.FC<NodeProps> = ({
   const executionResult = getExecutionResult(id);
   const isConfigured = !!(nodeData.formId && form);
 
-  const handlePreviewForm = () => {
-    if (nodeData.formId) {
-      const formUrl = generateFormUrl(nodeData.formId);
-      if (formUrl) {
-        window.open(formUrl, '_blank');
-      }
-    }
-  };
-
   return (
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-40 h-32 rounded-[15px] bg-white border shadow-sm transition-all duration-200 flex flex-col items-center justify-center relative overflow-hidden ${
+      <div className={`w-40 h-20 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200 relative overflow-hidden ${
         selected 
           ? 'border-[#5D8701] shadow-[0_0_0_2px_rgba(93,135,1,0.2)]' 
-          : 'border-gray-200'
+          : 'border-gray-200 dark:border-gray-700'
       }`}>
-        {isConfigured ? (
-          <>
-            <Database className="h-6 w-6 mb-1 text-[#5D8701]" />
-            <div className="text-xs font-semibold text-center text-[#5D8701] tracking-tight mb-1">
-              Form. Selecionado
-            </div>
-            <div className="flex items-center gap-1 text-[10px] text-gray-500">
-              <CheckCircle className="h-2.5 w-2.5" />
+        {/* Header Section */}
+        <div className="flex items-center gap-2 px-3 py-2">
+          <FileText className="h-4 w-4 text-[#5D8701]" />
+          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Formulário</span>
+        </div>
+        
+        {/* Divider */}
+        <div className="border-t border-gray-200 dark:border-gray-600"></div>
+        
+        {/* Content Section */}
+        <div className="px-3 py-2">
+          {isConfigured ? (
+            <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+              <CheckCircle className="h-3 w-3" />
               <span>Configurado</span>
             </div>
-          </>
-        ) : (
-          <>
-            <AlertCircle className="h-6 w-6 mb-1 text-[#5D8701]" />
-            <div className="text-xs font-semibold text-center text-[#5D8701] tracking-tight mb-1">
-              Formulário
-            </div>
-            <div className="flex items-center gap-1 text-[10px] text-gray-500">
-              <FileText className="h-2.5 w-2.5" />
+          ) : (
+            <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+              <AlertCircle className="h-3 w-3" />
               <span>Não configurado</span>
             </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
       
       <Handle

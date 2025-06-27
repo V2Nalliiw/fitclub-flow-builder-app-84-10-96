@@ -23,20 +23,26 @@ export const DelayNode: React.FC<DelayNodeProps> = ({ data, selected, id, onDele
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-32 h-32 rounded-full bg-white border shadow-sm transition-all duration-200 flex flex-col items-center justify-center relative overflow-hidden ${
+      <div className={`w-36 h-20 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200 relative overflow-hidden ${
         selected 
           ? 'border-[#5D8701] shadow-[0_0_0_2px_rgba(93,135,1,0.2)]' 
-          : 'border-gray-200'
+          : 'border-gray-200 dark:border-gray-700'
       }`}>
-        <Clock className="h-6 w-6 mb-1 text-[#5D8701]" />
-        
-        <div className="text-xs font-semibold text-center text-[#5D8701] tracking-tight mb-1">
-          Aguardar
+        {/* Header Section */}
+        <div className="flex items-center gap-2 px-3 py-2">
+          <Clock className="h-4 w-4 text-[#5D8701]" />
+          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Aguardar</span>
         </div>
         
-        <div className="flex items-center gap-1 text-[10px] font-medium bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-          <Timer className="h-2.5 w-2.5" />
-          <span>{getTimeLabel()}</span>
+        {/* Divider */}
+        <div className="border-t border-gray-200 dark:border-gray-600"></div>
+        
+        {/* Content Section */}
+        <div className="px-3 py-2">
+          <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+            <Timer className="h-3 w-3" />
+            <span>{getTimeLabel()}</span>
+          </div>
         </div>
       </div>
       

@@ -17,24 +17,30 @@ export const FormStartNode: React.FC<FormStartNodeProps> = ({ data, selected, id
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-36 h-32 rounded-[15px] bg-white border shadow-sm transition-all duration-200 flex flex-col items-center justify-center relative overflow-hidden ${
+      <div className={`w-40 h-24 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200 relative overflow-hidden ${
         selected 
           ? 'border-[#5D8701] shadow-[0_0_0_2px_rgba(93,135,1,0.2)]' 
-          : 'border-gray-200'
+          : 'border-gray-200 dark:border-gray-700'
       }`}>
-        <FileText className="h-6 w-6 mb-1 text-[#5D8701]" />
-        <div className="text-xs font-semibold text-center text-[#5D8701] tracking-tight mb-1">
-          Formulário
+        {/* Header Section */}
+        <div className="flex items-center gap-2 px-3 py-2">
+          <FileText className="h-4 w-4 text-[#5D8701]" />
+          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Formulário</span>
         </div>
         
-        <div className="flex items-center gap-1 text-[10px] text-gray-500 mb-1">
-          <Send className="h-2.5 w-2.5" />
-          <span>Envia WhatsApp</span>
-        </div>
+        {/* Divider */}
+        <div className="border-t border-gray-200 dark:border-gray-600"></div>
         
-        <div className="flex items-center gap-1 text-[10px] text-gray-400">
-          <ExternalLink className="h-2.5 w-2.5" />
-          <span>com link</span>
+        {/* Content Section */}
+        <div className="px-3 py-2 space-y-1">
+          <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+            <Send className="h-3 w-3" />
+            <span>Envia WhatsApp</span>
+          </div>
+          <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-500">
+            <ExternalLink className="h-3 w-3" />
+            <span>com link</span>
+          </div>
         </div>
       </div>
       

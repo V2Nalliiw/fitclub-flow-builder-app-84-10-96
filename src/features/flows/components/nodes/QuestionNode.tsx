@@ -33,34 +33,37 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
 
   const isEscolhaUnica = data.tipoResposta === 'escolha-unica';
   const opcoes = data.opcoes || [];
-  const hasContent = data.pergunta || opcoes.length > 0;
-  const minHeight = hasContent ? 36 : 32;
 
   return (
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-36 rounded-[15px] bg-white border shadow-sm transition-all duration-200 flex flex-col items-center justify-center relative overflow-hidden ${
+      <div className={`w-40 h-24 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200 relative overflow-hidden ${
         selected 
           ? 'border-[#5D8701] shadow-[0_0_0_2px_rgba(93,135,1,0.2)]' 
-          : 'border-gray-200'
-      }`}
-      style={{ minHeight: `${minHeight * 4}px` }}>
-        <HelpCircle className="h-6 w-6 mb-1 text-[#5D8701]" />
-        <div className="text-xs font-semibold text-center text-[#5D8701] tracking-tight mb-1">
-          Pergunta
+          : 'border-gray-200 dark:border-gray-700'
+      }`}>
+        {/* Header Section */}
+        <div className="flex items-center gap-2 px-3 py-2">
+          <HelpCircle className="h-4 w-4 text-[#5D8701]" />
+          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Pergunta</span>
         </div>
         
-        <div className="flex items-center gap-1 text-[10px] text-gray-500">
-          {getQuestionIcon()}
-          <span>{getTypeLabel()}</span>
-        </div>
+        {/* Divider */}
+        <div className="border-t border-gray-200 dark:border-gray-600"></div>
         
-        {opcoes.length > 0 && (
-          <div className="text-[10px] text-gray-400 text-center mt-1">
-            {opcoes.length} opções
+        {/* Content Section */}
+        <div className="px-3 py-2 space-y-1">
+          <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+            {getQuestionIcon()}
+            <span>{getTypeLabel()}</span>
           </div>
-        )}
+          {opcoes.length > 0 && (
+            <div className="text-xs text-gray-500 dark:text-gray-500">
+              {opcoes.length} opções
+            </div>
+          )}
+        </div>
       </div>
       
       <NodeActions
