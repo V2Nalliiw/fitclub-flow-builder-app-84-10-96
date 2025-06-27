@@ -135,7 +135,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
       <CardContent className="p-0">
         <div className="px-6 pb-3">
           {unreadCount > 0 && (
-            <Button variant="ghost" size="sm" onClick={markAllAsRead} className="w-full">
+            <Button variant="ghost" size="sm" onClick={() => markAllAsRead()} className="w-full">
               <Check className="h-4 w-4 mr-2" />
               Marcar todas como lidas
             </Button>
