@@ -24,7 +24,7 @@ export const StartNode: React.FC<StartNodeProps> = ({ data, selected, id, onDele
       }`}>
         {/* Header Section */}
         <div className="flex items-center gap-2 px-3 py-2">
-          <Play className="h-4 w-4 text-[#5D8701]" fill="currentColor" />
+          <Play className="h-4 w-4 text-green-600" fill="currentColor" />
           <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Início</span>
         </div>
         

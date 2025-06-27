@@ -24,7 +24,7 @@ export const EndNode: React.FC<EndNodeProps> = ({ data, selected, id, onDelete, 
       }`}>
         {/* Header Section */}
         <div className="flex items-center gap-2 px-3 py-2">
-          <Flag className="h-4 w-4 text-[#5D8701]" />
+          <Flag className="h-4 w-4 text-red-500" />
           <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Fim do Fluxo</span>
         </div>
         

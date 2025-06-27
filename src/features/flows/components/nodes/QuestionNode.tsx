@@ -45,7 +45,7 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
       }`}>
         {/* Header Section */}
         <div className="flex items-center gap-2 px-3 py-2">
-          <HelpCircle className="h-4 w-4 text-[#5D8701]" />
+          <HelpCircle className="h-4 w-4 text-amber-500" />
           <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Pergunta</span>
         </div>
         

@@ -85,7 +85,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
 
   return (
     <div 
-      className="relative bg-white dark:bg-[#0E0E0E]"
+      className="relative bg-gray-50 dark:bg-[#0E0E0E]"
       style={{ 
         height: canvasHeight,
         width: canvasWidth
@@ -102,7 +102,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        className="bg-white dark:bg-[#0E0E0E]"
+        className="bg-gray-50 dark:bg-[#0E0E0E]"
         defaultEdgeOptions={{
           animated: true,
           type: 'deleteButton',
@@ -148,9 +148,9 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         />
         <Background 
           gap={16} 
-          size={1} 
-          color="hsl(var(--muted-foreground) / 0.3)" 
-          className="bg-gray-50/50 dark:bg-[#0E0E0E]"
+          size={1.5} 
+          color="hsl(var(--muted-foreground) / 0.6)" 
+          className="bg-gray-50 dark:bg-[#0E0E0E]"
         />
       </ReactFlow>
     </div>
