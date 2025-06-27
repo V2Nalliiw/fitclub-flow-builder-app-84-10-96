@@ -6,6 +6,7 @@ import { PatientFlowDashboard } from '@/features/patient/components/PatientFlowD
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import { QuickActions } from '@/components/dashboard/QuickActions';
+import { FlowAssignmentsList } from '@/components/dashboard/FlowAssignmentsList';
 import { SystemHealthChecker } from '@/components/system/SystemHealthChecker';
 import { FileUploadTester } from '@/components/system/FileUploadTester';
 import { PageNavigationTester } from '@/components/system/PageNavigationTester';
@@ -61,7 +62,7 @@ export const Dashboard = () => {
             <PatientFlowDashboard />
           </div>
           <div className="space-y-6">
-            <QuickActions />
+            <FlowAssignmentsList />
             <ActivityFeed />
           </div>
         </div>
@@ -169,6 +170,9 @@ export const Dashboard = () => {
           />
         ))}
       </div>
+
+      {/* Atribuições de Fluxos */}
+      <FlowAssignmentsList />
 
       {/* Sistema de Verificação Completa */}
       <div className="grid gap-6 lg:grid-cols-2">

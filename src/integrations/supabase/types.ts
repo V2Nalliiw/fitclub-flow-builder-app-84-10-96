@@ -9,6 +9,88 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      flow_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string
+          completed_at: string | null
+          flow_id: string
+          id: string
+          notes: string | null
+          patient_id: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by: string
+          completed_at?: string | null
+          flow_id: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string
+          completed_at?: string | null
+          flow_id?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flow_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "flow_assignments_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "flows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flow_assignments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       flow_executions: {
         Row: {
           completed_at: string | null
