@@ -3,9 +3,28 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, MessageSquare, GitBranch, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { PatientFlowDashboard } from '@/features/patient/components/PatientFlowDashboard';
 
 export const Dashboard = () => {
   const { user } = useAuth();
+
+  // Se for paciente, mostrar dashboard específico
+  if (user?.role === 'patient') {
+    return (
+      <div className="space-y-6 px-6 py-6">
+        <div>
+          <h1 className="text-3xl font-bold">
+            Bem-vindo, {user?.name}!
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Acompanhe o progresso dos seus tratamentos e fluxos
+          </p>
+        </div>
+
+        <PatientFlowDashboard />
+      </div>
+    );
+  }
 
   const getDashboardCards = () => {
     switch (user?.role) {
@@ -22,12 +41,6 @@ export const Dashboard = () => {
           { title: 'Fluxos Criados', value: '8', icon: GitBranch, color: 'text-green-600' },
           { title: 'Mensagens Hoje', value: '23', icon: MessageSquare, color: 'text-purple-600' },
           { title: 'Taxa de Resposta', value: '87%', icon: TrendingUp, color: 'text-orange-600' },
-        ];
-      case 'patient':
-        return [
-          { title: 'Formulários Pendentes', value: '2', icon: MessageSquare, color: 'text-blue-600' },
-          { title: 'Dias de Tratamento', value: '15', icon: TrendingUp, color: 'text-green-600' },
-          { title: 'Próxima Consulta', value: 'Amanhã', icon: Users, color: 'text-purple-600' },
         ];
       default:
         return [];

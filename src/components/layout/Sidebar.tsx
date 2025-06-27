@@ -13,7 +13,8 @@ import {
   ChevronRight,
   BarChart3,
   Shield,
-  FileText
+  FileText,
+  Activity
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -57,6 +58,7 @@ export const Sidebar = ({ isCollapsed, onToggle }: SidebarProps) => {
       case 'patient':
         return [
           { icon: Home, label: 'Início', href: '/dashboard' },
+          { icon: Activity, label: 'Meus Fluxos', href: '/my-flows' },
           { icon: User, label: 'Meu Perfil', href: '/profile' },
         ];
       default:

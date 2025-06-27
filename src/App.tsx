@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,6 +21,7 @@ import { Preferences } from "@/pages/Preferences";
 import { Analytics } from "@/pages/Analytics";
 import { Permissions } from "@/pages/Permissions";
 import { Forms } from "@/pages/Forms";
+import { MyFlows } from "@/pages/MyFlows";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,6 +77,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <FlowBuilder />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/my-flows" 
+        element={
+          <ProtectedRoute>
+            <MyFlows />
           </ProtectedRoute>
         } 
       />
