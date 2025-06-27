@@ -1,9 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
@@ -20,76 +19,20 @@ import {
   Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface Notification {
-  id: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  title: string;
-  message: string;
-  timestamp: string;
-  read: boolean;
-  actionable?: boolean;
-  category: 'system' | 'patient' | 'flow' | 'team';
-  metadata?: {
-    patientId?: string;
-    flowId?: string;
-    userId?: string;
-  };
-}
-
-// Mock data
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'info',
-    title: 'Novo paciente cadastrado',
-    message: 'Maria Silva foi adicionada à sua clínica',
-    timestamp: '2024-01-20T10:30:00Z',
-    read: false,
-    actionable: true,
-    category: 'patient',
-    metadata: { patientId: 'patient-1' }
-  },
-  {
-    id: '2',
-    type: 'success',
-    title: 'Fluxo concluído',
-    message: 'João Santos completou o fluxo de reabilitação',
-    timestamp: '2024-01-20T09:15:00Z',
-    read: false,
-    actionable: false,
-    category: 'flow',
-    metadata: { flowId: 'flow-1', patientId: 'patient-2' }
-  },
-  {
-    id: '3',
-    type: 'warning',
-    title: 'Formulário pendente',
-    message: 'Ana Costa não respondeu ao questionário há 3 dias',
-    timestamp: '2024-01-19T16:45:00Z',
-    read: true,
-    actionable: true,
-    category: 'patient',
-    metadata: { patientId: 'patient-3' }
-  },
-  {
-    id: '4',
-    type: 'error',
-    title: 'Erro no sistema',
-    message: 'Falha ao enviar WhatsApp para 2 pacientes',
-    timestamp: '2024-01-19T14:20:00Z',
-    read: false,
-    actionable: true,
-    category: 'system'
-  }
-];
+import { useNotifications } from '@/hooks/useNotifications';
 
 interface NotificationCenterProps {
   onClose?: () => void;
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose }) => {
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const { 
+    notifications, 
+    isLoading, 
+    markAsRead, 
+    markAllAsRead, 
+    deleteNotification 
+  } = useNotifications();
   const [filter, setFilter] = useState<'all' | 'unread' | 'actionable'>('all');
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -110,28 +53,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
       case 'team': return <Calendar className="h-3 w-3" />;
       default: return <Settings className="h-3 w-3" />;
     }
-  };
-
-  const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(notification =>
-        notification.id === id
-          ? { ...notification, read: true }
-          : notification
-      )
-    );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(notification =>
-        ({ ...notification, read: true })
-      )
-    );
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
   const filteredNotifications = notifications.filter(notification => {
@@ -155,6 +76,16 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
       return `${Math.floor(diffInMinutes / 1440)}d atrás`;
     }
   };
+
+  if (isLoading) {
+    return (
+      <Card className="w-full max-w-md">
+        <CardContent className="flex items-center justify-center p-8">
+          <p className="text-muted-foreground">Carregando notificações...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md">
