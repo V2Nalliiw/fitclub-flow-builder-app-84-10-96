@@ -22,6 +22,7 @@ import { Preferences } from "@/pages/Preferences";
 import { Analytics } from "@/pages/Analytics";
 import { Permissions } from "@/pages/Permissions";
 import { Forms } from "@/pages/Forms";
+import { WhatsAppSettings } from "@/pages/WhatsAppSettings";
 import MyFlows from "@/pages/MyFlows";
 
 const queryClient = new QueryClient({
@@ -118,6 +119,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Settings />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/whatsapp-settings" 
+        element={
+          <ProtectedRoute>
+            <WhatsAppSettings />
           </ProtectedRoute>
         } 
       />
