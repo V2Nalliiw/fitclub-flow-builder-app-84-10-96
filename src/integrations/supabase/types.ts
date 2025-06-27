@@ -140,12 +140,16 @@ export type Database = {
           created_at: string
           current_node: string
           current_step: Json
+          error_message: string | null
+          execution_data: Json | null
           flow_id: string
           flow_name: string
           id: string
           next_step_available_at: string | null
           patient_id: string
           progress: number
+          retry_count: number | null
+          scheduled_for: string | null
           started_at: string
           status: string
           total_steps: number
@@ -157,12 +161,16 @@ export type Database = {
           created_at?: string
           current_node: string
           current_step?: Json
+          error_message?: string | null
+          execution_data?: Json | null
           flow_id: string
           flow_name: string
           id?: string
           next_step_available_at?: string | null
           patient_id: string
           progress?: number
+          retry_count?: number | null
+          scheduled_for?: string | null
           started_at?: string
           status: string
           total_steps?: number
@@ -174,12 +182,16 @@ export type Database = {
           created_at?: string
           current_node?: string
           current_step?: Json
+          error_message?: string | null
+          execution_data?: Json | null
           flow_id?: string
           flow_name?: string
           id?: string
           next_step_available_at?: string | null
           patient_id?: string
           progress?: number
+          retry_count?: number | null
+          scheduled_for?: string | null
           started_at?: string
           status?: string
           total_steps?: number
@@ -364,6 +376,51 @@ export type Database = {
           type?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      patient_invitations: {
+        Row: {
+          accepted_at: string | null
+          clinic_id: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invitation_token: string
+          invited_by: string
+          name: string
+          phone: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          clinic_id: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          invitation_token: string
+          invited_by: string
+          name: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          clinic_id?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invitation_token?: string
+          invited_by?: string
+          name?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -553,6 +610,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      whatsapp_webhooks: {
+        Row: {
+          clinic_id: string
+          created_at: string
+          id: string
+          message_data: Json
+          message_type: string
+          phone_number: string
+          processed_at: string | null
+          status: string
+          webhook_id: string
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string
+          id?: string
+          message_data: Json
+          message_type: string
+          phone_number: string
+          processed_at?: string | null
+          status?: string
+          webhook_id: string
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string
+          id?: string
+          message_data?: Json
+          message_type?: string
+          phone_number?: string
+          processed_at?: string | null
+          status?: string
+          webhook_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

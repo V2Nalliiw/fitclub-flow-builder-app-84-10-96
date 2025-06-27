@@ -25,6 +25,8 @@ import { WhatsAppSettings } from "@/pages/WhatsAppSettings";
 import MyFlows from "@/pages/MyFlows";
 import NotFound from "@/pages/NotFound";
 
+import { RealtimeNotificationProvider } from "@/components/notifications/RealtimeNotificationProvider";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -198,11 +200,13 @@ const App = () => (
       <AuthProvider>
         <ErrorBoundary>
           <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AppRoutes />
-            </BrowserRouter>
+            <RealtimeNotificationProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <AppRoutes />
+              </BrowserRouter>
+            </RealtimeNotificationProvider>
           </TooltipProvider>
         </ErrorBoundary>
       </AuthProvider>
