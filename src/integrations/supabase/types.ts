@@ -9,7 +9,198 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      flow_executions: {
+        Row: {
+          completed_at: string | null
+          completed_steps: number
+          created_at: string
+          current_node: string
+          current_step: Json
+          flow_id: string
+          flow_name: string
+          id: string
+          next_step_available_at: string | null
+          patient_id: string
+          progress: number
+          started_at: string
+          status: string
+          total_steps: number
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_steps?: number
+          created_at?: string
+          current_node: string
+          current_step?: Json
+          flow_id: string
+          flow_name: string
+          id?: string
+          next_step_available_at?: string | null
+          patient_id: string
+          progress?: number
+          started_at?: string
+          status: string
+          total_steps?: number
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_steps?: number
+          created_at?: string
+          current_node?: string
+          current_step?: Json
+          flow_id?: string
+          flow_name?: string
+          id?: string
+          next_step_available_at?: string | null
+          patient_id?: string
+          progress?: number
+          started_at?: string
+          status?: string
+          total_steps?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flow_executions_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "flows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flow_steps: {
+        Row: {
+          available_at: string | null
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          execution_id: string
+          form_url: string | null
+          id: string
+          node_id: string
+          node_type: string
+          response: Json | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          available_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          execution_id: string
+          form_url?: string | null
+          id?: string
+          node_id: string
+          node_type: string
+          response?: Json | null
+          status: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          available_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          execution_id?: string
+          form_url?: string | null
+          id?: string
+          node_id?: string
+          node_type?: string
+          response?: Json | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flow_steps_execution_id_fkey"
+            columns: ["execution_id"]
+            isOneToOne: false
+            referencedRelation: "flow_executions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flows: {
+        Row: {
+          clinic_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          edges: Json
+          id: string
+          is_active: boolean
+          name: string
+          nodes: Json
+          updated_at: string
+        }
+        Insert: {
+          clinic_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          edges?: Json
+          id?: string
+          is_active?: boolean
+          name: string
+          nodes?: Json
+          updated_at?: string
+        }
+        Update: {
+          clinic_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          edges?: Json
+          id?: string
+          is_active?: boolean
+          name?: string
+          nodes?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      form_responses: {
+        Row: {
+          created_at: string
+          execution_id: string
+          id: string
+          node_id: string
+          patient_id: string
+          response: Json
+        }
+        Insert: {
+          created_at?: string
+          execution_id: string
+          id?: string
+          node_id: string
+          patient_id: string
+          response: Json
+        }
+        Update: {
+          created_at?: string
+          execution_id?: string
+          id?: string
+          node_id?: string
+          patient_id?: string
+          response?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_responses_execution_id_fkey"
+            columns: ["execution_id"]
+            isOneToOne: false
+            referencedRelation: "flow_executions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

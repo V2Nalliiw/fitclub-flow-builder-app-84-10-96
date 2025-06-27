@@ -1,14 +1,16 @@
 
 import { useState, useCallback } from 'react';
-import { FlowNode, FlowExecution, FormResponse } from '@/types/flow';
+import { FlowNode } from '@/types/flow';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export const useFlowExecution = () => {
-  const [executions, setExecutions] = useState<FlowExecution[]>([]);
-  const [responses, setResponses] = useState<FormResponse[]>([]);
+  const { toast } = useToast();
+  const [processing, setProcessing] = useState(false);
 
   const startFlowExecution = useCallback(async (
     flowId: string,
-    pacienteId: string,
+    patientId: string,
     nodes: FlowNode[]
   ) => {
     // Encontra o nó de início
@@ -17,21 +19,52 @@ export const useFlowExecution = () => {
       throw new Error('Fluxo deve ter um nó de início');
     }
 
-    const execution: FlowExecution = {
-      id: `exec_${Date.now()}`,
-      flow_id: flowId,
-      paciente_id: pacienteId,
-      status: 'em-andamento',
-      no_atual: startNode.id,
-      started_at: new Date().toISOString(),
-    };
+    try {
+      // Buscar informações do fluxo
+      const { data: flow, error: flowError } = await supabase
+        .from('flows')
+        .select('name')
+        .eq('id', flowId)
+        .single();
 
-    setExecutions(prev => [...prev, execution]);
-    
-    // Aqui integraria com Supabase para salvar a execução
-    console.log('Iniciando execução do fluxo:', execution);
-    
-    return execution;
+      if (flowError || !flow) {
+        throw new Error('Fluxo não encontrado');
+      }
+
+      // Criar execução
+      const { data: execution, error: executionError } = await supabase
+        .from('flow_executions')
+        .insert({
+          flow_id: flowId,
+          flow_name: flow.name,
+          patient_id: patientId,
+          status: 'em-andamento',
+          current_node: startNode.id,
+          progress: 0,
+          total_steps: nodes.length,
+          completed_steps: 0,
+          current_step: {
+            id: startNode.id,
+            type: startNode.type,
+            title: startNode.data.label || 'Início',
+            description: startNode.data.descricao,
+            completed: false,
+          },
+        })
+        .select()
+        .single();
+
+      if (executionError) {
+        throw executionError;
+      }
+
+      console.log('Execução do fluxo iniciada:', execution);
+      return execution;
+
+    } catch (error) {
+      console.error('Erro ao iniciar execução:', error);
+      throw error;
+    }
   }, []);
 
   const processNode = useCallback(async (
@@ -40,107 +73,141 @@ export const useFlowExecution = () => {
     nodeType: string,
     nodeData: any
   ) => {
-    console.log(`Processando nó ${nodeType}:`, { executionId, nodeId, nodeData });
+    setProcessing(true);
+    
+    try {
+      console.log(`Processando nó ${nodeType}:`, { executionId, nodeId, nodeData });
 
-    switch (nodeType) {
-      case 'formStart':
-        // Envia WhatsApp com link do formulário
-        await sendWhatsAppMessage(executionId, {
-          type: 'form_link',
-          titulo: nodeData.titulo,
-          descricao: nodeData.descricao,
-          link: `https://app.fitclub.com/formulario/${executionId}/${nodeId}`,
-        });
-        break;
+      switch (nodeType) {
+        case 'formStart':
+          // Criar etapa para formulário
+          await supabase.from('flow_steps').insert({
+            execution_id: executionId,
+            node_id: nodeId,
+            node_type: nodeType,
+            title: nodeData.titulo || 'Formulário',
+            description: nodeData.descricao,
+            status: 'disponivel',
+            form_url: `${window.location.origin}/forms/${nodeId}?execution=${executionId}`,
+          });
+          
+          console.log('Etapa de formulário criada');
+          break;
 
-      case 'formEnd':
-        // Envia conteúdo após resposta do formulário
-        await sendWhatsAppMessage(executionId, {
-          type: 'content',
-          mensagem: nodeData.mensagemFinal,
-          arquivo: nodeData.arquivo,
-          tipoConteudo: nodeData.tipoConteudo,
-        });
-        break;
+        case 'formEnd':
+          // Processar finalização de formulário
+          console.log('Processando fim de formulário:', nodeData);
+          break;
 
-      case 'delay':
-        // Agenda próxima execução
-        await scheduleNextNode(executionId, nodeData.quantidade, nodeData.tipoIntervalo);
-        break;
+        case 'delay':
+          // Calcular próxima data disponível
+          const delay = nodeData.quantidade || 1;
+          const tipo = nodeData.tipoIntervalo || 'dias';
+          
+          let nextDate = new Date();
+          switch (tipo) {
+            case 'minutos':
+              nextDate.setMinutes(nextDate.getMinutes() + delay);
+              break;
+            case 'horas':
+              nextDate.setHours(nextDate.getHours() + delay);
+              break;
+            case 'dias':
+            default:
+              nextDate.setDate(nextDate.getDate() + delay);
+              break;
+          }
 
-      case 'question':
-        // Salva pergunta e aguarda resposta
-        await saveQuestionNode(executionId, nodeId, nodeData);
-        break;
+          // Atualizar execução com próxima data
+          await supabase
+            .from('flow_executions')
+            .update({
+              status: 'aguardando',
+              next_step_available_at: nextDate.toISOString(),
+            })
+            .eq('id', executionId);
 
-      case 'end':
-        // Finaliza fluxo
-        await finalizeExecution(executionId, nodeData.mensagemFinal);
-        break;
+          console.log('Delay processado, próxima execução em:', nextDate);
+          break;
+
+        case 'question':
+          // Criar etapa para pergunta
+          await supabase.from('flow_steps').insert({
+            execution_id: executionId,
+            node_id: nodeId,
+            node_type: nodeType,
+            title: nodeData.pergunta || 'Pergunta',
+            description: 'Responda a pergunta para continuar',
+            status: 'disponivel',
+          });
+          
+          console.log('Etapa de pergunta criada');
+          break;
+
+        case 'end':
+          // Finalizar fluxo
+          await supabase
+            .from('flow_executions')
+            .update({
+              status: 'concluido',
+              progress: 100,
+              completed_at: new Date().toISOString(),
+            })
+            .eq('id', executionId);
+          
+          console.log('Fluxo finalizado');
+          break;
+
+        default:
+          console.log('Tipo de nó não reconhecido:', nodeType);
+      }
+
+    } catch (error) {
+      console.error('Erro ao processar nó:', error);
+      toast({
+        title: "Erro no processamento",
+        description: "Ocorreu um erro ao processar a etapa do fluxo",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setProcessing(false);
     }
-  }, []);
+  }, [toast]);
 
   const saveFormResponse = useCallback(async (
     executionId: string,
     nodeId: string,
-    pacienteId: string,
-    resposta: any
+    patientId: string,
+    response: any
   ) => {
-    const response: FormResponse = {
-      id: `resp_${Date.now()}`,
-      execution_id: executionId,
-      node_id: nodeId,
-      paciente_id: pacienteId,
-      resposta,
-      created_at: new Date().toISOString(),
-    };
+    try {
+      const { data, error } = await supabase
+        .from('form_responses')
+        .insert({
+          execution_id: executionId,
+          node_id: nodeId,
+          patient_id: patientId,
+          response: response,
+        })
+        .select()
+        .single();
 
-    setResponses(prev => [...prev, response]);
-    
-    // Aqui integraria com Supabase para salvar a resposta
-    console.log('Salvando resposta:', response);
-    
-    return response;
+      if (error) {
+        throw error;
+      }
+
+      console.log('Resposta salva:', data);
+      return data;
+
+    } catch (error) {
+      console.error('Erro ao salvar resposta:', error);
+      throw error;
+    }
   }, []);
 
-  // Funções auxiliares (implementar com integrações reais)
-  const sendWhatsAppMessage = async (executionId: string, messageData: any) => {
-    console.log('Enviando WhatsApp:', { executionId, messageData });
-    // Integração com API do WhatsApp via Supabase Edge Function
-  };
-
-  const scheduleNextNode = async (executionId: string, quantidade: number, tipo: string) => {
-    console.log('Agendando próximo nó:', { executionId, quantidade, tipo });
-    // Implementar sistema de agendamento
-  };
-
-  const saveQuestionNode = async (executionId: string, nodeId: string, questionData: any) => {
-    console.log('Salvando pergunta:', { executionId, nodeId, questionData });
-    // Salvar pergunta no banco para posterior resposta
-  };
-
-  const finalizeExecution = async (executionId: string, mensagemFinal?: string) => {
-    setExecutions(prev => 
-      prev.map(exec => 
-        exec.id === executionId 
-          ? { ...exec, status: 'concluido', completed_at: new Date().toISOString() }
-          : exec
-      )
-    );
-    
-    if (mensagemFinal) {
-      await sendWhatsAppMessage(executionId, {
-        type: 'final_message',
-        mensagem: mensagemFinal,
-      });
-    }
-    
-    console.log('Finalizando execução:', executionId);
-  };
-
   return {
-    executions,
-    responses,
+    processing,
     startFlowExecution,
     processNode,
     saveFormResponse,
