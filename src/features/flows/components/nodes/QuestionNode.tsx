@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { HelpCircle, CheckSquare, Circle, Type, List, MessageSquare } from 'lucide-react';
+import { HelpCircle, CheckSquare, Circle, Type, List } from 'lucide-react';
 import { NodeActions } from '../NodeActions';
 
 interface QuestionNodeProps {
@@ -34,77 +34,36 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
   const isEscolhaUnica = data.tipoResposta === 'escolha-unica';
   const opcoes = data.opcoes || [];
   const hasContent = data.pergunta || opcoes.length > 0;
-  const minHeight = hasContent ? 160 : 140;
+  const minHeight = hasContent ? 36 : 32;
 
   return (
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-44 bg-white dark:bg-gray-900 border-2 border-purple-200 dark:border-purple-800 shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden ${
+      <div className={`w-36 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden ${
         selected 
-          ? 'shadow-[0_0_0_3px_rgba(147,51,234,0.3),0_8px_25px_rgba(147,51,234,0.2)] border-purple-400 dark:border-purple-600' 
+          ? 'shadow-[0_0_0_3px_rgba(147,51,234,0.3),0_8px_25px_rgba(147,51,234,0.2)]' 
           : 'shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
       }`}
-      style={{
-        minHeight: `${minHeight}px`,
-        borderRadius: '16px 16px 16px 4px',
-        position: 'relative'
-      }}>
-        {/* Chat bubble tail */}
-        <div 
-          className="absolute -left-2 bottom-4 w-4 h-4 bg-white dark:bg-gray-900 border-l-2 border-b-2 border-purple-200 dark:border-purple-800 transform rotate-45"
-          style={{
-            clipPath: 'polygon(0 0, 100% 100%, 0 100%)'
-          }}
-        />
+      style={{ minHeight: `${minHeight * 4}px` }}>
+        {/* Glow effect interno */}
+        <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-transparent to-white/10" />
         
-        {/* Header */}
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-3 flex items-center gap-2 rounded-t-2xl">
-          <HelpCircle className="h-4 w-4 text-white" />
-          <div className="text-xs font-semibold text-white tracking-tight">
-            Pergunta
-          </div>
-          <MessageSquare className="h-3 w-3 ml-auto text-white/80" />
+        <HelpCircle className="h-6 w-6 mb-1 relative z-10" />
+        <div className="text-xs font-semibold text-center relative z-10 tracking-tight mb-1">
+          Pergunta
         </div>
         
-        {/* Body */}
-        <div className="flex-1 p-3 flex flex-col">
-          <div className="flex items-center gap-1 text-[10px] text-purple-600 dark:text-purple-400 justify-center mb-2">
-            {getQuestionIcon()}
-            <span className="font-medium">{getTypeLabel()}</span>
-          </div>
-          
-          {data.pergunta && (
-            <div className="text-xs text-gray-700 dark:text-gray-300 text-center mb-3 line-clamp-2 bg-gray-50 dark:bg-gray-800 p-2 rounded-lg">
-              {data.pergunta}
-            </div>
-          )}
-          
-          {/* Opções para escolha única */}
-          {isEscolhaUnica && opcoes.length > 0 && (
-            <div className="space-y-1 flex-1">
-              {opcoes.slice(0, 3).map((opcao: string, index: number) => (
-                <div key={index} className="text-[10px] text-gray-600 dark:text-gray-400">
-                  <span className="inline-flex items-center gap-1 bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded-full">
-                    <Circle className="h-2 w-2" />
-                    {opcao.substring(0, 12)}{opcao.length > 12 ? '...' : ''}
-                  </span>
-                </div>
-              ))}
-              {opcoes.length > 3 && (
-                <div className="text-[10px] text-purple-600 dark:text-purple-400 text-center">
-                  +{opcoes.length - 3} opções...
-                </div>
-              )}
-            </div>
-          )}
-          
-          {opcoes.length > 0 && !isEscolhaUnica && (
-            <div className="text-[10px] text-purple-600 dark:text-purple-400 text-center mt-auto bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded-full">
-              {opcoes.length} opções disponíveis
-            </div>
-          )}
+        <div className="flex items-center gap-1 text-[10px] opacity-90 relative z-10">
+          {getQuestionIcon()}
+          <span>{getTypeLabel()}</span>
         </div>
+        
+        {opcoes.length > 0 && (
+          <div className="text-[10px] opacity-80 text-center relative z-10 mt-1">
+            {opcoes.length} opções
+          </div>
+        )}
       </div>
       
       <NodeActions

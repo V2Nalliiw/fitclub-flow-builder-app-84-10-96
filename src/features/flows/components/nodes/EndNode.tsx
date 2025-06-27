@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Square, MessageCircle } from 'lucide-react';
+import { Flag, MessageCircle } from 'lucide-react';
 import { NodeActions } from '../NodeActions';
 
 interface EndNodeProps {
@@ -17,19 +17,15 @@ export const EndNode: React.FC<EndNodeProps> = ({ data, selected, id, onDelete, 
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-36 h-24 bg-gradient-to-br from-red-500 to-red-600 shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden ${
+      <div className={`w-32 h-28 rounded-lg bg-gradient-to-br from-red-500 to-red-600 shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden ${
         selected 
           ? 'shadow-[0_0_0_3px_rgba(239,68,68,0.3),0_8px_25px_rgba(239,68,68,0.2)]' 
           : 'shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
-      }`}
-      style={{
-        clipPath: 'polygon(8% 0%, 92% 0%, 100% 25%, 92% 100%, 8% 100%, 0% 25%)'
-      }}>
+      }`}>
         {/* Glow effect interno */}
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/10" 
-             style={{clipPath: 'inherit'}} />
+        <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-transparent to-white/10" />
         
-        <Square className="h-5 w-5 mb-1 relative z-10" />
+        <Flag className="h-6 w-6 mb-1 relative z-10" />
         <div className="text-xs font-semibold text-center relative z-10 tracking-tight">
           Fim do Fluxo
         </div>
