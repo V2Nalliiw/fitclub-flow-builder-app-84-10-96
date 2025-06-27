@@ -26,18 +26,16 @@ export const useFlows = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      let query = supabase.from('flows').select('*');
+      const { data, error } = await supabase
+        .from('flows')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      // Filtrar baseado no papel do usuário
-      if (user.role === 'clinic') {
-        query = query.eq('created_by', user.id);
-      } else if (user.role === 'super_admin') {
-        // Super admin vê todos os fluxos
+      if (error) {
+        console.error('Erro ao carregar fluxos:', error);
+        throw error;
       }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) throw error;
+      
       return data as Flow[];
     },
     enabled: !!user,
@@ -61,7 +59,10 @@ export const useFlows = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao criar fluxo:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -78,12 +79,18 @@ export const useFlows = () => {
     mutationFn: async ({ id, ...updates }: Partial<Flow> & { id: string }) => {
       const { data, error } = await supabase
         .from('flows')
-        .update(updates)
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao atualizar fluxo:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -103,7 +110,10 @@ export const useFlows = () => {
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao excluir fluxo:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['flows'] });

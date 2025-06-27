@@ -20,7 +20,6 @@ export const usePatientFlows = () => {
 
     setLoading(true);
     try {
-      // Buscar execuções do paciente
       const { data: flowExecutions, error: flowError } = await supabase
         .from('flow_executions')
         .select('*')
@@ -37,7 +36,6 @@ export const usePatientFlows = () => {
         return;
       }
 
-      // Transformar dados do Supabase para o formato esperado
       const transformedExecutions: PatientFlowExecution[] = (flowExecutions || []).map(execution => ({
         id: execution.id,
         flow_id: execution.flow_id,
@@ -56,7 +54,6 @@ export const usePatientFlows = () => {
 
       setExecutions(transformedExecutions);
 
-      // Buscar etapas se houver execuções
       if (transformedExecutions.length > 0) {
         const executionIds = transformedExecutions.map(exec => exec.id);
         const { data: flowSteps, error: stepsError } = await supabase
@@ -101,7 +98,6 @@ export const usePatientFlows = () => {
     if (!user?.id) return;
 
     try {
-      // Buscar a execução atual
       const { data: execution, error: fetchError } = await supabase
         .from('flow_executions')
         .select('*')
@@ -112,12 +108,10 @@ export const usePatientFlows = () => {
         throw new Error('Execução não encontrada');
       }
 
-      // Calcular novo progresso
       const newCompletedSteps = execution.completed_steps + 1;
       const newProgress = Math.round((newCompletedSteps / execution.total_steps) * 100);
       const newStatus = newProgress >= 100 ? 'concluido' : execution.status;
 
-      // Atualizar execução
       const { error: updateError } = await supabase
         .from('flow_executions')
         .update({
@@ -133,7 +127,6 @@ export const usePatientFlows = () => {
         throw updateError;
       }
 
-      // Salvar resposta se fornecida
       if (response && stepId) {
         const { error: responseError } = await supabase
           .from('form_responses')
@@ -149,7 +142,6 @@ export const usePatientFlows = () => {
         }
       }
 
-      // Recarregar dados
       await loadPatientFlows();
 
       toast({

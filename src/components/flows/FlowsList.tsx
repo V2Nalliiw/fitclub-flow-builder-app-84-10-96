@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,8 +17,7 @@ import {
   Edit, 
   Trash2, 
   GitBranch,
-  Calendar,
-  User
+  Calendar
 } from 'lucide-react';
 import { useFlows } from '@/hooks/useFlows';
 import { formatDistanceToNow } from 'date-fns';

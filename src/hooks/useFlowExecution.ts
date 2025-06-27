@@ -13,14 +13,12 @@ export const useFlowExecution = () => {
     patientId: string,
     nodes: FlowNode[]
   ) => {
-    // Encontra o nó de início
     const startNode = nodes.find(node => node.type === 'start');
     if (!startNode) {
       throw new Error('Fluxo deve ter um nó de início');
     }
 
     try {
-      // Buscar informações do fluxo
       const { data: flow, error: flowError } = await supabase
         .from('flows')
         .select('name')
@@ -31,7 +29,6 @@ export const useFlowExecution = () => {
         throw new Error('Fluxo não encontrado');
       }
 
-      // Criar execução
       const { data: execution, error: executionError } = await supabase
         .from('flow_executions')
         .insert({
@@ -55,6 +52,7 @@ export const useFlowExecution = () => {
         .single();
 
       if (executionError) {
+        console.error('Erro ao criar execução:', executionError);
         throw executionError;
       }
 
@@ -63,9 +61,14 @@ export const useFlowExecution = () => {
 
     } catch (error) {
       console.error('Erro ao iniciar execução:', error);
+      toast({
+        title: "Erro ao iniciar fluxo",
+        description: "Não foi possível iniciar o fluxo",
+        variant: "destructive",
+      });
       throw error;
     }
-  }, []);
+  }, [toast]);
 
   const processNode = useCallback(async (
     executionId: string,
@@ -80,7 +83,6 @@ export const useFlowExecution = () => {
 
       switch (nodeType) {
         case 'formStart':
-          // Criar etapa para formulário
           await supabase.from('flow_steps').insert({
             execution_id: executionId,
             node_id: nodeId,
@@ -95,12 +97,10 @@ export const useFlowExecution = () => {
           break;
 
         case 'formEnd':
-          // Processar finalização de formulário
           console.log('Processando fim de formulário:', nodeData);
           break;
 
         case 'delay':
-          // Calcular próxima data disponível
           const delay = nodeData.quantidade || 1;
           const tipo = nodeData.tipoIntervalo || 'dias';
           
@@ -118,12 +118,12 @@ export const useFlowExecution = () => {
               break;
           }
 
-          // Atualizar execução com próxima data
           await supabase
             .from('flow_executions')
             .update({
               status: 'aguardando',
               next_step_available_at: nextDate.toISOString(),
+              updated_at: new Date().toISOString(),
             })
             .eq('id', executionId);
 
@@ -131,7 +131,6 @@ export const useFlowExecution = () => {
           break;
 
         case 'question':
-          // Criar etapa para pergunta
           await supabase.from('flow_steps').insert({
             execution_id: executionId,
             node_id: nodeId,
@@ -145,13 +144,13 @@ export const useFlowExecution = () => {
           break;
 
         case 'end':
-          // Finalizar fluxo
           await supabase
             .from('flow_executions')
             .update({
               status: 'concluido',
               progress: 100,
               completed_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
             })
             .eq('id', executionId);
           
@@ -194,6 +193,7 @@ export const useFlowExecution = () => {
         .single();
 
       if (error) {
+        console.error('Erro ao salvar resposta:', error);
         throw error;
       }
 
@@ -202,9 +202,14 @@ export const useFlowExecution = () => {
 
     } catch (error) {
       console.error('Erro ao salvar resposta:', error);
+      toast({
+        title: "Erro ao salvar resposta",
+        description: "Não foi possível salvar a resposta",
+        variant: "destructive",
+      });
       throw error;
     }
-  }, []);
+  }, [toast]);
 
   return {
     processing,

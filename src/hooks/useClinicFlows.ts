@@ -19,7 +19,6 @@ export const useClinicFlows = () => {
       const { data, error } = await supabase
         .from('flows')
         .select('*')
-        .eq('created_by', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -96,9 +95,7 @@ export const useClinicFlows = () => {
         description: "O fluxo foi salvo com sucesso",
       });
 
-      // Recarregar fluxos
       await loadClinicFlows();
-
       return data;
 
     } catch (error) {
@@ -133,8 +130,7 @@ export const useClinicFlows = () => {
       const { error } = await supabase
         .from('flows')
         .update(updateData)
-        .eq('id', flowId)
-        .eq('created_by', user?.id);
+        .eq('id', flowId);
 
       if (error) {
         console.error('Erro ao atualizar fluxo:', error);
@@ -151,7 +147,6 @@ export const useClinicFlows = () => {
         description: "O fluxo foi atualizado com sucesso",
       });
 
-      // Recarregar fluxos
       await loadClinicFlows();
       return true;
 
@@ -164,15 +159,14 @@ export const useClinicFlows = () => {
       });
       return false;
     }
-  }, [user?.id, toast, loadClinicFlows]);
+  }, [toast, loadClinicFlows]);
 
   const deleteFlow = useCallback(async (flowId: string) => {
     try {
       const { error } = await supabase
         .from('flows')
         .delete()
-        .eq('id', flowId)
-        .eq('created_by', user?.id);
+        .eq('id', flowId);
 
       if (error) {
         console.error('Erro ao deletar fluxo:', error);
@@ -189,7 +183,6 @@ export const useClinicFlows = () => {
         description: "O fluxo foi deletado com sucesso",
       });
 
-      // Recarregar fluxos
       await loadClinicFlows();
       return true;
 
@@ -202,11 +195,10 @@ export const useClinicFlows = () => {
       });
       return false;
     }
-  }, [user?.id, toast, loadClinicFlows]);
+  }, [toast, loadClinicFlows]);
 
   const startFlowExecution = useCallback(async (flowId: string, patientId: string) => {
     try {
-      // Buscar o fluxo para obter informações
       const { data: flow, error: flowError } = await supabase
         .from('flows')
         .select('*')
@@ -224,7 +216,6 @@ export const useClinicFlows = () => {
         throw new Error('Fluxo deve ter um nó de início');
       }
 
-      // Criar execução
       const { data: execution, error: executionError } = await supabase
         .from('flow_executions')
         .insert({
