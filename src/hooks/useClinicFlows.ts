@@ -126,8 +126,8 @@ export const useClinicFlows = () => {
 
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.description !== undefined) updateData.description = updates.description;
-      if (updates.nodes !== undefined) updateData.nodes = updates.nodes;
-      if (updates.edges !== undefined) updateData.edges = updates.edges;
+      if (updates.nodes !== undefined) updateData.nodes = updates.nodes as any;
+      if (updates.edges !== undefined) updateData.edges = updates.edges as any;
       if (updates.is_active !== undefined) updateData.is_active = updates.is_active;
 
       const { error } = await supabase
