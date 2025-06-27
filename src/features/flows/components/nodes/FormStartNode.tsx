@@ -17,13 +17,13 @@ export const FormStartNode: React.FC<FormStartNodeProps> = ({ data, selected, id
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-36 h-32 rounded-lg bg-gradient-to-br from-blue-500/70 to-blue-600/70 backdrop-blur-sm shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden border border-blue-500/20 ${
+      <div className={`w-36 h-32 rounded-[15px] bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden border border-blue-500/20 ${
         selected 
           ? 'shadow-[0_0_0_3px_rgba(59,130,246,0.3),0_8px_25px_rgba(59,130,246,0.2)]' 
           : 'shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
       }`}>
         {/* Glow effect interno */}
-        <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-transparent to-white/10" />
+        <div className="absolute inset-0 rounded-[15px] bg-gradient-to-t from-transparent to-white/10" />
         
         {/* Padrão de grid sutil no fundo */}
         <div className="absolute inset-0 opacity-10">

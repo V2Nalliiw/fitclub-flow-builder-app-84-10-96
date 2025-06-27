@@ -23,13 +23,13 @@ export const DelayNode: React.FC<DelayNodeProps> = ({ data, selected, id, onDele
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-32 h-28 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-500 shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden ${
+      <div className={`w-32 h-32 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden ${
         selected 
           ? 'shadow-[0_0_0_3px_rgba(251,146,60,0.3),0_8px_25px_rgba(251,146,60,0.2)]' 
           : 'shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
       }`}>
         {/* Glow effect interno */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-transparent to-white/10" />
+        <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent to-white/10" />
         
         {/* Ícone de relógio com animação sutil */}
         <div className="relative z-10 mb-1">

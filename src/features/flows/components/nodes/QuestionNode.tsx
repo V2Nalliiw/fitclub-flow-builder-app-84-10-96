@@ -40,14 +40,14 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-36 rounded-lg bg-gradient-to-br from-purple-500/70 to-purple-600/70 backdrop-blur-sm shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden border border-purple-500/20 ${
+      <div className={`w-36 rounded-[15px] bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden border border-purple-500/20 ${
         selected 
           ? 'shadow-[0_0_0_3px_rgba(147,51,234,0.3),0_8px_25px_rgba(147,51,234,0.2)]' 
           : 'shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
       }`}
       style={{ minHeight: `${minHeight * 4}px` }}>
         {/* Glow effect interno */}
-        <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-transparent to-white/10" />
+        <div className="absolute inset-0 rounded-[15px] bg-gradient-to-t from-transparent to-white/10" />
         
         {/* Padrão de balão de conversa no fundo */}
         <div className="absolute inset-0 opacity-10">

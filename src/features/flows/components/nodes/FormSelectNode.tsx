@@ -43,11 +43,11 @@ export const FormSelectNode: React.FC<NodeProps> = ({
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-40 h-32 rounded-lg bg-gradient-to-br ${
+      <div className={`w-40 h-32 rounded-[15px] bg-gradient-to-br ${
         isConfigured 
-          ? 'from-indigo-500/70 to-indigo-600/70' 
-          : 'from-orange-400/70 to-orange-500/70'
-      } backdrop-blur-sm shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden border ${
+          ? 'from-indigo-500 to-indigo-600' 
+          : 'from-orange-400 to-orange-500'
+      } shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden border ${
         isConfigured ? 'border-indigo-500/20' : 'border-orange-500/20'
       } ${
         selected 
@@ -55,7 +55,7 @@ export const FormSelectNode: React.FC<NodeProps> = ({
           : 'shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
       }`}>
         {/* Glow effect interno */}
-        <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-transparent to-white/10" />
+        <div className="absolute inset-0 rounded-[15px] bg-gradient-to-t from-transparent to-white/10" />
         
         {/* Padrão de seleção no fundo */}
         <div className="absolute inset-0 opacity-10">
