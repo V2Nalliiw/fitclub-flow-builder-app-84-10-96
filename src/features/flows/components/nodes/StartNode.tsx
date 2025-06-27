@@ -38,8 +38,8 @@ export const StartNode: React.FC<StartNodeProps> = ({ data, selected, id }) => {
       <NodeActions
         nodeId={id}
         nodeType="start"
-        onDelete={data.onDelete}
-        onDuplicate={data.onDuplicate}
+        onDelete={data?.onDelete}
+        onDuplicate={data?.onDuplicate}
         visible={selected}
       />
       

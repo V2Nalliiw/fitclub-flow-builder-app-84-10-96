@@ -21,8 +21,8 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
 }) => {
   const isMobile = useIsMobile();
 
-  // Não mostrar ações se não há funções definidas ou se não estiver visível
-  if (!visible || !onDelete || !onDuplicate) {
+  // Não mostrar ações se não estiver visível
+  if (!visible) {
     return null;
   }
 
@@ -32,39 +32,61 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    console.log('Deletando nó:', nodeId);
-    onDelete(nodeId);
+    console.log('Tentando deletar nó:', nodeId, 'Função disponível:', !!onDelete);
+    
+    if (onDelete && typeof onDelete === 'function') {
+      // Não permitir deletar o nó inicial
+      if (nodeType === 'start') {
+        console.log('Não é possível deletar o nó inicial');
+        return;
+      }
+      onDelete(nodeId);
+    } else {
+      console.error('Função onDelete não está disponível para o nó:', nodeId);
+    }
   };
 
   const handleDuplicate = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    console.log('Duplicando nó:', nodeId);
-    onDuplicate(nodeId);
+    console.log('Tentando duplicar nó:', nodeId, 'Função disponível:', !!onDuplicate);
+    
+    if (onDuplicate && typeof onDuplicate === 'function') {
+      onDuplicate(nodeId);
+    } else {
+      console.error('Função onDuplicate não está disponível para o nó:', nodeId);
+    }
   };
 
   return (
-    <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
-      <Button
-        size="sm"
-        variant="destructive"
-        className={`${buttonSize} p-0 rounded-full shadow-md hover:scale-110 transition-transform`}
-        onClick={handleDelete}
-        title="Excluir nó"
-        type="button"
-      >
-        <Trash2 className={iconSize} />
-      </Button>
-      <Button
-        size="sm"
-        variant="secondary"
-        className={`${buttonSize} p-0 rounded-full shadow-md hover:scale-110 transition-transform`}
-        onClick={handleDuplicate}
-        title="Duplicar nó"
-        type="button"
-      >
-        <Copy className={iconSize} />
-      </Button>
+    <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30">
+      {/* Botão de duplicar sempre presente */}
+      {onDuplicate && (
+        <Button
+          size="sm"
+          variant="secondary"
+          className={`${buttonSize} p-0 rounded-full shadow-md hover:scale-110 transition-transform bg-blue-500 hover:bg-blue-600 text-white border-blue-600`}
+          onClick={handleDuplicate}
+          title="Duplicar nó"
+          type="button"
+        >
+          <Copy className={iconSize} />
+        </Button>
+      )}
+      
+      {/* Botão de deletar - não mostrar para nó inicial */}
+      {onDelete && nodeType !== 'start' && (
+        <Button
+          size="sm"
+          variant="destructive"
+          className={`${buttonSize} p-0 rounded-full shadow-md hover:scale-110 transition-transform`}
+          onClick={handleDelete}
+          title="Excluir nó"
+          type="button"
+        >
+          <Trash2 className={iconSize} />
+        </Button>
+      )}
     </div>
   );
 };

@@ -71,15 +71,22 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
     },
   }));
 
-  // Passar as funções para cada nó através do data
-  const enhancedNodes = nodes.map(node => ({
-    ...node,
-    data: {
-      ...node.data,
-      onDelete: onDeleteNode,
-      onDuplicate: onDuplicateNode,
-    }
-  }));
+  // Garantir que as funções sejam passadas corretamente para cada nó
+  const enhancedNodes = nodes.map(node => {
+    console.log('Preparando nó:', node.id, 'com funções:', {
+      onDelete: !!onDeleteNode,
+      onDuplicate: !!onDuplicateNode
+    });
+    
+    return {
+      ...node,
+      data: {
+        ...node.data,
+        onDelete: onDeleteNode,
+        onDuplicate: onDuplicateNode,
+      }
+    };
+  });
 
   const canvasHeight = isFullscreen || isMobile ? '100vh' : 'calc(100vh - 4rem)';
   const canvasWidth = '100%';
