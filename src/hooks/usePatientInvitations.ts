@@ -39,7 +39,8 @@ export const usePatientInvitations = () => {
         throw error;
       }
 
-      return data || [];
+      // Type assertion to ensure proper typing from database
+      return (data || []) as PatientInvitation[];
     },
     enabled: !!user?.clinic_id,
   });
