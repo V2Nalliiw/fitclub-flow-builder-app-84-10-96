@@ -189,15 +189,6 @@ export const AuthForm = () => {
               }
             </Button>
           </div>
-
-          {mode === 'login' && (
-            <div className="text-center text-xs text-muted-foreground">
-              <p>Para desenvolvimento, você pode criar uma conta ou usar:</p>
-              <p><strong>admin@fitclub.com</strong> - Super Admin</p>
-              <p><strong>clinic@fitclub.com</strong> - Clínica</p>
-              <p><strong>patient@fitclub.com</strong> - Paciente</p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

@@ -37,7 +37,7 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
   const buttonSize = isMobile ? 'h-5 w-5' : 'h-6 w-6';
   const iconSize = isMobile ? 'h-2.5 w-2.5' : 'h-3 w-3';
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     
@@ -61,7 +61,7 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
     if (confirmDelete) {
       console.log('Confirmed - executing node delete:', nodeId);
       try {
-        onDelete(nodeId);
+        await onDelete(nodeId);
         console.log('Delete executed successfully');
       } catch (error) {
         console.error('Error executing delete:', error);
@@ -69,7 +69,7 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
     }
   };
 
-  const handleDuplicate = (e: React.MouseEvent) => {
+  const handleDuplicate = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     
@@ -88,7 +88,7 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
 
     console.log('Executing node duplicate:', nodeId);
     try {
-      onDuplicate(nodeId);
+      await onDuplicate(nodeId);
       console.log('Duplicate executed successfully');
     } catch (error) {
       console.error('Error executing duplicate:', error);
