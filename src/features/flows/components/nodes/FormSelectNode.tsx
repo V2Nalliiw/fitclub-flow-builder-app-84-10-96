@@ -58,14 +58,14 @@ export const FormSelectNode: React.FC<NodeProps> = ({
 
   return (
     <div className="group relative">
-      <Card className={`min-w-[220px] transition-all duration-200 ${
+      <Card className={`w-48 h-40 transition-all duration-200 ${
         selected ? 'ring-2 ring-primary shadow-lg' : 'hover:shadow-md'
       } ${!isConfigured ? 'border-orange-200' : ''}`}>
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-2 p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {getStatusIcon()}
-              <CardTitle className="text-sm">Formulário Selecionado</CardTitle>
+              <CardTitle className="text-xs">Formulário Selecionado</CardTitle>
             </div>
             <Badge variant={isConfigured ? 'default' : 'secondary'} className="text-xs">
               {getStatusText()}
@@ -73,15 +73,15 @@ export const FormSelectNode: React.FC<NodeProps> = ({
           </div>
         </CardHeader>
         
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-2 p-3 pt-0">
           {isConfigured && form ? (
             <div className="space-y-2">
               <div>
-                <div className="font-medium text-sm text-foreground">
+                <div className="font-medium text-xs text-foreground">
                   {nodeData.formName || form.name}
                 </div>
                 {nodeData.formDescription && (
-                  <div className="text-xs text-muted-foreground mt-1">
+                  <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
                     {nodeData.formDescription}
                   </div>
                 )}
@@ -100,12 +100,12 @@ export const FormSelectNode: React.FC<NodeProps> = ({
                 </div>
               )}
 
-              <div className="flex gap-1 pt-2">
+              <div className="flex gap-1 pt-1">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handlePreviewForm}
-                  className="text-xs h-7 px-2 flex-1"
+                  className="text-xs h-6 px-2 flex-1"
                 >
                   <ExternalLink className="h-3 w-3 mr-1" />
                   Ver
@@ -113,13 +113,13 @@ export const FormSelectNode: React.FC<NodeProps> = ({
               </div>
 
               {executionResult && (
-                <div className="text-xs text-muted-foreground pt-2 border-t">
+                <div className="text-xs text-muted-foreground pt-1 border-t">
                   Executado em {new Date(executionResult.executedAt).toLocaleString('pt-BR')}
                 </div>
               )}
             </div>
           ) : (
-            <div className="text-center py-4">
+            <div className="text-center py-2">
               <div className="text-xs text-muted-foreground mb-2">
                 Configure este nó para selecionar um formulário
               </div>

@@ -24,21 +24,21 @@ export const FormEndNode: React.FC<FormEndNodeProps> = ({ data, selected, id, on
   };
 
   return (
-    <div className={`group relative px-4 py-3 shadow-md rounded-lg bg-white dark:bg-white/10 text-foreground border transition-all duration-200 min-w-[200px] ${
+    <div className={`group relative px-4 py-4 shadow-md rounded-lg bg-white dark:bg-white/10 text-foreground border transition-all duration-200 w-44 h-32 flex flex-col justify-center ${
       selected ? 'border-primary shadow-lg scale-105' : 'border-border'
     }`}>
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex items-center gap-2 justify-center mb-1">
         <FileCheck className="h-5 w-5 text-green-500" />
         <div className="text-sm font-medium">Fim de Formulário</div>
       </div>
-      <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+      <div className="flex items-center gap-1 text-xs text-muted-foreground justify-center mb-1">
         {getContentIcon()}
         <span>
           Envia {data.tipoConteudo || 'conteúdo'}
         </span>
       </div>
       {data.arquivo && (
-        <div className="text-xs text-muted-foreground truncate">
+        <div className="text-xs text-muted-foreground truncate text-center">
           📎 {data.arquivo}
         </div>
       )}
