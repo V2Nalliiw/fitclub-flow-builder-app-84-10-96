@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,7 +44,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
     { type: 'formSelect', icon: FileText, label: 'Seleção Formulário', color: 'text-indigo-600' },
     { type: 'delay', icon: Clock, label: 'Delay', color: 'text-orange-600' },
     { type: 'question', icon: HelpCircle, label: 'Pergunta', color: 'text-cyan-600' },
-  ];
+  ] as const;
 
   const handleAddNode = (type: string) => {
     onAddNode(type);
@@ -70,18 +71,21 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
           
           {/* Menu de Nós - Desktop */}
           <div className="flex items-center gap-1">
-            {nodeTypes.map((node) => (
-              <Button
-                key={node.type}
-                onClick={() => handleAddNode(node.type)}
-                variant="outline"
-                size="sm"
-                className="h-7 w-7 md:h-8 md:w-8 p-0 flex-shrink-0 hover:bg-accent"
-                title={node.label}
-              >
-                <node.icon className={`h-3 w-3 md:h-4 md:w-4 ${node.color}`} />
-              </Button>
-            ))}
+            {nodeTypes.map((node) => {
+              const IconComponent = node.icon;
+              return (
+                <Button
+                  key={node.type}
+                  onClick={() => handleAddNode(node.type)}
+                  variant="outline"
+                  size="sm"
+                  className="h-7 w-7 md:h-8 md:w-8 p-0 flex-shrink-0 hover:bg-accent"
+                  title={node.label}
+                >
+                  <IconComponent className={`h-3 w-3 md:h-4 md:w-4 ${node.color}`} />
+                </Button>
+              );
+            })}
           </div>
 
           <div className="h-4 md:h-6 w-px bg-border flex-shrink-0" />
@@ -234,18 +238,21 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
 
       {/* Segunda Linha - Menu de Nós */}
       <div className="flex items-center justify-center gap-1">
-        {nodeTypes.map((node) => (
-          <Button
-            key={node.type}
-            onClick={() => handleAddNode(node.type)}
-            variant="outline"
-            size="sm"
-            className="h-6 w-6 p-0 flex-shrink-0 hover:bg-accent"
-            title={node.label}
-          >
-            <node.icon className={`h-3 w-3 ${node.color}`} />
-          </Button>
-        ))}
+        {nodeTypes.map((node) => {
+          const IconComponent = node.icon;
+          return (
+            <Button
+              key={node.type}
+              onClick={() => handleAddNode(node.type)}
+              variant="outline"
+              size="sm"
+              className="h-6 w-6 p-0 flex-shrink-0 hover:bg-accent"
+              title={node.label}
+            >
+              <IconComponent className={`h-3 w-3 ${node.color}`} />
+            </Button>
+          );
+        })}
       </div>
     </div>
   );
