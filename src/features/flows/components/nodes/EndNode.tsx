@@ -33,12 +33,12 @@ export const EndNode: React.FC<EndNodeProps> = ({ data, selected, id, onDelete, 
         nodeType="end"
         onDelete={onDelete || (() => {})}
         onDuplicate={onDuplicate || (() => {})}
-        visible={true}
+        visible={selected}
       />
       
       <Handle
         type="target"
-        position={Position.Top}
+        position={Position.Left}
         className="w-3 h-3 bg-red-500 border-2 border-white"
       />
     </div>

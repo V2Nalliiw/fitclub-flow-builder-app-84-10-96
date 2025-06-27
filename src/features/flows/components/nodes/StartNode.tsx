@@ -30,12 +30,12 @@ export const StartNode: React.FC<StartNodeProps> = ({ data, selected, id, onDele
         nodeType="start"
         onDelete={onDelete || (() => {})}
         onDuplicate={onDuplicate || (() => {})}
-        visible={true}
+        visible={selected}
       />
       
       <Handle
         type="source"
-        position={Position.Bottom}
+        position={Position.Right}
         className="w-3 h-3 bg-[#5D8701] border-2 border-white"
       />
     </div>

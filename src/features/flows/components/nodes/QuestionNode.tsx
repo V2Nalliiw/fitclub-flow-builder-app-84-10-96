@@ -79,12 +79,12 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
         nodeType="question"
         onDelete={onDelete || (() => {})}
         onDuplicate={onDuplicate || (() => {})}
-        visible={true}
+        visible={selected}
       />
       
       <Handle
         type="target"
-        position={Position.Top}
+        position={Position.Left}
         className="w-3 h-3 bg-purple-500 border-2 border-white"
       />
       
@@ -92,30 +92,30 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
       {(!isEscolhaUnica || opcoes.length === 0) && (
         <Handle
           type="source"
-          position={Position.Bottom}
+          position={Position.Right}
           className="w-3 h-3 bg-purple-500 border-2 border-white"
         />
       )}
       
-      {/* Handles múltiplos para escolha única */}
+      {/* Handles múltiplos para escolha única - organizados verticalmente na borda direita */}
       {isEscolhaUnica && opcoes.length > 0 && (
-        <div className="flex justify-around mt-2">
+        <div className="absolute -right-1.5 top-1/2 transform -translate-y-1/2 flex flex-col gap-2">
           {opcoes.map((opcao: string, index: number) => (
-            <div key={index} className="relative">
+            <div key={index} className="relative group/handle">
               <Handle
                 type="source"
-                position={Position.Bottom}
+                position={Position.Right}
                 id={`opcao-${index}`}
-                className="w-3 h-3 bg-purple-500 border-2 border-white"
+                className="w-3 h-3 bg-purple-500 border-2 border-white relative"
                 style={{ 
                   position: 'relative',
                   left: 0,
-                  bottom: 0,
+                  top: 0,
                   transform: 'none'
                 }}
               />
-              <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-muted-foreground whitespace-nowrap">
-                {opcao.substring(0, 8)}{opcao.length > 8 ? '...' : ''}
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-xs text-muted-foreground whitespace-nowrap bg-background/80 backdrop-blur-sm px-1 rounded opacity-0 group-hover/handle:opacity-100 transition-opacity z-10">
+                {opcao.substring(0, 15)}{opcao.length > 15 ? '...' : ''}
               </div>
             </div>
           ))}

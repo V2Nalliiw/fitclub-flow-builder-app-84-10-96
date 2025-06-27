@@ -132,13 +132,13 @@ export const FormSelectNode: React.FC<NodeProps> = ({
         
         <Handle
           type="target"
-          position={Position.Top}
+          position={Position.Left}
           className="w-3 h-3 bg-border border-2 border-background"
           style={{ background: '#555' }}
         />
         <Handle
           type="source"
-          position={Position.Bottom}
+          position={Position.Right}
           className="w-3 h-3 bg-border border-2 border-background"
           style={{ background: '#555' }}
         />
