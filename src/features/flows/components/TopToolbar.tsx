@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +47,9 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
     { type: 'question', icon: HelpCircle, label: 'Pergunta', color: 'text-cyan-600' },
   ] as const;
 
+  // Filtrar para ocultar apenas o botão de "start"
+  const visibleNodeTypes = nodeTypes.filter(node => node.type !== 'start');
+
   const handleAddNode = (type: string) => {
     onAddNode(type);
   };
@@ -71,7 +75,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
           
           {/* Menu de Nós - Desktop */}
           <div className="flex items-center gap-1">
-            {nodeTypes.map((node) => {
+            {visibleNodeTypes.map((node) => {
               const IconComponent = node.icon;
               return (
                 <Button
@@ -238,7 +242,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
 
       {/* Segunda Linha - Menu de Nós */}
       <div className="flex items-center justify-center gap-1">
-        {nodeTypes.map((node) => {
+        {visibleNodeTypes.map((node) => {
           const IconComponent = node.icon;
           return (
             <Button
@@ -257,3 +261,4 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
     </div>
   );
 };
+
