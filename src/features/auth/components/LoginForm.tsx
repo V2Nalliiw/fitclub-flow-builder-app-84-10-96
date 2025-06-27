@@ -119,13 +119,6 @@ export const LoginForm = () => {
               Cadastrar
             </Button>
           </div>
-
-          <div className="text-center text-sm text-muted-foreground">
-            <p>Para testar use:</p>
-            <p><strong>admin@test.com</strong> - Super Admin</p>
-            <p><strong>clinic@test.com</strong> - Clínica</p>
-            <p><strong>patient@test.com</strong> - Paciente</p>
-          </div>
         </CardContent>
       </Card>
     </div>

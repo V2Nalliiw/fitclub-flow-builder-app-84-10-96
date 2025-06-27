@@ -21,6 +21,14 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
 }) => {
   const isMobile = useIsMobile();
 
+  console.log('NodeActions render:', {
+    nodeId,
+    nodeType,
+    visible,
+    hasOnDelete: !!onDelete,
+    hasOnDuplicate: !!onDuplicate
+  });
+
   // Não mostrar ações se não estiver visível
   if (!visible) {
     return null;
@@ -32,36 +40,71 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    console.log('Tentando deletar nó:', nodeId, 'Função disponível:', !!onDelete);
     
-    if (onDelete && typeof onDelete === 'function') {
-      // Não permitir deletar o nó inicial
-      if (nodeType === 'start') {
-        console.log('Não é possível deletar o nó inicial');
-        return;
-      }
-      onDelete(nodeId);
-    } else {
+    console.log('Delete button clicked:', {
+      nodeId,
+      nodeType,
+      hasOnDelete: !!onDelete
+    });
+    
+    if (!onDelete || typeof onDelete !== 'function') {
       console.error('Função onDelete não está disponível para o nó:', nodeId);
+      return;
+    }
+
+    // Não permitir deletar o nó inicial
+    if (nodeType === 'start') {
+      console.log('Não é possível deletar o nó inicial');
+      return;
+    }
+
+    const confirmDelete = window.confirm(
+      `Tem certeza que deseja remover este nó?\n\nEsta ação não pode ser desfeita.`
+    );
+    
+    if (confirmDelete) {
+      console.log('Executando delete do nó:', nodeId);
+      onDelete(nodeId);
     }
   };
 
   const handleDuplicate = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    console.log('Tentando duplicar nó:', nodeId, 'Função disponível:', !!onDuplicate);
     
-    if (onDuplicate && typeof onDuplicate === 'function') {
-      onDuplicate(nodeId);
-    } else {
+    console.log('Duplicate button clicked:', {
+      nodeId,
+      nodeType,
+      hasOnDuplicate: !!onDuplicate
+    });
+    
+    if (!onDuplicate || typeof onDuplicate !== 'function') {
       console.error('Função onDuplicate não está disponível para o nó:', nodeId);
+      return;
     }
+
+    // Não permitir duplicar o nó inicial
+    if (nodeType === 'start') {
+      console.log('Não é possível duplicar o nó inicial');
+      return;
+    }
+
+    console.log('Executando duplicate do nó:', nodeId);
+    onDuplicate(nodeId);
   };
+
+  const showDeleteButton = onDelete && nodeType !== 'start';
+  const showDuplicateButton = onDuplicate && nodeType !== 'start';
+
+  console.log('Button visibility:', {
+    showDeleteButton,
+    showDuplicateButton
+  });
 
   return (
     <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30">
-      {/* Botão de duplicar sempre presente */}
-      {onDuplicate && (
+      {/* Botão de duplicar - não mostrar para nó inicial */}
+      {showDuplicateButton && (
         <Button
           size="sm"
           variant="secondary"
@@ -75,7 +118,7 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
       )}
       
       {/* Botão de deletar - não mostrar para nó inicial */}
-      {onDelete && nodeType !== 'start' && (
+      {showDeleteButton && (
         <Button
           size="sm"
           variant="destructive"
