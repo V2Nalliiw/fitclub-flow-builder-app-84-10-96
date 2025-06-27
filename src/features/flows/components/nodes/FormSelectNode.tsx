@@ -2,7 +2,7 @@
 import React from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { FileText, Database, AlertCircle, CheckCircle } from 'lucide-react';
-import { NodeActions } from '../NodeActions';
+import { SimpleNodeActions } from '../SimpleNodeActions';
 import { useFormIntegration } from '../../hooks/useFormIntegration';
 
 interface FormSelectNodeData extends Record<string, unknown> {
@@ -75,12 +75,11 @@ export const FormSelectNode: React.FC<NodeProps> = ({
         className="w-3.5 h-3.5 bg-[#5D8701] border-2 border-white shadow-md !right-0 !transform !translate-x-1/2 !-translate-y-1/2"
       />
       
-      <NodeActions
+      <SimpleNodeActions
         nodeId={id}
         nodeType="formSelect"
         onDelete={nodeData.onDelete}
-        onDuplicate={nodeData.onDuplicate}
-        visible={selected}
+        show={selected}
       />
     </div>
   );

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Flag, MessageCircle } from 'lucide-react';
-import { NodeActions } from '../NodeActions';
+import { SimpleNodeActions } from '../SimpleNodeActions';
 
 interface EndNodeProps {
   data: any;
@@ -42,12 +42,11 @@ export const EndNode: React.FC<EndNodeProps> = ({ data, selected, id }) => {
         </div>
       </div>
       
-      <NodeActions
+      <SimpleNodeActions
         nodeId={id}
         nodeType="end"
         onDelete={data?.onDelete}
-        onDuplicate={data?.onDuplicate}
-        visible={selected}
+        show={selected}
       />
       
       <Handle

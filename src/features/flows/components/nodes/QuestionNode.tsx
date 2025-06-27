@@ -2,7 +2,7 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { HelpCircle, CheckSquare, Circle, Type, List } from 'lucide-react';
-import { NodeActions } from '../NodeActions';
+import { SimpleNodeActions } from '../SimpleNodeActions';
 
 interface QuestionNodeProps {
   data: any;
@@ -66,12 +66,11 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
         </div>
       </div>
       
-      <NodeActions
+      <SimpleNodeActions
         nodeId={id}
         nodeType="question"
-        onDelete={onDelete || (() => {})}
-        onDuplicate={onDuplicate || (() => {})}
-        visible={selected}
+        onDelete={data?.onDelete}
+        show={selected}
       />
       
       <Handle

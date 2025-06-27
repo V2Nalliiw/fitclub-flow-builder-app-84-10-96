@@ -2,7 +2,7 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { FileCheck, Download } from 'lucide-react';
-import { NodeActions } from '../NodeActions';
+import { SimpleNodeActions } from '../SimpleNodeActions';
 
 interface FormEndNodeProps {
   data: any;
@@ -40,12 +40,11 @@ export const FormEndNode: React.FC<FormEndNodeProps> = ({ data, selected, id, on
         </div>
       </div>
       
-      <NodeActions
+      <SimpleNodeActions
         nodeId={id}
         nodeType="formEnd"
-        onDelete={onDelete || (() => {})}
-        onDuplicate={onDuplicate || (() => {})}
-        visible={selected}
+        onDelete={data?.onDelete}
+        show={selected}
       />
       
       <Handle

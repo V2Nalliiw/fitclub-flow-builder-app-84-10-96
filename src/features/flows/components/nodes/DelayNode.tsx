@@ -2,7 +2,7 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Clock, Timer } from 'lucide-react';
-import { NodeActions } from '../NodeActions';
+import { SimpleNodeActions } from '../SimpleNodeActions';
 
 interface DelayNodeProps {
   data: any;
@@ -46,12 +46,11 @@ export const DelayNode: React.FC<DelayNodeProps> = ({ data, selected, id, onDele
         </div>
       </div>
       
-      <NodeActions
+      <SimpleNodeActions
         nodeId={id}
         nodeType="delay"
-        onDelete={onDelete || (() => {})}
-        onDuplicate={onDuplicate || (() => {})}
-        visible={selected}
+        onDelete={data?.onDelete}
+        show={selected}
       />
       
       <Handle
