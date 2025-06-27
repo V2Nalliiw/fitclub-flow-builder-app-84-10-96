@@ -14,15 +14,24 @@ interface StartNodeProps {
 
 export const StartNode: React.FC<StartNodeProps> = ({ data, selected, id, onDelete, onDuplicate }) => {
   return (
-    <div className={`group relative px-4 py-4 shadow-md rounded-lg bg-white dark:bg-[#0E0E0E] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 transition-all duration-200 w-40 h-28 flex flex-col justify-center ${
-      selected ? 'border-primary shadow-lg scale-105' : ''
+    <div className={`group relative transition-all duration-200 ${
+      selected ? 'scale-105' : ''
     }`}>
-      <div className="flex items-center gap-2 justify-center mb-1">
-        <Play className="h-5 w-5 text-[#5D8701]" />
-        <div className="text-sm font-medium">Início do Fluxo</div>
-      </div>
-      <div className="text-xs text-gray-600 dark:text-gray-400 text-center">
-        Execução automática
+      <div className={`w-32 h-32 rounded-full bg-gradient-to-br from-[#5D8701] to-[#4a6e01] shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden ${
+        selected 
+          ? 'shadow-[0_0_0_3px_rgba(93,135,1,0.3),0_8px_25px_rgba(93,135,1,0.2)]' 
+          : 'shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+      }`}>
+        {/* Glow effect interno */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent to-white/10" />
+        
+        <Play className="h-6 w-6 mb-1 relative z-10" fill="currentColor" />
+        <div className="text-xs font-semibold text-center relative z-10 tracking-tight">
+          Início
+        </div>
+        <div className="text-[10px] opacity-80 text-center relative z-10 font-medium">
+          Automático
+        </div>
       </div>
       
       <NodeActions
@@ -36,7 +45,7 @@ export const StartNode: React.FC<StartNodeProps> = ({ data, selected, id, onDele
       <Handle
         type="source"
         position={Position.Right}
-        className="w-3 h-3 bg-[#5D8701] border-2 border-white"
+        className="w-3.5 h-3.5 bg-[#5D8701] border-2 border-white shadow-md !right-0 !transform !translate-x-1/2 !-translate-y-1/2"
       />
     </div>
   );
