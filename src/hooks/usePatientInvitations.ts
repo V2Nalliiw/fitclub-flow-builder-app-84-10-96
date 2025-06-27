@@ -1,19 +1,18 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-import { v4 as uuidv4 } from 'uuid';
+import { useToast } from '@/hooks/use-toast';
 
 export interface PatientInvitation {
   id: string;
   clinic_id: string;
-  email: string;
   name: string;
+  email: string;
   phone?: string;
-  invited_by: string;
-  status: 'pending' | 'accepted' | 'expired' | 'cancelled';
   invitation_token: string;
+  status: 'pending' | 'accepted' | 'expired';
+  invited_by: string;
   expires_at: string;
   accepted_at?: string;
   created_at: string;
@@ -22,145 +21,202 @@ export interface PatientInvitation {
 
 export const usePatientInvitations = () => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [invitations, setInvitations] = useState<PatientInvitation[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const { data: invitations = [], isLoading } = useQuery({
-    queryKey: ['patient-invitations', user?.clinic_id],
-    queryFn: async (): Promise<PatientInvitation[]> => {
-      if (!user?.clinic_id) return [];
+  const loadInvitations = useCallback(async () => {
+    if (!user?.clinic_id) {
+      setLoading(false);
+      return;
+    }
 
+    setLoading(true);
+    try {
       const { data, error } = await supabase
         .from('patient_invitations')
         .select('*')
+        .eq('clinic_id', user.clinic_id)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Erro ao buscar convites:', error);
-        throw error;
+        console.error('Erro ao carregar convites:', error);
+        toast({
+          title: "Erro ao carregar convites",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
       }
 
-      // Type assertion to ensure proper typing from database
-      return (data || []) as PatientInvitation[];
-    },
-    enabled: !!user?.clinic_id,
-  });
+      setInvitations(data || []);
+    } catch (error) {
+      console.error('Erro inesperado:', error);
+      toast({
+        title: "Erro inesperado",
+        description: "Ocorreu um erro inesperado ao carregar os convites",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.clinic_id, toast]);
 
-  const createInvitationMutation = useMutation({
-    mutationFn: async (invitationData: {
-      email: string;
-      name: string;
-      phone?: string;
-      expiresInDays?: number;
-    }) => {
-      if (!user?.clinic_id) throw new Error('Clínica não identificada');
+  const createInvitation = async (invitationData: {
+    name: string;
+    email: string;
+    phone?: string;
+  }) => {
+    if (!user?.clinic_id || !user?.id) {
+      toast({
+        title: "Erro",
+        description: "Clínica ou usuário não identificado",
+        variant: "destructive",
+      });
+      return false;
+    }
 
-      const token = uuidv4();
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + (invitationData.expiresInDays || 7));
+    // Generate invitation token
+    const invitationToken = `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Set expiration to 7 days from now
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
 
+    const dataToInsert = {
+      clinic_id: user.clinic_id,
+      name: invitationData.name,
+      email: invitationData.email,
+      phone: invitationData.phone || null,
+      invitation_token: invitationToken,
+      status: 'pending' as const,
+      invited_by: user.id,
+      expires_at: expiresAt.toISOString(),
+    };
+
+    try {
       const { data, error } = await supabase
         .from('patient_invitations')
-        .insert({
-          clinic_id: user.clinic_id,
-          email: invitationData.email,
-          name: invitationData.name,
-          phone: invitationData.phone,
-          invited_by: user.id,
-          invitation_token: token,
-          expires_at: expiresAt.toISOString(),
-        })
+        .insert(dataToInsert)
         .select()
         .single();
 
       if (error) {
         console.error('Erro ao criar convite:', error);
-        throw error;
+        toast({
+          title: "Erro ao criar convite",
+          description: error.message,
+          variant: "destructive",
+        });
+        return false;
       }
 
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patient-invitations'] });
-      toast.success('Convite enviado com sucesso!');
-    },
-    onError: (error: any) => {
+      toast({
+        title: "Convite criado",
+        description: `Convite enviado para ${invitationData.name}`,
+      });
+
+      // Reload invitations
+      await loadInvitations();
+      return true;
+    } catch (error: any) {
       console.error('Erro ao criar convite:', error);
-      toast.error('Erro ao enviar convite: ' + error.message);
-    },
-  });
+      toast({
+        title: "Erro",
+        description: "Não foi possível criar o convite",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
 
-  const updateInvitationMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: PatientInvitation['status'] }) => {
-      const updateData: any = { status };
-      
-      if (status === 'accepted') {
-        updateData.accepted_at = new Date().toISOString();
-      }
+  const resendInvitation = async (invitationId: string) => {
+    try {
+      // Update expires_at to 7 days from now
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
 
-      const { data, error } = await supabase
-        .from('patient_invitations')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Erro ao atualizar convite:', error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patient-invitations'] });
-      toast.success('Convite atualizado com sucesso!');
-    },
-    onError: (error: any) => {
-      console.error('Erro ao atualizar convite:', error);
-      toast.error('Erro ao atualizar convite: ' + error.message);
-    },
-  });
-
-  const resendInvitationMutation = useMutation({
-    mutationFn: async (invitationId: string) => {
-      const newExpiresAt = new Date();
-      newExpiresAt.setDate(newExpiresAt.getDate() + 7);
-
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('patient_invitations')
         .update({
-          expires_at: newExpiresAt.toISOString(),
-          status: 'pending',
+          expires_at: expiresAt.toISOString(),
+          status: 'pending'
         })
-        .eq('id', invitationId)
-        .select()
-        .single();
+        .eq('id', invitationId);
 
       if (error) {
         console.error('Erro ao reenviar convite:', error);
-        throw error;
+        toast({
+          title: "Erro ao reenviar",
+          description: error.message,
+          variant: "destructive",
+        });
+        return false;
       }
 
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patient-invitations'] });
-      toast.success('Convite reenviado com sucesso!');
-    },
-    onError: (error: any) => {
+      toast({
+        title: "Convite reenviado",
+        description: "O convite foi reenviado com sucesso",
+      });
+
+      await loadInvitations();
+      return true;
+    } catch (error: any) {
       console.error('Erro ao reenviar convite:', error);
-      toast.error('Erro ao reenviar convite: ' + error.message);
-    },
-  });
+      toast({
+        title: "Erro",
+        description: "Não foi possível reenviar o convite",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  const cancelInvitation = async (invitationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('patient_invitations')
+        .delete()
+        .eq('id', invitationId);
+
+      if (error) {
+        console.error('Erro ao cancelar convite:', error);
+        toast({
+          title: "Erro ao cancelar",
+          description: error.message,
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      toast({
+        title: "Convite cancelado",
+        description: "O convite foi cancelado com sucesso",
+      });
+
+      await loadInvitations();
+      return true;
+    } catch (error: any) {
+      console.error('Erro ao cancelar convite:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível cancelar o convite",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    loadInvitations();
+  }, [loadInvitations]);
 
   return {
     invitations,
-    isLoading,
-    createInvitation: createInvitationMutation.mutate,
-    updateInvitation: updateInvitationMutation.mutate,
-    resendInvitation: resendInvitationMutation.mutate,
-    isCreating: createInvitationMutation.isPending,
-    isUpdating: updateInvitationMutation.isPending,
-    isResending: resendInvitationMutation.isPending,
+    loading,
+    createInvitation,
+    resendInvitation,
+    cancelInvitation,
+    refetch: loadInvitations,
   };
 };

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,11 +9,13 @@ import { Separator } from '@/components/ui/separator';
 import { FileUpload } from '@/components/ui/file-upload';
 import { Building2, Save, Bell, Key, Palette } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useFileUpload } from '@/hooks/useFileUpload';
 
 export const Settings = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [logo, setLogo] = useState<File[]>([]);
+  const { uploadFile } = useFileUpload('clinic-logos');
   
   const [clinicData, setClinicData] = useState({
     name: 'Clínica Example',
@@ -63,6 +64,14 @@ export const Settings = () => {
   const handleSaveSettings = async () => {
     setLoading(true);
     try {
+      // Upload logo if selected
+      if (logo.length > 0) {
+        const uploadedLogo = await uploadFile(logo[0]);
+        if (uploadedLogo) {
+          console.log('Logo uploaded:', uploadedLogo.url);
+        }
+      }
+
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast({
         title: "Configurações salvas",

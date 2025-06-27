@@ -13,7 +13,9 @@ export interface UploadedFile {
   uploadedAt: string;
 }
 
-export const useFileUpload = () => {
+export type UploadBucket = 'user-uploads' | 'clinic-logos' | 'media-files';
+
+export const useFileUpload = (bucket: UploadBucket = 'user-uploads') => {
   const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -33,7 +35,7 @@ export const useFileUpload = () => {
       const filePath = `${user.id}/${fileName}`;
 
       const { data, error } = await supabase.storage
-        .from('user-uploads')
+        .from(bucket)
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
@@ -46,7 +48,7 @@ export const useFileUpload = () => {
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('user-uploads')
+        .from(bucket)
         .getPublicUrl(filePath);
 
       setUploadProgress(100);
@@ -78,7 +80,7 @@ export const useFileUpload = () => {
 
     try {
       const { error } = await supabase.storage
-        .from('user-uploads')
+        .from(bucket)
         .remove([filePath]);
 
       if (error) throw error;
