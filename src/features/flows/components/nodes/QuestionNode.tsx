@@ -73,6 +73,7 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
         show={selected}
       />
       
+      {/* Handle de entrada */}
       <Handle
         type="target"
         position={Position.Left}
@@ -80,7 +81,7 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
       />
       
       {/* Handle padrão para múltipla escolha, texto livre ou quando não há opções */}
-      {(!isEscolhaUnica || opcoes.length === 0) && (
+      {!isEscolhaUnica && (
         <Handle
           type="source"
           position={Position.Right}
@@ -90,21 +91,34 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
       
       {/* Handles múltiplos para escolha única */}
       {isEscolhaUnica && opcoes.length > 0 && (
-        <div className="absolute -right-1.5 top-1/2 transform -translate-y-1/2 flex flex-col gap-3">
-          {opcoes.map((opcao: string, index: number) => (
-            <div key={index} className="relative group/handle">
-              <Handle
-                type="source"
-                position={Position.Right}
-                id={`opcao-${index}`}
-                className="w-3.5 h-3.5 bg-[#5D8701] border-2 border-white shadow-md relative !static !transform-none"
-              />
-              <div className="absolute left-5 top-1/2 transform -translate-y-1/2 text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-2 py-1 rounded-md opacity-0 group-hover/handle:opacity-100 transition-opacity z-20 border border-gray-200 dark:border-gray-700">
-                {opcao.substring(0, 20)}{opcao.length > 20 ? '...' : ''}
+        <>
+          {opcoes.map((opcao: string, index: number) => {
+            // Calcular posição vertical baseada no número de opções
+            const totalOpcoes = opcoes.length;
+            const offsetY = totalOpcoes > 1 ? (index - (totalOpcoes - 1) / 2) * 20 : 0;
+            
+            return (
+              <div key={index} className="absolute" style={{
+                right: '-7px',
+                top: '50%',
+                transform: `translateY(${offsetY}px)`,
+                zIndex: 10
+              }}>
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  id={`opcao-${index}`}
+                  className="w-3.5 h-3.5 bg-[#5D8701] border-2 border-white shadow-md !static !transform-none"
+                />
+                
+                {/* Tooltip com nome da opção */}
+                <div className="absolute left-5 top-1/2 transform -translate-y-1/2 text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-2 py-1 rounded-md opacity-0 hover:opacity-100 transition-opacity z-20 border border-gray-200 dark:border-gray-700 pointer-events-none">
+                  {opcao.substring(0, 20)}{opcao.length > 20 ? '...' : ''}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            );
+          })}
+        </>
       )}
     </div>
   );
