@@ -124,7 +124,7 @@ export const Profile = () => {
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={user?.avatar} />
+                <AvatarImage src={user?.avatar_url} />
                 <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
