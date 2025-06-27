@@ -2,6 +2,7 @@
 import React from 'react';
 import {
   BaseEdge,
+  EdgeLabelRenderer,
   getBezierPath,
   useReactFlow,
   EdgeProps,
@@ -20,7 +21,7 @@ export const SimpleDeleteEdge: React.FC<EdgeProps> = ({
 }) => {
   const { setEdges } = useReactFlow();
   
-  const [edgePath] = getBezierPath({
+  const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
     sourcePosition,
@@ -33,7 +34,7 @@ export const SimpleDeleteEdge: React.FC<EdgeProps> = ({
     event.stopPropagation();
     event.preventDefault();
     
-    console.log('Edge clicked for deletion:', id);
+    console.log('Edge delete button clicked:', id);
     
     const confirmDelete = window.confirm(
       'Tem certeza que deseja desconectar estes nós?'
@@ -46,15 +47,32 @@ export const SimpleDeleteEdge: React.FC<EdgeProps> = ({
   };
 
   return (
-    <BaseEdge 
-      path={edgePath} 
-      markerEnd={markerEnd} 
-      style={{
-        ...style,
-        strokeWidth: 3,
-        cursor: 'pointer',
-      }}
-      onClick={handleDelete}
-    />
+    <>
+      <BaseEdge 
+        path={edgePath} 
+        markerEnd={markerEnd} 
+        style={{
+          ...style,
+          strokeWidth: 2,
+          stroke: '#9CA3AF',
+        }}
+      />
+      <EdgeLabelRenderer>
+        <div
+          className="absolute pointer-events-auto"
+          style={{
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+          }}
+        >
+          <button
+            onClick={handleDelete}
+            className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md hover:shadow-lg transition-all duration-150 border-2 border-white"
+            title="Clique para desconectar"
+          >
+            ×
+          </button>
+        </div>
+      </EdgeLabelRenderer>
+    </>
   );
 };

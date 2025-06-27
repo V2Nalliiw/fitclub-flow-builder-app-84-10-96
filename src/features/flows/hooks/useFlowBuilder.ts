@@ -23,15 +23,117 @@ export const useFlowBuilder = () => {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Função para validar conexões
+  const validateConnection = useCallback((connection: Connection): { isValid: boolean; message?: string } => {
+    const { source, target, sourceHandle } = connection;
+
+    // Verificar se source e target existem
+    if (!source || !target) {
+      return { isValid: false, message: 'Conexão inválida: nó não encontrado.' };
+    }
+
+    // Impedir conexão de um nó com ele mesmo
+    if (source === target) {
+      return { isValid: false, message: 'Não é possível conectar um nó com ele mesmo.' };
+    }
+
+    const sourceNode = nodes.find(n => n.id === source);
+    const targetNode = nodes.find(n => n.id === target);
+
+    if (!sourceNode || !targetNode) {
+      return { isValid: false, message: 'Nó não encontrado para conexão.' };
+    }
+
+    // Verificar se já existe uma conexão da mesma saída
+    const existingConnection = edges.find(edge => 
+      edge.source === source && 
+      (!sourceHandle || edge.sourceHandle === sourceHandle)
+    );
+
+    if (existingConnection) {
+      return { isValid: false, message: 'Este ponto de saída já possui uma conexão. Remova a conexão existente primeiro.' };
+    }
+
+    // Verificar tipos de nós incompatíveis
+    // Nós de fim não podem ter saídas
+    if (sourceNode.type === 'end') {
+      return { isValid: false, message: 'Nós de "Fim do Fluxo" não podem ter conexões de saída.' };
+    }
+
+    // Nós de início (exceto o primeiro) não podem ter entradas múltiplas
+    if (targetNode.type === 'start' && targetNode.id !== '1') {
+      return { isValid: false, message: 'Nós de início não podem receber conexões.' };
+    }
+
+    // Verificar se o nó alvo já tem uma entrada (a não ser que seja question com múltiplas opções)
+    const existingInputConnection = edges.find(edge => edge.target === target);
+    if (existingInputConnection && targetNode.type !== 'question') {
+      return { isValid: false, message: 'Este nó já possui uma conexão de entrada.' };
+    }
+
+    // Verificar loops circulares
+    const wouldCreateLoop = checkForCircularLoop(source, target, edges);
+    if (wouldCreateLoop) {
+      return { isValid: false, message: 'Esta conexão criaria um loop circular no fluxo.' };
+    }
+
+    return { isValid: true };
+  }, [nodes, edges]);
+
+  // Função para verificar loops circulares
+  const checkForCircularLoop = (source: string, target: string, currentEdges: Edge[]): boolean => {
+    const visited = new Set<string>();
+    const path = new Set<string>();
+
+    const dfs = (nodeId: string): boolean => {
+      if (path.has(nodeId)) return true; // Loop detectado
+      if (visited.has(nodeId)) return false;
+
+      visited.add(nodeId);
+      path.add(nodeId);
+
+      // Encontrar todas as conexões saindo deste nó
+      const outgoingEdges = currentEdges.filter(edge => edge.source === nodeId);
+      
+      // Adicionar a nova conexão se estivermos testando
+      if (nodeId === source) {
+        outgoingEdges.push({ source, target } as Edge);
+      }
+
+      for (const edge of outgoingEdges) {
+        if (dfs(edge.target)) return true;
+      }
+
+      path.delete(nodeId);
+      return false;
+    };
+
+    return dfs(source);
+  };
+
   const onConnect = useCallback(
     (params: Connection) => {
+      console.log('Tentando conectar:', params);
+      
+      const validation = validateConnection(params);
+      
+      if (!validation.isValid) {
+        console.log('Conexão inválida:', validation.message);
+        toast({
+          title: "Conexão inválida",
+          description: validation.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
       setEdges((eds) => addEdge(params, eds));
       toast({
         title: "Conexão criada",
         description: "Os nós foram conectados com sucesso.",
       });
     },
-    [setEdges]
+    [setEdges, validateConnection]
   );
 
   const calculateSmartPosition = (existingNodes: Node[]) => {
@@ -184,6 +286,25 @@ export const useFlowBuilder = () => {
     }, 300);
   }, [nodes, setNodes]);
 
+  // Função para limpar conexões órfãs
+  const cleanupOrphanedEdges = useCallback(() => {
+    setEdges((currentEdges) => {
+      const nodeIds = new Set(nodes.map(n => n.id));
+      const cleanEdges = currentEdges.filter(edge => 
+        nodeIds.has(edge.source) && nodeIds.has(edge.target)
+      );
+      
+      if (cleanEdges.length !== currentEdges.length) {
+        toast({
+          title: "Conexões limpas",
+          description: `${currentEdges.length - cleanEdges.length} conexões órfãs foram removidas.`,
+        });
+      }
+      
+      return cleanEdges;
+    });
+  }, [nodes, setEdges]);
+
   const autoArrangeNodes = () => {
     const confirmArrange = window.confirm(
       "Tem certeza que deseja reorganizar automaticamente todos os nós?\n\nAs posições atuais serão perdidas."
@@ -319,6 +440,9 @@ export const useFlowBuilder = () => {
   };
 
   const saveFlow = () => {
+    // Limpar conexões órfãs antes de salvar
+    cleanupOrphanedEdges();
+    
     setIsLoading(true);
     
     setTimeout(() => {
@@ -368,6 +492,7 @@ export const useFlowBuilder = () => {
     duplicateNode,
     autoArrangeNodes,
     clearAllNodes,
+    cleanupOrphanedEdges,
     onNodeDoubleClick,
     onNodeClick,
     handleNodeConfigSave,
