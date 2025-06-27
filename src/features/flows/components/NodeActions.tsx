@@ -41,11 +41,7 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
     e.stopPropagation();
     e.preventDefault();
     
-    console.log('Delete button clicked:', {
-      nodeId,
-      nodeType,
-      hasOnDelete: !!onDelete
-    });
+    console.log('Delete button clicked for node:', nodeId, 'type:', nodeType);
     
     if (!onDelete || typeof onDelete !== 'function') {
       console.error('Função onDelete não está disponível para o nó:', nodeId);
@@ -63,8 +59,13 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
     );
     
     if (confirmDelete) {
-      console.log('Executando delete do nó:', nodeId);
-      onDelete(nodeId);
+      console.log('Confirmado - executando delete do nó:', nodeId);
+      try {
+        onDelete(nodeId);
+        console.log('Delete executado com sucesso');
+      } catch (error) {
+        console.error('Erro ao executar delete:', error);
+      }
     }
   };
 
@@ -72,11 +73,7 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
     e.stopPropagation();
     e.preventDefault();
     
-    console.log('Duplicate button clicked:', {
-      nodeId,
-      nodeType,
-      hasOnDuplicate: !!onDuplicate
-    });
+    console.log('Duplicate button clicked for node:', nodeId, 'type:', nodeType);
     
     if (!onDuplicate || typeof onDuplicate !== 'function') {
       console.error('Função onDuplicate não está disponível para o nó:', nodeId);
@@ -90,7 +87,12 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
     }
 
     console.log('Executando duplicate do nó:', nodeId);
-    onDuplicate(nodeId);
+    try {
+      onDuplicate(nodeId);
+      console.log('Duplicate executado com sucesso');
+    } catch (error) {
+      console.error('Erro ao executar duplicate:', error);
+    }
   };
 
   const showDeleteButton = onDelete && nodeType !== 'start';
@@ -98,18 +100,20 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
 
   console.log('Button visibility:', {
     showDeleteButton,
-    showDuplicateButton
+    showDuplicateButton,
+    nodeType
   });
 
   return (
-    <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30">
+    <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30 pointer-events-auto">
       {/* Botão de duplicar - não mostrar para nó inicial */}
       {showDuplicateButton && (
         <Button
           size="sm"
           variant="secondary"
-          className={`${buttonSize} p-0 rounded-full shadow-md hover:scale-110 transition-transform bg-blue-500 hover:bg-blue-600 text-white border-blue-600`}
+          className={`${buttonSize} p-0 rounded-full shadow-md hover:scale-110 transition-transform bg-blue-500 hover:bg-blue-600 text-white border-blue-600 pointer-events-auto`}
           onClick={handleDuplicate}
+          onMouseDown={(e) => e.stopPropagation()}
           title="Duplicar nó"
           type="button"
         >
@@ -122,8 +126,9 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
         <Button
           size="sm"
           variant="destructive"
-          className={`${buttonSize} p-0 rounded-full shadow-md hover:scale-110 transition-transform`}
+          className={`${buttonSize} p-0 rounded-full shadow-md hover:scale-110 transition-transform pointer-events-auto`}
           onClick={handleDelete}
+          onMouseDown={(e) => e.stopPropagation()}
           title="Excluir nó"
           type="button"
         >

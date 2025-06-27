@@ -1,4 +1,3 @@
-
 import { useCallback, useState } from 'react';
 import { useNodesState, useEdgesState, addEdge, Connection, Edge, Node } from '@xyflow/react';
 import { FlowNode } from '@/types/flow';
@@ -84,24 +83,42 @@ export const useFlowBuilder = () => {
     }, 300);
   };
 
-  const deleteNode = (nodeId: string) => {
+  const deleteNode = useCallback((nodeId: string) => {
+    console.log('useFlowBuilder - deleteNode chamado para:', nodeId);
+    
     const nodeToDelete = nodes.find(n => n.id === nodeId);
-    if (!nodeToDelete) return;
-
-    // Mostrar confirmação apenas para nós que não sejam o inicial
-    if (nodeId !== '1') {
-      const confirmDelete = window.confirm(
-        `Tem certeza que deseja remover o nó "${nodeToDelete.data?.label || 'Sem nome'}"?\n\nEsta ação não pode ser desfeita.`
-      );
-      
-      if (!confirmDelete) return;
+    if (!nodeToDelete) {
+      console.error('Nó não encontrado:', nodeId);
+      return;
     }
+
+    // Não permitir deletar o nó inicial
+    if (nodeId === '1' || nodeToDelete.type === 'start') {
+      console.log('Tentativa de deletar nó inicial bloqueada');
+      return;
+    }
+
+    console.log('Deletando nó:', {
+      nodeId,
+      nodeType: nodeToDelete.type,
+      nodeLabel: nodeToDelete.data?.label
+    });
 
     setIsLoading(true);
     
     setTimeout(() => {
-      setNodes((nds) => nds.filter((n) => n.id !== nodeId));
-      setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+      setNodes((nds) => {
+        const filteredNodes = nds.filter((n) => n.id !== nodeId);
+        console.log('Nós após remoção:', filteredNodes.length);
+        return filteredNodes;
+      });
+      
+      setEdges((eds) => {
+        const filteredEdges = eds.filter((e) => e.source !== nodeId && e.target !== nodeId);
+        console.log('Edges após remoção do nó:', filteredEdges.length);
+        return filteredEdges;
+      });
+      
       if (selectedNode?.id === nodeId) {
         setSelectedNode(null);
       }
@@ -113,11 +130,28 @@ export const useFlowBuilder = () => {
         variant: "destructive",
       });
     }, 200);
-  };
+  }, [nodes, selectedNode, setNodes, setEdges]);
 
-  const duplicateNode = (nodeId: string) => {
+  const duplicateNode = useCallback((nodeId: string) => {
+    console.log('useFlowBuilder - duplicateNode chamado para:', nodeId);
+    
     const nodeToDuplicate = nodes.find(n => n.id === nodeId);
-    if (!nodeToDuplicate) return;
+    if (!nodeToDuplicate) {
+      console.error('Nó não encontrado para duplicar:', nodeId);
+      return;
+    }
+
+    // Não permitir duplicar o nó inicial
+    if (nodeId === '1' || nodeToDuplicate.type === 'start') {
+      console.log('Tentativa de duplicar nó inicial bloqueada');
+      return;
+    }
+
+    console.log('Duplicando nó:', {
+      nodeId,
+      nodeType: nodeToDuplicate.type,
+      nodeLabel: nodeToDuplicate.data?.label
+    });
 
     setIsLoading(true);
     
@@ -134,7 +168,13 @@ export const useFlowBuilder = () => {
           label: `${nodeToDuplicate.data?.label || ''} (Cópia)`,
         },
       };
-      setNodes((nds) => [...nds, newNode]);
+      
+      setNodes((nds) => {
+        const newNodes = [...nds, newNode];
+        console.log('Nós após duplicação:', newNodes.length);
+        return newNodes;
+      });
+      
       setIsLoading(false);
       
       toast({
@@ -142,7 +182,7 @@ export const useFlowBuilder = () => {
         description: `O nó "${nodeToDuplicate.data?.label || 'Sem nome'}" foi duplicado com sucesso.`,
       });
     }, 300);
-  };
+  }, [nodes, setNodes]);
 
   const autoArrangeNodes = () => {
     const confirmArrange = window.confirm(
