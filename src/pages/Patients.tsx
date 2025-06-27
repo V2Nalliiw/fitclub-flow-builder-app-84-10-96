@@ -40,51 +40,44 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Plus, Search, Edit, Trash2, Eye, UserPlus, MoreVertical } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { Patient } from '@/types';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
-
-// Mock data
-const mockPatients: Patient[] = [
-  {
-    id: '1',
-    name: 'Ana Silva',
-    email: 'ana@email.com',
-    phone: '(11) 99999-1111',
-    clinic_id: 'clinic-1',
-    avatar: '',
-    created_at: '2024-01-15T10:00:00Z'
-  },
-  {
-    id: '2',
-    name: 'Carlos Santos',
-    email: 'carlos@email.com',
-    phone: '(11) 99999-2222',
-    clinic_id: 'clinic-1',
-    avatar: '',
-    created_at: '2024-01-20T14:30:00Z'
-  }
-];
+import { usePatients } from '@/hooks/usePatients';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const Patients = () => {
-  const { toast } = useToast();
+  const { user } = useAuth();
   const { isMobile, isTablet } = useBreakpoints();
-  const [patients, setPatients] = useState<Patient[]>(mockPatients);
+  const { patients, loading, addPatient, updatePatient, deletePatient } = usePatients();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [formLoading, setFormLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
   });
 
+  // Verificar se o usuário tem permissão para gerenciar pacientes
+  if (user?.role !== 'clinic') {
+    return (
+      <div className="container mx-auto py-6 text-center">
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-muted-foreground">
+              Apenas clínicas podem gerenciar pacientes.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const filteredPatients = patients.filter(patient =>
     patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.phone.includes(searchTerm)
+    (patient.phone && patient.phone.includes(searchTerm))
   );
 
   const handleInputChange = (field: string, value: string) => {
@@ -103,101 +96,52 @@ export const Patients = () => {
   };
 
   const handleAddPatient = async () => {
-    setLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newPatient: Patient = {
-        id: Date.now().toString(),
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        clinic_id: 'clinic-1',
-        avatar: '',
-        created_at: new Date().toISOString()
-      };
+    if (!formData.name || !formData.email) {
+      return;
+    }
 
-      setPatients(prev => [...prev, newPatient]);
+    setFormLoading(true);
+    
+    const success = await addPatient(formData);
+    
+    if (success) {
       setIsAddModalOpen(false);
       resetForm();
-      
-      toast({
-        title: "Paciente adicionado",
-        description: "O paciente foi adicionado com sucesso.",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível adicionar o paciente.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
+    
+    setFormLoading(false);
   };
 
   const handleEditPatient = async () => {
-    if (!selectedPatient) return;
+    if (!selectedPatient || !formData.name || !formData.email) {
+      return;
+    }
+
+    setFormLoading(true);
     
-    setLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setPatients(prev =>
-        prev.map(patient =>
-          patient.id === selectedPatient.id
-            ? { ...patient, ...formData }
-            : patient
-        )
-      );
-      
+    const success = await updatePatient(selectedPatient.id, formData);
+    
+    if (success) {
       setIsEditModalOpen(false);
       setSelectedPatient(null);
       resetForm();
-      
-      toast({
-        title: "Paciente atualizado",
-        description: "Os dados do paciente foram atualizados com sucesso.",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o paciente.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
+    
+    setFormLoading(false);
   };
 
   const handleDeletePatient = async (patientId: string) => {
-    setLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setPatients(prev => prev.filter(patient => patient.id !== patientId));
-      
-      toast({
-        title: "Paciente removido",
-        description: "O paciente foi removido com sucesso.",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível remover o paciente.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    setFormLoading(true);
+    await deletePatient(patientId);
+    setFormLoading(false);
   };
 
-  const openEditModal = (patient: Patient) => {
+  const openEditModal = (patient: any) => {
     setSelectedPatient(patient);
     setFormData({
       name: patient.name,
       email: patient.email,
-      phone: patient.phone,
+      phone: patient.phone || '',
     });
     setIsEditModalOpen(true);
   };
@@ -217,7 +161,7 @@ export const Patients = () => {
             <TableCell>
               <div className="flex items-center gap-3">
                 <Avatar>
-                  <AvatarImage src={patient.avatar} />
+                  <AvatarImage src={patient.avatar_url} />
                   <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <span className="font-medium">{patient.name}</span>
@@ -242,10 +186,12 @@ export const Patients = () => {
                       <div className="text-xs text-muted-foreground">Email</div>
                       <div className="text-sm">{patient.email}</div>
                     </div>
-                    <div className="px-3 py-1">
-                      <div className="text-xs text-muted-foreground">Telefone</div>
-                      <div className="text-sm">{patient.phone}</div>
-                    </div>
+                    {patient.phone && (
+                      <div className="px-3 py-1">
+                        <div className="text-xs text-muted-foreground">Telefone</div>
+                        <div className="text-sm">{patient.phone}</div>
+                      </div>
+                    )}
                     <div className="px-3 py-1">
                       <div className="text-xs text-muted-foreground">Cadastrado em</div>
                       <div className="text-sm">{new Date(patient.created_at).toLocaleDateString('pt-BR')}</div>
@@ -284,8 +230,9 @@ export const Patients = () => {
                             <AlertDialogAction
                               onClick={() => handleDeletePatient(patient.id)}
                               className="bg-destructive text-destructive-foreground"
+                              disabled={formLoading}
                             >
-                              Remover
+                              {formLoading ? 'Removendo...' : 'Remover'}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -319,14 +266,14 @@ export const Patients = () => {
             <TableCell>
               <div className="flex items-center gap-3">
                 <Avatar>
-                  <AvatarImage src={patient.avatar} />
+                  <AvatarImage src={patient.avatar_url} />
                   <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <span className="font-medium">{patient.name}</span>
               </div>
             </TableCell>
             <TableCell>{patient.email}</TableCell>
-            <TableCell>{patient.phone}</TableCell>
+            <TableCell>{patient.phone || '-'}</TableCell>
             <TableCell>
               {new Date(patient.created_at).toLocaleDateString('pt-BR')}
             </TableCell>
@@ -364,8 +311,9 @@ export const Patients = () => {
                       <AlertDialogAction
                         onClick={() => handleDeletePatient(patient.id)}
                         className="bg-destructive text-destructive-foreground"
+                        disabled={formLoading}
                       >
-                        Remover
+                        {formLoading ? 'Removendo...' : 'Remover'}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -377,6 +325,14 @@ export const Patients = () => {
       </TableBody>
     </Table>
   );
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-6 text-center">
+        <p>Carregando pacientes...</p>
+      </div>
+    );
+  }
 
   return (
     <div className={`container mx-auto py-6 space-y-6 ${isMobile ? 'px-3' : ''}`}>
@@ -408,6 +364,7 @@ export const Patients = () => {
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   placeholder="Digite o nome completo"
+                  required
                 />
               </div>
               <div>
@@ -418,6 +375,7 @@ export const Patients = () => {
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="email@exemplo.com"
+                  required
                 />
               </div>
               <div>
@@ -434,8 +392,8 @@ export const Patients = () => {
               <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleAddPatient} disabled={loading}>
-                {loading ? 'Adicionando...' : 'Adicionar'}
+              <Button onClick={handleAddPatient} disabled={formLoading}>
+                {formLoading ? 'Adicionando...' : 'Adicionar'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -493,6 +451,7 @@ export const Patients = () => {
                 id="edit-name"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
+                required
               />
             </div>
             <div>
@@ -502,6 +461,7 @@ export const Patients = () => {
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
+                required
               />
             </div>
             <div>
@@ -517,8 +477,8 @@ export const Patients = () => {
             <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleEditPatient} disabled={loading}>
-              {loading ? 'Salvando...' : 'Salvar'}
+            <Button onClick={handleEditPatient} disabled={formLoading}>
+              {formLoading ? 'Salvando...' : 'Salvar'}
             </Button>
           </DialogFooter>
         </DialogContent>
