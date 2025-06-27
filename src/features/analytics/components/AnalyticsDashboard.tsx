@@ -1,323 +1,223 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { TrendingUp, Users, Activity, Target, Calendar, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Users, 
-  FileText, 
-  CheckCircle, 
-  Clock,
-  Download,
-  Calendar,
-  Filter
-} from 'lucide-react';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { useAuth } from '@/contexts/AuthContext';
 
-// Mock data
-const mockMetrics = {
-  totalPatients: 142,
-  activeFlows: 23,
-  completedFlows: 89,
-  avgResponseTime: 2.3,
-  patientGrowth: 12.5,
-  flowCompletionRate: 78.2
-};
-
-const mockFlowData = [
-  { name: 'Jan', completed: 12, started: 15, abandoned: 3 },
-  { name: 'Feb', completed: 19, started: 22, abandoned: 3 },
-  { name: 'Mar', completed: 15, started: 18, abandoned: 3 },
-  { name: 'Apr', completed: 22, started: 28, abandoned: 6 },
-  { name: 'Mai', completed: 18, started: 23, abandoned: 5 },
-  { name: 'Jun', completed: 25, started: 30, abandoned: 5 }
-];
-
-const mockPatientData = [
-  { name: 'Jan', novos: 8, ativos: 45 },
-  { name: 'Feb', novos: 12, ativos: 52 },
-  { name: 'Mar', novos: 6, ativos: 48 },
-  { name: 'Apr', novos: 15, ativos: 58 },
-  { name: 'Mai', novos: 9, ativos: 62 },
-  { name: 'Jun', novos: 18, ativos: 68 }
-];
-
-const mockCompletionData = [
-  { name: 'Questionário Inicial', value: 92 },
-  { name: 'Avaliação Física', value: 78 },
-  { name: 'Exercícios', value: 65 },
-  { name: 'Feedback Final', value: 43 }
-];
-
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export const AnalyticsDashboard = () => {
-  const [timeRange, setTimeRange] = useState('6m');
-  const [selectedMetric, setSelectedMetric] = useState('flows');
+  const { user } = useAuth();
+  const { data: analytics, isLoading } = useAnalytics();
 
-  const MetricCard = ({ 
-    title, 
-    value, 
-    change, 
-    icon: Icon, 
-    trend 
-  }: { 
-    title: string; 
-    value: string | number; 
-    change: number; 
-    icon: any; 
-    trend: 'up' | 'down' 
-  }) => (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold">{value}</p>
-          </div>
-          <Icon className="h-8 w-8 text-muted-foreground" />
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        <div className="flex items-center mt-4">
-          {trend === 'up' ? (
-            <TrendingUp className="h-4 w-4 text-green-500" />
-          ) : (
-            <TrendingDown className="h-4 w-4 text-red-500" />
-          )}
-          <span className={`text-sm ml-1 ${trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
-            {change > 0 ? '+' : ''}{change}%
-          </span>
-          <span className="text-sm text-muted-foreground ml-1">vs mês anterior</span>
-        </div>
-      </CardContent>
-    </Card>
-  );
+      </div>
+    );
+  }
 
-  const generateReport = () => {
-    console.log('Generating report for:', timeRange);
-    // Aqui implementaria a geração do relatório
+  // Se não há dados suficientes, mostrar estado vazio
+  if (!analytics || analytics.totalEvents === 0) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-bold">Analytics</h2>
+          <p className="text-muted-foreground">
+            Acompanhe o desempenho e uso da plataforma
+          </p>
+        </div>
+
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Sem dados ainda</h3>
+            <p className="text-muted-foreground">
+              Comece a usar a plataforma para ver analytics detalhados aqui.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const getMetricCards = () => {
+    const baseCards = [
+      {
+        title: 'Total de Eventos',
+        value: analytics.totalEvents,
+        icon: Activity,
+        color: 'text-blue-600',
+        change: analytics.eventsGrowth
+      },
+      {
+        title: 'Usuários Ativos',
+        value: analytics.activeUsers,
+        icon: Users,
+        color: 'text-green-600',
+        change: analytics.usersGrowth
+      },
+      {
+        title: 'Execuções de Fluxo',
+        value: analytics.flowExecutions,
+        icon: Target,
+        color: 'text-purple-600',
+        change: analytics.executionsGrowth
+      },
+      {
+        title: 'Taxa de Conclusão',
+        value: `${analytics.completionRate}%`,
+        icon: TrendingUp,
+        color: 'text-orange-600',
+        change: analytics.completionGrowth
+      }
+    ];
+
+    return baseCards;
   };
 
+  const cards = getMetricCards();
+
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Analytics & Relatórios</h1>
-          <p className="text-muted-foreground">Acompanhe o desempenho e métricas da sua clínica</p>
-        </div>
-        
-        <div className="flex gap-2">
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1m">1 Mês</SelectItem>
-              <SelectItem value="3m">3 Meses</SelectItem>
-              <SelectItem value="6m">6 Meses</SelectItem>
-              <SelectItem value="1y">1 Ano</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Button onClick={generateReport}>
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-3xl font-bold">Analytics</h2>
+        <p className="text-muted-foreground">
+          {user?.role === 'super_admin' 
+            ? 'Visão geral de todas as clínicas'
+            : 'Acompanhe o desempenho da sua clínica'
+          }
+        </p>
       </div>
 
       {/* Métricas principais */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          title="Total de Pacientes"
-          value={mockMetrics.totalPatients}
-          change={mockMetrics.patientGrowth}
-          icon={Users}
-          trend="up"
-        />
-        <MetricCard
-          title="Fluxos Ativos"
-          value={mockMetrics.activeFlows}
-          change={8.2}
-          icon={FileText}
-          trend="up"
-        />
-        <MetricCard
-          title="Taxa de Conclusão"
-          value={`${mockMetrics.flowCompletionRate}%`}
-          change={-2.1}
-          icon={CheckCircle}
-          trend="down"
-        />
-        <MetricCard
-          title="Tempo Médio (dias)"
-          value={mockMetrics.avgResponseTime}
-          change={-15.3}
-          icon={Clock}
-          trend="up"
-        />
+        {cards.map((card, index) => (
+          <Card key={index}>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2">
+                <card.icon className={`h-5 w-5 ${card.color}`} />
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">{card.title}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-2xl font-bold">{card.value}</p>
+                    {card.change !== undefined && (
+                      <Badge variant={card.change >= 0 ? "default" : "destructive"}>
+                        {card.change >= 0 ? '+' : ''}{card.change}%
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Gráficos detalhados */}
-      <Tabs value={selectedMetric} onValueChange={setSelectedMetric} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="flows">Fluxos</TabsTrigger>
-          <TabsTrigger value="patients">Pacientes</TabsTrigger>
-          <TabsTrigger value="completion">Conclusão</TabsTrigger>
-        </TabsList>
+      {/* Gráficos */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Gráfico de Atividade por Tempo */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Atividade por Período
+            </CardTitle>
+            <CardDescription>
+              Eventos registrados nos últimos 30 dias
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={analytics.timelineData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Line 
+                  type="monotone" 
+                  dataKey="events" 
+                  stroke="#8884d8" 
+                  strokeWidth={2}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="flows" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Desempenho dos Fluxos</CardTitle>
-              <CardDescription>
-                Acompanhe fluxos iniciados, completados e abandonados
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={mockFlowData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="completed" fill="#22c55e" name="Completados" />
-                  <Bar dataKey="started" fill="#3b82f6" name="Iniciados" />
-                  <Bar dataKey="abandoned" fill="#ef4444" name="Abandonados" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* Gráfico de Tipos de Evento */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Tipos de Evento
+            </CardTitle>
+            <CardDescription>
+              Distribuição dos tipos de eventos
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={analytics.eventTypes}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {analytics.eventTypes.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
 
-        <TabsContent value="patients" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Crescimento de Pacientes</CardTitle>
-              <CardDescription>
-                Novos pacientes vs pacientes ativos ao longo do tempo
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={mockPatientData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="novos" 
-                    stroke="#3b82f6" 
-                    strokeWidth={2}
-                    name="Novos Pacientes"
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="ativos" 
-                    stroke="#22c55e" 
-                    strokeWidth={2}
-                    name="Pacientes Ativos"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="completion" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Taxa de Conclusão por Etapa</CardTitle>
-                <CardDescription>
-                  Onde os pacientes mais abandonam o fluxo
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={mockCompletionData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {mockCompletionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Insights e Recomendações</CardTitle>
-                <CardDescription>
-                  Sugestões baseadas nos dados
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingDown className="h-4 w-4 text-yellow-600" />
-                    <span className="font-medium text-yellow-800">Atenção</span>
-                  </div>
-                  <p className="text-sm text-yellow-700">
-                    43% dos pacientes não completam o feedback final. 
-                    Considere simplificar esta etapa.
-                  </p>
-                </div>
-
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="h-4 w-4 text-green-600" />
-                    <span className="font-medium text-green-800">Sucesso</span>
-                  </div>
-                  <p className="text-sm text-green-700">
-                    92% de conclusão no questionário inicial indica 
-                    boa aceitação dos pacientes.
-                  </p>
-                </div>
-
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <FileText className="h-4 w-4 text-blue-600" />
-                    <span className="font-medium text-blue-800">Sugestão</span>
-                  </div>
-                  <p className="text-sm text-blue-700">
-                    Adicione lembretes automáticos para aumentar 
-                    a taxa de conclusão dos exercícios.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+      {/* Estatísticas por Clínica (apenas para super_admin) */}
+      {user?.role === 'super_admin' && analytics.clinicStats && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Performance por Clínica</CardTitle>
+            <CardDescription>
+              Comparativo de atividade entre clínicas
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={analytics.clinicStats}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="clinic_name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="events" fill="#8884d8" />
+                <Bar dataKey="users" fill="#82ca9d" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

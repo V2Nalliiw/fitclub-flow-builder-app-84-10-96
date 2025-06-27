@@ -25,13 +25,14 @@ export const usePatients = () => {
   const [loading, setLoading] = useState(true);
 
   const loadPatients = useCallback(async () => {
-    if (!user?.id) {
+    if (!user?.id || !user?.clinic_id) {
       setLoading(false);
       return;
     }
 
     setLoading(true);
     try {
+      // Buscar pacientes da clínica específica
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -81,7 +82,8 @@ export const usePatients = () => {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             name: patientData.name,
-            role: 'patient'
+            role: 'patient',
+            clinic_id: user.clinic_id
           }
         }
       });
@@ -96,22 +98,25 @@ export const usePatients = () => {
         return false;
       }
 
-      // Se o usuário foi criado com sucesso, o trigger handle_new_user criará o perfil
-      // Vamos aguardar um pouco e tentar atualizar os dados específicos do paciente
+      // Se o usuário foi criado com sucesso, atualizar os dados específicos do paciente
       if (authData.user) {
-        setTimeout(async () => {
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({
-              clinic_id: user.clinic_id,
-              phone: patientData.phone,
-            })
-            .eq('user_id', authData.user.id);
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            clinic_id: user.clinic_id,
+            phone: patientData.phone || null,
+            role: 'patient'
+          })
+          .eq('user_id', authData.user.id);
 
-          if (updateError) {
-            console.error('Erro ao atualizar perfil:', updateError);
-          }
-        }, 1000);
+        if (updateError) {
+          console.error('Erro ao atualizar perfil:', updateError);
+          toast({
+            title: "Aviso",
+            description: "Paciente criado, mas alguns dados podem não ter sido salvos",
+            variant: "default",
+          });
+        }
       }
 
       toast({
@@ -139,10 +144,11 @@ export const usePatients = () => {
         .update({
           name: patientData.name,
           email: patientData.email,
-          phone: patientData.phone,
+          phone: patientData.phone || null,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', patientId);
+        .eq('id', patientId)
+        .eq('clinic_id', user?.clinic_id); // Garantir que só atualize pacientes da clínica
 
       if (error) {
         console.error('Erro ao atualizar paciente:', error);
@@ -177,7 +183,8 @@ export const usePatients = () => {
       const { error } = await supabase
         .from('profiles')
         .delete()
-        .eq('id', patientId);
+        .eq('id', patientId)
+        .eq('clinic_id', user?.clinic_id); // Garantir que só delete pacientes da clínica
 
       if (error) {
         console.error('Erro ao deletar paciente:', error);
@@ -208,7 +215,7 @@ export const usePatients = () => {
   };
 
   useEffect(() => {
-    if (user?.role === 'clinic') {
+    if (user?.role === 'clinic' && user?.clinic_id) {
       loadPatients();
     } else {
       setLoading(false);
