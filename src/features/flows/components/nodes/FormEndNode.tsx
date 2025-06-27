@@ -17,13 +17,25 @@ export const FormEndNode: React.FC<FormEndNodeProps> = ({ data, selected, id, on
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-40 h-32 rounded-lg bg-gradient-to-br from-green-500 to-green-600 shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden ${
+      <div className={`w-36 h-32 rounded-lg bg-gradient-to-br from-green-500/70 to-green-600/70 backdrop-blur-sm shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden border border-green-500/20 ${
         selected 
           ? 'shadow-[0_0_0_3px_rgba(34,197,94,0.3),0_8px_25px_rgba(34,197,94,0.2)]' 
           : 'shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
       }`}>
         {/* Glow effect interno */}
         <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-transparent to-white/10" />
+        
+        {/* Linhas de conclusão no fundo */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="flex flex-col gap-1 p-3 pt-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-white/40 rounded-full"></div>
+                <div className="flex-1 h-0.5 bg-white/40 rounded"></div>
+              </div>
+            ))}
+          </div>
+        </div>
         
         <FileCheck className="h-6 w-6 mb-1 relative z-10" />
         <div className="text-xs font-semibold text-center relative z-10 tracking-tight mb-1">

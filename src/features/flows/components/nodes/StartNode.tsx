@@ -17,13 +17,13 @@ export const StartNode: React.FC<StartNodeProps> = ({ data, selected, id, onDele
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-32 h-28 rounded-lg bg-gradient-to-br from-[#5D8701] to-[#4a6e01] shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden ${
+      <div className={`w-28 h-28 rounded-full bg-gradient-to-br from-[#5D8701]/80 to-[#4a6e01]/80 backdrop-blur-sm shadow-lg transition-all duration-200 flex flex-col items-center justify-center text-white relative overflow-hidden border border-[#5D8701]/20 ${
         selected 
           ? 'shadow-[0_0_0_3px_rgba(93,135,1,0.3),0_8px_25px_rgba(93,135,1,0.2)]' 
           : 'shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
       }`}>
         {/* Glow effect interno */}
-        <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-transparent to-white/10" />
+        <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent to-white/10" />
         
         <Play className="h-6 w-6 mb-1 relative z-10" fill="currentColor" />
         <div className="text-xs font-semibold text-center relative z-10 tracking-tight">
