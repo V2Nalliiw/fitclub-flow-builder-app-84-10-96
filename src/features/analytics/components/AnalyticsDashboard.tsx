@@ -139,7 +139,7 @@ export const AnalyticsDashboard = () => {
               Atividade por Período
             </CardTitle>
             <CardDescription>
-              Eventos registrados nos últimos 30 dias
+              Eventos registrados nos últimos 7 dias
             </CardDescription>
           </CardHeader>
           <CardContent>
