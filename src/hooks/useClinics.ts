@@ -27,13 +27,15 @@ export const useClinics = () => {
   const loadClinics = useCallback(async () => {
     setLoading(true);
     try {
-      // Usar query SQL customizada para acessar a tabela clinics
+      // Try to query the clinics table directly
       const { data, error } = await supabase
-        .rpc('get_clinics_data');
+        .from('clinics')
+        .select('*')
+        .eq('is_active', true);
 
       if (error) {
         console.error('Erro ao carregar clínicas:', error);
-        // Usar dados mock se a tabela não existir ainda
+        // Use mock data if the table query fails
         const mockClinics: Clinic[] = [
           {
             id: '1',
@@ -77,22 +79,34 @@ export const useClinics = () => {
 
   const getClinicBySlug = useCallback(async (slug: string): Promise<Clinic | null> => {
     try {
-      // Usar dados mock por enquanto
-      const mockClinics: Clinic[] = [
-        {
-          id: '1',
-          name: 'Clínica Saúde Total',
-          slug: 'saude-total',
-          description: 'Clínica especializada em medicina preventiva',
-          contact_email: 'contato@saudetotal.com',
-          contact_phone: '(11) 3333-4444',
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ];
+      // Try to query the clinics table directly
+      const { data, error } = await supabase
+        .from('clinics')
+        .select('*')
+        .eq('slug', slug)
+        .eq('is_active', true)
+        .single();
 
-      return mockClinics.find(clinic => clinic.slug === slug) || null;
+      if (error) {
+        console.error('Erro ao buscar clínica:', error);
+        // Fallback to mock data
+        const mockClinics: Clinic[] = [
+          {
+            id: '1',
+            name: 'Clínica Saúde Total',
+            slug: 'saude-total',
+            description: 'Clínica especializada em medicina preventiva',
+            contact_email: 'contato@saudetotal.com',
+            contact_phone: '(11) 3333-4444',
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        ];
+        return mockClinics.find(clinic => clinic.slug === slug) || null;
+      }
+
+      return data;
     } catch (error) {
       console.error('Erro inesperado:', error);
       return null;
