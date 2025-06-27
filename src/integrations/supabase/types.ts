@@ -33,6 +33,48 @@ export type Database = {
         }
         Relationships: []
       }
+      clinics: {
+        Row: {
+          address: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       flow_assignments: {
         Row: {
           assigned_at: string | null
@@ -363,6 +405,154 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          clinic_id: string | null
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          execution_id: string | null
+          flow_id: string | null
+          id: string
+          media_type: string | null
+          media_url: string | null
+          message_id: string | null
+          message_text: string
+          patient_id: string | null
+          sent_at: string | null
+          status: string
+          to_phone: string
+          updated_at: string
+        }
+        Insert: {
+          clinic_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          execution_id?: string | null
+          flow_id?: string | null
+          id?: string
+          media_type?: string | null
+          media_url?: string | null
+          message_id?: string | null
+          message_text: string
+          patient_id?: string | null
+          sent_at?: string | null
+          status?: string
+          to_phone: string
+          updated_at?: string
+        }
+        Update: {
+          clinic_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          execution_id?: string | null
+          flow_id?: string | null
+          id?: string
+          media_type?: string | null
+          media_url?: string | null
+          message_id?: string | null
+          message_text?: string
+          patient_id?: string | null
+          sent_at?: string | null
+          status?: string
+          to_phone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_execution_id_fkey"
+            columns: ["execution_id"]
+            isOneToOne: false
+            referencedRelation: "flow_executions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "flows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      whatsapp_settings: {
+        Row: {
+          access_token: string | null
+          account_sid: string | null
+          api_key: string | null
+          auth_token: string | null
+          base_url: string | null
+          business_account_id: string | null
+          clinic_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          phone_number: string | null
+          provider: string
+          session_name: string | null
+          updated_at: string
+          webhook_url: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          account_sid?: string | null
+          api_key?: string | null
+          auth_token?: string | null
+          base_url?: string | null
+          business_account_id?: string | null
+          clinic_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          phone_number?: string | null
+          provider: string
+          session_name?: string | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          account_sid?: string | null
+          api_key?: string | null
+          auth_token?: string | null
+          base_url?: string | null
+          business_account_id?: string | null
+          clinic_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          phone_number?: string | null
+          provider?: string
+          session_name?: string | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_settings_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: true
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

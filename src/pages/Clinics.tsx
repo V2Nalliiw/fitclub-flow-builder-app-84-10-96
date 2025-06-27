@@ -17,62 +17,55 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Building2, Search, Plus, Users, Settings, BarChart3, Edit, Trash2, Eye } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { Clinic } from '@/types';
-
-// Mock data expandido
-const mockClinics: Clinic[] = [
-  {
-    id: '1',
-    name: 'Clínica Fisio+',
-    logo: '',
-    chief_user_id: 'user-1',
-    created_at: '2024-01-10T10:00:00Z'
-  },
-  {
-    id: '2',
-    name: 'Centro de Reabilitação Vida',
-    logo: '',
-    chief_user_id: 'user-2',
-    created_at: '2024-01-15T14:00:00Z'
-  },
-  {
-    id: '3',
-    name: 'Clínica Movimento',
-    logo: '',
-    chief_user_id: 'user-3',
-    created_at: '2024-01-20T09:00:00Z'
-  }
-];
+import { useClinics } from '@/hooks/useClinics';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ClinicFormData {
   name: string;
+  slug: string;
   email: string;
   phone: string;
   address: string;
-  chiefName: string;
-  chiefEmail: string;
+  description: string;
   logo: File[];
 }
 
 export const Clinics = () => {
-  const { toast } = useToast();
-  const [clinics, setClinics] = useState<Clinic[]>(mockClinics);
+  const { user } = useAuth();
+  const { clinics, loading, createClinic, deleteClinic } = useClinics();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [formData, setFormData] = useState<ClinicFormData>({
     name: '',
+    slug: '',
     email: '',
     phone: '',
     address: '',
-    chiefName: '',
-    chiefEmail: '',
+    description: '',
     logo: []
   });
 
+  // Verificar se o usuário tem permissão para gerenciar clínicas
+  if (user?.role !== 'super_admin') {
+    return (
+      <div className="container mx-auto py-6">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Acesso Restrito</h3>
+            <p className="text-muted-foreground">
+              Apenas super administradores podem gerenciar clínicas.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const filteredClinics = clinics.filter(clinic =>
-    clinic.name.toLowerCase().includes(searchTerm.toLowerCase())
+    clinic.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    clinic.slug.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleInputChange = (field: keyof ClinicFormData, value: string) => {
@@ -80,68 +73,86 @@ export const Clinics = () => {
       ...prev,
       [field]: value
     }));
+
+    // Auto-gerar slug baseado no nome
+    if (field === 'name') {
+      const slug = value
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+        .replace(/[^a-z0-9\s-]/g, '') // Remove caracteres especiais
+        .replace(/\s+/g, '-') // Substitui espaços por hífens
+        .replace(/-+/g, '-') // Remove hífens duplicados
+        .trim();
+      
+      setFormData(prev => ({
+        ...prev,
+        slug: slug
+      }));
+    }
   };
 
   const resetForm = () => {
     setFormData({
       name: '',
+      slug: '',
       email: '',
       phone: '',
       address: '',
-      chiefName: '',
-      chiefEmail: '',
+      description: '',
       logo: []
     });
   };
 
   const handleAddClinic = async () => {
-    setLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newClinic: Clinic = {
-        id: Date.now().toString(),
-        name: formData.name,
-        logo: formData.logo.length > 0 ? URL.createObjectURL(formData.logo[0]) : '',
-        chief_user_id: Date.now().toString(),
-        created_at: new Date().toISOString()
-      };
+    if (!formData.name.trim() || !formData.slug.trim()) {
+      return;
+    }
 
-      setClinics(prev => [...prev, newClinic]);
-      setIsAddModalOpen(false);
-      resetForm();
-      
-      toast({
-        title: "Clínica adicionada",
-        description: `${formData.name} foi criada com sucesso.`,
+    setCreating(true);
+    try {
+      const success = await createClinic({
+        name: formData.name,
+        slug: formData.slug,
+        description: formData.description,
+        contact_email: formData.email,
+        contact_phone: formData.phone,
+        address: formData.address,
       });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível criar a clínica.",
-        variant: "destructive",
-      });
+
+      if (success) {
+        setIsAddModalOpen(false);
+        resetForm();
+      }
     } finally {
-      setLoading(false);
+      setCreating(false);
     }
   };
 
   const handleDeleteClinic = async (clinicId: string, clinicName: string) => {
-    try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setClinics(prev => prev.filter(clinic => clinic.id !== clinicId));
-      toast({
-        title: "Clínica removida",
-        description: `${clinicName} foi removida do sistema.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível remover a clínica.",
-        variant: "destructive",
-      });
+    if (window.confirm(`Tem certeza que deseja excluir a clínica "${clinicName}"?`)) {
+      await deleteClinic(clinicId);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-6 space-y-6">
+        <div className="grid gap-4 md:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -168,7 +179,7 @@ export const Clinics = () => {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="clinic-name">Nome da Clínica</Label>
+                  <Label htmlFor="clinic-name">Nome da Clínica *</Label>
                   <Input
                     id="clinic-name"
                     value={formData.name}
@@ -176,6 +187,28 @@ export const Clinics = () => {
                     placeholder="Digite o nome da clínica"
                   />
                 </div>
+                <div>
+                  <Label htmlFor="clinic-slug">Slug *</Label>
+                  <Input
+                    id="clinic-slug"
+                    value={formData.slug}
+                    onChange={(e) => handleInputChange('slug', e.target.value)}
+                    placeholder="slug-da-clinica"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="clinic-description">Descrição</Label>
+                <Input
+                  id="clinic-description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Breve descrição da clínica"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="clinic-email">Email da Clínica</Label>
                   <Input
@@ -186,9 +219,6 @@ export const Clinics = () => {
                     placeholder="contato@clinica.com"
                   />
                 </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="clinic-phone">Telefone</Label>
                   <Input
@@ -198,37 +228,16 @@ export const Clinics = () => {
                     placeholder="(11) 99999-9999"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="clinic-address">Endereço</Label>
-                  <Input
-                    id="clinic-address"
-                    value={formData.address}
-                    onChange={(e) => handleInputChange('address', e.target.value)}
-                    placeholder="Rua, número, bairro, cidade"
-                  />
-                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="chief-name">Nome do Responsável</Label>
-                  <Input
-                    id="chief-name"
-                    value={formData.chiefName}
-                    onChange={(e) => handleInputChange('chiefName', e.target.value)}
-                    placeholder="Nome do administrador"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="chief-email">Email do Responsável</Label>
-                  <Input
-                    id="chief-email"
-                    type="email"
-                    value={formData.chiefEmail}
-                    onChange={(e) => handleInputChange('chiefEmail', e.target.value)}
-                    placeholder="admin@clinica.com"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="clinic-address">Endereço</Label>
+                <Input
+                  id="clinic-address"
+                  value={formData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  placeholder="Rua, número, bairro, cidade"
+                />
               </div>
 
               <div>
@@ -245,14 +254,18 @@ export const Clinics = () => {
               <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleAddClinic} disabled={loading}>
-                {loading ? 'Criando...' : 'Criar Clínica'}
+              <Button 
+                onClick={handleAddClinic} 
+                disabled={creating || !formData.name.trim() || !formData.slug.trim()}
+              >
+                {creating ? 'Criando...' : 'Criar Clínica'}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
+      {/* Métricas */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="p-6">
@@ -271,7 +284,7 @@ export const Clinics = () => {
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold">156</p>
+                <p className="text-2xl font-bold">-</p>
                 <p className="text-sm text-muted-foreground">Total de Pacientes</p>
               </div>
             </div>
@@ -283,7 +296,7 @@ export const Clinics = () => {
             <div className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-green-500" />
               <div>
-                <p className="text-2xl font-bold">23</p>
+                <p className="text-2xl font-bold">-</p>
                 <p className="text-sm text-muted-foreground">Fluxos Ativos</p>
               </div>
             </div>
@@ -295,7 +308,7 @@ export const Clinics = () => {
             <div className="flex items-center gap-2">
               <Settings className="h-5 w-5 text-orange-500" />
               <div>
-                <p className="text-2xl font-bold">12</p>
+                <p className="text-2xl font-bold">-</p>
                 <p className="text-sm text-muted-foreground">Colaboradores</p>
               </div>
             </div>
@@ -303,6 +316,7 @@ export const Clinics = () => {
         </Card>
       </div>
 
+      {/* Lista de Clínicas */}
       <Card>
         <CardHeader>
           <CardTitle>Lista de Clínicas</CardTitle>
@@ -329,7 +343,7 @@ export const Clinics = () => {
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     <Avatar className="h-12 w-12">
-                      <AvatarImage src={clinic.logo} />
+                      <AvatarImage src={clinic.logo_url} />
                       <AvatarFallback>
                         <Building2 className="h-6 w-6" />
                       </AvatarFallback>
@@ -337,12 +351,19 @@ export const Clinics = () => {
                     
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold truncate">{clinic.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Criada em {new Date(clinic.created_at).toLocaleDateString('pt-BR')}
+                      <p className="text-sm text-muted-foreground truncate">
+                        {clinic.slug}
                       </p>
+                      {clinic.description && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          {clinic.description}
+                        </p>
+                      )}
                       
                       <div className="flex items-center gap-2 mt-2">
-                        <Badge variant="default">Ativa</Badge>
+                        <Badge variant={clinic.is_active ? "default" : "secondary"}>
+                          {clinic.is_active ? 'Ativa' : 'Inativa'}
+                        </Badge>
                       </div>
                       
                       <div className="flex gap-2 mt-4">

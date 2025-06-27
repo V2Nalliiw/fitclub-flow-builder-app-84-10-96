@@ -27,32 +27,24 @@ export const useClinics = () => {
   const loadClinics = useCallback(async () => {
     setLoading(true);
     try {
-      // Use mock data since clinics table is not yet available in types
-      const mockClinics: Clinic[] = [
-        {
-          id: '1',
-          name: 'Clínica Saúde Total',
-          slug: 'saude-total',
-          description: 'Clínica especializada em medicina preventiva',
-          contact_email: 'contato@saudetotal.com',
-          contact_phone: '(11) 3333-4444',
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          name: 'Centro Médico Vida',
-          slug: 'centro-vida',
-          description: 'Centro médico com foco em medicina familiar',
-          contact_email: 'info@centrovida.com',
-          contact_phone: '(11) 2222-3333',
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ];
-      setClinics(mockClinics);
+      const { data, error } = await supabase
+        .from('clinics')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) {
+        console.error('Erro ao carregar clínicas:', error);
+        toast({
+          title: "Erro ao carregar clínicas",
+          description: error.message,
+          variant: "destructive",
+        });
+        setClinics([]);
+        return;
+      }
+
+      setClinics(data || []);
     } catch (error) {
       console.error('Erro inesperado:', error);
       toast({
@@ -60,6 +52,7 @@ export const useClinics = () => {
         description: "Ocorreu um erro inesperado ao carregar os dados",
         variant: "destructive",
       });
+      setClinics([]);
     } finally {
       setLoading(false);
     }
@@ -67,21 +60,19 @@ export const useClinics = () => {
 
   const getClinicBySlug = useCallback(async (slug: string): Promise<Clinic | null> => {
     try {
-      // Use mock data since clinics table is not yet available in types
-      const mockClinics: Clinic[] = [
-        {
-          id: '1',
-          name: 'Clínica Saúde Total',
-          slug: 'saude-total',
-          description: 'Clínica especializada em medicina preventiva',
-          contact_email: 'contato@saudetotal.com',
-          contact_phone: '(11) 3333-4444',
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ];
-      return mockClinics.find(clinic => clinic.slug === slug) || null;
+      const { data, error } = await supabase
+        .from('clinics')
+        .select('*')
+        .eq('slug', slug)
+        .eq('is_active', true)
+        .single();
+
+      if (error) {
+        console.error('Erro ao buscar clínica:', error);
+        return null;
+      }
+
+      return data;
     } catch (error) {
       console.error('Erro inesperado:', error);
       return null;
@@ -106,7 +97,30 @@ export const useClinics = () => {
     }
 
     try {
-      // Por enquanto, simular criação de clínica
+      const { data, error } = await supabase
+        .from('clinics')
+        .insert([{
+          name: clinicData.name,
+          slug: clinicData.slug,
+          description: clinicData.description,
+          contact_email: clinicData.contact_email,
+          contact_phone: clinicData.contact_phone,
+          address: clinicData.address,
+          is_active: true,
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao criar clínica:', error);
+        toast({
+          title: "Erro",
+          description: error.message,
+          variant: "destructive",
+        });
+        return false;
+      }
+
       toast({
         title: "Clínica criada",
         description: "A clínica foi criada com sucesso",
@@ -127,7 +141,21 @@ export const useClinics = () => {
 
   const updateClinic = async (clinicId: string, clinicData: Partial<Clinic>) => {
     try {
-      // Por enquanto, simular atualização
+      const { error } = await supabase
+        .from('clinics')
+        .update(clinicData)
+        .eq('id', clinicId);
+
+      if (error) {
+        console.error('Erro ao atualizar clínica:', error);
+        toast({
+          title: "Erro",
+          description: error.message,
+          variant: "destructive",
+        });
+        return false;
+      }
+
       toast({
         title: "Clínica atualizada",
         description: "Os dados da clínica foram atualizados com sucesso",
@@ -146,8 +174,52 @@ export const useClinics = () => {
     }
   };
 
+  const deleteClinic = async (clinicId: string) => {
+    if (user?.role !== 'super_admin') {
+      toast({
+        title: "Erro",
+        description: "Apenas super administradores podem excluir clínicas",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('clinics')
+        .update({ is_active: false })
+        .eq('id', clinicId);
+
+      if (error) {
+        console.error('Erro ao excluir clínica:', error);
+        toast({
+          title: "Erro",
+          description: error.message,
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      toast({
+        title: "Clínica excluída",
+        description: "A clínica foi excluída com sucesso",
+      });
+      
+      await loadClinics();
+      return true;
+    } catch (error: any) {
+      console.error('Erro ao excluir clínica:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir a clínica",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   useEffect(() => {
-    if (user?.role === 'super_admin') {
+    if (user) {
       loadClinics();
     } else {
       setLoading(false);
@@ -159,6 +231,7 @@ export const useClinics = () => {
     loading,
     createClinic,
     updateClinic,
+    deleteClinic,
     getClinicBySlug,
     refetch: loadClinics,
   };

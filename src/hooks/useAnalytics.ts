@@ -39,7 +39,7 @@ export const useAnalytics = () => {
         .from('analytics_events')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(1000);
 
       if (error) {
         console.error('Erro ao buscar eventos de analytics:', error);
@@ -51,19 +51,54 @@ export const useAnalytics = () => {
     enabled: !!user,
   });
 
+  // Buscar dados de clínicas para estatísticas
+  const { data: clinicStats = [] } = useQuery({
+    queryKey: ['clinic-stats', user?.id],
+    queryFn: async () => {
+      if (!user || user.role !== 'super_admin') return [];
+
+      const { data: clinics, error } = await supabase
+        .from('clinics')
+        .select(`
+          name,
+          profiles!inner(user_id)
+        `)
+        .eq('is_active', true);
+
+      if (error) {
+        console.error('Erro ao buscar estatísticas de clínicas:', error);
+        return [];
+      }
+
+      // Calcular estatísticas por clínica
+      return clinics?.map(clinic => {
+        const clinicEvents = events.filter(event => 
+          clinic.profiles?.some(profile => profile.user_id === event.user_id)
+        );
+        
+        return {
+          clinic_name: clinic.name,
+          events: clinicEvents.length,
+          users: clinic.profiles?.length || 0
+        };
+      }) || [];
+    },
+    enabled: !!user && user.role === 'super_admin' && events.length > 0,
+  });
+
   // Processar dados para analytics
   const processedData: AnalyticsData = {
     totalEvents: events.length,
     activeUsers: new Set(events.map(e => e.user_id)).size,
     flowExecutions: events.filter(e => e.event_type === 'flow_completed').length,
     completionRate: events.length > 0 ? Math.round((events.filter(e => e.event_type === 'flow_completed').length / events.length) * 100) : 0,
-    eventsGrowth: 15, // Mock data
-    usersGrowth: 8,   // Mock data
-    executionsGrowth: 12, // Mock data
-    completionGrowth: 5,  // Mock data
+    eventsGrowth: calculateGrowth(events, 'weekly'),
+    usersGrowth: calculateUsersGrowth(events),
+    executionsGrowth: calculateExecutionsGrowth(events),
+    completionGrowth: calculateCompletionGrowth(events),
     timelineData: generateTimelineData(events),
     eventTypes: generateEventTypesData(events),
-    clinicStats: user?.role === 'super_admin' ? generateClinicStats(events) : undefined,
+    clinicStats: user?.role === 'super_admin' ? clinicStats : undefined,
   };
 
   const trackEventMutation = useMutation({
@@ -96,7 +131,7 @@ export const useAnalytics = () => {
     trackEventMutation.mutate({ eventType, eventData });
   };
 
-  // Helper functions for common events
+  // Helper functions para eventos comuns
   const trackFlowCreated = (flowId: string, flowName: string) => {
     trackEvent('flow_created', { flowId, flowName });
   };
@@ -113,6 +148,10 @@ export const useAnalytics = () => {
     trackEvent('file_uploaded', { fileName, fileSize });
   };
 
+  const trackWhatsAppSent = (phoneNumber: string, messageType: string) => {
+    trackEvent('whatsapp_sent', { phoneNumber, messageType });
+  };
+
   return {
     data: processedData,
     events,
@@ -122,10 +161,86 @@ export const useAnalytics = () => {
     trackFlowAssigned,
     trackFlowCompleted,
     trackFileUploaded,
+    trackWhatsAppSent,
   };
 };
 
 // Helper functions para processar dados
+function calculateGrowth(events: AnalyticsEvent[], period: 'daily' | 'weekly' | 'monthly' = 'weekly'): number {
+  const now = new Date();
+  const periodMs = period === 'daily' ? 24 * 60 * 60 * 1000 : 
+                   period === 'weekly' ? 7 * 24 * 60 * 60 * 1000 : 
+                   30 * 24 * 60 * 60 * 1000;
+  
+  const currentPeriodStart = new Date(now.getTime() - periodMs);
+  const previousPeriodStart = new Date(currentPeriodStart.getTime() - periodMs);
+  
+  const currentPeriodEvents = events.filter(e => 
+    new Date(e.created_at) >= currentPeriodStart
+  ).length;
+  
+  const previousPeriodEvents = events.filter(e => {
+    const eventDate = new Date(e.created_at);
+    return eventDate >= previousPeriodStart && eventDate < currentPeriodStart;
+  }).length;
+  
+  if (previousPeriodEvents === 0) return currentPeriodEvents > 0 ? 100 : 0;
+  
+  return Math.round(((currentPeriodEvents - previousPeriodEvents) / previousPeriodEvents) * 100);
+}
+
+function calculateUsersGrowth(events: AnalyticsEvent[]): number {
+  const now = new Date();
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+  
+  const currentWeekStart = new Date(now.getTime() - weekMs);
+  const previousWeekStart = new Date(currentWeekStart.getTime() - weekMs);
+  
+  const currentWeekUsers = new Set(
+    events.filter(e => new Date(e.created_at) >= currentWeekStart)
+          .map(e => e.user_id)
+  ).size;
+  
+  const previousWeekUsers = new Set(
+    events.filter(e => {
+      const eventDate = new Date(e.created_at);
+      return eventDate >= previousWeekStart && eventDate < currentWeekStart;
+    }).map(e => e.user_id)
+  ).size;
+  
+  if (previousWeekUsers === 0) return currentWeekUsers > 0 ? 100 : 0;
+  
+  return Math.round(((currentWeekUsers - previousWeekUsers) / previousWeekUsers) * 100);
+}
+
+function calculateExecutionsGrowth(events: AnalyticsEvent[]): number {
+  const executionEvents = events.filter(e => e.event_type === 'flow_completed');
+  return calculateGrowth(executionEvents, 'weekly');
+}
+
+function calculateCompletionGrowth(events: AnalyticsEvent[]): number {
+  const now = new Date();
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+  
+  const currentWeekStart = new Date(now.getTime() - weekMs);
+  const previousWeekStart = new Date(currentWeekStart.getTime() - weekMs);
+  
+  const currentWeekEvents = events.filter(e => new Date(e.created_at) >= currentWeekStart);
+  const currentWeekCompletions = currentWeekEvents.filter(e => e.event_type === 'flow_completed');
+  const currentRate = currentWeekEvents.length > 0 ? (currentWeekCompletions.length / currentWeekEvents.length) * 100 : 0;
+  
+  const previousWeekEvents = events.filter(e => {
+    const eventDate = new Date(e.created_at);
+    return eventDate >= previousWeekStart && eventDate < currentWeekStart;
+  });
+  const previousWeekCompletions = previousWeekEvents.filter(e => e.event_type === 'flow_completed');
+  const previousRate = previousWeekEvents.length > 0 ? (previousWeekCompletions.length / previousWeekEvents.length) * 100 : 0;
+  
+  if (previousRate === 0) return currentRate > 0 ? 100 : 0;
+  
+  return Math.round(((currentRate - previousRate) / previousRate) * 100);
+}
+
 function generateTimelineData(events: AnalyticsEvent[]) {
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
@@ -146,13 +261,4 @@ function generateEventTypesData(events: AnalyticsEvent[]) {
   }, {} as Record<string, number>);
 
   return Object.entries(eventTypes).map(([name, value]) => ({ name, value }));
-}
-
-function generateClinicStats(events: AnalyticsEvent[]) {
-  // Mock data para estatísticas de clínica
-  return [
-    { clinic_name: 'Clínica Saúde Total', events: 45, users: 12 },
-    { clinic_name: 'Centro Médico Vida', events: 32, users: 8 },
-    { clinic_name: 'Clínica Bem Estar', events: 28, users: 6 },
-  ];
 }

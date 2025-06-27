@@ -1,36 +1,16 @@
 
 import { useState, useCallback } from 'react';
 import { whatsappService } from '@/services/whatsapp/WhatsAppService';
-import { WhatsAppConfig, WhatsAppMessage, SendMessageResponse } from '@/services/whatsapp/types';
+import { WhatsAppConfig, SendMessageResponse } from '@/services/whatsapp/types';
 import { useToast } from '@/hooks/use-toast';
+import { useWhatsAppSettings } from './useWhatsAppSettings';
+import { useAnalytics } from './useAnalytics';
 
 export const useWhatsApp = () => {
-  const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [config, setConfig] = useState<WhatsAppConfig | null>(null);
   const { toast } = useToast();
-
-  const updateConfig = useCallback(async (newConfig: WhatsAppConfig) => {
-    setConfig(newConfig);
-    whatsappService.setConfig(newConfig);
-    
-    // Test connection
-    const connected = await whatsappService.testConnection();
-    setIsConnected(connected);
-    
-    if (connected) {
-      toast({
-        title: "WhatsApp conectado",
-        description: "Conexão estabelecida com sucesso.",
-      });
-    } else {
-      toast({
-        title: "Erro de conexão",
-        description: "Não foi possível conectar ao WhatsApp.",
-        variant: "destructive",
-      });
-    }
-  }, [toast]);
+  const { getWhatsAppConfig } = useWhatsAppSettings();
+  const { trackWhatsAppSent } = useAnalytics();
 
   const sendFormLink = useCallback(async (
     phoneNumber: string, 
@@ -38,7 +18,18 @@ export const useWhatsApp = () => {
     formUrl: string, 
     customMessage?: string
   ): Promise<SendMessageResponse> => {
+    const config = getWhatsAppConfig();
+    if (!config) {
+      toast({
+        title: "WhatsApp não configurado",
+        description: "Configure o WhatsApp nas configurações antes de enviar mensagens.",
+        variant: "destructive",
+      });
+      return { success: false, error: "WhatsApp não configurado" };
+    }
+
     setIsLoading(true);
+    whatsappService.setConfig(config);
     
     const message = customMessage || 
       `📋 *${formName}*\n\nOlá! Você tem um formulário para preencher.\n\n🔗 Acesse o link: ${formUrl}\n\n_Responda assim que possível._`;
@@ -51,6 +42,7 @@ export const useWhatsApp = () => {
           title: "Link enviado",
           description: `Formulário enviado para ${phoneNumber}`,
         });
+        trackWhatsAppSent(phoneNumber, 'form_link');
       } else {
         toast({
           title: "Erro ao enviar",
@@ -63,7 +55,7 @@ export const useWhatsApp = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [getWhatsAppConfig, toast, trackWhatsAppSent]);
 
   const sendMedia = useCallback(async (
     phoneNumber: string,
@@ -71,7 +63,18 @@ export const useWhatsApp = () => {
     mediaType: string,
     message?: string
   ): Promise<SendMessageResponse> => {
+    const config = getWhatsAppConfig();
+    if (!config) {
+      toast({
+        title: "WhatsApp não configurado",
+        description: "Configure o WhatsApp nas configurações antes de enviar mensagens.",
+        variant: "destructive",
+      });
+      return { success: false, error: "WhatsApp não configurado" };
+    }
+
     setIsLoading(true);
+    whatsappService.setConfig(config);
     
     const defaultMessage = message || 
       `📁 *Conteúdo disponível*\n\nAqui está o seu conteúdo solicitado.\n\n_Obrigado por preencher o formulário!_`;
@@ -89,6 +92,7 @@ export const useWhatsApp = () => {
           title: "Conteúdo enviado",
           description: `Mídia enviada para ${phoneNumber}`,
         });
+        trackWhatsAppSent(phoneNumber, 'media');
       } else {
         toast({
           title: "Erro ao enviar mídia",
@@ -101,14 +105,64 @@ export const useWhatsApp = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [getWhatsAppConfig, toast, trackWhatsAppSent]);
+
+  const sendMessage = useCallback(async (
+    phoneNumber: string,
+    message: string
+  ): Promise<SendMessageResponse> => {
+    const config = getWhatsAppConfig();
+    if (!config) {
+      toast({
+        title: "WhatsApp não configurado",
+        description: "Configure o WhatsApp nas configurações antes de enviar mensagens.",
+        variant: "destructive",
+      });
+      return { success: false, error: "WhatsApp não configurado" };
+    }
+
+    setIsLoading(true);
+    whatsappService.setConfig(config);
+    
+    try {
+      const result = await whatsappService.sendMessage(phoneNumber, message);
+      
+      if (result.success) {
+        toast({
+          title: "Mensagem enviada",
+          description: `Mensagem enviada para ${phoneNumber}`,
+        });
+        trackWhatsAppSent(phoneNumber, 'text');
+      } else {
+        toast({
+          title: "Erro ao enviar",
+          description: result.error,
+          variant: "destructive",
+        });
+      }
+      
+      return result;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getWhatsAppConfig, toast, trackWhatsAppSent]);
 
   const testConnection = useCallback(async (): Promise<boolean> => {
+    const config = getWhatsAppConfig();
+    if (!config) {
+      toast({
+        title: "Configuração não encontrada",
+        description: "Configure o WhatsApp primeiro.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     setIsLoading(true);
+    whatsappService.setConfig(config);
     
     try {
       const connected = await whatsappService.testConnection();
-      setIsConnected(connected);
       
       toast({
         title: connected ? "Conexão OK" : "Sem conexão",
@@ -122,15 +176,13 @@ export const useWhatsApp = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [getWhatsAppConfig, toast]);
 
   return {
-    isConnected,
     isLoading,
-    config,
-    updateConfig,
     sendFormLink,
     sendMedia,
+    sendMessage,
     testConnection,
   };
 };
