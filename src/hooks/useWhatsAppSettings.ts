@@ -78,12 +78,23 @@ export const useWhatsAppSettings = () => {
       return false;
     }
 
-    try {
-      const dataToSave = {
-        ...settingsData,
-        clinic_id: user.clinic_id,
-      };
+    // Ensure provider is always set - default to 'evolution' if not provided
+    const dataToSave = {
+      clinic_id: user.clinic_id,
+      provider: settingsData.provider || 'evolution' as const,
+      base_url: settingsData.base_url || null,
+      api_key: settingsData.api_key || null,
+      session_name: settingsData.session_name || null,
+      account_sid: settingsData.account_sid || null,
+      auth_token: settingsData.auth_token || null,
+      phone_number: settingsData.phone_number || null,
+      access_token: settingsData.access_token || null,
+      business_account_id: settingsData.business_account_id || null,
+      webhook_url: settingsData.webhook_url || null,
+      is_active: settingsData.is_active ?? false,
+    };
 
+    try {
       let result;
       if (settings?.id) {
         // Update existing settings
