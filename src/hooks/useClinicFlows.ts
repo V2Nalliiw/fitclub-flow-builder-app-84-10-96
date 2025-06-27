@@ -37,8 +37,8 @@ export const useClinicFlows = () => {
         nome: flow.name,
         descricao: flow.description || undefined,
         clinica_id: flow.clinic_id || '',
-        nodes: flow.nodes as FlowNode[],
-        edges: flow.edges as FlowEdge[],
+        nodes: (flow.nodes as unknown as FlowNode[]) || [],
+        edges: (flow.edges as unknown as FlowEdge[]) || [],
         ativo: flow.is_active,
         created_at: flow.created_at,
       }));
@@ -74,8 +74,8 @@ export const useClinicFlows = () => {
           description: flowData.description,
           clinic_id: user.clinic_id,
           created_by: user.id,
-          nodes: flowData.nodes,
-          edges: flowData.edges,
+          nodes: flowData.nodes as any,
+          edges: flowData.edges as any,
           is_active: flowData.is_active ?? true,
         })
         .select()
@@ -120,12 +120,19 @@ export const useClinicFlows = () => {
     is_active: boolean;
   }>) => {
     try {
+      const updateData: any = {
+        updated_at: new Date().toISOString(),
+      };
+
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.nodes !== undefined) updateData.nodes = updates.nodes;
+      if (updates.edges !== undefined) updateData.edges = updates.edges;
+      if (updates.is_active !== undefined) updateData.is_active = updates.is_active;
+
       const { error } = await supabase
         .from('flows')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', flowId)
         .eq('created_by', user?.id);
 
@@ -210,7 +217,7 @@ export const useClinicFlows = () => {
         throw new Error('Fluxo não encontrado');
       }
 
-      const nodes = flow.nodes as FlowNode[];
+      const nodes = (flow.nodes as unknown as FlowNode[]) || [];
       const startNode = nodes.find(node => node.type === 'start');
       
       if (!startNode) {
