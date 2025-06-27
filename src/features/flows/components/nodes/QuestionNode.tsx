@@ -38,7 +38,7 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-40 h-24 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200 relative ${
+      <div className={`w-40 h-24 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200 relative overflow-visible ${
         selected 
           ? 'border-[#5D8701] shadow-[0_0_0_2px_rgba(93,135,1,0.2)]' 
           : 'border-gray-200 dark:border-gray-700'
@@ -90,43 +90,54 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
       )}
       
       {/* Handles múltiplos para escolha única */}
-      {isEscolhaUnica && opcoes.length > 0 && opcoes.map((opcao: string, index: number) => {
-        // Calcular posição vertical baseada no número de opções
-        const totalOpcoes = opcoes.length;
-        const spacing = Math.min(20, 40 / Math.max(1, totalOpcoes - 1)); // Espaçamento máximo de 20px
-        const startY = totalOpcoes > 1 ? -(totalOpcoes - 1) * spacing / 2 : 0;
-        const offsetY = startY + index * spacing;
-        
-        return (
-          <React.Fragment key={index}>
-            <Handle
-              type="source"
-              position={Position.Right}
-              id={`opcao-${index}`}
-              className="w-3.5 h-3.5 bg-[#5D8701] border-2 border-white shadow-md"
-              style={{
-                top: `calc(50% + ${offsetY}px)`,
-                right: '-7px',
-                position: 'absolute',
-                transform: 'translateY(-50%)',
-                zIndex: 10
-              }}
-            />
+      {isEscolhaUnica && opcoes.length > 0 && (
+        <>
+          {opcoes.map((opcao: string, index: number) => {
+            // Calcular posição vertical baseada no número de opções
+            const totalOpcoes = opcoes.length;
+            const offsetY = totalOpcoes > 1 ? (index - (totalOpcoes - 1) / 2) * 24 : 0;
             
-            {/* Tooltip com nome da opção */}
-            <div 
-              className="absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap"
-              style={{
-                top: `calc(50% + ${offsetY}px)`,
-                right: '-120px',
-                transform: 'translateY(-50%)',
-              }}
-            >
-              {opcao.length > 20 ? `${opcao.substring(0, 20)}...` : opcao}
-            </div>
-          </React.Fragment>
-        );
-      })}
+            return (
+              <Handle
+                key={index}
+                type="source"
+                position={Position.Right}
+                id={`opcao-${index}`}
+                className="w-3.5 h-3.5 bg-[#5D8701] border-2 border-white shadow-md"
+                style={{
+                  right: '-7px',
+                  top: '50%',
+                  transform: `translate(50%, calc(-50% + ${offsetY}px))`,
+                  position: 'absolute',
+                  zIndex: 10
+                }}
+              />
+            );
+          })}
+          
+          {/* Tooltips separados para não interferir com os handles */}
+          {opcoes.map((opcao: string, index: number) => {
+            const totalOpcoes = opcoes.length;
+            const offsetY = totalOpcoes > 1 ? (index - (totalOpcoes - 1) / 2) * 24 : 0;
+            
+            return (
+              <div 
+                key={`tooltip-${index}`}
+                className="absolute pointer-events-none opacity-0 hover:opacity-100 transition-opacity z-20"
+                style={{
+                  right: '-120px',
+                  top: '50%',
+                  transform: `translateY(calc(-50% + ${offsetY}px))`,
+                }}
+              >
+                <div className="text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm">
+                  {opcao.length > 20 ? `${opcao.substring(0, 20)}...` : opcao}
+                </div>
+              </div>
+            );
+          })}
+        </>
+      )}
     </div>
   );
 };
