@@ -6,8 +6,9 @@ import { PatientFlowDashboard } from '@/features/patient/components/PatientFlowD
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import { QuickActions } from '@/components/dashboard/QuickActions';
-import { SystemTester } from '@/components/system/SystemTester';
+import { SystemHealthChecker } from '@/components/system/SystemHealthChecker';
 import { FileUploadTester } from '@/components/system/FileUploadTester';
+import { PageNavigationTester } from '@/components/system/PageNavigationTester';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 
 export const Dashboard = () => {
@@ -63,6 +64,12 @@ export const Dashboard = () => {
             <QuickActions />
             <ActivityFeed />
           </div>
+        </div>
+
+        {/* Sistema de Verificação para Pacientes */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <SystemHealthChecker />
+          <PageNavigationTester />
         </div>
       </div>
     );
@@ -163,19 +170,18 @@ export const Dashboard = () => {
         ))}
       </div>
 
-      {/* Sistema de Testes para Diagnóstico */}
+      {/* Sistema de Verificação Completa */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <SystemTester />
-        <FileUploadTester />
+        <SystemHealthChecker />
+        <PageNavigationTester />
       </div>
 
-      {/* Layout em grid para ações rápidas e atividades */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <ActivityFeed />
-        </div>
-        <div>
+      {/* Sistema de Testes para Upload */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <FileUploadTester />
+        <div className="space-y-6">
           <QuickActions />
+          <ActivityFeed />
         </div>
       </div>
     </div>
