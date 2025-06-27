@@ -19,7 +19,6 @@ export const DeleteEdgeButton: React.FC<EdgeProps> = ({
   targetPosition,
   style = {},
   markerEnd,
-  selected,
 }) => {
   const { setEdges } = useReactFlow();
   
@@ -46,17 +45,17 @@ export const DeleteEdgeButton: React.FC<EdgeProps> = ({
     );
     
     if (confirmDelete) {
-      console.log('Confirmado - removendo edge:', id);
+      console.log('Confirmed - removing edge:', id);
       setEdges((edges) => {
         const filteredEdges = edges.filter((edge) => edge.id !== id);
-        console.log('Edges após remoção:', {
+        console.log('Edges after removal:', {
           removedEdgeId: id,
           remainingEdges: filteredEdges.length
         });
         return filteredEdges;
       });
     } else {
-      console.log('Remoção cancelada pelo usuário');
+      console.log('Removal cancelled by user');
     }
   };
 
@@ -69,17 +68,19 @@ export const DeleteEdgeButton: React.FC<EdgeProps> = ({
       />
       <EdgeLabelRenderer>
         <div
-          className="absolute pointer-events-auto z-50"
+          className="absolute z-50"
           style={{
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            pointerEvents: 'auto'
           }}
         >
           <button
-            className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-80 hover:opacity-100 transition-all duration-200 shadow-lg border border-white hover:scale-110 pointer-events-auto"
+            className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-80 hover:opacity-100 transition-all duration-200 shadow-lg border border-white hover:scale-110"
             onClick={onEdgeClick}
             onMouseDown={(e) => e.stopPropagation()}
             title="Desconectar"
             type="button"
+            style={{ pointerEvents: 'auto' }}
           >
             <X className="h-3 w-3" />
           </button>

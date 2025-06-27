@@ -29,7 +29,7 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
     hasOnDuplicate: !!onDuplicate
   });
 
-  // Não mostrar ações se não estiver visível
+  // Don't show actions if not visible
   if (!visible) {
     return null;
   }
@@ -44,13 +44,13 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
     console.log('Delete button clicked for node:', nodeId, 'type:', nodeType);
     
     if (!onDelete || typeof onDelete !== 'function') {
-      console.error('Função onDelete não está disponível para o nó:', nodeId);
+      console.error('onDelete function not available for node:', nodeId);
       return;
     }
 
-    // Não permitir deletar o nó inicial
+    // Don't allow deleting the start node
     if (nodeType === 'start') {
-      console.log('Não é possível deletar o nó inicial');
+      console.log('Cannot delete start node');
       return;
     }
 
@@ -59,12 +59,12 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
     );
     
     if (confirmDelete) {
-      console.log('Confirmado - executando delete do nó:', nodeId);
+      console.log('Confirmed - executing node delete:', nodeId);
       try {
         onDelete(nodeId);
-        console.log('Delete executado com sucesso');
+        console.log('Delete executed successfully');
       } catch (error) {
-        console.error('Erro ao executar delete:', error);
+        console.error('Error executing delete:', error);
       }
     }
   };
@@ -76,22 +76,22 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
     console.log('Duplicate button clicked for node:', nodeId, 'type:', nodeType);
     
     if (!onDuplicate || typeof onDuplicate !== 'function') {
-      console.error('Função onDuplicate não está disponível para o nó:', nodeId);
+      console.error('onDuplicate function not available for node:', nodeId);
       return;
     }
 
-    // Não permitir duplicar o nó inicial
+    // Don't allow duplicating the start node
     if (nodeType === 'start') {
-      console.log('Não é possível duplicar o nó inicial');
+      console.log('Cannot duplicate start node');
       return;
     }
 
-    console.log('Executando duplicate do nó:', nodeId);
+    console.log('Executing node duplicate:', nodeId);
     try {
       onDuplicate(nodeId);
-      console.log('Duplicate executado com sucesso');
+      console.log('Duplicate executed successfully');
     } catch (error) {
-      console.error('Erro ao executar duplicate:', error);
+      console.error('Error executing duplicate:', error);
     }
   };
 
@@ -105,32 +105,37 @@ export const NodeActions: React.FC<NodeActionsProps> = ({
   });
 
   return (
-    <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30 pointer-events-auto">
-      {/* Botão de duplicar - não mostrar para nó inicial */}
+    <div 
+      className="absolute -top-2 -right-2 flex gap-1 opacity-100 transition-opacity duration-200 z-50"
+      style={{ pointerEvents: 'auto' }}
+    >
+      {/* Duplicate button - don't show for start node */}
       {showDuplicateButton && (
         <Button
           size="sm"
           variant="secondary"
-          className={`${buttonSize} p-0 rounded-full shadow-md hover:scale-110 transition-transform bg-blue-500 hover:bg-blue-600 text-white border-blue-600 pointer-events-auto`}
+          className={`${buttonSize} p-0 rounded-full shadow-md hover:scale-110 transition-transform bg-blue-500 hover:bg-blue-600 text-white border-blue-600`}
           onClick={handleDuplicate}
           onMouseDown={(e) => e.stopPropagation()}
           title="Duplicar nó"
           type="button"
+          style={{ pointerEvents: 'auto' }}
         >
           <Copy className={iconSize} />
         </Button>
       )}
       
-      {/* Botão de deletar - não mostrar para nó inicial */}
+      {/* Delete button - don't show for start node */}
       {showDeleteButton && (
         <Button
           size="sm"
           variant="destructive"
-          className={`${buttonSize} p-0 rounded-full shadow-md hover:scale-110 transition-transform pointer-events-auto`}
+          className={`${buttonSize} p-0 rounded-full shadow-md hover:scale-110 transition-transform`}
           onClick={handleDelete}
           onMouseDown={(e) => e.stopPropagation()}
           title="Excluir nó"
           type="button"
+          style={{ pointerEvents: 'auto' }}
         >
           <Trash2 className={iconSize} />
         </Button>

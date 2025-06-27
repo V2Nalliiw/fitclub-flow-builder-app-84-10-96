@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   ReactFlow,
@@ -71,31 +70,22 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
     },
   }));
 
-  // Garantir que as funções sejam passadas corretamente para cada nó
+  // Ensure functions are passed correctly to each node
   const enhancedNodes = nodes.map(node => {
-    console.log('FlowBuilderCanvas - Preparando nó:', {
+    console.log('FlowBuilderCanvas - Preparing node:', {
       id: node.id,
       type: node.type,
       hasDeleteFunction: !!onDeleteNode,
       hasDuplicateFunction: !!onDuplicateNode
     });
     
-    const nodeData = {
-      ...node.data,
-      onDelete: onDeleteNode,
-      onDuplicate: onDuplicateNode,
-    };
-
-    console.log('FlowBuilderCanvas - Node data preparado:', {
-      nodeId: node.id,
-      dataKeys: Object.keys(nodeData),
-      hasOnDelete: !!nodeData.onDelete,
-      hasOnDuplicate: !!nodeData.onDuplicate
-    });
-    
     return {
       ...node,
-      data: nodeData
+      data: {
+        ...node.data,
+        onDelete: onDeleteNode,
+        onDuplicate: onDuplicateNode,
+      }
     };
   });
 
