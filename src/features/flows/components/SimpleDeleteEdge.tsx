@@ -7,7 +7,6 @@ import {
   useReactFlow,
   EdgeProps,
 } from '@xyflow/react';
-import { X } from 'lucide-react';
 
 export const SimpleDeleteEdge: React.FC<EdgeProps> = ({
   id,
@@ -57,23 +56,17 @@ export const SimpleDeleteEdge: React.FC<EdgeProps> = ({
       />
       <EdgeLabelRenderer>
         <div
-          className="absolute z-50 pointer-events-all"
+          className="absolute z-50 pointer-events-all cursor-pointer"
           style={{
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
           }}
+          onClick={handleDelete}
+          title="Clique para desconectar"
         >
-          <div className="flex items-center gap-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 shadow-lg">
-            <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+          <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 shadow-sm hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-150">
+            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
               {label}
             </span>
-            <button
-              className="w-4 h-4 bg-red-500 hover:bg-red-600 text-white rounded-sm flex items-center justify-center shadow-sm hover:scale-110 transition-all duration-150"
-              onClick={handleDelete}
-              title="Desconectar"
-              type="button"
-            >
-              <X className="h-2.5 w-2.5" />
-            </button>
           </div>
         </div>
       </EdgeLabelRenderer>
