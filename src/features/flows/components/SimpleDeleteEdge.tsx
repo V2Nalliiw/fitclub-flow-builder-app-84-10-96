@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   BaseEdge,
   EdgeLabelRenderer,
@@ -19,9 +19,9 @@ export const SimpleDeleteEdge: React.FC<EdgeProps> = ({
   targetPosition,
   style = {},
   markerEnd,
+  label = 'Conexão',
 }) => {
   const { setEdges } = useReactFlow();
-  const [showButton, setShowButton] = useState(false);
   
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
@@ -54,30 +54,28 @@ export const SimpleDeleteEdge: React.FC<EdgeProps> = ({
         path={edgePath} 
         markerEnd={markerEnd} 
         style={style}
-        onMouseEnter={() => setShowButton(true)}
-        onMouseLeave={() => setShowButton(false)}
       />
       <EdgeLabelRenderer>
-        {showButton && (
-          <div
-            className="absolute z-50"
-            style={{
-              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-              pointerEvents: 'all'
-            }}
-            onMouseEnter={() => setShowButton(true)}
-            onMouseLeave={() => setShowButton(false)}
-          >
+        <div
+          className="absolute z-50 pointer-events-all"
+          style={{
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+          }}
+        >
+          <div className="flex items-center gap-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 shadow-lg">
+            <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+              {label}
+            </span>
             <button
-              className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white hover:scale-110 transition-transform"
+              className="w-4 h-4 bg-red-500 hover:bg-red-600 text-white rounded-sm flex items-center justify-center shadow-sm hover:scale-110 transition-all duration-150"
               onClick={handleDelete}
               title="Desconectar"
               type="button"
             >
-              <X className="h-3 w-3" />
+              <X className="h-2.5 w-2.5" />
             </button>
           </div>
-        )}
+        </div>
       </EdgeLabelRenderer>
     </>
   );
