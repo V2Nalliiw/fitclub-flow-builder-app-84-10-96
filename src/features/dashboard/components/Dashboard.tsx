@@ -1,12 +1,16 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, MessageSquare, GitBranch, TrendingUp } from 'lucide-react';
+import { Users, MessageSquare, GitBranch, TrendingUp, Building2, Activity } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { PatientFlowDashboard } from '@/features/patient/components/PatientFlowDashboard';
+import { MetricCard } from '@/components/dashboard/MetricCard';
+import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
+import { QuickActions } from '@/components/dashboard/QuickActions';
+import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 
 export const Dashboard = () => {
   const { user } = useAuth();
+  const { data: metrics, isLoading } = useDashboardMetrics();
 
   // Se for paciente, mostrar dashboard específico
   if (user?.role === 'patient') {
@@ -21,27 +25,107 @@ export const Dashboard = () => {
           </p>
         </div>
 
-        <PatientFlowDashboard />
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <MetricCard
+            title="Meus Tratamentos"
+            value={metrics?.totalExecutions || 0}
+            icon={GitBranch}
+            color="text-blue-600"
+            isLoading={isLoading}
+          />
+          <MetricCard
+            title="Tratamentos Concluídos"
+            value={metrics?.completedExecutions || 0}
+            icon={TrendingUp}
+            color="text-green-600"
+            isLoading={isLoading}
+          />
+          <MetricCard
+            title="Taxa de Conclusão"
+            value={
+              metrics?.totalExecutions 
+                ? `${Math.round((metrics.completedExecutions / metrics.totalExecutions) * 100)}%`
+                : '0%'
+            }
+            icon={Activity}
+            color="text-purple-600"
+            isLoading={isLoading}
+          />
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <PatientFlowDashboard />
+          </div>
+          <div className="space-y-6">
+            <QuickActions />
+            <ActivityFeed />
+          </div>
+        </div>
       </div>
     );
   }
 
   const getDashboardCards = () => {
+    if (!metrics) return [];
+
     switch (user?.role) {
       case 'super_admin':
         return [
-          { title: 'Total de Clínicas', value: '12', icon: Users, color: 'text-blue-600' },
-          { title: 'Usuários Ativos', value: '248', icon: Users, color: 'text-green-600' },
-          { title: 'Mensagens Enviadas', value: '1,429', icon: MessageSquare, color: 'text-purple-600' },
-          { title: 'Fluxos Ativos', value: '67', icon: GitBranch, color: 'text-orange-600' },
+          { 
+            title: 'Total de Clínicas', 
+            value: metrics.totalClinics, 
+            icon: Building2, 
+            color: 'text-blue-600' 
+          },
+          { 
+            title: 'Usuários Ativos', 
+            value: metrics.totalUsers, 
+            icon: Users, 
+            color: 'text-green-600' 
+          },
+          { 
+            title: 'Fluxos Totais', 
+            value: metrics.totalFlows, 
+            icon: GitBranch, 
+            color: 'text-purple-600' 
+          },
+          { 
+            title: 'Execuções Ativas', 
+            value: metrics.totalExecutions, 
+            icon: Activity, 
+            color: 'text-orange-600' 
+          },
         ];
+
       case 'clinic':
         return [
-          { title: 'Pacientes Ativos', value: '34', icon: Users, color: 'text-blue-600' },
-          { title: 'Fluxos Criados', value: '8', icon: GitBranch, color: 'text-green-600' },
-          { title: 'Mensagens Hoje', value: '23', icon: MessageSquare, color: 'text-purple-600' },
-          { title: 'Taxa de Resposta', value: '87%', icon: TrendingUp, color: 'text-orange-600' },
+          { 
+            title: 'Meus Fluxos', 
+            value: metrics.totalFlows, 
+            icon: GitBranch, 
+            color: 'text-blue-600' 
+          },
+          { 
+            title: 'Fluxos Ativos', 
+            value: metrics.activeFlows, 
+            icon: Activity, 
+            color: 'text-green-600' 
+          },
+          { 
+            title: 'Total de Execuções', 
+            value: metrics.totalExecutions, 
+            icon: TrendingUp, 
+            color: 'text-purple-600' 
+          },
+          { 
+            title: 'Execuções Concluídas', 
+            value: metrics.completedExecutions, 
+            icon: MessageSquare, 
+            color: 'text-orange-600' 
+          },
         ];
+
       default:
         return [];
     }
@@ -56,49 +140,36 @@ export const Dashboard = () => {
           Bem-vindo, {user?.name}!
         </h1>
         <p className="text-muted-foreground mt-2">
-          Aqui está um resumo das suas atividades
+          {user?.role === 'super_admin' 
+            ? 'Visão geral do sistema e todas as clínicas'
+            : 'Aqui está um resumo das suas atividades'
+          }
         </p>
       </div>
 
+      {/* Métricas principais */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {cards.map((card, index) => (
-          <Card key={index} className="hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {card.title}
-              </CardTitle>
-              <card.icon className={`h-5 w-5 ${card.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{card.value}</div>
-            </CardContent>
-          </Card>
+          <MetricCard
+            key={index}
+            title={card.title}
+            value={card.value}
+            icon={card.icon}
+            color={card.color}
+            isLoading={isLoading}
+          />
         ))}
       </div>
 
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Atividade Recente</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="flex items-center space-x-4 p-3 rounded-lg bg-secondary/50">
-                <div className="w-2 h-2 bg-[#5D8701] rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">
-                    Novo formulário respondido por João Silva
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    há 2 horas
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Layout em grid para ações rápidas e atividades */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <ActivityFeed />
+        </div>
+        <div>
+          <QuickActions />
+        </div>
+      </div>
     </div>
   );
 };
