@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,15 +14,16 @@ import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { Profile } from "@/pages/Profile";
 import { Patients } from "@/pages/Patients";
 import { Settings } from "@/pages/Settings";
-import { Team } from "@/pages/Team";
+import Team from "@/pages/Team";
 import { Clinics } from "@/pages/Clinics";
-import { Customization } from "@/pages/Customization";
-import { Preferences } from "@/pages/Preferences";
+import Customization from "@/pages/Customization";
+import Preferences from "@/pages/Preferences";
 import { Analytics } from "@/pages/Analytics";
-import { Permissions } from "@/pages/Permissions";
+import Permissions from "@/pages/Permissions";
 import { Forms } from "@/pages/Forms";
 import { WhatsAppSettings } from "@/pages/WhatsAppSettings";
 import MyFlows from "@/pages/MyFlows";
+import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -186,7 +186,8 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/404" element={<NotFound />} />
+      <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
   );
 };
