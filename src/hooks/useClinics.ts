@@ -18,6 +18,23 @@ export interface Clinic {
   updated_at: string;
 }
 
+interface ResponsibleUser {
+  name: string;
+  email: string;
+  password: string;
+  isChief: boolean;
+}
+
+interface CreateClinicData {
+  name: string;
+  slug: string;
+  description?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  address?: string;
+  responsibleUser?: ResponsibleUser;
+}
+
 export const useClinics = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -103,14 +120,7 @@ export const useClinics = () => {
     }
   }, []);
 
-  const createClinic = async (clinicData: {
-    name: string;
-    slug: string;
-    description?: string;
-    contact_email?: string;
-    contact_phone?: string;
-    address?: string;
-  }) => {
+  const createClinic = async (clinicData: CreateClinicData) => {
     if (user?.role !== 'super_admin') {
       toast({
         title: "Erro",
@@ -121,7 +131,8 @@ export const useClinics = () => {
     }
 
     try {
-      const { data, error } = await supabase
+      // 1. Primeiro, criar a clínica
+      const { data: clinic, error: clinicError } = await supabase
         .from('clinics')
         .insert([{
           name: clinicData.name,
@@ -135,20 +146,80 @@ export const useClinics = () => {
         .select()
         .single();
 
-      if (error) {
-        console.error('Erro ao criar clínica:', error);
+      if (clinicError) {
+        console.error('Erro ao criar clínica:', clinicError);
         toast({
           title: "Erro",
-          description: error.message,
+          description: clinicError.message,
           variant: "destructive",
         });
         return false;
       }
 
-      toast({
-        title: "Clínica criada",
-        description: "A clínica foi criada com sucesso",
-      });
+      // 2. Se há dados do usuário responsável, criar o usuário
+      if (clinicData.responsibleUser) {
+        const { responsibleUser } = clinicData;
+        
+        // Criar o usuário no Supabase Auth
+        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+          email: responsibleUser.email,
+          password: responsibleUser.password,
+          email_confirm: true,
+          user_metadata: {
+            name: responsibleUser.name,
+            role: 'clinic',
+          }
+        });
+
+        if (authError) {
+          console.error('Erro ao criar usuário:', authError);
+          // Se falhar na criação do usuário, excluir a clínica criada
+          await supabase.from('clinics').delete().eq('id', clinic.id);
+          
+          toast({
+            title: "Erro",
+            description: `Erro ao criar usuário: ${authError.message}`,
+            variant: "destructive",
+          });
+          return false;
+        }
+
+        // Criar o perfil do usuário
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([{
+            user_id: authUser.user.id,
+            email: responsibleUser.email,
+            name: responsibleUser.name,
+            role: 'clinic',
+            clinic_id: clinic.id,
+            is_chief: responsibleUser.isChief,
+          }]);
+
+        if (profileError) {
+          console.error('Erro ao criar perfil:', profileError);
+          // Se falhar na criação do perfil, excluir usuário e clínica
+          await supabase.auth.admin.deleteUser(authUser.user.id);
+          await supabase.from('clinics').delete().eq('id', clinic.id);
+          
+          toast({
+            title: "Erro",
+            description: `Erro ao criar perfil: ${profileError.message}`,
+            variant: "destructive",
+          });
+          return false;
+        }
+
+        toast({
+          title: "Clínica e usuário criados",
+          description: `A clínica "${clinicData.name}" e o usuário responsável foram criados com sucesso`,
+        });
+      } else {
+        toast({
+          title: "Clínica criada",
+          description: "A clínica foi criada com sucesso",
+        });
+      }
       
       await loadClinics();
       return true;

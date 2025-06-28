@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -161,11 +162,11 @@ export const DesktopHeaderNavigation = () => {
   return (
     <div className="flex items-center justify-between w-full">
       {/* Logo à esquerda */}
-      <div className="flex items-center">
+      <div className="flex items-center py-2">
         <img 
           src={currentLogo}
           alt="Logo" 
-          className="h-8 w-8 object-contain"
+          className="h-12 w-auto max-w-[200px] object-contain"
         />
       </div>
 

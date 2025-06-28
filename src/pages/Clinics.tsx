@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { FileUpload } from '@/components/ui/file-upload';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Building2, Search, Plus, Users, Settings, BarChart3, Edit, Trash2, Eye } from 'lucide-react';
+import { Building2, Search, Plus, Users, Settings, BarChart3, Edit, Trash2, Eye, User } from 'lucide-react';
 import { useClinics } from '@/hooks/useClinics';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -28,6 +30,11 @@ interface ClinicFormData {
   address: string;
   description: string;
   logo: File[];
+  // Dados do usuário responsável
+  responsibleName: string;
+  responsibleEmail: string;
+  temporaryPassword: string;
+  isChief: boolean;
 }
 
 export const Clinics = () => {
@@ -43,7 +50,11 @@ export const Clinics = () => {
     phone: '',
     address: '',
     description: '',
-    logo: []
+    logo: [],
+    responsibleName: '',
+    responsibleEmail: '',
+    temporaryPassword: '',
+    isChief: true
   });
 
   // Verificar se o usuário tem permissão para gerenciar clínicas
@@ -68,14 +79,14 @@ export const Clinics = () => {
     clinic.slug.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleInputChange = (field: keyof ClinicFormData, value: string) => {
+  const handleInputChange = (field: keyof ClinicFormData, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
 
     // Auto-gerar slug baseado no nome
-    if (field === 'name') {
+    if (field === 'name' && typeof value === 'string') {
       const slug = value
         .toLowerCase()
         .normalize('NFD')
@@ -92,6 +103,15 @@ export const Clinics = () => {
     }
   };
 
+  const generateTemporaryPassword = () => {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setFormData(prev => ({ ...prev, temporaryPassword: password }));
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
@@ -100,12 +120,16 @@ export const Clinics = () => {
       phone: '',
       address: '',
       description: '',
-      logo: []
+      logo: [],
+      responsibleName: '',
+      responsibleEmail: '',
+      temporaryPassword: '',
+      isChief: true
     });
   };
 
   const handleAddClinic = async () => {
-    if (!formData.name.trim() || !formData.slug.trim()) {
+    if (!formData.name.trim() || !formData.slug.trim() || !formData.responsibleName.trim() || !formData.responsibleEmail.trim() || !formData.temporaryPassword.trim()) {
       return;
     }
 
@@ -118,6 +142,12 @@ export const Clinics = () => {
         contact_email: formData.email,
         contact_phone: formData.phone,
         address: formData.address,
+        responsibleUser: {
+          name: formData.responsibleName,
+          email: formData.responsibleEmail,
+          password: formData.temporaryPassword,
+          isChief: formData.isChief
+        }
       });
 
       if (success) {
@@ -169,85 +199,158 @@ export const Clinics = () => {
               Nova Clínica
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Criar Nova Clínica</DialogTitle>
               <DialogDescription>
-                Preencha os dados para criar uma nova clínica no sistema
+                Preencha os dados para criar uma nova clínica e seu usuário responsável
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-6 py-4">
+              {/* Seção da Clínica */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold">Dados da Clínica</h3>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="clinic-name">Nome da Clínica *</Label>
+                    <Input
+                      id="clinic-name"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      placeholder="Digite o nome da clínica"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="clinic-slug">Slug *</Label>
+                    <Input
+                      id="clinic-slug"
+                      value={formData.slug}
+                      onChange={(e) => handleInputChange('slug', e.target.value)}
+                      placeholder="slug-da-clinica"
+                    />
+                  </div>
+                </div>
+                
                 <div>
-                  <Label htmlFor="clinic-name">Nome da Clínica *</Label>
+                  <Label htmlFor="clinic-description">Descrição</Label>
                   <Input
-                    id="clinic-name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="Digite o nome da clínica"
+                    id="clinic-description"
+                    value={formData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    placeholder="Breve descrição da clínica"
                   />
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="clinic-email">Email da Clínica</Label>
+                    <Input
+                      id="clinic-email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      placeholder="contato@clinica.com"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="clinic-phone">Telefone</Label>
+                    <Input
+                      id="clinic-phone"
+                      value={formData.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      placeholder="(11) 99999-9999"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <Label htmlFor="clinic-slug">Slug *</Label>
+                  <Label htmlFor="clinic-address">Endereço</Label>
                   <Input
-                    id="clinic-slug"
-                    value={formData.slug}
-                    onChange={(e) => handleInputChange('slug', e.target.value)}
-                    placeholder="slug-da-clinica"
+                    id="clinic-address"
+                    value={formData.address}
+                    onChange={(e) => handleInputChange('address', e.target.value)}
+                    placeholder="Rua, número, bairro, cidade"
                   />
                 </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="clinic-description">Descrição</Label>
-                <Input
-                  id="clinic-description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Breve descrição da clínica"
-                />
+
+                <div>
+                  <Label>Logo da Clínica</Label>
+                  <FileUpload
+                    onFilesChange={(files) => setFormData(prev => ({ ...prev, logo: files }))}
+                    maxFiles={1}
+                    accept={{ 'image/*': ['.png', '.jpg', '.jpeg', '.svg'] }}
+                    className="mt-2"
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="clinic-email">Email da Clínica</Label>
-                  <Input
-                    id="clinic-email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="contato@clinica.com"
+              <Separator />
+
+              {/* Seção do Usuário Responsável */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold">Usuário Responsável</h3>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="responsible-name">Nome Completo *</Label>
+                    <Input
+                      id="responsible-name"
+                      value={formData.responsibleName}
+                      onChange={(e) => handleInputChange('responsibleName', e.target.value)}
+                      placeholder="Nome completo do responsável"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="responsible-email">Email de Login *</Label>
+                    <Input
+                      id="responsible-email"
+                      type="email"
+                      value={formData.responsibleEmail}
+                      onChange={(e) => handleInputChange('responsibleEmail', e.target.value)}
+                      placeholder="email@clinica.com"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 items-end">
+                  <div className="col-span-2">
+                    <Label htmlFor="temporary-password">Senha Temporária *</Label>
+                    <Input
+                      id="temporary-password"
+                      type="text"
+                      value={formData.temporaryPassword}
+                      onChange={(e) => handleInputChange('temporaryPassword', e.target.value)}
+                      placeholder="Senha temporária"
+                    />
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={generateTemporaryPassword}
+                  >
+                    Gerar Senha
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Usuário Chefe da Clínica</Label>
+                    <div className="text-sm text-muted-foreground">
+                      Marque se este usuário será o chefe/administrador da clínica
+                    </div>
+                  </div>
+                  <Switch
+                    checked={formData.isChief}
+                    onCheckedChange={(checked) => handleInputChange('isChief', checked)}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="clinic-phone">Telefone</Label>
-                  <Input
-                    id="clinic-phone"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                    placeholder="(11) 99999-9999"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="clinic-address">Endereço</Label>
-                <Input
-                  id="clinic-address"
-                  value={formData.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
-                  placeholder="Rua, número, bairro, cidade"
-                />
-              </div>
-
-              <div>
-                <Label>Logo da Clínica</Label>
-                <FileUpload
-                  onFilesChange={(files) => setFormData(prev => ({ ...prev, logo: files }))}
-                  maxFiles={1}
-                  accept={{ 'image/*': ['.png', '.jpg', '.jpeg', '.svg'] }}
-                  className="mt-2"
-                />
               </div>
             </div>
             <DialogFooter>
@@ -256,9 +359,9 @@ export const Clinics = () => {
               </Button>
               <Button 
                 onClick={handleAddClinic} 
-                disabled={creating || !formData.name.trim() || !formData.slug.trim()}
+                disabled={creating || !formData.name.trim() || !formData.slug.trim() || !formData.responsibleName.trim() || !formData.responsibleEmail.trim() || !formData.temporaryPassword.trim()}
               >
-                {creating ? 'Criando...' : 'Criar Clínica'}
+                {creating ? 'Criando...' : 'Criar Clínica e Usuário'}
               </Button>
             </DialogFooter>
           </DialogContent>

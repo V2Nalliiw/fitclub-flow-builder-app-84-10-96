@@ -37,11 +37,11 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         ) : (
           /* Mobile/Tablet - manter como estava */
           <>
-            <div>
+            <div className="py-2">
               <img 
                 src={currentLogo}
                 alt="Logo" 
-                className="h-8 w-8 object-contain"
+                className="h-12 w-auto max-w-[160px] object-contain"
               />
             </div>
             
