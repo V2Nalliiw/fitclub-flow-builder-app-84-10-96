@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,7 +49,7 @@ export const SystemHealthChecker = () => {
 
     // 2. Teste de Conexão Supabase
     try {
-      const { data, error } = await supabase.from('profiles').select('count').limit(1);
+      const { data, error } = await supabase.from('profiles' as any).select('count').limit(1);
       healthChecks.push({
         name: 'Conexão Supabase',
         status: error ? 'error' : 'success',
@@ -71,7 +70,7 @@ export const SystemHealthChecker = () => {
     if (user) {
       try {
         const { data: profile, error } = await supabase
-          .from('profiles')
+          .from('profiles' as any)
           .select('*')
           .eq('user_id', user.id)
           .single();
@@ -96,7 +95,7 @@ export const SystemHealthChecker = () => {
     // 4. Teste de Fluxos
     try {
       const { data: flows, error } = await supabase
-        .from('flows')
+        .from('flows' as any)
         .select('id, name, is_active')
         .limit(10);
 
@@ -105,7 +104,7 @@ export const SystemHealthChecker = () => {
         status: error ? 'error' : 'success',
         message: error ? `Erro: ${error.message}` : `${flows?.length || 0} fluxos encontrados`,
         icon: <GitBranch className="h-4 w-4" />,
-        details: flows ? `Fluxos ativos: ${flows.filter(f => f.is_active).length}` : undefined
+        details: flows ? `Fluxos ativos: ${flows.filter((f: any) => f.is_active).length}` : undefined
       });
     } catch (error) {
       healthChecks.push({
@@ -119,7 +118,7 @@ export const SystemHealthChecker = () => {
     // 5. Teste de Execuções de Fluxo
     try {
       const { data: executions, error } = await supabase
-        .from('flow_executions')
+        .from('flow_executions' as any)
         .select('id, status')
         .limit(10);
 
@@ -128,7 +127,7 @@ export const SystemHealthChecker = () => {
         status: error ? 'error' : 'success',
         message: error ? `Erro: ${error.message}` : `${executions?.length || 0} execuções encontradas`,
         icon: <Settings className="h-4 w-4" />,
-        details: executions ? `Em andamento: ${executions.filter(e => e.status === 'em-andamento').length}` : undefined
+        details: executions ? `Em andamento: ${executions.filter((e: any) => e.status === 'in-progress').length}` : undefined
       });
     } catch (error) {
       healthChecks.push({
@@ -143,7 +142,7 @@ export const SystemHealthChecker = () => {
     if (user?.role === 'clinic') {
       try {
         const { data: patients, error } = await supabase
-          .from('profiles')
+          .from('profiles' as any)
           .select('id, name')
           .eq('role', 'patient')
           .eq('clinic_id', user.clinic_id);
@@ -208,7 +207,6 @@ export const SystemHealthChecker = () => {
     // Mostrar resumo
     const successCount = healthChecks.filter(c => c.status === 'success').length;
     const errorCount = healthChecks.filter(c => c.status === 'error').length;
-    const warningCount = healthChecks.filter(c => c.status === 'warning').length;
 
     if (errorCount === 0) {
       toast.success(`Verificação concluída: ${successCount} testes passaram com sucesso!`);

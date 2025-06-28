@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,18 +34,23 @@ export const useAnalytics = () => {
     queryFn: async (): Promise<AnalyticsEvent[]> => {
       if (!user) return [];
 
-      const { data, error } = await supabase
-        .from('analytics_events')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(1000);
+      try {
+        const { data, error } = await supabase
+          .from('analytics_events' as any)
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(1000);
 
-      if (error) {
-        console.error('Erro ao buscar eventos de analytics:', error);
-        throw error;
+        if (error) {
+          console.error('Erro ao buscar eventos de analytics:', error);
+          return [];
+        }
+
+        return data || [];
+      } catch (error) {
+        console.error('Erro na consulta de eventos:', error);
+        return [];
       }
-
-      return data || [];
     },
     enabled: !!user,
   });
@@ -57,56 +61,46 @@ export const useAnalytics = () => {
     queryFn: async () => {
       if (!user || user.role !== 'super_admin') return [];
 
-      const { data: clinics, error } = await supabase
-        .from('clinics')
-        .select(`
-          name,
-          profiles!inner(user_id)
-        `)
-        .eq('is_active', true);
+      try {
+        const { data: clinics, error } = await supabase
+          .from('clinics' as any)
+          .select(`
+            name,
+            profiles!inner(user_id)
+          `)
+          .eq('is_active', true);
 
-      if (error) {
-        console.error('Erro ao buscar estatísticas de clínicas:', error);
+        if (error) {
+          console.error('Erro ao buscar estatísticas de clínicas:', error);
+          return [];
+        }
+
+        // Calcular estatísticas por clínica
+        return clinics?.map((clinic: any) => {
+          const clinicEvents = events.filter(event => 
+            clinic.profiles?.some((profile: any) => profile.user_id === event.user_id)
+          );
+          
+          return {
+            clinic_name: clinic.name,
+            events: clinicEvents.length,
+            users: clinic.profiles?.length || 0
+          };
+        }) || [];
+      } catch (error) {
+        console.error('Erro ao buscar estatísticas:', error);
         return [];
       }
-
-      // Calcular estatísticas por clínica
-      return clinics?.map(clinic => {
-        const clinicEvents = events.filter(event => 
-          clinic.profiles?.some(profile => profile.user_id === event.user_id)
-        );
-        
-        return {
-          clinic_name: clinic.name,
-          events: clinicEvents.length,
-          users: clinic.profiles?.length || 0
-        };
-      }) || [];
     },
     enabled: !!user && user.role === 'super_admin' && events.length > 0,
   });
-
-  // Processar dados para analytics
-  const processedData: AnalyticsData = {
-    totalEvents: events.length,
-    activeUsers: new Set(events.map(e => e.user_id)).size,
-    flowExecutions: events.filter(e => e.event_type === 'flow_completed').length,
-    completionRate: events.length > 0 ? Math.round((events.filter(e => e.event_type === 'flow_completed').length / events.length) * 100) : 0,
-    eventsGrowth: calculateGrowth(events, 'weekly'),
-    usersGrowth: calculateUsersGrowth(events),
-    executionsGrowth: calculateExecutionsGrowth(events),
-    completionGrowth: calculateCompletionGrowth(events),
-    timelineData: generateTimelineData(events),
-    eventTypes: generateEventTypesData(events),
-    clinicStats: user?.role === 'super_admin' ? clinicStats : undefined,
-  };
 
   const trackEventMutation = useMutation({
     mutationFn: async ({ eventType, eventData }: { eventType: string; eventData?: Record<string, any> }) => {
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
-        .from('analytics_events')
+        .from('analytics_events' as any)
         .insert({
           user_id: user.id,
           event_type: eventType,
@@ -129,6 +123,21 @@ export const useAnalytics = () => {
 
   const trackEvent = (eventType: string, eventData?: Record<string, any>) => {
     trackEventMutation.mutate({ eventType, eventData });
+  };
+
+  // Processar dados para analytics
+  const processedData: AnalyticsData = {
+    totalEvents: events.length,
+    activeUsers: new Set(events.map(e => e.user_id)).size,
+    flowExecutions: events.filter(e => e.event_type === 'flow_completed').length,
+    completionRate: events.length > 0 ? Math.round((events.filter(e => e.event_type === 'flow_completed').length / events.length) * 100) : 0,
+    eventsGrowth: calculateGrowth(events, 'weekly'),
+    usersGrowth: calculateUsersGrowth(events),
+    executionsGrowth: calculateExecutionsGrowth(events),
+    completionGrowth: calculateCompletionGrowth(events),
+    timelineData: generateTimelineData(events),
+    eventTypes: generateEventTypesData(events),
+    clinicStats: user?.role === 'super_admin' ? clinicStats : undefined,
   };
 
   // Helper functions para eventos comuns

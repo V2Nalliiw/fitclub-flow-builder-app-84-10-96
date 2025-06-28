@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,13 +27,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const fetchUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('profiles' as any)
         .select('*')
         .eq('user_id', supabaseUser.id)
         .single();
 
       if (error) {
         console.error('Erro ao buscar perfil:', error);
+        return null;
+      }
+
+      if (!data) {
         return null;
       }
 
@@ -93,6 +96,34 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       subscription.unsubscribe();
     };
   }, []);
+
+  const updateProfile = async (updates: Partial<User>) => {
+    if (!user) return { error: 'Usuário não autenticado' };
+
+    try {
+      const { error } = await supabase
+        .from('profiles' as any)
+        .update({
+          name: updates.name,
+          avatar_url: updates.avatar_url,
+          clinic_id: updates.clinic_id,
+          is_chief: updates.is_chief,
+        })
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Erro ao atualizar perfil:', error);
+        return { error: error.message };
+      }
+
+      // Atualizar estado local
+      setUser(prev => prev ? { ...prev, ...updates } : null);
+      return {};
+    } catch (error: any) {
+      console.error('Erro ao atualizar perfil:', error);
+      return { error: 'Erro inesperado ao atualizar perfil' };
+    }
+  };
 
   const login = async (email: string, password: string) => {
     try {
@@ -159,34 +190,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setSession(null);
     } catch (error) {
       console.error('Erro no logout:', error);
-    }
-  };
-
-  const updateProfile = async (updates: Partial<User>) => {
-    if (!user) return { error: 'Usuário não autenticado' };
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          name: updates.name,
-          avatar_url: updates.avatar_url,
-          clinic_id: updates.clinic_id,
-          is_chief: updates.is_chief,
-        })
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Erro ao atualizar perfil:', error);
-        return { error: error.message };
-      }
-
-      // Atualizar estado local
-      setUser(prev => prev ? { ...prev, ...updates } : null);
-      return {};
-    } catch (error: any) {
-      console.error('Erro ao atualizar perfil:', error);
-      return { error: 'Erro inesperado ao atualizar perfil' };
     }
   };
 
