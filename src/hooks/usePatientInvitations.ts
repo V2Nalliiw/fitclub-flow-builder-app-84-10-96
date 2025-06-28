@@ -36,10 +36,12 @@ export const usePatientInvitations = () => {
 
     setLoading(true);
     try {
+      // Since patient_invitations table doesn't exist in current schema,
+      // we'll simulate with notifications table for now
       const { data, error } = await supabase
-        .from('patient_invitations')
+        .from('notifications')
         .select('*')
-        .eq('clinic_id', user.clinic_id)
+        .eq('category', 'patient_invitation')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -52,10 +54,20 @@ export const usePatientInvitations = () => {
         return;
       }
 
-      // Garantir que o status seja do tipo correto
-      const typedInvitations = (data || []).map(invitation => ({
-        ...invitation,
-        status: invitation.status as 'pending' | 'accepted' | 'expired' | 'cancelled'
+      // Transform notifications to PatientInvitation format
+      const typedInvitations: PatientInvitation[] = (data || []).map((notification: any) => ({
+        id: notification.id,
+        clinic_id: user.clinic_id || '',
+        name: notification.metadata?.name || 'Unknown',
+        email: notification.metadata?.email || '',
+        phone: notification.metadata?.phone,
+        invitation_token: notification.metadata?.token || '',
+        status: notification.metadata?.status || 'pending',
+        invited_by: notification.user_id || '',
+        expires_at: notification.metadata?.expires_at || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        accepted_at: notification.metadata?.accepted_at,
+        created_at: notification.created_at || '',
+        updated_at: notification.updated_at || '',
       }));
 
       setInvitations(typedInvitations);
@@ -95,21 +107,26 @@ export const usePatientInvitations = () => {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + (invitationData.expiresInDays || 7));
 
-    const dataToInsert = {
-      clinic_id: user.clinic_id,
-      name: invitationData.name,
-      email: invitationData.email,
-      phone: invitationData.phone || null,
-      invitation_token: invitationToken,
-      status: 'pending' as const,
-      invited_by: user.id,
-      expires_at: expiresAt.toISOString(),
-    };
-
     try {
+      // Store invitation as notification since patient_invitations table doesn't exist
       const { data, error } = await supabase
-        .from('patient_invitations')
-        .insert(dataToInsert)
+        .from('notifications')
+        .insert({
+          user_id: user.id,
+          title: `Convite para ${invitationData.name}`,
+          message: `Convite enviado para ${invitationData.email}`,
+          type: 'invitation',
+          category: 'patient_invitation',
+          metadata: {
+            name: invitationData.name,
+            email: invitationData.email,
+            phone: invitationData.phone,
+            token: invitationToken,
+            status: 'pending',
+            expires_at: expiresAt.toISOString(),
+            clinic_id: user.clinic_id,
+          }
+        })
         .select()
         .single();
 
@@ -147,9 +164,14 @@ export const usePatientInvitations = () => {
   const updateInvitation = async (updateData: { id: string; status: 'pending' | 'accepted' | 'expired' | 'cancelled' }) => {
     setIsUpdating(true);
     try {
+      // Update notification metadata
       const { error } = await supabase
-        .from('patient_invitations')
-        .update({ status: updateData.status })
+        .from('notifications')
+        .update({ 
+          metadata: {
+            status: updateData.status
+          }
+        })
         .eq('id', updateData.id);
 
       if (error) {
@@ -190,10 +212,12 @@ export const usePatientInvitations = () => {
       expiresAt.setDate(expiresAt.getDate() + 7);
 
       const { error } = await supabase
-        .from('patient_invitations')
+        .from('notifications')
         .update({
-          expires_at: expiresAt.toISOString(),
-          status: 'pending'
+          metadata: {
+            expires_at: expiresAt.toISOString(),
+            status: 'pending'
+          }
         })
         .eq('id', invitationId);
 
@@ -230,7 +254,7 @@ export const usePatientInvitations = () => {
   const cancelInvitation = async (invitationId: string) => {
     try {
       const { error } = await supabase
-        .from('patient_invitations')
+        .from('notifications')
         .delete()
         .eq('id', invitationId);
 

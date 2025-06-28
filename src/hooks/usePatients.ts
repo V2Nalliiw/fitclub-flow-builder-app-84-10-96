@@ -50,7 +50,22 @@ export const usePatients = () => {
         return;
       }
 
-      setPatients(data || []);
+      // Transform profiles to Patient format
+      const transformedPatients: Patient[] = (data || []).map((profile: any) => ({
+        id: profile.user_id, // Use user_id as id for compatibility
+        user_id: profile.user_id,
+        name: profile.name,
+        email: profile.email,
+        phone: profile.phone || undefined,
+        clinic_id: profile.clinic_id,
+        avatar_url: profile.avatar_url || undefined,
+        role: profile.role,
+        is_chief: profile.is_chief || false,
+        created_at: profile.created_at,
+        updated_at: profile.updated_at,
+      }));
+
+      setPatients(transformedPatients);
     } catch (error) {
       console.error('Erro inesperado:', error);
       toast({
@@ -147,7 +162,7 @@ export const usePatients = () => {
           phone: patientData.phone || null,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', patientId)
+        .eq('user_id', patientId) // Use user_id instead of id
         .eq('clinic_id', user?.clinic_id); // Garantir que só atualize pacientes da clínica
 
       if (error) {
@@ -183,7 +198,7 @@ export const usePatients = () => {
       const { error } = await supabase
         .from('profiles')
         .delete()
-        .eq('id', patientId)
+        .eq('user_id', patientId) // Use user_id instead of id
         .eq('clinic_id', user?.clinic_id); // Garantir que só delete pacientes da clínica
 
       if (error) {
