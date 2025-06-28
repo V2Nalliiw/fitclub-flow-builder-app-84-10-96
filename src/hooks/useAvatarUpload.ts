@@ -40,14 +40,14 @@ export const useAvatarUpload = () => {
         .getPublicUrl(filePath);
 
       // Atualizar perfil do usuário
-      const success = await updateProfile({ avatar_url: publicUrl });
+      const result = await updateProfile({ avatar_url: publicUrl });
       
-      if (success) {
-        toast.success('Avatar atualizado com sucesso!');
-        return true;
-      } else {
-        throw new Error('Falha ao atualizar perfil');
+      if (result.error) {
+        throw new Error(result.error);
       }
+
+      toast.success('Avatar atualizado com sucesso!');
+      return true;
 
     } catch (error: any) {
       console.error('Erro no upload do avatar:', error);

@@ -66,7 +66,7 @@ export const useLogoUpload = () => {
 
       // Upload do arquivo
       const { data, error } = await supabase.storage
-        .from('clinic-logos')
+        .from('user-avatars')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true
@@ -79,7 +79,7 @@ export const useLogoUpload = () => {
 
       // Obter URL pública
       const { data: { publicUrl } } = supabase.storage
-        .from('clinic-logos')
+        .from('user-avatars')
         .getPublicUrl(filePath);
 
       toast.success('Logo da clínica enviado com sucesso!');
