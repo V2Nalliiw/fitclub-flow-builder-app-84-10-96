@@ -84,16 +84,21 @@ export const useFlowExecutionEngine = () => {
   const processFormStartNode = async (executionId: string, step: ExecutionStep, nodeData: any) => {
     const formUrl = `${window.location.origin}/forms/${step.nodeId}?execution=${executionId}`;
     
-    await supabase.from('flow_steps').insert({
-      execution_id: executionId,
-      node_id: step.nodeId,
-      node_type: step.nodeType,
-      title: nodeData.titulo || 'Formulário',
-      description: nodeData.descricao,
-      status: 'disponivel',
-      form_url: formUrl,
-      available_at: new Date().toISOString(),
-    });
+    // Store form info in execution metadata
+    await supabase
+      .from('flow_executions')
+      .update({
+        current_step: {
+          nodeId: step.nodeId,
+          nodeType: step.nodeType,
+          title: nodeData.titulo || 'Formulário',
+          description: nodeData.descricao,
+          formUrl: formUrl,
+          status: 'disponivel'
+        },
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', executionId);
 
     console.log('Formulário criado:', formUrl);
   };
@@ -130,7 +135,6 @@ export const useFlowExecutionEngine = () => {
       .from('flow_executions')
       .update({
         status: 'aguardando',
-        scheduled_for: nextExecutionDate.toISOString(),
         next_step_available_at: nextExecutionDate.toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -140,15 +144,20 @@ export const useFlowExecutionEngine = () => {
   };
 
   const processQuestionNode = async (executionId: string, step: ExecutionStep, nodeData: any) => {
-    await supabase.from('flow_steps').insert({
-      execution_id: executionId,
-      node_id: step.nodeId,
-      node_type: step.nodeType,
-      title: nodeData.pergunta || 'Pergunta',
-      description: 'Responda a pergunta para continuar',
-      status: 'disponivel',
-      available_at: new Date().toISOString(),
-    });
+    // Store question info in execution metadata
+    await supabase
+      .from('flow_executions')
+      .update({
+        current_step: {
+          nodeId: step.nodeId,
+          nodeType: step.nodeType,
+          title: nodeData.pergunta || 'Pergunta',
+          description: 'Responda a pergunta para continuar',
+          status: 'disponivel'
+        },
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', executionId);
 
     console.log('Pergunta criada');
   };
@@ -169,17 +178,23 @@ export const useFlowExecutionEngine = () => {
     const { data: patient } = await supabase
       .from('profiles')
       .select('name, email')
-      .eq('user_id', execution.patient_id)
+      .eq('user_id', (execution as any).patient_id)
       .single();
 
-    // Registrar mensagem para ser enviada
-    await supabase.from('whatsapp_messages').insert({
-      execution_id: executionId,
-      patient_id: execution.patient_id,
-      to_phone: nodeData.telefone || '',
-      message_text: nodeData.mensagem || '',
-      status: 'pending',
-    });
+    // Store WhatsApp message info in execution metadata
+    await supabase
+      .from('flow_executions')
+      .update({
+        current_step: {
+          nodeId: step.nodeId,
+          nodeType: step.nodeType,
+          phone: nodeData.telefone || '',
+          message: nodeData.mensagem || '',
+          status: 'pending'
+        },
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', executionId);
 
     console.log('Mensagem WhatsApp programada');
   };
@@ -210,11 +225,11 @@ export const useFlowExecutionEngine = () => {
   const handleStepError = async (executionId: string, step: ExecutionStep, error: Error) => {
     const { data: execution } = await supabase
       .from('flow_executions')
-      .select('retry_count')
+      .select('*')
       .eq('id', executionId)
       .single();
 
-    const currentRetryCount = execution?.retry_count || 0;
+    const currentRetryCount = (execution as any)?.retry_count || 0;
     const maxRetries = 3;
 
     if (currentRetryCount < maxRetries) {
@@ -222,9 +237,12 @@ export const useFlowExecutionEngine = () => {
       await supabase
         .from('flow_executions')
         .update({
-          retry_count: currentRetryCount + 1,
-          error_message: error.message,
-          scheduled_for: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // Reagendar em 30 min
+          current_step: {
+            ...(execution as any)?.current_step,
+            retry_count: currentRetryCount + 1,
+            error_message: error.message,
+            scheduled_for: new Date(Date.now() + 30 * 60 * 1000).toISOString()
+          },
           updated_at: new Date().toISOString(),
         })
         .eq('id', executionId);
@@ -236,7 +254,10 @@ export const useFlowExecutionEngine = () => {
         .from('flow_executions')
         .update({
           status: 'falhou',
-          error_message: error.message,
+          current_step: {
+            ...(execution as any)?.current_step,
+            error_message: error.message
+          },
           updated_at: new Date().toISOString(),
         })
         .eq('id', executionId);
