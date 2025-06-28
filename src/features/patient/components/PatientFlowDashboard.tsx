@@ -11,7 +11,8 @@ import {
   FileText, 
   AlertCircle,
   Calendar,
-  TrendingUp
+  TrendingUp,
+  BookOpen
 } from 'lucide-react';
 import { usePatientFlows } from '@/hooks/usePatientFlows';
 import { PatientFlowExecution } from '@/types/patient';
@@ -20,7 +21,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 const getStatusIcon = (status: string) => {
   switch (status) {
     case 'em-andamento':
-      return <Play className="h-4 w-4 text-blue-500" />;
+      return <BookOpen className="h-4 w-4 text-blue-500" />;
     case 'aguardando':
       return <Clock className="h-4 w-4 text-orange-500" />;
     case 'concluido':
@@ -50,11 +51,11 @@ const getStatusColor = (status: string) => {
 const getStatusText = (status: string) => {
   switch (status) {
     case 'em-andamento':
-      return 'Em Andamento';
+      return 'Disponível Hoje';
     case 'aguardando':
-      return 'Aguardando';
+      return 'Próximo Formulário';
     case 'concluido':
-      return 'Concluído';
+      return 'Completado';
     case 'pausado':
       return 'Pausado';
     default:
@@ -95,13 +96,15 @@ const FlowCard: React.FC<FlowCardProps> = ({ execution, onAction, getTimeUntilAv
           </div>
           <Progress value={execution.progresso} className="h-2" />
           <div className="text-xs text-muted-foreground">
-            {execution.completed_steps} de {execution.total_steps} etapas concluídas
+            {execution.completed_steps} de {execution.total_steps} formulários completados
           </div>
         </div>
 
-        {/* Etapa Atual */}
+        {/* Formulário Atual */}
         <div className="p-3 bg-secondary/50 rounded-lg">
-          <div className="font-medium text-sm mb-1">Etapa Atual:</div>
+          <div className="font-medium text-sm mb-1">
+            {execution.status === 'em-andamento' ? 'Formulário de Hoje:' : 'Último Formulário:'}
+          </div>
           <div className="text-sm text-muted-foreground mb-2">
             {execution.current_step.title}
           </div>
@@ -123,7 +126,7 @@ const FlowCard: React.FC<FlowCardProps> = ({ execution, onAction, getTimeUntilAv
         {execution.next_step_available_at && execution.status === 'aguardando' && (
           <div className="flex items-center gap-2 text-xs text-orange-600 dark:text-orange-400">
             <Clock className="h-3 w-3" />
-            <span>{getTimeUntilAvailable(execution.next_step_available_at)}</span>
+            <span>Próximo formulário {getTimeUntilAvailable(execution.next_step_available_at)}</span>
           </div>
         )}
 
@@ -135,7 +138,7 @@ const FlowCard: React.FC<FlowCardProps> = ({ execution, onAction, getTimeUntilAv
               className="w-full"
               size="sm"
             >
-              {execution.current_step.type === 'formStart' ? 'Preencher Formulário' : 'Responder'}
+              {execution.current_step.type === 'formStart' ? 'Preencher Formulário' : 'Responder Pergunta'}
             </Button>
           )}
           
@@ -146,13 +149,13 @@ const FlowCard: React.FC<FlowCardProps> = ({ execution, onAction, getTimeUntilAv
               className="w-full"
               size="sm"
             >
-              Ver Detalhes
+              Ver Histórico
             </Button>
           )}
           
           {execution.status === 'aguardando' && (
             <Button variant="outline" className="w-full" size="sm" disabled>
-              Aguardando Próxima Etapa
+              Aguardando Próximo Formulário
             </Button>
           )}
         </div>
@@ -168,11 +171,10 @@ export const PatientFlowDashboard: React.FC = () => {
     try {
       switch (action) {
         case 'continue':
-          // Simular preenchimento de formulário
           await completeStep(executionId, 'current_step');
           break;
         case 'view':
-          console.log('Visualizar detalhes do fluxo:', executionId);
+          console.log('Visualizar histórico do fluxo:', executionId);
           break;
         default:
           console.log('Ação não reconhecida:', action);
@@ -190,8 +192,9 @@ export const PatientFlowDashboard: React.FC = () => {
     );
   }
 
-  const activeFlows = executions.filter(e => e.status !== 'concluido');
-  const completedFlows = executions.filter(e => e.status === 'concluido');
+  const todayForms = executions.filter(e => e.status === 'em-andamento');
+  const waitingForms = executions.filter(e => e.status === 'aguardando');
+  const completedForms = executions.filter(e => e.status === 'concluido');
 
   return (
     <div className="space-y-6">
@@ -199,45 +202,41 @@ export const PatientFlowDashboard: React.FC = () => {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Fluxos Ativos</CardTitle>
-            <Play className="h-4 w-4 text-blue-500" />
+            <CardTitle className="text-sm font-medium">Formulários Hoje</CardTitle>
+            <BookOpen className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeFlows.length}</div>
+            <div className="text-2xl font-bold">{todayForms.length}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Concluídos</CardTitle>
+            <CardTitle className="text-sm font-medium">Em Progresso</CardTitle>
+            <Clock className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{waitingForms.length}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Completados</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{completedFlows.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Progresso Médio</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {activeFlows.length > 0 
-                ? Math.round(activeFlows.reduce((acc, flow) => acc + flow.progresso, 0) / activeFlows.length)
-                : 0}%
-            </div>
+            <div className="text-2xl font-bold">{completedForms.length}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Fluxos Ativos */}
-      {activeFlows.length > 0 && (
+      {/* Formulários de Hoje */}
+      {todayForms.length > 0 && (
         <div>
-          <h2 className="text-xl font-semibold mb-4">Meus Fluxos Ativos</h2>
+          <h2 className="text-xl font-semibold mb-4">Formulários de Hoje</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {activeFlows.map((execution) => (
+            {todayForms.map((execution) => (
               <FlowCard
                 key={execution.id}
                 execution={execution}
@@ -249,12 +248,29 @@ export const PatientFlowDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Fluxos Concluídos */}
-      {completedFlows.length > 0 && (
+      {/* Próximos Formulários */}
+      {waitingForms.length > 0 && (
         <div>
-          <h2 className="text-xl font-semibold mb-4">Fluxos Concluídos</h2>
+          <h2 className="text-xl font-semibold mb-4">Próximos Formulários</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {completedFlows.map((execution) => (
+            {waitingForms.map((execution) => (
+              <FlowCard
+                key={execution.id}
+                execution={execution}
+                onAction={handleFlowAction}
+                getTimeUntilAvailable={getTimeUntilAvailable}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Formulários Concluídos */}
+      {completedForms.length > 0 && (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Formulários Concluídos</h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {completedForms.map((execution) => (
               <FlowCard
                 key={execution.id}
                 execution={execution}
@@ -270,10 +286,10 @@ export const PatientFlowDashboard: React.FC = () => {
       {executions.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhum fluxo encontrado</h3>
+            <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Nenhum formulário encontrado</h3>
             <p className="text-muted-foreground text-center">
-              Você ainda não tem fluxos ativos. Entre em contato com sua clínica para mais informações.
+              Você ainda não tem formulários disponíveis. Entre em contato com sua clínica para mais informações.
             </p>
           </CardContent>
         </Card>
