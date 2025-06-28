@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -80,7 +81,8 @@ export const TopToolbar = ({
     if (isMobile || isTablet) {
       return 'top-[calc(5%+3rem)]';
     }
-    return 'top-[calc(5px+3rem)]';
+    // Desktop: 5px da linha inferior do cabeçalho (64px - 5px = 59px)
+    return 'top-[calc(4rem-5px)]';
   };
 
   return (
