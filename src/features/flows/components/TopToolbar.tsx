@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -291,17 +292,7 @@ export const TopToolbar = ({
         {isDesktop && (
           <div className="flex items-center justify-center px-[10px]">
             <div className="flex items-center gap-3">
-              {/* Nome do fluxo PRIMEIRO */}
-              <Input
-                value={flowName}
-                onChange={(e) => onFlowNameChange(e.target.value)}
-                placeholder="Nome do fluxo..."
-                className="max-w-xs dark:bg-transparent dark:border-gray-800 dark:text-gray-100 h-8 text-sm"
-              />
-
-              <Separator orientation="vertical" className="h-4 mx-1 dark:bg-gray-800" />
-
-              {/* Botões de Nós DEPOIS do nome - todos do mesmo tamanho */}
+              {/* Botões de Nós PRIMEIRO - movidos para dentro da div principal */}
               <div className="flex items-center gap-1.5">
                 {nodeTypes.map((nodeType) => {
                   const IconComponent = nodeType.icon;
@@ -319,6 +310,16 @@ export const TopToolbar = ({
                   );
                 })}
               </div>
+
+              <Separator orientation="vertical" className="h-4 mx-1 dark:bg-gray-800" />
+
+              {/* Nome do fluxo DEPOIS dos botões */}
+              <Input
+                value={flowName}
+                onChange={(e) => onFlowNameChange(e.target.value)}
+                placeholder="Nome do fluxo..."
+                className="max-w-xs dark:bg-transparent dark:border-gray-800 dark:text-gray-100 h-8 text-sm"
+              />
 
               {/* Badge do nó selecionado */}
               {selectedNode && (
