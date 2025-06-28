@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -181,7 +182,7 @@ export const useClinics = () => {
 
           if (authError) {
             console.error('Erro ao criar usuário:', authError);
-            // Se falhar na criação do usuário, excluir a clínica criada
+            // Rollback: excluir a clínica criada
             await supabase.from('clinics').delete().eq('id', clinic.id);
             
             toast({
@@ -206,34 +207,66 @@ export const useClinics = () => {
 
           console.log('Usuário criado com sucesso:', authData.user.id);
 
-          // Aguardar um momento para o trigger criar o perfil básico
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Aguardar o trigger criar o perfil básico
+          await new Promise(resolve => setTimeout(resolve, 1000));
 
-          // Atualizar o perfil com os dados específicos da clínica
-          const { error: profileError } = await supabase
+          // Verificar se o perfil foi criado pelo trigger
+          const { data: existingProfile } = await supabase
             .from('profiles')
-            .update({
-              name: responsibleUser.name,
-              role: 'clinic',
-              clinic_id: clinic.id,
-              is_chief: responsibleUser.isChief,
-            })
-            .eq('user_id', authData.user.id);
+            .select('*')
+            .eq('user_id', authData.user.id)
+            .single();
 
-          if (profileError) {
-            console.error('Erro ao atualizar perfil:', profileError);
-            // Se falhar na atualização do perfil, tentar limpar o que foi criado
-            await supabase.from('clinics').delete().eq('id', clinic.id);
-            
-            toast({
-              title: "Erro",
-              description: `Erro ao configurar perfil: ${profileError.message}`,
-              variant: "destructive",
-            });
-            return false;
+          if (!existingProfile) {
+            // Se o perfil não foi criado pelo trigger, criar manualmente
+            const { error: profileInsertError } = await supabase
+              .from('profiles')
+              .insert({
+                user_id: authData.user.id,
+                email: responsibleUser.email,
+                name: responsibleUser.name,
+                role: 'clinic',
+                clinic_id: clinic.id,
+                is_chief: responsibleUser.isChief,
+              });
+
+            if (profileInsertError) {
+              console.error('Erro ao criar perfil:', profileInsertError);
+              await supabase.from('clinics').delete().eq('id', clinic.id);
+              
+              toast({
+                title: "Erro",
+                description: `Erro ao criar perfil: ${profileInsertError.message}`,
+                variant: "destructive",
+              });
+              return false;
+            }
+          } else {
+            // Atualizar o perfil existente com os dados da clínica
+            const { error: profileUpdateError } = await supabase
+              .from('profiles')
+              .update({
+                name: responsibleUser.name,
+                role: 'clinic',
+                clinic_id: clinic.id,
+                is_chief: responsibleUser.isChief,
+              })
+              .eq('user_id', authData.user.id);
+
+            if (profileUpdateError) {
+              console.error('Erro ao atualizar perfil:', profileUpdateError);
+              await supabase.from('clinics').delete().eq('id', clinic.id);
+              
+              toast({
+                title: "Erro",
+                description: `Erro ao configurar perfil: ${profileUpdateError.message}`,
+                variant: "destructive",
+              });
+              return false;
+            }
           }
 
-          console.log('Perfil atualizado com sucesso');
+          console.log('Perfil configurado com sucesso');
 
           toast({
             title: "Clínica e usuário criados",
