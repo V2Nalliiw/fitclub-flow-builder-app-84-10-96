@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -78,7 +77,7 @@ export const TopToolbar = ({
 
   return (
     <>
-      <div className="absolute top-4 left-4 right-4 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-3">
+      <div className="absolute top-[20%] left-4 right-4 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-3">
         <div className="flex items-center justify-between gap-4">
           {/* Nome do Fluxo e Controles de Nós */}
           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -203,7 +202,7 @@ export const TopToolbar = ({
         <>
           <Button
             onClick={() => setShowNodeMenu(!showNodeMenu)}
-            className="fixed top-[calc(5%+1rem)] right-[5%] z-50 bg-[#5D8701] hover:bg-[#4a6e01] text-white rounded-full w-12 h-12 p-0 shadow-lg"
+            className="fixed top-[calc(20%+1rem)] right-[5%] z-50 bg-[#5D8701] hover:bg-[#4a6e01] text-white rounded-full w-12 h-12 p-0 shadow-lg"
             title="Menu de nós"
           >
             <Plus className="h-6 w-6" />
@@ -211,7 +210,7 @@ export const TopToolbar = ({
 
           {showNodeMenu && (
             <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowNodeMenu(false)}>
-              <div className="absolute top-[calc(5%+4rem)] right-[5%] bg-white dark:bg-[#0E0E0E] border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl p-4 w-64">
+              <div className="absolute top-[calc(20%+4rem)] right-[5%] bg-white dark:bg-[#0E0E0E] border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl p-4 w-64">
                 {/* Primeira linha - Nós */}
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   {nodeTypes.map((nodeType) => {
@@ -285,7 +284,7 @@ export const TopToolbar = ({
         <>
           <Button
             onClick={() => setShowNodeMenu(!showNodeMenu)}
-            className="fixed top-[5%] left-1/2 transform -translate-x-1/2 z-50 bg-[#5D8701] hover:bg-[#4a6e01] text-white rounded-full w-12 h-12 p-0 shadow-lg"
+            className="fixed top-[20%] left-1/2 transform -translate-x-1/2 z-50 bg-[#5D8701] hover:bg-[#4a6e01] text-white rounded-full w-12 h-12 p-0 shadow-lg"
             title="Menu de nós"
           >
             <Plus className="h-6 w-6" />
@@ -293,7 +292,7 @@ export const TopToolbar = ({
 
           {showNodeMenu && (
             <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowNodeMenu(false)}>
-              <div className="absolute top-[calc(5%+4rem)] left-1/2 transform -translate-x-1/2 bg-white dark:bg-[#0E0E0E] border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl p-4 w-80">
+              <div className="absolute top-[calc(20%+4rem)] left-1/2 transform -translate-x-1/2 bg-white dark:bg-[#0E0E0E] border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl p-4 w-80">
                 {/* Primeira linha - Nós */}
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   {nodeTypes.map((nodeType) => {
