@@ -180,7 +180,7 @@ export const TopToolbar = ({
           </>
         )}
 
-        {/* Layout Tablet - Nós na frente do nome do fluxo */}
+        {/* Layout Tablet - Botões de nós na frente do nome do fluxo */}
         {isTablet && (
           <>
             {/* Primeira linha - Nós, nome do fluxo e controles principais */}
@@ -212,7 +212,7 @@ export const TopToolbar = ({
                   value={flowName}
                   onChange={(e) => onFlowNameChange(e.target.value)}
                   placeholder="Nome do fluxo..."
-                  className="max-w-[200px] dark:bg-transparent dark:border-gray-800 dark:text-gray-100 h-7 text-sm"
+                  className="max-w-[150px] dark:bg-transparent dark:border-gray-800 dark:text-gray-100 h-7 text-sm"
                 />
                 
                 {selectedNode && (
