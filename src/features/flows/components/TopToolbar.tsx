@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,75 +84,33 @@ export const TopToolbar = ({
     return 'top-[calc(4rem+0.5rem)]';
   };
 
-  // Desktop: Menu minimalista fixo na parte inferior com todos os ícones agrupados
+  // Desktop: Menu minimalista fixo na parte inferior com todos os controles
   if (isDesktop) {
     return (
       <>
-        {/* Header com nome do fluxo - Desktop */}
-        <div className={`absolute ${getTopPosition()} left-4 right-4 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-2`}>
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <Input
-                value={flowName}
-                onChange={(e) => onFlowNameChange(e.target.value)}
-                placeholder="Nome do fluxo..."
-                className="dark:bg-transparent dark:border-gray-800 dark:text-gray-100 text-sm max-w-xs h-8"
-              />
-              
-              {selectedNode && (
-                <Badge variant="secondary" className="truncate dark:bg-gray-900/50 dark:text-gray-200 dark:border-gray-800 text-xs py-0.5">
-                  {selectedNode.data?.label || 'Nó selecionado'}
-                </Badge>
-              )}
-            </div>
-
-            {/* Controles Principais */}
-            <div className="flex items-center gap-1.5">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onPreviewFlow}
-                title="Visualizar fluxo"
-                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-8 px-3"
-              >
-                <Play className="h-4 w-4" />
-              </Button>
-
-              <Button
-                onClick={onSaveFlow}
-                size="sm"
-                disabled={!canSave || isSaving}
-                className="bg-[#5D8701] hover:bg-[#4a6e01] text-white dark:bg-[#5D8701] dark:hover:bg-[#4a6e01] h-8 px-3"
-                title="Salvar fluxo"
-              >
-                {isSaving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onToggleFullscreen}
-                title={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
-                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-8 px-3"
-              >
-                {isFullscreen ? (
-                  <Minimize className="h-4 w-4" />
-                ) : (
-                  <Maximize className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
+        {/* Header vazio para desktop - apenas badge do nó selecionado se houver */}
+        {selectedNode && (
+          <div className={`absolute ${getTopPosition()} left-4 z-40`}>
+            <Badge variant="secondary" className="truncate dark:bg-gray-900/50 dark:text-gray-200 dark:border-gray-800 text-xs py-0.5">
+              {selectedNode.data?.label || 'Nó selecionado'}
+            </Badge>
           </div>
-        </div>
+        )}
 
         {/* Menu flutuante minimalista fixo na parte inferior central - Desktop */}
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-full shadow-lg px-6 py-3">
           <div className="flex items-center gap-3">
-            {/* Todos os Botões de Nós agrupados */}
+            {/* Campo Nome do Fluxo */}
+            <Input
+              value={flowName}
+              onChange={(e) => onFlowNameChange(e.target.value)}
+              placeholder="Nome do fluxo..."
+              className="dark:bg-transparent dark:border-gray-700 dark:text-gray-100 text-sm w-48 h-8 rounded-full px-3"
+            />
+
+            <Separator orientation="vertical" className="h-6 mx-2" />
+
+            {/* Botões de Nós agrupados */}
             {nodeTypes.map((nodeType) => {
               const IconComponent = nodeType.icon;
               return (
@@ -169,6 +126,34 @@ export const TopToolbar = ({
                 </Button>
               );
             })}
+
+            <Separator orientation="vertical" className="h-6 mx-2" />
+
+            {/* Botão Visualizar */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onPreviewFlow}
+              title="Visualizar fluxo"
+              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
+            >
+              <Play className="h-4 w-4" />
+            </Button>
+
+            {/* Botão Salvar */}
+            <Button
+              onClick={onSaveFlow}
+              size="sm"
+              disabled={!canSave || isSaving}
+              className="bg-[#5D8701] hover:bg-[#4a6e01] text-white dark:bg-[#5D8701] dark:hover:bg-[#4a6e01] h-9 w-9 p-0 rounded-full"
+              title="Salvar fluxo"
+            >
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+            </Button>
 
             <Separator orientation="vertical" className="h-6 mx-2" />
 
