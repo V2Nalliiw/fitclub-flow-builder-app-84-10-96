@@ -9,7 +9,14 @@ import { Mail, Phone, RefreshCw, X, CheckCircle } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export const PatientInvitationsList = () => {
-  const { invitations, isLoading, updateInvitation, resendInvitation, isUpdating, isResending } = usePatientInvitations();
+  const { 
+    invitations, 
+    isLoading, 
+    updateInvitation, 
+    resendInvitation, 
+    isUpdating, 
+    isResending 
+  } = usePatientInvitations();
 
   if (isLoading) {
     return (

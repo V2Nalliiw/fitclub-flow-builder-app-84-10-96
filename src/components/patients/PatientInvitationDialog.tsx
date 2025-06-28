@@ -19,19 +19,21 @@ export const PatientInvitationDialog = () => {
 
   const { createInvitation, isCreating } = usePatientInvitations();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    createInvitation({
+    const success = await createInvitation({
       name: formData.name,
       email: formData.email,
       phone: formData.phone || undefined,
       expiresInDays: formData.expiresInDays,
     });
     
-    // Reset form and close dialog on success
-    setFormData({ name: '', email: '', phone: '', expiresInDays: 7 });
-    setOpen(false);
+    if (success) {
+      // Reset form and close dialog on success
+      setFormData({ name: '', email: '', phone: '', expiresInDays: 7 });
+      setOpen(false);
+    }
   };
 
   return (
