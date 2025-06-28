@@ -196,10 +196,10 @@ export const TopToolbar = ({
           </>
         )}
 
-        {/* Layout Desktop - Novo layout centralizado com nós na frente */}
+        {/* Layout Desktop - Nós primeiro, depois nome do fluxo, tudo centralizado */}
         {isDesktop && (
           <div className="flex items-center justify-center gap-3">
-            {/* Botões de Nós primeiro */}
+            {/* Botões de Nós PRIMEIRO */}
             <div className="flex items-center gap-1">
               {nodeTypes.map((nodeType) => {
                 const IconComponent = nodeType.icon;
@@ -220,7 +220,7 @@ export const TopToolbar = ({
 
             <Separator orientation="vertical" className="h-4 mx-1 dark:bg-gray-800" />
 
-            {/* Nome do fluxo */}
+            {/* Nome do fluxo DEPOIS dos nós */}
             <Input
               value={flowName}
               onChange={(e) => onFlowNameChange(e.target.value)}
