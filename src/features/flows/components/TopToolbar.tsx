@@ -286,123 +286,125 @@ export const TopToolbar = ({
           </>
         )}
 
-        {/* Layout Desktop - Nome primeiro, depois nós, padding ajustado */}
+        {/* Layout Desktop - Menu justo ao conteúdo com padding 10px */}
         {isDesktop && (
-          <div className="flex items-center justify-center gap-3 px-[15px]">
-            {/* Nome do fluxo PRIMEIRO */}
-            <Input
-              value={flowName}
-              onChange={(e) => onFlowNameChange(e.target.value)}
-              placeholder="Nome do fluxo..."
-              className="max-w-xs dark:bg-transparent dark:border-gray-800 dark:text-gray-100 h-7 text-sm"
-            />
+          <div className="flex items-center justify-center">
+            <div className="flex items-center gap-3 px-[10px]">
+              {/* Nome do fluxo PRIMEIRO */}
+              <Input
+                value={flowName}
+                onChange={(e) => onFlowNameChange(e.target.value)}
+                placeholder="Nome do fluxo..."
+                className="max-w-xs dark:bg-transparent dark:border-gray-800 dark:text-gray-100 h-8 text-sm"
+              />
 
-            <Separator orientation="vertical" className="h-4 mx-1 dark:bg-gray-800" />
+              <Separator orientation="vertical" className="h-4 mx-1 dark:bg-gray-800" />
 
-            {/* Botões de Nós DEPOIS do nome - botões maiores */}
-            <div className="flex items-center gap-1.5">
-              {nodeTypes.map((nodeType) => {
-                const IconComponent = nodeType.icon;
-                return (
-                  <Button
-                    key={nodeType.type}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleAddNode(nodeType.type)}
-                    className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 border-gray-200 hover:bg-gray-50 h-8 w-8 p-0"
-                    title={nodeType.label}
-                  >
-                    <IconComponent className={`h-4 w-4 ${nodeType.color}`} />
-                  </Button>
-                );
-              })}
-            </div>
+              {/* Botões de Nós DEPOIS do nome - todos do mesmo tamanho */}
+              <div className="flex items-center gap-1.5">
+                {nodeTypes.map((nodeType) => {
+                  const IconComponent = nodeType.icon;
+                  return (
+                    <Button
+                      key={nodeType.type}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddNode(nodeType.type)}
+                      className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 border-gray-200 hover:bg-gray-50 h-8 w-8 p-0"
+                      title={nodeType.label}
+                    >
+                      <IconComponent className={`h-4 w-4 ${nodeType.color}`} />
+                    </Button>
+                  );
+                })}
+              </div>
 
-            {/* Badge do nó selecionado */}
-            {selectedNode && (
-              <Badge variant="secondary" className="truncate dark:bg-gray-900/50 dark:text-gray-200 dark:border-gray-800 text-xs py-0.5">
-                {selectedNode.data?.label || 'Nó selecionado'}
-              </Badge>
-            )}
-
-            <Separator orientation="vertical" className="h-4 mx-1 dark:bg-gray-800" />
-
-            {/* Ferramentas */}
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onAutoArrangeNodes}
-                title="Organizar nós automaticamente"
-                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-6 w-6 p-0"
-              >
-                <AlignJustify className="h-3 w-3" />
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onClearAllNodes}
-                title="Limpar todos os nós"
-                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-6 w-6 p-0"
-              >
-                <Eraser className="h-3 w-3" />
-              </Button>
-
+              {/* Badge do nó selecionado */}
               {selectedNode && (
+                <Badge variant="secondary" className="truncate dark:bg-gray-900/50 dark:text-gray-200 dark:border-gray-800 text-xs py-0.5">
+                  {selectedNode.data?.label || 'Nó selecionado'}
+                </Badge>
+              )}
+
+              <Separator orientation="vertical" className="h-4 mx-1 dark:bg-gray-800" />
+
+              {/* Ferramentas - todos do mesmo tamanho */}
+              <div className="flex items-center gap-1">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onDeleteNode(selectedNode.id)}
-                  title="Deletar nó selecionado"
-                  className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-6 w-6 p-0"
+                  onClick={onAutoArrangeNodes}
+                  title="Organizar nós automaticamente"
+                  className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-8 w-8 p-0"
                 >
-                  <Trash2 className="h-3 w-3" />
+                  <AlignJustify className="h-4 w-4" />
                 </Button>
-              )}
-            </div>
 
-            <Separator orientation="vertical" className="h-4 mx-1 dark:bg-gray-800" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onClearAllNodes}
+                  title="Limpar todos os nós"
+                  className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-8 w-8 p-0"
+                >
+                  <Eraser className="h-4 w-4" />
+                </Button>
 
-            {/* Controles principais */}
-            <div className="flex items-center gap-1.5">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onPreviewFlow}
-                title="Visualizar fluxo"
-                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-7 px-2"
-              >
-                <Play className="h-3 w-3" />
-              </Button>
-
-              <Button
-                onClick={onSaveFlow}
-                size="sm"
-                disabled={!canSave || isSaving}
-                className="bg-[#5D8701] hover:bg-[#4a6e01] text-white dark:bg-[#5D8701] dark:hover:bg-[#4a6e01] h-7 px-2"
-                title="Salvar fluxo"
-              >
-                {isSaving ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <Save className="h-3 w-3" />
+                {selectedNode && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDeleteNode(selectedNode.id)}
+                    title="Deletar nó selecionado"
+                    className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-8 w-8 p-0"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 )}
-              </Button>
+              </div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onToggleFullscreen}
-                title={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
-                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-7 px-2"
-              >
-                {isFullscreen ? (
-                  <Minimize className="h-3 w-3" />
-                ) : (
-                  <Maximize className="h-3 w-3" />
-                )}
-              </Button>
+              <Separator orientation="vertical" className="h-4 mx-1 dark:bg-gray-800" />
+
+              {/* Controles principais - todos do mesmo tamanho */}
+              <div className="flex items-center gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onPreviewFlow}
+                  title="Visualizar fluxo"
+                  className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-8 px-3"
+                >
+                  <Play className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  onClick={onSaveFlow}
+                  size="sm"
+                  disabled={!canSave || isSaving}
+                  className="bg-[#5D8701] hover:bg-[#4a6e01] text-white dark:bg-[#5D8701] dark:hover:bg-[#4a6e01] h-8 px-3"
+                  title="Salvar fluxo"
+                >
+                  {isSaving ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onToggleFullscreen}
+                  title={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
+                  className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-8 px-3"
+                >
+                  {isFullscreen ? (
+                    <Minimize className="h-4 w-4" />
+                  ) : (
+                    <Maximize className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         )}
