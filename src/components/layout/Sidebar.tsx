@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   FileText,
@@ -27,6 +28,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useTheme } from "@/contexts/ThemeContext"
 import {
+  Sidebar as SidebarComponent,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
@@ -41,13 +43,11 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 
-// ... keep existing code (imports and constants)
-
 export const Sidebar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { theme, setTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
 
   const handleLogout = async () => {
     await logout();
@@ -130,13 +130,15 @@ export const Sidebar = () => {
   const navigationItems = getNavigationItems();
 
   return (
-    <>
-      <SidebarTrigger />
+    <SidebarComponent>
       <SidebarContent className="flex flex-col">
         <SidebarHeader>
-          <h1 className="font-semibold text-lg">
-            {user?.clinic_name || 'Painel'}
-          </h1>
+          <div className="flex items-center gap-2">
+            <SidebarTrigger />
+            <h1 className="font-semibold text-lg">
+              {user?.name || 'Painel'}
+            </h1>
+          </div>
         </SidebarHeader>
 
         <SidebarSeparator />
@@ -216,7 +218,7 @@ export const Sidebar = () => {
             <Switch
               id="theme"
               checked={theme === "dark"}
-              onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+              onCheckedChange={() => toggleTheme()}
             />
             <Label htmlFor="theme" className="text-sm">
               Modo {theme === "dark" ? "Escuro" : "Claro"}
@@ -224,6 +226,6 @@ export const Sidebar = () => {
           </div>
         </SidebarFooter>
       </SidebarContent>
-    </>
+    </SidebarComponent>
   );
 };
