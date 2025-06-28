@@ -19,7 +19,7 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const location = useLocation();
-  const { isDesktop } = useBreakpoints();
+  const { isDesktop, isMobile } = useBreakpoints();
   const { currentLogo } = useLogoManager();
   
   const isFlowsPage = location.pathname === '/flows';
@@ -70,18 +70,16 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       {/* Main Content */}
       <main className={cn(
         "flex-1 transition-all duration-300 animate-fade-in",
-        !isDesktop && isFlowsPage ? "pt-0" : "pb-20 md:pb-6"
+        !isDesktop && isFlowsPage ? "pt-0" : isMobile ? "pb-20" : "pb-6"
       )}>
         {children}
       </main>
 
-      {/* Mobile/Tablet Navigation - Show on mobile and tablet */}
-      {!isDesktop && (
-        <>
-          <MobileNavigation />
-          <MobileDrawer />
-        </>
-      )}
+      {/* Mobile Navigation - Show only on mobile */}
+      {isMobile && <MobileNavigation />}
+      
+      {/* Drawer Menu - Show on all devices */}
+      <MobileDrawer />
     </div>
   );
 };

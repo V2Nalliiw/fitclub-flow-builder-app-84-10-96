@@ -19,6 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBreakpoints } from '@/hooks/use-breakpoints';
 import {
   Drawer,
   DrawerContent,
@@ -29,6 +30,7 @@ import {
 
 export const MobileDrawer = () => {
   const { user, logout } = useAuth();
+  const { isMobile } = useBreakpoints();
   const [open, setOpen] = useState(false);
 
   const getAllNavItems = () => {
@@ -71,7 +73,12 @@ export const MobileDrawer = () => {
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <button className="fixed bottom-20 right-4 z-40 bg-primary text-primary-foreground rounded-full p-3 shadow-lg md:hidden animate-bounce">
+        <button 
+          className={cn(
+            "z-40 bg-primary text-primary-foreground rounded-full p-3 shadow-lg animate-bounce",
+            isMobile ? "fixed bottom-20 right-4" : "fixed bottom-6 right-6"
+          )}
+        >
           <ChevronUp className="h-5 w-5" />
         </button>
       </DrawerTrigger>
