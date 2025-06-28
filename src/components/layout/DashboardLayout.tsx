@@ -11,6 +11,7 @@ import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NotificationCenter } from '@/features/notifications/components/NotificationCenter';
 import { useLogoManager } from '@/hooks/useLogoManager';
+import { TabletFlowMenu } from './components/TabletFlowMenu';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -98,14 +99,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       </header>
 
       {/* Menu minimalista do tablet - posicionado no topo centralizado */}
-      {isTablet && isFlowsPage && (
-        <div className="fixed top-[calc(4rem+0.5rem)] left-1/2 transform -translate-x-1/2 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-full shadow-lg px-6 py-3">
-          <div className="flex items-center gap-3">
-            {/* Aqui será inserido o conteúdo do menu minimalista do tablet */}
-            <div className="text-sm text-muted-foreground">Menu Tablet</div>
-          </div>
-        </div>
-      )}
+      {isTablet && isFlowsPage && <TabletFlowMenu />}
 
       {/* Main Content */}
       <main className={cn(
