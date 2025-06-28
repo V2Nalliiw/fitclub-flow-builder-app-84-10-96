@@ -23,7 +23,7 @@ import {
   Eraser
 } from 'lucide-react';
 import { FlowNode } from '@/types/flow';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useBreakpoints } from '@/hooks/use-breakpoints';
 
 interface TopToolbarProps {
   flowName: string;
@@ -57,7 +57,7 @@ export const TopToolbar = ({
   canSave = true
 }: TopToolbarProps) => {
   const [showNodeMenu, setShowNodeMenu] = useState(false);
-  const isMobile = useIsMobile();
+  const { isMobile, isTablet, isDesktop } = useBreakpoints();
 
   const nodeTypes = [
     { type: 'end' as FlowNode['type'], label: 'Fim', icon: Square, color: 'text-red-500' },
@@ -76,9 +76,17 @@ export const TopToolbar = ({
     }
   };
 
+  // Definir posição baseada no dispositivo
+  const getTopPosition = () => {
+    if (isMobile || isTablet) {
+      return 'top-[calc(5%+3rem)]';
+    }
+    return 'top-[calc(2%+3rem)]';
+  };
+
   return (
     <>
-      <div className="absolute top-[calc(2%+3rem)] left-4 right-4 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-2">
+      <div className={`absolute ${getTopPosition()} left-4 right-4 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-2`}>
         {/* Primeira linha - Nome do fluxo e controles principais */}
         <div className="flex items-center justify-between gap-3 mb-2">
           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -122,19 +130,32 @@ export const TopToolbar = ({
               )}
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onToggleFullscreen}
-              title={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
-              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-7 px-2"
-            >
-              {isFullscreen ? (
-                <Minimize className="h-3 w-3" />
-              ) : (
-                <Maximize className="h-3 w-3" />
-              )}
-            </Button>
+            {/* Mobile: substituir expandir por limpar todos */}
+            {isMobile ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onClearAllNodes}
+                title="Limpar todos os nós"
+                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-7 px-2"
+              >
+                <Eraser className="h-3 w-3" />
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onToggleFullscreen}
+                title={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
+                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-7 px-2"
+              >
+                {isFullscreen ? (
+                  <Minimize className="h-3 w-3" />
+                ) : (
+                  <Maximize className="h-3 w-3" />
+                )}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -159,26 +180,31 @@ export const TopToolbar = ({
 
           <Separator orientation="vertical" className="h-4 mx-1 dark:bg-gray-800" />
 
-          {/* Ferramentas */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onAutoArrangeNodes}
-            title="Organizar nós automaticamente"
-            className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-6 w-6 p-0"
-          >
-            <AlignJustify className="h-3 w-3" />
-          </Button>
+          {/* Ferramentas - ocultar organizar no mobile */}
+          {!isMobile && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onAutoArrangeNodes}
+              title="Organizar nós automaticamente"
+              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-6 w-6 p-0"
+            >
+              <AlignJustify className="h-3 w-3" />
+            </Button>
+          )}
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onClearAllNodes}
-            title="Limpar todos os nós"
-            className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-6 w-6 p-0"
-          >
-            <Eraser className="h-3 w-3" />
-          </Button>
+          {/* Desktop/Tablet: mostrar limpar todos separadamente */}
+          {!isMobile && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClearAllNodes}
+              title="Limpar todos os nós"
+              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-6 w-6 p-0"
+            >
+              <Eraser className="h-3 w-3" />
+            </Button>
+          )}
 
           {selectedNode && (
             <Button
