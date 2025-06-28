@@ -52,7 +52,7 @@ export const useFlowProcessor = () => {
         .from('flow_executions')
         .insert({
           flow_id: flowId,
-          flow_name: flow.name,
+          flow_name: (flow as any).name,
           patient_id: patientId,
           status: 'em-andamento',
           current_node: steps[0].nodeId,
@@ -65,6 +65,7 @@ export const useFlowProcessor = () => {
             title: steps[0].title,
             description: steps[0].description,
             completed: false,
+            steps: steps, // Store all steps in metadata
           },
         })
         .select()
@@ -74,29 +75,9 @@ export const useFlowProcessor = () => {
         throw executionError;
       }
 
-      // Criar steps individuais
-      const flowSteps = steps.map(step => ({
-        execution_id: execution.id,
-        node_id: step.nodeId,
-        node_type: step.nodeType,
-        title: step.title,
-        description: step.description,
-        status: step.order === 1 ? 'disponivel' : 'pendente',
-        available_at: step.availableAt.toISOString(),
-        form_url: step.formId ? `${window.location.origin}/forms/${step.formId}?execution=${execution.id}` : null,
-      }));
-
-      const { error: stepsError } = await supabase
-        .from('flow_steps')
-        .insert(flowSteps);
-
-      if (stepsError) {
-        throw stepsError;
-      }
-
       toast({
         title: "Fluxo iniciado",
-        description: `O fluxo "${flow.name}" foi iniciado para o paciente`,
+        description: `O fluxo "${(flow as any).name}" foi iniciado para o paciente`,
       });
 
       return execution;
@@ -178,21 +159,6 @@ export const useFlowProcessor = () => {
 
   const completeFlowStep = useCallback(async (executionId: string, stepId: string, response?: any) => {
     try {
-      // Marcar step como concluído
-      const { error: stepError } = await supabase
-        .from('flow_steps')
-        .update({
-          status: 'concluido',
-          completed_at: new Date().toISOString(),
-          response,
-        })
-        .eq('execution_id', executionId)
-        .eq('node_id', stepId);
-
-      if (stepError) {
-        throw stepError;
-      }
-
       // Buscar execução atual
       const { data: execution, error: execError } = await supabase
         .from('flow_executions')
@@ -204,43 +170,45 @@ export const useFlowProcessor = () => {
         throw new Error('Execução não encontrada');
       }
 
-      // Atualizar progresso
-      const newCompletedSteps = execution.completed_steps + 1;
-      const newProgress = Math.round((newCompletedSteps / execution.total_steps) * 100);
+      const executionData = execution as any;
+      const currentSteps = executionData.current_step?.steps || [];
+      
+      // Encontrar o step atual e marcar como concluído
+      const updatedSteps = currentSteps.map((step: any) => {
+        if (step.nodeId === stepId) {
+          return { ...step, completed: true, response };
+        }
+        return step;
+      });
 
-      // Buscar próximo step disponível
-      const { data: nextStep } = await supabase
-        .from('flow_steps')
-        .select('*')
-        .eq('execution_id', executionId)
-        .eq('status', 'pendente')
-        .order('available_at', { ascending: true })
-        .limit(1)
-        .single();
+      // Encontrar próximo step disponível
+      const nextStep = updatedSteps.find((step: any) => !step.completed);
+
+      // Atualizar progresso
+      const completedStepsCount = updatedSteps.filter((step: any) => step.completed).length;
+      const newCompletedSteps = executionData.completed_steps + 1;
+      const newProgress = Math.round((completedStepsCount / updatedSteps.length) * 100);
 
       let updateData: any = {
         completed_steps: newCompletedSteps,
         progress: newProgress,
         updated_at: new Date().toISOString(),
+        current_step: {
+          ...executionData.current_step,
+          steps: updatedSteps
+        }
       };
 
       if (nextStep) {
         // Ativar próximo step
-        await supabase
-          .from('flow_steps')
-          .update({ status: 'disponivel' })
-          .eq('id', nextStep.id);
-
-        updateData.current_node = nextStep.node_id;
-        updateData.current_step = {
-          id: nextStep.node_id,
-          type: nextStep.node_type,
-          title: nextStep.title,
-          description: nextStep.description,
-          completed: false,
-        };
-        updateData.next_step_available_at = nextStep.available_at;
-        updateData.status = new Date(nextStep.available_at) <= new Date() ? 'em-andamento' : 'aguardando';
+        updateData.current_node = nextStep.nodeId;
+        updateData.current_step.id = nextStep.nodeId;
+        updateData.current_step.type = nextStep.nodeType;
+        updateData.current_step.title = nextStep.title;
+        updateData.current_step.description = nextStep.description;
+        updateData.current_step.completed = false;
+        updateData.next_step_available_at = nextStep.availableAt;
+        updateData.status = new Date(nextStep.availableAt) <= new Date() ? 'em-andamento' : 'aguardando';
       } else {
         // Fluxo concluído
         updateData.status = 'concluido';
