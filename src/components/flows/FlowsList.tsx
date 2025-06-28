@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useFlows } from '@/hooks/useFlows';
 import { useAuth } from '@/contexts/AuthContext';
@@ -111,17 +112,17 @@ export const FlowsList = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-            {user?.user_metadata?.role === 'patient' ? 'Dicas e Formulários' : 'Meus Fluxos'}
+            {user?.role === 'patient' ? 'Dicas e Formulários' : 'Meus Fluxos'}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {user?.user_metadata?.role === 'patient' 
+            {user?.role === 'patient' 
               ? 'Acesse seus formulários e dicas personalizadas'
               : 'Gerencie seus fluxos de atendimento e formulários'
             }
           </p>
         </div>
         
-        {user?.user_metadata?.role !== 'patient' && (
+        {user?.role !== 'patient' && (
           <Button 
             onClick={() => setIsCreateDialogOpen(true)}
             className="bg-[#5D8701] hover:bg-[#4a6e01] text-white shadow-lg hover-lift"
@@ -199,12 +200,12 @@ export const FlowsList = () => {
             <p className="text-gray-600 dark:text-gray-400 text-center mb-6 max-w-md">
               {searchTerm 
                 ? `Não encontramos fluxos que correspondam à sua pesquisa por "${searchTerm}".`
-                : user?.user_metadata?.role === 'patient' 
+                : user?.role === 'patient' 
                   ? 'Você ainda não possui formulários ou dicas disponíveis.'
                   : 'Comece criando seu primeiro fluxo de atendimento.'
               }
             </p>
-            {!searchTerm && user?.user_metadata?.role !== 'patient' && (
+            {!searchTerm && user?.role !== 'patient' && (
               <Button 
                 onClick={() => setIsCreateDialogOpen(true)}
                 className="bg-[#5D8701] hover:bg-[#4a6e01] text-white"
@@ -228,7 +229,7 @@ export const FlowsList = () => {
               onEdit={handleEdit}
               onDelete={handleDelete}
               onPreview={handlePreview}
-              userRole={user?.user_metadata?.role}
+              userRole={user?.role}
             />
           ))}
         </div>
