@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,8 +35,6 @@ export const usePatientInvitations = () => {
 
     setLoading(true);
     try {
-      // Since patient_invitations table doesn't exist in current schema,
-      // we'll simulate with notifications table for now
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -54,7 +51,6 @@ export const usePatientInvitations = () => {
         return;
       }
 
-      // Transform notifications to PatientInvitation format
       const typedInvitations: PatientInvitation[] = (data || []).map((notification: any) => ({
         id: notification.id,
         clinic_id: user.clinic_id || '',
@@ -100,15 +96,12 @@ export const usePatientInvitations = () => {
 
     setIsCreating(true);
 
-    // Generate invitation token
     const invitationToken = `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    // Set expiration based on expiresInDays or default to 7 days
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + (invitationData.expiresInDays || 7));
 
     try {
-      // Store invitation as notification since patient_invitations table doesn't exist
+      // Store invitation as notification
       const { data, error } = await supabase
         .from('notifications')
         .insert({
@@ -140,12 +133,43 @@ export const usePatientInvitations = () => {
         return false;
       }
 
-      toast({
-        title: "Convite criado",
-        description: `Convite enviado para ${invitationData.name}`,
-      });
+      // Send email using Edge Function
+      try {
+        const { data: emailData, error: emailError } = await supabase.functions.invoke(
+          'send-patient-invitation',
+          {
+            body: {
+              name: invitationData.name,
+              email: invitationData.email,
+              phone: invitationData.phone,
+              invitationToken,
+              expiresAt: expiresAt.toISOString(),
+              clinicName: 'Nossa Clínica', // Você pode buscar isso do perfil da clínica
+            },
+          }
+        );
 
-      // Reload invitations
+        if (emailError) {
+          console.error('Erro ao enviar email:', emailError);
+          toast({
+            title: "Convite criado, mas email não foi enviado",
+            description: "O convite foi registrado, mas houve um problema ao enviar o email.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Convite enviado",
+            description: `Convite enviado por email para ${invitationData.name}`,
+          });
+        }
+      } catch (emailError) {
+        console.error('Erro ao chamar função de email:', emailError);
+        toast({
+          title: "Convite criado",
+          description: `Convite criado para ${invitationData.name}, mas o email não pôde ser enviado automaticamente`,
+        });
+      }
+
       await loadInvitations();
       return true;
     } catch (error: any) {
