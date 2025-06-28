@@ -3,13 +3,13 @@ import React, { useState } from 'react';
 import { MobileNavigation } from './MobileNavigation';
 import { MobileDrawer } from './MobileDrawer';
 import { DesktopHeaderNavigation } from './DesktopHeaderNavigation';
+import { cn } from '@/lib/utils';
+import { useLocation } from 'react-router-dom';
+import { useBreakpoints } from '@/hooks/use-breakpoints';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { NotificationCenter } from '@/features/notifications/components/NotificationCenter';
-import { useLocation } from 'react-router-dom';
-import { useBreakpoints } from '@/hooks/use-breakpoints';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -62,28 +62,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <ThemeToggle />
             </div>
           </>
-        )}
-        
-        {/* Notificações e tema apenas para desktop - já integrados no DesktopHeaderNavigation */}
-        {isDesktop && (
-          <div className="flex items-center gap-2 ml-4">
-            <div className="relative">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setNotificationsOpen(!notificationsOpen)}
-              >
-                <Bell className="h-4 w-4" />
-              </Button>
-              
-              {notificationsOpen && (
-                <div className="absolute top-12 right-0 z-50">
-                  <NotificationCenter onClose={() => setNotificationsOpen(false)} />
-                </div>
-              )}
-            </div>
-            <ThemeToggle />
-          </div>
         )}
       </header>
 

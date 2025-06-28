@@ -15,6 +15,7 @@ import {
   UserPlus,
   HelpCircle,
   LogOut,
+  Bell,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,11 +27,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { NotificationCenter } from '@/features/notifications/components/NotificationCenter';
 
 export const DesktopHeaderNavigation = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -165,7 +169,7 @@ export const DesktopHeaderNavigation = () => {
         />
       </div>
 
-      {/* Navegação e menu do usuário à direita */}
+      {/* Navegação e controles à direita */}
       <div className="flex items-center gap-2">
         {/* Ícones de navegação */}
         {navigationItems.map((item) => (
@@ -184,7 +188,10 @@ export const DesktopHeaderNavigation = () => {
           </Button>
         ))}
 
-        {/* Menu do usuário (avatar) - primeiro da direita para esquerda */}
+        {/* Botão de tema (dark mode) - primeiro da direita para esquerda */}
+        <ThemeToggle />
+
+        {/* Menu do usuário (avatar) - segundo da direita para esquerda */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -208,6 +215,23 @@ export const DesktopHeaderNavigation = () => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Notificações - terceiro da direita para esquerda */}
+        <div className="relative">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setNotificationsOpen(!notificationsOpen)}
+          >
+            <Bell className="h-4 w-4" />
+          </Button>
+          
+          {notificationsOpen && (
+            <div className="absolute top-12 right-0 z-50">
+              <NotificationCenter onClose={() => setNotificationsOpen(false)} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
