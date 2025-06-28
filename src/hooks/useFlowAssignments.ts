@@ -36,51 +36,60 @@ export const useFlowAssignments = () => {
     queryFn: async (): Promise<FlowAssignment[]> => {
       if (!user) return [];
 
-      let query = supabase
-        .from('flow_assignments')
-        .select(`
-          *,
-          flows!inner(name, description),
-          patient:profiles!flow_assignments_patient_id_fkey(name, email),
-          assigned_by_profile:profiles!flow_assignments_assigned_by_fkey(name)
-        `)
-        .order('assigned_at', { ascending: false });
+      try {
+        let query = supabase
+          .from('flow_assignments')
+          .select(`
+            *,
+            flows!inner(name, description),
+            patient:profiles!flow_assignments_patient_id_fkey(name, email),
+            assigned_by_profile:profiles!flow_assignments_assigned_by_fkey(name)
+          `)
+          .order('assigned_at', { ascending: false });
 
-      // Filter based on user role
-      if (user.role === 'patient') {
-        query = query.eq('patient_id', user.id);
-      } else if (user.role === 'clinic') {
-        // For clinics, get assignments for patients in their clinic
-        const { data: clinicPatients } = await supabase
-          .from('profiles')
-          .select('user_id')
-          .eq('clinic_id', user.clinic_id)
-          .eq('role', 'patient');
+        // Filter based on user role
+        if (user.role === 'patient') {
+          query = query.eq('patient_id', user.id);
+        } else if (user.role === 'clinic') {
+          // For clinics, get assignments for patients in their clinic
+          const { data: clinicPatients } = await supabase
+            .from('profiles')
+            .select('user_id')
+            .eq('clinic_id', user.clinic_id)
+            .eq('role', 'patient');
 
-        if (clinicPatients && clinicPatients.length > 0) {
-          const patientIds = clinicPatients.map(p => p.user_id);
-          query = query.in('patient_id', patientIds);
-        } else {
-          return [];
+          if (clinicPatients && clinicPatients.length > 0) {
+            const patientIds = clinicPatients.map(p => p.user_id);
+            query = query.in('patient_id', patientIds);
+          } else {
+            return [];
+          }
         }
+        // Super admin gets all assignments (no filter needed)
+
+        const { data, error } = await query;
+
+        if (error) {
+          console.error('Erro ao buscar atribuições:', error);
+          throw error;
+        }
+
+        return (data || []).map(assignment => ({
+          ...assignment,
+          flow: assignment.flows,
+          patient: assignment.patient,
+          assigned_by_profile: assignment.assigned_by_profile,
+        }));
+      } catch (error) {
+        console.error('Erro na consulta de atribuições:', error);
+        return [];
       }
-      // Super admin gets all assignments (no filter needed)
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Erro ao buscar atribuições:', error);
-        throw error;
-      }
-
-      return (data || []).map(assignment => ({
-        ...assignment,
-        flow: assignment.flows,
-        patient: assignment.patient,
-        assigned_by_profile: assignment.assigned_by_profile,
-      }));
     },
     enabled: !!user,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchInterval: false,
   });
 
   const assignFlowMutation = useMutation({

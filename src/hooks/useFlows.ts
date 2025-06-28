@@ -34,49 +34,56 @@ export const useFlows = () => {
 
       console.log('Buscando fluxos para usuário:', user.role, user.id);
 
-      let query = supabase.from('flows').select('*');
+      try {
+        let query = supabase.from('flows').select('*');
 
-      // Aplicar filtros baseados no papel do usuário
-      if (user.role === 'clinic') {
-        query = query.eq('clinic_id', user.clinic_id);
-      } else if (user.role === 'patient') {
-        // Para pacientes, buscar apenas fluxos atribuídos
-        const { data: assignments } = await supabase
-          .from('flow_assignments')
-          .select('flow_id')
-          .eq('patient_id', user.id);
-        
-        if (assignments && assignments.length > 0) {
-          const flowIds = assignments.map(a => a.flow_id);
-          query = query.in('id', flowIds);
-        } else {
-          console.log('Nenhum fluxo atribuído ao paciente');
-          setHasLoadedOnce(true);
-          setIsEmpty(true);
-          return [];
+        // Aplicar filtros baseados no papel do usuário
+        if (user.role === 'clinic') {
+          query = query.eq('clinic_id', user.clinic_id);
+        } else if (user.role === 'patient') {
+          // Para pacientes, buscar apenas fluxos atribuídos
+          const { data: assignments } = await supabase
+            .from('flow_assignments')
+            .select('flow_id')
+            .eq('patient_id', user.id);
+          
+          if (assignments && assignments.length > 0) {
+            const flowIds = assignments.map(a => a.flow_id);
+            query = query.in('id', flowIds);
+          } else {
+            console.log('Nenhum fluxo atribuído ao paciente');
+            setHasLoadedOnce(true);
+            setIsEmpty(true);
+            return [];
+          }
         }
-      }
-      // Super admin vê todos os fluxos (sem filtro adicional)
+        // Super admin vê todos os fluxos (sem filtro adicional)
 
-      const { data, error } = await query.order('created_at', { ascending: false });
+        const { data, error } = await query.order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Erro ao carregar fluxos:', error);
-        throw error;
+        if (error) {
+          console.error('Erro ao carregar fluxos:', error);
+          throw error;
+        }
+        
+        console.log('Fluxos carregados:', data?.length || 0);
+        setHasLoadedOnce(true);
+        setIsEmpty(!data || data.length === 0);
+        return data as Flow[];
+      } catch (error) {
+        console.error('Erro na consulta de fluxos:', error);
+        setHasLoadedOnce(true);
+        setIsEmpty(true);
+        return [];
       }
-      
-      console.log('Fluxos carregados:', data?.length || 0);
-      setHasLoadedOnce(true);
-      setIsEmpty(!data || data.length === 0);
-      return data as Flow[];
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 15, // 15 minutos - cache mais agressivo
-    gcTime: 1000 * 60 * 30, // 30 minutos para garbage collection
+    staleTime: 1000 * 60 * 15, // 15 minutos
+    gcTime: 1000 * 60 * 30, // 30 minutos
     refetchOnWindowFocus: false,
-    refetchOnMount: false, // Evita refetch desnecessário no mount
-    refetchInterval: false, // Desabilita refetch automático
-    retry: 1, // Apenas uma tentativa em caso de erro
+    refetchOnMount: false,
+    refetchInterval: false,
+    retry: false, // Desabilitar retry para evitar loops
   });
 
   // Função para refresh manual
@@ -184,7 +191,7 @@ export const useFlows = () => {
 
   return {
     flows,
-    isLoading: isLoading && !hasLoadedOnce, // Loading apenas na primeira vez
+    isLoading: isLoading && !hasLoadedOnce,
     error,
     hasLoadedOnce,
     isEmpty,
