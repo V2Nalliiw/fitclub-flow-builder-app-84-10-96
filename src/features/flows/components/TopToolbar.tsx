@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -81,8 +80,8 @@ export const TopToolbar = ({
     if (isMobile || isTablet) {
       return 'top-[calc(5%+3rem)]';
     }
-    // Desktop: 5px da linha inferior do cabeçalho (64px - 5px = 59px)
-    return 'top-[calc(4rem-5px)]';
+    // Desktop: 5px do cabeçalho
+    return 'top-[calc(4rem+5px)]';
   };
 
   return (
@@ -288,10 +287,10 @@ export const TopToolbar = ({
           </>
         )}
 
-        {/* Layout Desktop - Menu justo ao conteúdo com padding 10px */}
+        {/* Layout Desktop - Menu com padding 10px e posição 5px do cabeçalho */}
         {isDesktop && (
-          <div className="flex items-center justify-center">
-            <div className="flex items-center gap-3 px-[10px]">
+          <div className="flex items-center justify-center px-[10px]">
+            <div className="flex items-center gap-3">
               {/* Nome do fluxo PRIMEIRO */}
               <Input
                 value={flowName}
