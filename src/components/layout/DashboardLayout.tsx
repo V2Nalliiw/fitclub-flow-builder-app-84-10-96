@@ -78,8 +78,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       {/* Mobile Navigation - Show only on mobile */}
       {isMobile && <MobileNavigation />}
       
-      {/* Drawer Menu - Show on all devices ONLY when NOT on flows page */}
-      {!isFlowsPage && <MobileDrawer />}
+      {/* Drawer Menu - Show on all devices */}
+      <MobileDrawer />
     </div>
   );
 };
