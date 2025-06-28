@@ -130,6 +130,8 @@ export const useClinics = () => {
     }
 
     try {
+      console.log('Iniciando criação da clínica:', clinicData.name);
+      
       // 1. Primeiro, criar a clínica
       const { data: clinic, error: clinicError } = await supabase
         .from('clinics')
@@ -149,28 +151,30 @@ export const useClinics = () => {
         console.error('Erro ao criar clínica:', clinicError);
         toast({
           title: "Erro",
-          description: clinicError.message,
+          description: `Erro ao criar clínica: ${clinicError.message}`,
           variant: "destructive",
         });
         return false;
       }
 
+      console.log('Clínica criada com sucesso:', clinic.id);
+
       // 2. Se há dados do usuário responsável, criar o usuário
       if (clinicData.responsibleUser) {
         const { responsibleUser } = clinicData;
-        
-        // Salvar a sessão atual do super admin
-        const currentSession = await supabase.auth.getSession();
+        console.log('Criando usuário responsável:', responsibleUser.email);
         
         try {
-          // Criar o usuário usando signup (método público)
+          // Criar o usuário usando signup
           const { data: authData, error: authError } = await supabase.auth.signUp({
             email: responsibleUser.email,
             password: responsibleUser.password,
             options: {
+              emailRedirectTo: `${window.location.origin}/`,
               data: {
                 name: responsibleUser.name,
                 role: 'clinic',
+                clinic_id: clinic.id
               }
             }
           });
@@ -200,39 +204,40 @@ export const useClinics = () => {
             return false;
           }
 
-          // Restaurar a sessão do super admin
-          if (currentSession.data.session) {
-            await supabase.auth.setSession(currentSession.data.session);
-          }
+          console.log('Usuário criado com sucesso:', authData.user.id);
 
-          // Criar o perfil do usuário
+          // Aguardar um momento para o trigger criar o perfil básico
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          // Atualizar o perfil com os dados específicos da clínica
           const { error: profileError } = await supabase
             .from('profiles')
-            .insert([{
-              user_id: authData.user.id,
-              email: responsibleUser.email,
+            .update({
               name: responsibleUser.name,
               role: 'clinic',
               clinic_id: clinic.id,
               is_chief: responsibleUser.isChief,
-            }]);
+            })
+            .eq('user_id', authData.user.id);
 
           if (profileError) {
-            console.error('Erro ao criar perfil:', profileError);
-            // Se falhar na criação do perfil, tentar limpar o que foi criado
+            console.error('Erro ao atualizar perfil:', profileError);
+            // Se falhar na atualização do perfil, tentar limpar o que foi criado
             await supabase.from('clinics').delete().eq('id', clinic.id);
             
             toast({
               title: "Erro",
-              description: `Erro ao criar perfil: ${profileError.message}`,
+              description: `Erro ao configurar perfil: ${profileError.message}`,
               variant: "destructive",
             });
             return false;
           }
 
+          console.log('Perfil atualizado com sucesso');
+
           toast({
             title: "Clínica e usuário criados",
-            description: `A clínica "${clinicData.name}" e o usuário responsável foram criados com sucesso. O usuário pode fazer login com as credenciais fornecidas.`,
+            description: `A clínica "${clinicData.name}" e o usuário responsável foram criados com sucesso.`,
           });
         } catch (signupError) {
           console.error('Erro no processo de criação do usuário:', signupError);
