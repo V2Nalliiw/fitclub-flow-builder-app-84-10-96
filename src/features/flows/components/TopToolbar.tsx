@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -81,7 +80,7 @@ export const TopToolbar = ({
     if (isMobile || isTablet) {
       return 'top-[calc(5%+3rem)]';
     }
-    return 'top-[calc(2%+3rem)]';
+    return 'top-[calc(5%+3rem)]';
   };
 
   return (
@@ -287,11 +286,21 @@ export const TopToolbar = ({
           </>
         )}
 
-        {/* Layout Desktop - Nós primeiro, depois nome do fluxo, tudo centralizado */}
+        {/* Layout Desktop - Nome primeiro, depois nós, padding ajustado */}
         {isDesktop && (
-          <div className="flex items-center justify-center gap-3">
-            {/* Botões de Nós PRIMEIRO */}
-            <div className="flex items-center gap-1">
+          <div className="flex items-center justify-center gap-3 px-2.5">
+            {/* Nome do fluxo PRIMEIRO */}
+            <Input
+              value={flowName}
+              onChange={(e) => onFlowNameChange(e.target.value)}
+              placeholder="Nome do fluxo..."
+              className="max-w-xs dark:bg-transparent dark:border-gray-800 dark:text-gray-100 h-7 text-sm"
+            />
+
+            <Separator orientation="vertical" className="h-4 mx-1 dark:bg-gray-800" />
+
+            {/* Botões de Nós DEPOIS do nome - botões maiores */}
+            <div className="flex items-center gap-1.5">
               {nodeTypes.map((nodeType) => {
                 const IconComponent = nodeType.icon;
                 return (
@@ -300,24 +309,14 @@ export const TopToolbar = ({
                     variant="outline"
                     size="sm"
                     onClick={() => handleAddNode(nodeType.type)}
-                    className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 border-gray-200 hover:bg-gray-50 h-6 w-6 p-0"
+                    className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 border-gray-200 hover:bg-gray-50 h-8 w-8 p-0"
                     title={nodeType.label}
                   >
-                    <IconComponent className={`h-3 w-3 ${nodeType.color}`} />
+                    <IconComponent className={`h-4 w-4 ${nodeType.color}`} />
                   </Button>
                 );
               })}
             </div>
-
-            <Separator orientation="vertical" className="h-4 mx-1 dark:bg-gray-800" />
-
-            {/* Nome do fluxo DEPOIS dos nós */}
-            <Input
-              value={flowName}
-              onChange={(e) => onFlowNameChange(e.target.value)}
-              placeholder="Nome do fluxo..."
-              className="max-w-xs dark:bg-transparent dark:border-gray-800 dark:text-gray-100 h-7 text-sm"
-            />
 
             {/* Badge do nó selecionado */}
             {selectedNode && (
