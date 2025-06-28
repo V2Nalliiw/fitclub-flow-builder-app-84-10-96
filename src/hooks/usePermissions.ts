@@ -25,6 +25,11 @@ export const usePermissions = () => {
           canConfigureWhatsApp: true,
           canViewAppSettings: true,
           canViewDashboard: true,
+          canCreateFlows: true,
+          canEditFlows: true,
+          canDeleteFlows: true,
+          canAssignFlows: true,
+          canViewAllFlows: true,
         };
 
       case 'clinic':
@@ -32,14 +37,18 @@ export const usePermissions = () => {
           ...basePermissions,
           // Clínica - funcionalidades específicas
           canManageFlows: true,
+          canCreateFlows: true,
+          canEditFlows: true,
+          canDeleteFlows: true,
+          canAssignFlows: true,
+          canViewOwnFlows: true,
           canManagePatients: true,
-          canViewAnalytics: false, // Removido conforme solicitado
           canViewClinicSettings: true,
           canManageTeam: true,
           canViewForms: true,
           canCreateForms: true,
           canViewDashboard: true,
-          canCreatePatientAccounts: true, // Nova permissão para criar contas de pacientes
+          canCreatePatientAccounts: true,
         };
 
       case 'patient':
@@ -47,9 +56,10 @@ export const usePermissions = () => {
           ...basePermissions,
           // Paciente - acesso limitado
           canViewOwnFlows: true,
+          canExecuteFlows: true,
           canRespondForms: true,
           canViewDashboard: true,
-          canViewTipsAndForms: true, // Nova permissão específica
+          canViewTipsAndForms: true,
         };
 
       default:

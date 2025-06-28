@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -82,7 +83,7 @@ export const DesktopHeaderNavigation = () => {
     return [
       ...baseItems,
       {
-        title: "Fluxos Salvos",
+        title: "Meus Fluxos",
         url: "/my-flows",
         icon: GitBranch,
       },
@@ -108,8 +109,6 @@ export const DesktopHeaderNavigation = () => {
       },
     ];
   };
-
-  const navigationItems = getNavigationItems();
 
   const getUserMenuItems = () => {
     if (!user) return [];
@@ -155,6 +154,7 @@ export const DesktopHeaderNavigation = () => {
     return baseMenuItems;
   };
 
+  const navigationItems = getNavigationItems();
   const userMenuItems = getUserMenuItems();
 
   return (

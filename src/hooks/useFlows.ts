@@ -26,10 +26,28 @@ export const useFlows = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      const { data, error } = await supabase
-        .from('flows')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let query = supabase.from('flows').select('*');
+
+      // Aplicar filtros baseados no papel do usuário
+      if (user.role === 'clinic') {
+        query = query.eq('clinic_id', user.clinic_id);
+      } else if (user.role === 'patient') {
+        // Para pacientes, buscar apenas fluxos atribuídos
+        const { data: assignments } = await supabase
+          .from('flow_assignments')
+          .select('flow_id')
+          .eq('patient_id', user.id);
+        
+        if (assignments && assignments.length > 0) {
+          const flowIds = assignments.map(a => a.flow_id);
+          query = query.in('id', flowIds);
+        } else {
+          return [];
+        }
+      }
+      // Super admin vê todos os fluxos (sem filtro adicional)
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
         console.error('Erro ao carregar fluxos:', error);
@@ -125,12 +143,24 @@ export const useFlows = () => {
     },
   });
 
+  const saveFlowFromBuilder = async (flowData: { name: string; description?: string; nodes: any[]; edges: any[] }) => {
+    if (!user) throw new Error('User not authenticated');
+    
+    return createFlowMutation.mutateAsync(flowData);
+  };
+
+  const updateFlowFromBuilder = async (id: string, flowData: { name: string; description?: string; nodes: any[]; edges: any[] }) => {
+    return updateFlowMutation.mutateAsync({ id, ...flowData });
+  };
+
   return {
     flows,
     isLoading,
     createFlow: createFlowMutation.mutate,
     updateFlow: updateFlowMutation.mutate,
     deleteFlow: deleteFlowMutation.mutate,
+    saveFlowFromBuilder,
+    updateFlowFromBuilder,
     isCreating: createFlowMutation.isPending,
     isUpdating: updateFlowMutation.isPending,
     isDeleting: deleteFlowMutation.isPending,
