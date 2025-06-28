@@ -80,7 +80,7 @@ export const TopToolbar = ({
     <>
       <div className="absolute top-4 left-4 right-4 z-40 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-3">
         <div className="flex items-center justify-between gap-4">
-          {/* Nome do Fluxo */}
+          {/* Nome do Fluxo e Controles de Nós */}
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <Input
               value={flowName}
@@ -88,6 +88,62 @@ export const TopToolbar = ({
               placeholder="Nome do fluxo..."
               className="max-w-xs dark:bg-gray-900 dark:border-gray-700"
             />
+            
+            {/* Botões de Nós - Desktop */}
+            {!isMobile && (
+              <div className="flex items-center gap-2">
+                {nodeTypes.map((nodeType) => {
+                  const IconComponent = nodeType.icon;
+                  return (
+                    <Button
+                      key={nodeType.type}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddNode(nodeType.type)}
+                      className={`${nodeType.color} border-none p-2`}
+                      title={nodeType.label}
+                    >
+                      <IconComponent className="h-4 w-4" />
+                    </Button>
+                  );
+                })}
+
+                <Separator orientation="vertical" className="h-6 mx-2" />
+
+                {/* Ferramentas */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onAutoArrangeNodes}
+                  title="Organizar nós automaticamente"
+                  className="dark:border-gray-700 dark:hover:bg-gray-800 p-2"
+                >
+                  <AlignJustify className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onClearAllNodes}
+                  title="Limpar todos os nós"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 p-2"
+                >
+                  <Eraser className="h-4 w-4" />
+                </Button>
+
+                {selectedNode && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDeleteNode(selectedNode.id)}
+                    title="Deletar nó selecionado"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 p-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            )}
             
             {selectedNode && (
               <Badge variant="secondary" className="truncate dark:bg-gray-800 dark:text-gray-200">
@@ -140,66 +196,6 @@ export const TopToolbar = ({
             </Button>
           </div>
         </div>
-
-        {/* Barra de Nós - Desktop/Tablet */}
-        {!isMobile && (
-          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-muted-foreground mr-2">Nós:</span>
-              
-              {nodeTypes.map((nodeType) => {
-                const IconComponent = nodeType.icon;
-                return (
-                  <Button
-                    key={nodeType.type}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleAddNode(nodeType.type)}
-                    className={`${nodeType.color} border-none p-2`}
-                    title={nodeType.label}
-                  >
-                    <IconComponent className="h-4 w-4" />
-                  </Button>
-                );
-              })}
-
-              <Separator orientation="vertical" className="h-6 mx-2" />
-
-              {/* Ferramentas */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onAutoArrangeNodes}
-                title="Organizar nós automaticamente"
-                className="dark:border-gray-700 dark:hover:bg-gray-800 p-2"
-              >
-                <AlignJustify className="h-4 w-4" />
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onClearAllNodes}
-                title="Limpar todos os nós"
-                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 p-2"
-              >
-                <Eraser className="h-4 w-4" />
-              </Button>
-
-              {selectedNode && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onDeleteNode(selectedNode.id)}
-                  title="Deletar nó selecionado"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 p-2"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Menu Mobile - Botão flutuante posicionado */}
