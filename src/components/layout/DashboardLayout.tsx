@@ -10,6 +10,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NotificationCenter } from '@/features/notifications/components/NotificationCenter';
+import { useLogoManager } from '@/hooks/useLogoManager';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const location = useLocation();
   const { isDesktop } = useBreakpoints();
+  const { currentLogo } = useLogoManager();
   
   const isFlowsPage = location.pathname === '/flows';
 
@@ -37,9 +39,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <>
             <div>
               <img 
-                src="/lovable-uploads/f205f390-c668-44cc-9a73-ee3d49cb0a6c.png" 
-                alt="FitClub" 
-                className="h-8 w-8"
+                src={currentLogo}
+                alt="Logo" 
+                className="h-8 w-8 object-contain"
               />
             </div>
             

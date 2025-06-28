@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,9 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { FileUpload } from '@/components/ui/file-upload';
+import { AvatarUpload } from '@/components/ui/avatar-upload';
 import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Bell, Lock, User, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -17,7 +15,6 @@ export const Profile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [avatar, setAvatar] = useState<File[]>([]);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -123,18 +120,16 @@ export const Profile = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={user?.avatar_url} />
-                <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
-              </Avatar>
+              <AvatarUpload
+                currentAvatar={user?.avatar_url}
+                userName={user?.name}
+                size="lg"
+              />
               <div className="flex-1">
                 <Label>Foto do Perfil</Label>
-                <FileUpload
-                  onFilesChange={setAvatar}
-                  maxFiles={1}
-                  accept={{ 'image/*': ['.png', '.jpg', '.jpeg'] }}
-                  className="mt-2"
-                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Clique na imagem para alterar sua foto de perfil
+                </p>
               </div>
             </div>
 

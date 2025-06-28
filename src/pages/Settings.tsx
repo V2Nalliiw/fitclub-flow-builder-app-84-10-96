@@ -6,16 +6,19 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { FileUpload } from '@/components/ui/file-upload';
-import { Building2, Save, Bell, Key, Palette } from 'lucide-react';
+import { LogoUpload } from '@/components/ui/logo-upload';
+import { Building2, Save, Bell, Key, Palette, Crown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useFileUpload } from '@/hooks/useFileUpload';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAppSettings } from '@/hooks/useAppSettings';
+import { useLogoUpload } from '@/hooks/useLogoUpload';
 
 export const Settings = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
+  const { settings: appSettings, updateSettings: updateAppSettings } = useAppSettings();
+  const { uploadAppLogo, uploadClinicLogo, uploading } = useLogoUpload();
   const [loading, setLoading] = useState(false);
-  const [logo, setLogo] = useState<File[]>([]);
-  const { uploadFile } = useFileUpload('clinic-logos');
   
   const [clinicData, setClinicData] = useState({
     name: 'Clínica Example',
@@ -61,17 +64,36 @@ export const Settings = () => {
     }));
   };
 
+  const handleAppLogoUpload = async (file: File) => {
+    const logoUrl = await uploadAppLogo(file);
+    if (logoUrl) {
+      await updateAppSettings({ logo_url: logoUrl });
+    }
+  };
+
+  const handleClinicLogoUpload = async (file: File) => {
+    if (!user?.clinic_id) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível identificar a clínica",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const logoUrl = await uploadClinicLogo(file, user.clinic_id);
+    if (logoUrl) {
+      // Aqui seria atualizada a logo da clínica no banco
+      toast({
+        title: "Logo atualizado",
+        description: "Logo da clínica foi atualizado com sucesso",
+      });
+    }
+  };
+
   const handleSaveSettings = async () => {
     setLoading(true);
     try {
-      // Upload logo if selected
-      if (logo.length > 0) {
-        const uploadedLogo = await uploadFile(logo[0]);
-        if (uploadedLogo) {
-          console.log('Logo uploaded:', uploadedLogo.url);
-        }
-      }
-
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast({
         title: "Configurações salvas",
@@ -92,16 +114,53 @@ export const Settings = () => {
     <div className="container mx-auto py-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Configurações</h1>
-        <p className="text-muted-foreground">Gerencie as configurações da clínica</p>
+        <p className="text-muted-foreground">
+          {user?.role === 'super_admin' ? 'Gerencie as configurações do app' : 'Gerencie as configurações da clínica'}
+        </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6">
+        {/* Configurações do App - apenas para super admin */}
+        {user?.role === 'super_admin' && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Crown className="h-5 w-5" />
+                <CardTitle>Configurações do App</CardTitle>
+              </div>
+              <CardDescription>
+                Configure o logo e nome do aplicativo
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <LogoUpload
+                onUpload={handleAppLogoUpload}
+                currentLogo={appSettings?.logo_url}
+                uploading={uploading}
+                label="Logo do App"
+              />
+              
+              <div>
+                <Label htmlFor="app-name">Nome do App</Label>
+                <Input
+                  id="app-name"
+                  value={appSettings?.app_name || ''}
+                  onChange={(e) => updateAppSettings({ app_name: e.target.value })}
+                  placeholder="Nome do aplicativo"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Informações da Clínica */}
         <Card className="md:col-span-2">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              <CardTitle>Informações da Clínica</CardTitle>
+              <CardTitle>
+                {user?.role === 'super_admin' ? 'Configurações Padrão' : 'Informações da Clínica'}
+              </CardTitle>
             </div>
             <CardDescription>
               Configure os dados básicos da clínica
@@ -109,15 +168,16 @@ export const Settings = () => {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="md:col-span-2">
-                <Label>Logo da Clínica</Label>
-                <FileUpload
-                  onFilesChange={setLogo}
-                  maxFiles={1}
-                  accept={{ 'image/*': ['.png', '.jpg', '.jpeg', '.svg'] }}
-                  className="mt-2"
-                />
-              </div>
+              {user?.role !== 'super_admin' && (
+                <div className="md:col-span-2">
+                  <LogoUpload
+                    onUpload={handleClinicLogoUpload}
+                    currentLogo={undefined} // Logo da clínica seria carregado aqui
+                    uploading={uploading}
+                    label="Logo da Clínica"
+                  />
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="clinic-name">Nome da Clínica</Label>
@@ -179,123 +239,125 @@ export const Settings = () => {
           </CardContent>
         </Card>
 
-        {/* Notificações */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              <CardTitle>Notificações</CardTitle>
-            </div>
-            <CardDescription>
-              Configure quando receber notificações
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Novo Paciente</Label>
-                <p className="text-sm text-muted-foreground">Quando um novo paciente se cadastrar</p>
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Notificações */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                <CardTitle>Notificações</CardTitle>
               </div>
-              <Switch
-                checked={notifications.newPatient}
-                onCheckedChange={(value) => handleNotificationChange('newPatient', value)}
-              />
-            </div>
-
-            <Separator />
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Lembrete de Consulta</Label>
-                <p className="text-sm text-muted-foreground">Lembretes de consultas agendadas</p>
+              <CardDescription>
+                Configure quando receber notificações
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Novo Paciente</Label>
+                  <p className="text-sm text-muted-foreground">Quando um novo paciente se cadastrar</p>
+                </div>
+                <Switch
+                  checked={notifications.newPatient}
+                  onCheckedChange={(value) => handleNotificationChange('newPatient', value)}
+                />
               </div>
-              <Switch
-                checked={notifications.appointmentReminder}
-                onCheckedChange={(value) => handleNotificationChange('appointmentReminder', value)}
-              />
-            </div>
 
-            <Separator />
+              <Separator />
 
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Fluxo Concluído</Label>
-                <p className="text-sm text-muted-foreground">Quando um paciente completar um fluxo</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Lembrete de Consulta</Label>
+                  <p className="text-sm text-muted-foreground">Lembretes de consultas agendadas</p>
+                </div>
+                <Switch
+                  checked={notifications.appointmentReminder}
+                  onCheckedChange={(value) => handleNotificationChange('appointmentReminder', value)}
+                />
               </div>
-              <Switch
-                checked={notifications.flowCompletion}
-                onCheckedChange={(value) => handleNotificationChange('flowCompletion', value)}
-              />
-            </div>
 
-            <Separator />
+              <Separator />
 
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Atualizações do Sistema</Label>
-                <p className="text-sm text-muted-foreground">Notificações sobre atualizações</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Fluxo Concluído</Label>
+                  <p className="text-sm text-muted-foreground">Quando um paciente completar um fluxo</p>
+                </div>
+                <Switch
+                  checked={notifications.flowCompletion}
+                  onCheckedChange={(value) => handleNotificationChange('flowCompletion', value)}
+                />
               </div>
-              <Switch
-                checked={notifications.systemUpdates}
-                onCheckedChange={(value) => handleNotificationChange('systemUpdates', value)}
-              />
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Integrações */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Key className="h-5 w-5" />
-              <CardTitle>Integrações</CardTitle>
-            </div>
-            <CardDescription>
-              Configure integrações com serviços externos
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="whatsapp">WhatsApp Business API</Label>
-              <Input
-                id="whatsapp"
-                value={integrations.whatsapp}
-                onChange={(e) => handleIntegrationChange('whatsapp', e.target.value)}
-                placeholder="Token da API"
-              />
-            </div>
+              <Separator />
 
-            <div>
-              <Label htmlFor="telegram">Telegram Bot</Label>
-              <Input
-                id="telegram"
-                value={integrations.telegram}
-                onChange={(e) => handleIntegrationChange('telegram', e.target.value)}
-                placeholder="Token do Bot"
-              />
-            </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Atualizações do Sistema</Label>
+                  <p className="text-sm text-muted-foreground">Notificações sobre atualizações</p>
+                </div>
+                <Switch
+                  checked={notifications.systemUpdates}
+                  onCheckedChange={(value) => handleNotificationChange('systemUpdates', value)}
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-            <div>
-              <Label htmlFor="email-smtp">Servidor SMTP</Label>
-              <Input
-                id="email-smtp"
-                value={integrations.email_smtp}
-                onChange={(e) => handleIntegrationChange('email_smtp', e.target.value)}
-                placeholder="smtp.servidor.com"
-              />
-            </div>
+          {/* Integrações */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                <CardTitle>Integrações</CardTitle>
+              </div>
+              <CardDescription>
+                Configure integrações com serviços externos
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="whatsapp">WhatsApp Business API</Label>
+                <Input
+                  id="whatsapp"
+                  value={integrations.whatsapp}
+                  onChange={(e) => handleIntegrationChange('whatsapp', e.target.value)}
+                  placeholder="Token da API"
+                />
+              </div>
 
-            <div>
-              <Label htmlFor="sms-provider">Provedor SMS</Label>
-              <Input
-                id="sms-provider"
-                value={integrations.sms_provider}
-                onChange={(e) => handleIntegrationChange('sms_provider', e.target.value)}
-                placeholder="Chave da API"
-              />
-            </div>
-          </CardContent>
-        </Card>
+              <div>
+                <Label htmlFor="telegram">Telegram Bot</Label>
+                <Input
+                  id="telegram"
+                  value={integrations.telegram}
+                  onChange={(e) => handleIntegrationChange('telegram', e.target.value)}
+                  placeholder="Token do Bot"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="email-smtp">Servidor SMTP</Label>
+                <Input
+                  id="email-smtp"
+                  value={integrations.email_smtp}
+                  onChange={(e) => handleIntegrationChange('email_smtp', e.target.value)}
+                  placeholder="smtp.servidor.com"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="sms-provider">Provedor SMS</Label>
+                <Input
+                  id="sms-provider"
+                  value={integrations.sms_provider}
+                  onChange={(e) => handleIntegrationChange('sms_provider', e.target.value)}
+                  placeholder="Chave da API"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <div className="flex justify-end">

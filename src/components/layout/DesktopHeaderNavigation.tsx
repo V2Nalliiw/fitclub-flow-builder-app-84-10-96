@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,12 +28,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { NotificationCenter } from '@/features/notifications/components/NotificationCenter';
+import { useLogoManager } from '@/hooks/useLogoManager';
 
 export const DesktopHeaderNavigation = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const { currentLogo } = useLogoManager();
 
   const handleLogout = async () => {
     await logout();
@@ -162,9 +163,9 @@ export const DesktopHeaderNavigation = () => {
       {/* Logo à esquerda */}
       <div className="flex items-center">
         <img 
-          src="/lovable-uploads/f205f390-c668-44cc-9a73-ee3d49cb0a6c.png" 
-          alt="FitClub" 
-          className="h-8 w-8"
+          src={currentLogo}
+          alt="Logo" 
+          className="h-8 w-8 object-contain"
         />
       </div>
 
