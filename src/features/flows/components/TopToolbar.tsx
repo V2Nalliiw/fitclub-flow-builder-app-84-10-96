@@ -73,16 +73,18 @@ export const TopToolbar = ({
     onAddNode(type);
   };
 
-  // Definir posição baseada no dispositivo - todos ficam na mesma posição do mobile
+  // Definir posição baseada no dispositivo
   const getTopPosition = () => {
-    if (isMobile || isTablet) {
+    if (isMobile) {
       return 'top-[calc(5%+3rem)]';
     }
-    // Desktop: mesma proporção do mobile
-    return 'top-[calc(5%+3rem)]';
+    if (isTablet) {
+      return 'top-[calc(5%+3rem)]';
+    }
+    // Desktop: bem próximo do cabeçalho
+    return 'top-[calc(4rem+0.5rem)]';
   };
 
-  // Layout unificado - mesmo para todos os dispositivos (baseado no mobile)
   return (
     <>
       <div className={`absolute ${getTopPosition()} left-4 right-4 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-2`}>
@@ -168,7 +170,9 @@ export const TopToolbar = ({
         </div>
 
         {/* Segunda linha - Todos os botões de nós e ferramentas */}
-        <div className="flex items-center justify-center gap-1">
+        <div className={`flex items-center gap-1 ${
+          isMobile ? 'justify-center' : 'justify-start'
+        }`}>
           {/* Botões de Nós */}
           {nodeTypes.map((nodeType) => {
             const IconComponent = nodeType.icon;
