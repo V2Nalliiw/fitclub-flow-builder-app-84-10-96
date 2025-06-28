@@ -196,27 +196,90 @@ export const TopToolbar = ({
     );
   }
 
-  // Tablet: Layout em uma linha com botões menores
+  // Tablet: Layout em uma linha SEM os botões de nós
   if (isTablet) {
     return (
-      <div className={`absolute ${getTopPosition()} left-4 right-4 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-2`}>
-        <div className="flex items-center justify-between gap-2">
-          {/* Campo Nome do Fluxo */}
-          <Input
-            value={flowName}
-            onChange={(e) => onFlowNameChange(e.target.value)}
-            placeholder="Nome do fluxo..."
-            className="dark:bg-transparent dark:border-gray-800 dark:text-gray-100 text-sm max-w-[140px] h-7"
-          />
-          
-          {selectedNode && (
-            <Badge variant="secondary" className="truncate dark:bg-gray-900/50 dark:text-gray-200 dark:border-gray-800 text-xs py-0.5 max-w-[80px]">
-              {selectedNode.data?.label || 'Nó'}
-            </Badge>
-          )}
+      <>
+        <div className={`absolute ${getTopPosition()} left-4 right-4 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-2`}>
+          <div className="flex items-center justify-between gap-2">
+            {/* Campo Nome do Fluxo */}
+            <Input
+              value={flowName}
+              onChange={(e) => onFlowNameChange(e.target.value)}
+              placeholder="Nome do fluxo..."
+              className="dark:bg-transparent dark:border-gray-800 dark:text-gray-100 text-sm max-w-[140px] h-7"
+            />
+            
+            {selectedNode && (
+              <Badge variant="secondary" className="truncate dark:bg-gray-900/50 dark:text-gray-200 dark:border-gray-800 text-xs py-0.5 max-w-[80px]">
+                {selectedNode.data?.label || 'Nó'}
+              </Badge>
+            )}
 
-          {/* Botões de Nós */}
-          <div className="flex items-center gap-1">
+            {/* Controles Principais */}
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onPreviewFlow}
+                title="Visualizar fluxo"
+                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 px-2 h-7"
+              >
+                <Play className="h-3 w-3" />
+              </Button>
+
+              <Button
+                onClick={onSaveFlow}
+                size="sm"
+                disabled={!canSave || isSaving}
+                className="bg-[#5D8701] hover:bg-[#4a6e01] text-white dark:bg-[#5D8701] dark:hover:bg-[#4a6e01] px-2 h-7"
+                title="Salvar fluxo"
+              >
+                {isSaving ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Save className="h-3 w-3" />
+                )}
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onAutoArrangeNodes}
+                title="Organizar nós automaticamente"
+                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 p-0 h-6 w-6"
+              >
+                <AlignJustify className="h-3 w-3" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onClearAllNodes}
+                title="Limpar todos os nós"
+                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-0 h-6 w-6"
+              >
+                <Eraser className="h-3 w-3" />
+              </Button>
+
+              {selectedNode && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onDeleteNode(selectedNode.id)}
+                  title="Deletar nó selecionado"
+                  className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-0 h-6 w-6"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Menu separado de nós na lateral direita - TABLET */}
+        <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-2">
+          <div className="flex flex-col gap-1">
             {nodeTypes.map((nodeType) => {
               const IconComponent = nodeType.icon;
               return (
@@ -225,75 +288,16 @@ export const TopToolbar = ({
                   variant="outline"
                   size="sm"
                   onClick={() => handleAddNode(nodeType.type)}
-                  className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 border-gray-200 hover:bg-gray-50 p-0 h-6 w-6"
+                  className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 border-gray-200 hover:bg-gray-50 p-0 h-8 w-8"
                   title={nodeType.label}
                 >
-                  <IconComponent className={`h-3 w-3 ${nodeType.color}`} />
+                  <IconComponent className={`h-4 w-4 ${nodeType.color}`} />
                 </Button>
               );
             })}
           </div>
-
-          {/* Controles Principais */}
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onPreviewFlow}
-              title="Visualizar fluxo"
-              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 px-2 h-7"
-            >
-              <Play className="h-3 w-3" />
-            </Button>
-
-            <Button
-              onClick={onSaveFlow}
-              size="sm"
-              disabled={!canSave || isSaving}
-              className="bg-[#5D8701] hover:bg-[#4a6e01] text-white dark:bg-[#5D8701] dark:hover:bg-[#4a6e01] px-2 h-7"
-              title="Salvar fluxo"
-            >
-              {isSaving ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Save className="h-3 w-3" />
-              )}
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onAutoArrangeNodes}
-              title="Organizar nós automaticamente"
-              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 p-0 h-6 w-6"
-            >
-              <AlignJustify className="h-3 w-3" />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onClearAllNodes}
-              title="Limpar todos os nós"
-              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-0 h-6 w-6"
-            >
-              <Eraser className="h-3 w-3" />
-            </Button>
-
-            {selectedNode && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onDeleteNode(selectedNode.id)}
-                title="Deletar nó selecionado"
-                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-0 h-6 w-6"
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
         </div>
-      </div>
+      </>
     );
   }
 
