@@ -21,10 +21,15 @@ export const useFlows = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: flows = [], isLoading } = useQuery({
+  const { data: flows = [], isLoading, error } = useQuery({
     queryKey: ['flows', user?.id],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user) {
+        console.log('Nenhum usuário autenticado');
+        return [];
+      }
+
+      console.log('Buscando fluxos para usuário:', user.role, user.id);
 
       let query = supabase.from('flows').select('*');
 
@@ -42,6 +47,7 @@ export const useFlows = () => {
           const flowIds = assignments.map(a => a.flow_id);
           query = query.in('id', flowIds);
         } else {
+          console.log('Nenhum fluxo atribuído ao paciente');
           return [];
         }
       }
@@ -54,9 +60,12 @@ export const useFlows = () => {
         throw error;
       }
       
+      console.log('Fluxos carregados:', data?.length || 0);
       return data as Flow[];
     },
     enabled: !!user,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    refetchOnWindowFocus: false,
   });
 
   const createFlowMutation = useMutation({
@@ -155,7 +164,8 @@ export const useFlows = () => {
 
   return {
     flows,
-    isLoading,
+    isLoading: user ? isLoading : false, // Se não há usuário, não está carregando
+    error,
     createFlow: createFlowMutation.mutate,
     updateFlow: updateFlowMutation.mutate,
     deleteFlow: deleteFlowMutation.mutate,

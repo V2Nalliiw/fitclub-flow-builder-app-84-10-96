@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,8 @@ export const FlowsList = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [assignmentFlow, setAssignmentFlow] = useState(null);
 
-  if (isLoading) {
+  // Mostrar loading apenas se há usuário e está realmente carregando
+  if (isLoading && user) {
     return (
       <div className="flex items-center justify-center p-8">
         <LoadingSpinner />
@@ -29,6 +29,7 @@ export const FlowsList = () => {
     );
   }
 
+  // Interface para pacientes
   if (user?.role === 'patient') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 p-6">
@@ -144,7 +145,7 @@ export const FlowsList = () => {
     );
   }
 
-  // Interface para clínicas - Página de Meus Fluxos
+  // Interface para clínicas - Página de Meus Fluxos (sempre mostrar, mesmo sem fluxos)
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
