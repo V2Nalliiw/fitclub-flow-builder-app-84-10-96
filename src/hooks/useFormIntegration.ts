@@ -25,33 +25,36 @@ export const useFormIntegration = () => {
     setLoading(true);
     
     try {
-      // Salvar resposta do formulário
-      const { error: responseError } = await supabase
-        .from('form_responses')
-        .insert({
-          execution_id: executionId,
-          node_id: nodeId,
-          patient_id: (await supabase.auth.getUser()).data.user?.id,
-          response: formData,
-        });
+      // Store response in flow_executions metadata instead of separate table
+      const { data: execution, error: fetchError } = await supabase
+        .from('flow_executions')
+        .select('current_step')
+        .eq('id', executionId)
+        .single();
 
-      if (responseError) {
-        throw responseError;
+      if (fetchError || !execution) {
+        throw new Error('Execução não encontrada');
       }
 
-      // Marcar step como concluído
-      const { error: stepError } = await supabase
-        .from('flow_steps')
-        .update({
-          status: 'concluido',
-          completed_at: new Date().toISOString(),
-          response: formData,
-        })
-        .eq('execution_id', executionId)
-        .eq('node_id', nodeId);
+      const currentStep = execution.current_step as any;
+      const updatedStep = {
+        ...currentStep,
+        response: formData,
+        completed: true,
+        completed_at: new Date().toISOString()
+      };
 
-      if (stepError) {
-        throw stepError;
+      // Update the execution with the form response
+      const { error: updateError } = await supabase
+        .from('flow_executions')
+        .update({
+          current_step: updatedStep,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', executionId);
+
+      if (updateError) {
+        throw updateError;
       }
 
       toast({

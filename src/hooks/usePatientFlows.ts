@@ -54,33 +54,30 @@ export const usePatientFlows = () => {
 
       setExecutions(transformedExecutions);
 
-      if (transformedExecutions.length > 0) {
-        const executionIds = transformedExecutions.map(exec => exec.id);
-        const { data: flowSteps, error: stepsError } = await supabase
-          .from('flow_steps')
-          .select('*')
-          .in('execution_id', executionIds)
-          .order('created_at', { ascending: true });
-
-        if (stepsError) {
-          console.error('Erro ao carregar etapas:', stepsError);
-        } else {
-          const transformedSteps: PatientFlowStep[] = (flowSteps || []).map(step => ({
-            id: step.id,
-            execution_id: step.execution_id,
-            node_id: step.node_id,
-            node_type: step.node_type,
-            title: step.title,
-            description: step.description || undefined,
-            status: step.status as 'pendente' | 'disponivel' | 'concluido' | 'aguardando',
-            completed_at: step.completed_at || undefined,
-            available_at: step.available_at || undefined,
-            form_url: step.form_url || undefined,
-            response: step.response || undefined,
-          }));
-          setSteps(transformedSteps);
+      // Extract steps from execution metadata instead of separate table
+      const transformedSteps: PatientFlowStep[] = [];
+      transformedExecutions.forEach(execution => {
+        const currentStepData = execution.current_step as any;
+        if (currentStepData?.steps) {
+          currentStepData.steps.forEach((step: any) => {
+            transformedSteps.push({
+              id: `${execution.id}-${step.nodeId}`,
+              execution_id: execution.id,
+              node_id: step.nodeId,
+              node_type: step.nodeType,
+              title: step.title,
+              description: step.description || undefined,
+              status: step.completed ? 'concluido' : 'disponivel',
+              completed_at: step.completed_at || undefined,
+              available_at: step.availableAt || undefined,
+              form_url: step.formId ? `/forms/${step.formId}?execution=${execution.id}` : undefined,
+              response: step.response || undefined,
+            });
+          });
         }
-      }
+      });
+      
+      setSteps(transformedSteps);
 
     } catch (error) {
       console.error('Erro ao carregar fluxos:', error);
@@ -127,19 +124,23 @@ export const usePatientFlows = () => {
         throw updateError;
       }
 
+      // Store response in execution metadata if provided
       if (response && stepId) {
-        const { error: responseError } = await supabase
-          .from('form_responses')
-          .insert({
-            execution_id: executionId,
-            node_id: stepId,
-            patient_id: user.id,
-            response: response,
-          });
+        const currentStepData = execution.current_step as any;
+        const updatedStep = {
+          ...currentStepData,
+          response: response,
+          completed: true,
+          completed_at: new Date().toISOString()
+        };
 
-        if (responseError) {
-          console.error('Erro ao salvar resposta:', responseError);
-        }
+        await supabase
+          .from('flow_executions')
+          .update({
+            current_step: updatedStep,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', executionId);
       }
 
       await loadPatientFlows();

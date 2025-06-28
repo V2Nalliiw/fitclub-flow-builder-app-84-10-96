@@ -5,12 +5,13 @@ import { useToast } from '@/hooks/use-toast';
 import { FlowNode, FlowEdge } from '@/types/flow';
 
 interface FlowStep {
+  [key: string]: any; // Make it JSON-compatible
   nodeId: string;
   nodeType: string;
   title: string;
   description?: string;
   order: number;
-  availableAt: Date;
+  availableAt: string; // Changed from Date to string for JSON compatibility
   formId?: string;
   delayAmount?: number;
   delayType?: 'minutos' | 'horas' | 'dias';
@@ -65,8 +66,8 @@ export const useFlowProcessor = () => {
             title: steps[0].title,
             description: steps[0].description,
             completed: false,
-            steps: steps, // Store all steps in metadata
-          },
+            steps: steps, // Now JSON-compatible
+          } as any,
         })
         .select()
         .single();
@@ -121,7 +122,7 @@ export const useFlowProcessor = () => {
           title: currentNode.data.titulo || currentNode.data.label || `${currentNode.type} ${order}`,
           description: currentNode.data.descricao,
           order,
-          availableAt: new Date(currentDate),
+          availableAt: currentDate.toISOString(), // Convert to string
           formId: currentNode.data.formId,
         });
         order++;
