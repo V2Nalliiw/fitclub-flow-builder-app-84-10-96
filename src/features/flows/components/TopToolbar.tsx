@@ -78,7 +78,7 @@ export const TopToolbar = ({
 
   return (
     <>
-      <div className="absolute top-4 left-4 right-4 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3">
+      <div className="absolute top-4 left-4 right-4 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg p-3">
         <div className="flex items-center justify-between gap-4">
           {/* Nome do Fluxo e Controles de Nós */}
           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -86,7 +86,7 @@ export const TopToolbar = ({
               value={flowName}
               onChange={(e) => onFlowNameChange(e.target.value)}
               placeholder="Nome do fluxo..."
-              className="max-w-xs dark:bg-transparent dark:border-gray-600 dark:text-gray-100"
+              className="max-w-xs dark:bg-transparent dark:border-gray-800 dark:text-gray-100"
             />
             
             {/* Botões de Nós - Desktop */}
@@ -100,7 +100,7 @@ export const TopToolbar = ({
                       variant="outline"
                       size="sm"
                       onClick={() => handleAddNode(nodeType.type)}
-                      className={`dark:bg-transparent dark:border-gray-600 dark:hover:bg-gray-800/50 border-gray-200 hover:bg-gray-50 p-2`}
+                      className={`dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 border-gray-200 hover:bg-gray-50 p-2`}
                       title={nodeType.label}
                     >
                       <IconComponent className={`h-4 w-4 ${nodeType.color}`} />
@@ -108,7 +108,7 @@ export const TopToolbar = ({
                   );
                 })}
 
-                <Separator orientation="vertical" className="h-6 mx-2 dark:bg-gray-600" />
+                <Separator orientation="vertical" className="h-6 mx-2 dark:bg-gray-800" />
 
                 {/* Ferramentas */}
                 <Button
@@ -116,7 +116,7 @@ export const TopToolbar = ({
                   size="sm"
                   onClick={onAutoArrangeNodes}
                   title="Organizar nós automaticamente"
-                  className="dark:bg-transparent dark:border-gray-600 dark:hover:bg-gray-800/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 p-2"
+                  className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 p-2"
                 >
                   <AlignJustify className="h-4 w-4" />
                 </Button>
@@ -126,7 +126,7 @@ export const TopToolbar = ({
                   size="sm"
                   onClick={onClearAllNodes}
                   title="Limpar todos os nós"
-                  className="dark:bg-transparent dark:border-gray-600 dark:hover:bg-gray-800/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-2"
+                  className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-2"
                 >
                   <Eraser className="h-4 w-4" />
                 </Button>
@@ -137,7 +137,7 @@ export const TopToolbar = ({
                     size="sm"
                     onClick={() => onDeleteNode(selectedNode.id)}
                     title="Deletar nó selecionado"
-                    className="dark:bg-transparent dark:border-gray-600 dark:hover:bg-gray-800/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-2"
+                    className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-2"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -146,7 +146,7 @@ export const TopToolbar = ({
             )}
             
             {selectedNode && (
-              <Badge variant="secondary" className="truncate dark:bg-gray-800/50 dark:text-gray-200 dark:border-gray-600">
+              <Badge variant="secondary" className="truncate dark:bg-gray-900/50 dark:text-gray-200 dark:border-gray-800">
                 {selectedNode.data?.label || 'Nó selecionado'}
               </Badge>
             )}
@@ -160,7 +160,7 @@ export const TopToolbar = ({
               size="sm"
               onClick={onPreviewFlow}
               title="Visualizar fluxo"
-              className="dark:bg-transparent dark:border-gray-600 dark:hover:bg-gray-800/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50"
+              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50"
             >
               <Play className="h-4 w-4" />
             </Button>
@@ -186,7 +186,7 @@ export const TopToolbar = ({
               size="sm"
               onClick={onToggleFullscreen}
               title={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
-              className="dark:bg-transparent dark:border-gray-600 dark:hover:bg-gray-800/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50"
+              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50"
             >
               {isFullscreen ? (
                 <Minimize className="h-4 w-4" />
@@ -211,7 +211,7 @@ export const TopToolbar = ({
 
           {showNodeMenu && (
             <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowNodeMenu(false)}>
-              <div className="absolute top-[calc(5%+4rem)] right-[5%] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-4 w-64">
+              <div className="absolute top-[calc(5%+4rem)] right-[5%] bg-white dark:bg-[#0E0E0E] border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl p-4 w-64">
                 {/* Primeira linha - Nós */}
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   {nodeTypes.map((nodeType) => {
@@ -222,7 +222,7 @@ export const TopToolbar = ({
                         variant="outline"
                         size="sm"
                         onClick={() => handleAddNode(nodeType.type)}
-                        className="dark:bg-transparent dark:border-gray-600 dark:hover:bg-gray-800/50 border-gray-200 hover:bg-gray-50 p-3 flex flex-col items-center gap-1"
+                        className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 border-gray-200 hover:bg-gray-50 p-3 flex flex-col items-center gap-1"
                         title={nodeType.label}
                       >
                         <IconComponent className={`h-4 w-4 ${nodeType.color}`} />
@@ -232,7 +232,7 @@ export const TopToolbar = ({
                   })}
                 </div>
 
-                <Separator className="my-3 dark:bg-gray-600" />
+                <Separator className="my-3 dark:bg-gray-800" />
 
                 {/* Segunda linha - Ferramentas */}
                 <div className="grid grid-cols-3 gap-2">
@@ -240,7 +240,7 @@ export const TopToolbar = ({
                     variant="outline"
                     size="sm"
                     onClick={onAutoArrangeNodes}
-                    className="dark:bg-transparent dark:border-gray-600 dark:hover:bg-gray-800/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 p-3 flex flex-col items-center gap-1"
+                    className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 p-3 flex flex-col items-center gap-1"
                     title="Organizar"
                   >
                     <AlignJustify className="h-4 w-4" />
@@ -251,7 +251,7 @@ export const TopToolbar = ({
                     variant="outline"
                     size="sm"
                     onClick={onClearAllNodes}
-                    className="dark:bg-transparent dark:border-gray-600 dark:hover:bg-gray-800/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-3 flex flex-col items-center gap-1"
+                    className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-3 flex flex-col items-center gap-1"
                     title="Limpar tudo"
                   >
                     <Eraser className="h-4 w-4" />
@@ -266,7 +266,7 @@ export const TopToolbar = ({
                         onDeleteNode(selectedNode.id);
                         setShowNodeMenu(false);
                       }}
-                      className="dark:bg-transparent dark:border-gray-600 dark:hover:bg-gray-800/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-3 flex flex-col items-center gap-1"
+                      className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-3 flex flex-col items-center gap-1"
                       title="Deletar"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -293,7 +293,7 @@ export const TopToolbar = ({
 
           {showNodeMenu && (
             <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowNodeMenu(false)}>
-              <div className="absolute top-[calc(5%+4rem)] left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-4 w-80">
+              <div className="absolute top-[calc(5%+4rem)] left-1/2 transform -translate-x-1/2 bg-white dark:bg-[#0E0E0E] border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl p-4 w-80">
                 {/* Primeira linha - Nós */}
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   {nodeTypes.map((nodeType) => {
@@ -304,7 +304,7 @@ export const TopToolbar = ({
                         variant="outline"
                         size="sm"
                         onClick={() => handleAddNode(nodeType.type)}
-                        className="dark:bg-transparent dark:border-gray-600 dark:hover:bg-gray-800/50 border-gray-200 hover:bg-gray-50 p-3 flex flex-col items-center gap-1"
+                        className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 border-gray-200 hover:bg-gray-50 p-3 flex flex-col items-center gap-1"
                         title={nodeType.label}
                       >
                         <IconComponent className={`h-4 w-4 ${nodeType.color}`} />
@@ -314,7 +314,7 @@ export const TopToolbar = ({
                   })}
                 </div>
 
-                <Separator className="my-3 dark:bg-gray-600" />
+                <Separator className="my-3 dark:bg-gray-800" />
 
                 {/* Segunda linha - Ferramentas */}
                 <div className="grid grid-cols-3 gap-2">
@@ -322,7 +322,7 @@ export const TopToolbar = ({
                     variant="outline"
                     size="sm"
                     onClick={onAutoArrangeNodes}
-                    className="dark:bg-transparent dark:border-gray-600 dark:hover:bg-gray-800/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 p-3 flex flex-col items-center gap-1"
+                    className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 p-3 flex flex-col items-center gap-1"
                     title="Organizar"
                   >
                     <AlignJustify className="h-4 w-4" />
@@ -333,7 +333,7 @@ export const TopToolbar = ({
                     variant="outline"
                     size="sm"
                     onClick={onClearAllNodes}
-                    className="dark:bg-transparent dark:border-gray-600 dark:hover:bg-gray-800/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-3 flex flex-col items-center gap-1"
+                    className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-3 flex flex-col items-center gap-1"
                     title="Limpar tudo"
                   >
                     <Eraser className="h-4 w-4" />
@@ -348,7 +348,7 @@ export const TopToolbar = ({
                         onDeleteNode(selectedNode.id);
                         setShowNodeMenu(false);
                       }}
-                      className="dark:bg-transparent dark:border-gray-600 dark:hover:bg-gray-800/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-3 flex flex-col items-center gap-1"
+                      className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-3 flex flex-col items-center gap-1"
                       title="Deletar"
                     >
                       <Trash2 className="h-4 w-4" />
