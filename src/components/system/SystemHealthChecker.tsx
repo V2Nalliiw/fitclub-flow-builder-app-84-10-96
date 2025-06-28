@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,7 +50,7 @@ export const SystemHealthChecker = () => {
 
     // 2. Teste de Conexão Supabase
     try {
-      const { data, error } = await supabase.from('profiles' as any).select('count').limit(1);
+      const { data, error } = await supabase.from('profiles').select('count').limit(1);
       healthChecks.push({
         name: 'Conexão Supabase',
         status: error ? 'error' : 'success',
@@ -70,7 +71,7 @@ export const SystemHealthChecker = () => {
     if (user) {
       try {
         const { data: profile, error } = await supabase
-          .from('profiles' as any)
+          .from('profiles')
           .select('*')
           .eq('user_id', user.id)
           .single();
@@ -80,7 +81,7 @@ export const SystemHealthChecker = () => {
           status: error ? 'error' : 'success',
           message: error ? `Erro ao carregar perfil: ${error.message}` : 'Perfil carregado com sucesso',
           icon: <User className="h-4 w-4" />,
-          details: profile ? `Clínica ID: ${profile.clinic_id || 'N/A'}` : undefined
+          details: profile ? `Clínica ID: ${(profile as any).clinic_id || 'N/A'}` : undefined
         });
       } catch (error) {
         healthChecks.push({
@@ -95,7 +96,7 @@ export const SystemHealthChecker = () => {
     // 4. Teste de Fluxos
     try {
       const { data: flows, error } = await supabase
-        .from('flows' as any)
+        .from('flows')
         .select('id, name, is_active')
         .limit(10);
 
@@ -118,7 +119,7 @@ export const SystemHealthChecker = () => {
     // 5. Teste de Execuções de Fluxo
     try {
       const { data: executions, error } = await supabase
-        .from('flow_executions' as any)
+        .from('flow_executions')
         .select('id, status')
         .limit(10);
 
@@ -142,7 +143,7 @@ export const SystemHealthChecker = () => {
     if (user?.role === 'clinic') {
       try {
         const { data: patients, error } = await supabase
-          .from('profiles' as any)
+          .from('profiles')
           .select('id, name')
           .eq('role', 'patient')
           .eq('clinic_id', user.clinic_id);

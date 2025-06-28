@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,7 +28,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const fetchUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
       const { data, error } = await supabase
-        .from('profiles' as any)
+        .from('profiles')
         .select('*')
         .eq('user_id', supabaseUser.id)
         .single();
@@ -42,15 +43,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
 
       return {
-        id: data.user_id,
-        email: data.email,
-        name: data.name,
-        role: data.role as 'super_admin' | 'clinic' | 'patient',
-        avatar_url: data.avatar_url,
-        clinic_id: data.clinic_id,
-        is_chief: data.is_chief,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
+        id: (data as any).user_id,
+        email: (data as any).email,
+        name: (data as any).name,
+        role: (data as any).role as 'super_admin' | 'clinic' | 'patient',
+        avatar_url: (data as any).avatar_url,
+        clinic_id: (data as any).clinic_id,
+        is_chief: (data as any).is_chief,
+        created_at: (data as any).created_at,
+        updated_at: (data as any).updated_at,
       };
     } catch (error) {
       console.error('Erro ao buscar perfil:', error);
@@ -102,7 +103,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     try {
       const { error } = await supabase
-        .from('profiles' as any)
+        .from('profiles')
         .update({
           name: updates.name,
           avatar_url: updates.avatar_url,

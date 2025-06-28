@@ -44,7 +44,19 @@ export const useClinics = () => {
         return;
       }
 
-      setClinics(data || []);
+      setClinics((data || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        slug: item.slug,
+        description: item.description,
+        logo_url: item.logo_url,
+        contact_email: item.contact_email,
+        contact_phone: item.contact_phone,
+        address: item.address,
+        is_active: item.is_active,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+      })));
     } catch (error) {
       console.error('Erro inesperado:', error);
       toast({
@@ -72,7 +84,19 @@ export const useClinics = () => {
         return null;
       }
 
-      return data;
+      return data ? {
+        id: (data as any).id,
+        name: (data as any).name,
+        slug: (data as any).slug,
+        description: (data as any).description,
+        logo_url: (data as any).logo_url,
+        contact_email: (data as any).contact_email,
+        contact_phone: (data as any).contact_phone,
+        address: (data as any).address,
+        is_active: (data as any).is_active,
+        created_at: (data as any).created_at,
+        updated_at: (data as any).updated_at,
+      } : null;
     } catch (error) {
       console.error('Erro inesperado:', error);
       return null;

@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,7 +37,7 @@ export const useAnalytics = () => {
 
       try {
         const { data, error } = await supabase
-          .from('analytics_events' as any)
+          .from('analytics_events')
           .select('*')
           .order('created_at', { ascending: false })
           .limit(1000);
@@ -46,7 +47,13 @@ export const useAnalytics = () => {
           return [];
         }
 
-        return data || [];
+        return (data || []).map((item: any) => ({
+          id: item.id,
+          user_id: item.user_id,
+          event_type: item.event_type,
+          event_data: item.event_data,
+          created_at: item.created_at,
+        }));
       } catch (error) {
         console.error('Erro na consulta de eventos:', error);
         return [];
@@ -63,7 +70,7 @@ export const useAnalytics = () => {
 
       try {
         const { data: clinics, error } = await supabase
-          .from('clinics' as any)
+          .from('clinics')
           .select(`
             name,
             profiles!inner(user_id)
@@ -76,7 +83,7 @@ export const useAnalytics = () => {
         }
 
         // Calcular estatísticas por clínica
-        return clinics?.map((clinic: any) => {
+        return (clinics || []).map((clinic: any) => {
           const clinicEvents = events.filter(event => 
             clinic.profiles?.some((profile: any) => profile.user_id === event.user_id)
           );
@@ -86,7 +93,7 @@ export const useAnalytics = () => {
             events: clinicEvents.length,
             users: clinic.profiles?.length || 0
           };
-        }) || [];
+        });
       } catch (error) {
         console.error('Erro ao buscar estatísticas:', error);
         return [];
@@ -100,7 +107,7 @@ export const useAnalytics = () => {
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
-        .from('analytics_events' as any)
+        .from('analytics_events')
         .insert({
           user_id: user.id,
           event_type: eventType,
