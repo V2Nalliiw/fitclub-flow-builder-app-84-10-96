@@ -19,7 +19,7 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const location = useLocation();
-  const { isDesktop, isMobile } = useBreakpoints();
+  const { isDesktop, isMobile, isTablet } = useBreakpoints();
   const { currentLogo } = useLogoManager();
   
   const isFlowsPage = location.pathname === '/flows';
@@ -34,8 +34,38 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         {/* Desktop Navigation */}
         {isDesktop ? (
           <DesktopHeaderNavigation />
+        ) : isTablet ? (
+          /* Tablet - Menu minimalista centralizado no topo */
+          <>
+            <div className="py-2">
+              <img 
+                src={currentLogo}
+                alt="Logo" 
+                className="h-12 w-auto max-w-[160px] object-contain"
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setNotificationsOpen(!notificationsOpen)}
+                >
+                  <Bell className="h-4 w-4" />
+                </Button>
+                
+                {notificationsOpen && (
+                  <div className="absolute top-12 right-0 z-50">
+                    <NotificationCenter onClose={() => setNotificationsOpen(false)} />
+                  </div>
+                )}
+              </div>
+              <ThemeToggle />
+            </div>
+          </>
         ) : (
-          /* Mobile/Tablet - manter como estava */
+          /* Mobile - manter como estava */
           <>
             <div className="py-2">
               <img 
@@ -67,6 +97,16 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         )}
       </header>
 
+      {/* Menu minimalista do tablet - posicionado no topo centralizado */}
+      {isTablet && isFlowsPage && (
+        <div className="fixed top-[calc(4rem+0.5rem)] left-1/2 transform -translate-x-1/2 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-full shadow-lg px-6 py-3">
+          <div className="flex items-center gap-3">
+            {/* Aqui será inserido o conteúdo do menu minimalista do tablet */}
+            <div className="text-sm text-muted-foreground">Menu Tablet</div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <main className={cn(
         "flex-1 transition-all duration-300 animate-fade-in",
@@ -78,8 +118,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       {/* Mobile Navigation - Show only on mobile */}
       {isMobile && <MobileNavigation />}
       
-      {/* Drawer Menu - Show on all devices */}
-      <MobileDrawer />
+      {/* Drawer Menu - Show on mobile and tablet only */}
+      {!isDesktop && <MobileDrawer />}
     </div>
   );
 };
