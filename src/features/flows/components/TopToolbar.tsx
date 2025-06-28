@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -181,13 +180,23 @@ export const TopToolbar = ({
           </>
         )}
 
-        {/* Layout Tablet - Botões de nós na frente do nome do fluxo */}
+        {/* Layout Tablet - Botões de nós DEPOIS do nome do fluxo */}
         {isTablet && (
           <>
-            {/* Primeira linha - Nós, nome do fluxo e controles principais */}
+            {/* Primeira linha - Nome do fluxo, nós e controles principais */}
             <div className="flex items-center justify-between gap-3 mb-2">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                {/* Botões de Nós PRIMEIRO no tablet */}
+                {/* Nome do fluxo PRIMEIRO - reduzido */}
+                <Input
+                  value={flowName}
+                  onChange={(e) => onFlowNameChange(e.target.value)}
+                  placeholder="Nome do fluxo..."
+                  className="max-w-[120px] dark:bg-transparent dark:border-gray-800 dark:text-gray-100 h-7 text-sm"
+                />
+
+                <Separator orientation="vertical" className="h-4 mx-1 dark:bg-gray-800" />
+
+                {/* Botões de Nós DEPOIS do nome do fluxo */}
                 <div className="flex items-center gap-1">
                   {nodeTypes.map((nodeType) => {
                     const IconComponent = nodeType.icon;
@@ -205,16 +214,6 @@ export const TopToolbar = ({
                     );
                   })}
                 </div>
-
-                <Separator orientation="vertical" className="h-4 mx-1 dark:bg-gray-800" />
-
-                {/* Nome do fluxo menor */}
-                <Input
-                  value={flowName}
-                  onChange={(e) => onFlowNameChange(e.target.value)}
-                  placeholder="Nome do fluxo..."
-                  className="max-w-[150px] dark:bg-transparent dark:border-gray-800 dark:text-gray-100 h-7 text-sm"
-                />
                 
                 {selectedNode && (
                   <Badge variant="secondary" className="truncate dark:bg-gray-900/50 dark:text-gray-200 dark:border-gray-800 text-xs py-0.5">
