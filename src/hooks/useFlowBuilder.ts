@@ -52,6 +52,8 @@ export const useFlowBuilder = () => {
         edges,
       };
 
+      console.log('Salvando fluxo:', flowData);
+
       if (editingFlowId) {
         await updateFlowFromBuilder(editingFlowId, flowData);
         toast.success('Fluxo atualizado com sucesso!');
@@ -60,14 +62,14 @@ export const useFlowBuilder = () => {
         toast.success('Fluxo salvo com sucesso!');
       }
 
-      // Redirecionar para a página "Meus Fluxos"
+      // Redirecionar para a página "Meus Fluxos" após sucesso
       setTimeout(() => {
         navigate('/my-flows');
-      }, 1000);
+      }, 1500);
 
     } catch (error) {
       console.error('Erro ao salvar fluxo:', error);
-      toast.error('Erro ao salvar fluxo. Tente novamente.');
+      toast.error('Erro ao salvar fluxo. Verifique sua conexão e tente novamente.');
     } finally {
       setIsSaving(false);
     }

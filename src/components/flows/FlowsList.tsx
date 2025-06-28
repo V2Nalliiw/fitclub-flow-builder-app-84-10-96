@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,17 @@ export const FlowsList = () => {
   const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [assignmentFlow, setAssignmentFlow] = useState(null);
+
+  // Auto-refresh quando o componente monta
+  useEffect(() => {
+    console.log('FlowsList montado, dados atuais:', { flows: flows.length, hasLoadedOnce, isEmpty });
+    
+    // Se não carregou ainda ou está vazio, tentar refresh
+    if (!hasLoadedOnce || (hasLoadedOnce && isEmpty && flows.length === 0)) {
+      console.log('Fazendo refresh automático dos fluxos...');
+      refreshFlows();
+    }
+  }, []);
 
   // Mostrar loading apenas na primeira busca quando ainda não carregou
   if (isLoading) {
@@ -80,23 +91,25 @@ export const FlowsList = () => {
                   <Workflow className="h-10 w-10 text-white" />
                 </div>
                 <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
-                  Problemas de conexão detectados
+                  {flows.length === 0 ? 'Nenhum fluxo encontrado' : 'Problemas de conexão detectados'}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-                  Há problemas temporários com a conexão ao banco de dados. Tente novamente ou 
-                  acesse diretamente o construtor de fluxos.
+                  {flows.length === 0 
+                    ? 'Comece criando seu primeiro fluxo usando o construtor de fluxos.'
+                    : 'Há problemas temporários com a conexão ao banco de dados. Tente novamente ou acesse diretamente o construtor de fluxos.'
+                  }
                 </p>
                 <div className="space-y-4">
                   <Button 
-                    onClick={refreshFlows}
+                    onClick={() => navigate('/flows')}
                     size="lg"
                     className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
                   >
-                    <RefreshCw className="h-5 w-5 mr-2" />
-                    Tentar Novamente
+                    <Plus className="h-5 w-5 mr-2" />
+                    Criar Primeiro Fluxo
                   </Button>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    ou clique em "Construtor de Fluxos" acima
+                    ou tente atualizar a página
                   </p>
                 </div>
               </div>

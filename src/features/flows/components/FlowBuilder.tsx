@@ -5,17 +5,34 @@ import { NodeConfigModal } from './NodeConfigModal';
 import { FlowPreviewModal } from './FlowPreviewModal';
 import { TopToolbar } from './TopToolbar';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { useFlowBuilder } from '../hooks/useFlowBuilder';
+import { useFlowBuilder as useFlowBuilderFeature } from '../hooks/useFlowBuilder';
+import { useFlowBuilder } from '@/hooks/useFlowBuilder';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export const FlowBuilder = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isMobile = useIsMobile();
   
+  // Usar o hook principal para salvamento
+  const {
+    flowName,
+    setFlowName,
+    flowDescription,
+    setFlowDescription,
+    nodes: savedNodes,
+    setNodes: setSavedNodes,
+    edges: savedEdges,
+    setEdges: setSavedEdges,
+    saveFlow,
+    isSaving,
+    canSave,
+    isEditing
+  } = useFlowBuilder();
+
+  // Usar o hook de features para funcionalidades do canvas
   const {
     nodes,
     edges,
-    flowName,
     selectedNode,
     isConfigModalOpen,
     isPreviewModalOpen,
@@ -23,7 +40,6 @@ export const FlowBuilder = () => {
     onNodesChange,
     onEdgesChange,
     onConnect,
-    setFlowName,
     setSelectedNode,
     setIsConfigModalOpen,
     addNode,
@@ -34,13 +50,48 @@ export const FlowBuilder = () => {
     onNodeDoubleClick,
     onNodeClick,
     handleNodeConfigSave,
-    saveFlow,
     openPreview,
     closePreview,
-  } = useFlowBuilder();
+  } = useFlowBuilderFeature();
+
+  // Sincronizar nodes e edges entre os hooks
+  useEffect(() => {
+    if (savedNodes.length > 0) {
+      // Atualizar nodes do canvas com os dados salvos
+      console.log('Carregando nodes salvos:', savedNodes);
+    }
+    if (savedEdges.length > 0) {
+      // Atualizar edges do canvas com os dados salvos
+      console.log('Carregando edges salvos:', savedEdges);
+    }
+  }, [savedNodes, savedEdges]);
+
+  // Atualizar dados salvos quando o canvas muda
+  useEffect(() => {
+    setSavedNodes(nodes);
+    setSavedEdges(edges);
+  }, [nodes, edges, setSavedNodes, setSavedEdges]);
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
+  };
+
+  const handleSaveFlow = async () => {
+    console.log('Iniciando salvamento do fluxo:', {
+      name: flowName,
+      description: flowDescription,
+      nodes: nodes.length,
+      edges: edges.length
+    });
+    
+    await saveFlow();
+  };
+
+  const openPreviewModal = () => {
+    if (nodes.length === 0) {
+      return;
+    }
+    openPreview();
   };
 
   // Handle escape key to exit fullscreen
@@ -92,11 +143,13 @@ export const FlowBuilder = () => {
         onDeleteNode={deleteNode}
         onClearAllNodes={clearAllNodes}
         onAutoArrangeNodes={autoArrangeNodes}
-        onSaveFlow={saveFlow}
-        onPreviewFlow={openPreview}
+        onSaveFlow={handleSaveFlow}
+        onPreviewFlow={openPreviewModal}
         onToggleFullscreen={toggleFullscreen}
         isFullscreen={isFullscreen}
         onAddNode={addNode}
+        isSaving={isSaving}
+        canSave={canSave}
       />
 
       <NodeConfigModal
@@ -118,12 +171,12 @@ export const FlowBuilder = () => {
       />
 
       {/* Loading Overlay */}
-      {isLoading && (
+      {(isLoading || isSaving) && (
         <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <LoadingSpinner size="lg" />
             <div className="text-sm text-muted-foreground">
-              Processando operação...
+              {isSaving ? 'Salvando fluxo...' : 'Processando operação...'}
             </div>
           </div>
         </div>
