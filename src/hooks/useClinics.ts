@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -160,60 +159,92 @@ export const useClinics = () => {
       if (clinicData.responsibleUser) {
         const { responsibleUser } = clinicData;
         
-        // Criar o usuário no Supabase Auth
-        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-          email: responsibleUser.email,
-          password: responsibleUser.password,
-          email_confirm: true,
-          user_metadata: {
-            name: responsibleUser.name,
-            role: 'clinic',
-          }
-        });
-
-        if (authError) {
-          console.error('Erro ao criar usuário:', authError);
-          // Se falhar na criação do usuário, excluir a clínica criada
-          await supabase.from('clinics').delete().eq('id', clinic.id);
-          
-          toast({
-            title: "Erro",
-            description: `Erro ao criar usuário: ${authError.message}`,
-            variant: "destructive",
-          });
-          return false;
-        }
-
-        // Criar o perfil do usuário
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([{
-            user_id: authUser.user.id,
+        // Salvar a sessão atual do super admin
+        const currentSession = await supabase.auth.getSession();
+        
+        try {
+          // Criar o usuário usando signup (método público)
+          const { data: authData, error: authError } = await supabase.auth.signUp({
             email: responsibleUser.email,
-            name: responsibleUser.name,
-            role: 'clinic',
-            clinic_id: clinic.id,
-            is_chief: responsibleUser.isChief,
-          }]);
+            password: responsibleUser.password,
+            options: {
+              data: {
+                name: responsibleUser.name,
+                role: 'clinic',
+              }
+            }
+          });
 
-        if (profileError) {
-          console.error('Erro ao criar perfil:', profileError);
-          // Se falhar na criação do perfil, excluir usuário e clínica
-          await supabase.auth.admin.deleteUser(authUser.user.id);
+          if (authError) {
+            console.error('Erro ao criar usuário:', authError);
+            // Se falhar na criação do usuário, excluir a clínica criada
+            await supabase.from('clinics').delete().eq('id', clinic.id);
+            
+            toast({
+              title: "Erro",
+              description: `Erro ao criar usuário: ${authError.message}`,
+              variant: "destructive",
+            });
+            return false;
+          }
+
+          if (!authData.user) {
+            console.error('Usuário não foi criado corretamente');
+            await supabase.from('clinics').delete().eq('id', clinic.id);
+            
+            toast({
+              title: "Erro",
+              description: "Erro ao criar usuário: dados não retornados",
+              variant: "destructive",
+            });
+            return false;
+          }
+
+          // Restaurar a sessão do super admin
+          if (currentSession.data.session) {
+            await supabase.auth.setSession(currentSession.data.session);
+          }
+
+          // Criar o perfil do usuário
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([{
+              user_id: authData.user.id,
+              email: responsibleUser.email,
+              name: responsibleUser.name,
+              role: 'clinic',
+              clinic_id: clinic.id,
+              is_chief: responsibleUser.isChief,
+            }]);
+
+          if (profileError) {
+            console.error('Erro ao criar perfil:', profileError);
+            // Se falhar na criação do perfil, tentar limpar o que foi criado
+            await supabase.from('clinics').delete().eq('id', clinic.id);
+            
+            toast({
+              title: "Erro",
+              description: `Erro ao criar perfil: ${profileError.message}`,
+              variant: "destructive",
+            });
+            return false;
+          }
+
+          toast({
+            title: "Clínica e usuário criados",
+            description: `A clínica "${clinicData.name}" e o usuário responsável foram criados com sucesso. O usuário pode fazer login com as credenciais fornecidas.`,
+          });
+        } catch (signupError) {
+          console.error('Erro no processo de criação do usuário:', signupError);
           await supabase.from('clinics').delete().eq('id', clinic.id);
           
           toast({
             title: "Erro",
-            description: `Erro ao criar perfil: ${profileError.message}`,
+            description: "Erro ao criar usuário responsável",
             variant: "destructive",
           });
           return false;
         }
-
-        toast({
-          title: "Clínica e usuário criados",
-          description: `A clínica "${clinicData.name}" e o usuário responsável foram criados com sucesso`,
-        });
       } else {
         toast({
           title: "Clínica criada",
