@@ -80,7 +80,7 @@ export const TopToolbar = ({
     if (isMobile || isTablet) {
       return 'top-[calc(5%+3rem)]';
     }
-    return 'top-[calc(5%+3rem)]';
+    return 'top-[calc(5px+3rem)]';
   };
 
   return (
@@ -288,7 +288,7 @@ export const TopToolbar = ({
 
         {/* Layout Desktop - Nome primeiro, depois nós, padding ajustado */}
         {isDesktop && (
-          <div className="flex items-center justify-center gap-3 px-2.5">
+          <div className="flex items-center justify-center gap-3 px-[15px]">
             {/* Nome do fluxo PRIMEIRO */}
             <Input
               value={flowName}
