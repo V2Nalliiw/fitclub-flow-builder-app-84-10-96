@@ -29,12 +29,12 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         "h-16 border-b border-border bg-card px-6 flex items-center justify-between relative z-30",
         !isDesktop && isFlowsPage && "fixed top-0 left-0 right-0"
       )}>
-        <div className="flex items-center gap-4 flex-1">
-          {/* Desktop Navigation */}
-          {isDesktop ? (
-            <DesktopHeaderNavigation />
-          ) : (
-            /* Mobile/Tablet Logo */
+        {/* Desktop Navigation */}
+        {isDesktop ? (
+          <DesktopHeaderNavigation />
+        ) : (
+          /* Mobile/Tablet - manter como estava */
+          <>
             <div>
               <img 
                 src="/lovable-uploads/f205f390-c668-44cc-9a73-ee3d49cb0a6c.png" 
@@ -42,27 +42,49 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 className="h-8 w-8"
               />
             </div>
-          )}
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setNotificationsOpen(!notificationsOpen)}
-            >
-              <Bell className="h-4 w-4" />
-            </Button>
             
-            {notificationsOpen && (
-              <div className="absolute top-12 right-0 z-50">
-                <NotificationCenter onClose={() => setNotificationsOpen(false)} />
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setNotificationsOpen(!notificationsOpen)}
+                >
+                  <Bell className="h-4 w-4" />
+                </Button>
+                
+                {notificationsOpen && (
+                  <div className="absolute top-12 right-0 z-50">
+                    <NotificationCenter onClose={() => setNotificationsOpen(false)} />
+                  </div>
+                )}
               </div>
-            )}
+              <ThemeToggle />
+            </div>
+          </>
+        )}
+        
+        {/* Notificações e tema apenas para desktop - já integrados no DesktopHeaderNavigation */}
+        {isDesktop && (
+          <div className="flex items-center gap-2 ml-4">
+            <div className="relative">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setNotificationsOpen(!notificationsOpen)}
+              >
+                <Bell className="h-4 w-4" />
+              </Button>
+              
+              {notificationsOpen && (
+                <div className="absolute top-12 right-0 z-50">
+                  <NotificationCenter onClose={() => setNotificationsOpen(false)} />
+                </div>
+              )}
+            </div>
+            <ThemeToggle />
           </div>
-          <ThemeToggle />
-        </div>
+        )}
       </header>
 
       {/* Main Content */}

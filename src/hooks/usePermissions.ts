@@ -18,39 +18,38 @@ export const usePermissions = () => {
       case 'super_admin':
         return {
           ...basePermissions,
-          // Super Admin tem acesso a tudo
+          // Super Admin - acesso limitado conforme especificado
           canManageClinics: true,
           canViewAllData: true,
           canManageUsers: true,
-          canViewAnalytics: true,
-          canManageFlows: true,
-          canManagePatients: true,
           canConfigureWhatsApp: true,
-          canViewSettings: true,
-          canManageTeam: true,
-          canManagePermissions: true,
+          canViewAppSettings: true,
+          canViewDashboard: true,
         };
 
       case 'clinic':
         return {
           ...basePermissions,
-          // Clínica pode gerenciar seus próprios dados
+          // Clínica - funcionalidades específicas
           canManageFlows: true,
           canManagePatients: true,
-          canConfigureWhatsApp: true,
-          canViewAnalytics: true,
-          canViewSettings: true,
-          canManageTeam: user.is_chief || false,
+          canViewAnalytics: false, // Removido conforme solicitado
+          canViewClinicSettings: true,
+          canManageTeam: true,
           canViewForms: true,
           canCreateForms: true,
+          canViewDashboard: true,
+          canCreatePatientAccounts: true, // Nova permissão para criar contas de pacientes
         };
 
       case 'patient':
         return {
           ...basePermissions,
-          // Paciente tem acesso limitado
+          // Paciente - acesso limitado
           canViewOwnFlows: true,
           canRespondForms: true,
+          canViewDashboard: true,
+          canViewTipsAndForms: true, // Nova permissão específica
         };
 
       default:

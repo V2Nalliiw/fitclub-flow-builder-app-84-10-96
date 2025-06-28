@@ -10,9 +10,9 @@ import {
   Workflow,
   Settings,
   Users,
-  Activity,
   MessagesSquare,
-  Calendar,
+  Building2,
+  UserPlus,
   HelpCircle,
   LogOut,
 } from 'lucide-react';
@@ -48,6 +48,22 @@ export const DesktopHeaderNavigation = () => {
       },
     ];
 
+    if (user.role === 'super_admin') {
+      return [
+        ...baseItems,
+        {
+          title: "Clínicas",
+          url: "/clinics",
+          icon: Building2,
+        },
+        {
+          title: "WhatsApp",
+          url: "/whatsapp-settings",
+          icon: MessagesSquare,
+        },
+      ];
+    }
+
     if (user.role === 'patient') {
       return [
         ...baseItems,
@@ -56,19 +72,14 @@ export const DesktopHeaderNavigation = () => {
           url: "/my-flows",
           icon: FileText,
         },
-        {
-          title: "Perfil",
-          url: "/profile",
-          icon: User,
-        },
       ];
     }
 
-    // For clinics and professionals
+    // Para clínicas
     return [
       ...baseItems,
       {
-        title: "Meus Fluxos",
+        title: "Fluxos Salvos",
         url: "/my-flows",
         icon: GitBranch,
       },
@@ -88,34 +99,65 @@ export const DesktopHeaderNavigation = () => {
         icon: FileText,
       },
       {
-        title: "Analytics",
-        url: "/analytics",
-        icon: Activity,
-      },
-      {
-        title: "WhatsApp",
-        url: "/whatsapp-settings",
-        icon: MessagesSquare,
-      },
-      {
-        title: "Agendamentos",
-        url: "/appointments",
-        icon: Calendar,
-      },
-      {
-        title: "Configurações",
-        url: "/settings",
-        icon: Settings,
+        title: "Equipe",
+        url: "/team",
+        icon: UserPlus,
       },
     ];
   };
 
   const navigationItems = getNavigationItems();
 
+  const getUserMenuItems = () => {
+    if (!user) return [];
+
+    const baseMenuItems = [
+      {
+        title: "Perfil",
+        icon: User,
+        action: () => navigate('/profile'),
+      },
+      {
+        title: "Ajuda",
+        icon: HelpCircle,
+        action: () => navigate('/help'),
+      },
+    ];
+
+    if (user.role === 'super_admin') {
+      return [
+        ...baseMenuItems.slice(0, 1), // Perfil
+        {
+          title: "Configurações do App",
+          icon: Settings,
+          action: () => navigate('/settings'),
+        },
+        ...baseMenuItems.slice(1), // Ajuda
+      ];
+    }
+
+    if (user.role === 'clinic') {
+      return [
+        ...baseMenuItems.slice(0, 1), // Perfil
+        {
+          title: "Configurações da Clínica",
+          icon: Settings,
+          action: () => navigate('/settings'),
+        },
+        ...baseMenuItems.slice(1), // Ajuda
+      ];
+    }
+
+    // Para pacientes, apenas perfil e ajuda
+    return baseMenuItems;
+  };
+
+  const userMenuItems = getUserMenuItems();
+
   return (
-    <div className="flex items-center gap-2">
-      {/* Logo */}
-      <div className="mr-4">
+    <div className="flex items-center justify-between w-full">
+      {/* Logo à esquerda */}
+      <div className="flex items-center">
         <img 
           src="/lovable-uploads/f205f390-c668-44cc-9a73-ee3d49cb0a6c.png" 
           alt="FitClub" 
@@ -123,8 +165,9 @@ export const DesktopHeaderNavigation = () => {
         />
       </div>
 
-      {/* Navigation Items */}
-      <div className="flex items-center gap-1">
+      {/* Navegação e menu do usuário à direita */}
+      <div className="flex items-center gap-2">
+        {/* Ícones de navegação */}
         {navigationItems.map((item) => (
           <Button
             key={item.title}
@@ -140,10 +183,8 @@ export const DesktopHeaderNavigation = () => {
             <item.icon className="h-5 w-5" />
           </Button>
         ))}
-      </div>
 
-      {/* User Menu */}
-      <div className="ml-4">
+        {/* Menu do usuário (avatar) - primeiro da direita para esquerda */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -154,18 +195,12 @@ export const DesktopHeaderNavigation = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end" forceMount>
-            <DropdownMenuItem onClick={() => navigate('/profile')}>
-              <User className="mr-2 h-4 w-4" />
-              Perfil
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/settings')}>
-              <Settings className="mr-2 h-4 w-4" />
-              Configurações
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/help')}>
-              <HelpCircle className="mr-2 h-4 w-4" />
-              Ajuda
-            </DropdownMenuItem>
+            {userMenuItems.map((item, index) => (
+              <DropdownMenuItem key={item.title} onClick={item.action}>
+                <item.icon className="mr-2 h-4 w-4" />
+                {item.title}
+              </DropdownMenuItem>
+            ))}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
