@@ -25,9 +25,12 @@ export const useWhatsAppWebhooks = () => {
     queryFn: async (): Promise<WhatsAppWebhook[]> => {
       if (!user?.clinic_id) return [];
 
+      // Since whatsapp_webhooks table doesn't exist, we'll use notifications table
       const { data, error } = await supabase
-        .from('whatsapp_webhooks')
+        .from('notifications')
         .select('*')
+        .eq('category', 'whatsapp_webhook')
+        .eq('metadata->>clinic_id', user.clinic_id)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -36,18 +39,35 @@ export const useWhatsAppWebhooks = () => {
         throw error;
       }
 
-      return data || [];
+      // Transform notifications to WhatsAppWebhook format
+      return (data || []).map((notification: any) => {
+        const metadata = notification.metadata || {};
+        return {
+          id: notification.id,
+          clinic_id: user.clinic_id || '',
+          webhook_id: metadata.webhook_id || '',
+          phone_number: metadata.phone_number || '',
+          message_data: metadata.message_data || {},
+          message_type: metadata.message_type || 'text',
+          status: metadata.status || 'received',
+          processed_at: metadata.processed_at,
+          created_at: notification.created_at || '',
+        };
+      });
     },
     enabled: !!user?.clinic_id,
   });
 
   const processWebhookMutation = useMutation({
     mutationFn: async (webhookId: string) => {
+      // Update the notification metadata to mark as processed
       const { data, error } = await supabase
-        .from('whatsapp_webhooks')
+        .from('notifications')
         .update({
-          status: 'processed',
-          processed_at: new Date().toISOString(),
+          metadata: {
+            status: 'processed',
+            processed_at: new Date().toISOString(),
+          }
         })
         .eq('id', webhookId)
         .select()
@@ -81,15 +101,16 @@ export const useWhatsAppWebhooks = () => {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'whatsapp_webhooks',
-          filter: `clinic_id=eq.${user.clinic_id}`,
+          table: 'notifications',
+          filter: `category=eq.whatsapp_webhook`,
         },
         (payload) => {
           console.log('Novo webhook recebido:', payload);
           queryClient.invalidateQueries({ queryKey: ['whatsapp-webhooks'] });
           
+          const metadata = payload.new.metadata as any;
           toast.success('Nova mensagem WhatsApp recebida!', {
-            description: `De: ${payload.new.phone_number}`,
+            description: `De: ${metadata?.phone_number || 'Desconhecido'}`,
           });
         }
       )
