@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,14 +14,14 @@ import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export const FlowsList = () => {
-  const { flows, isLoading, hasLoadedOnce, refreshFlows, deleteFlow } = useFlows();
+  const { flows, isLoading, hasLoadedOnce, isEmpty, refreshFlows, deleteFlow } = useFlows();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [assignmentFlow, setAssignmentFlow] = useState(null);
 
-  // Mostrar loading apenas na primeira busca
-  if (isLoading && !hasLoadedOnce) {
+  // Mostrar loading apenas na primeira busca quando ainda não carregou
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <LoadingSpinner />
@@ -46,7 +47,7 @@ export const FlowsList = () => {
             </p>
           </div>
 
-          {flows.length === 0 ? (
+          {isEmpty ? (
             <Card className="max-w-2xl mx-auto shadow-lg border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
               <CardContent className="flex flex-col items-center justify-center py-16">
                 <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mb-6">
@@ -145,7 +146,7 @@ export const FlowsList = () => {
     );
   }
 
-  // Interface para clínicas - Página otimizada sem buscas desnecessárias
+  // Interface para clínicas - Página otimizada
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -159,27 +160,27 @@ export const FlowsList = () => {
             </div>
             
             <div className="flex gap-3">
-              {flows.length > 0 && (
-                <>
-                  <Button 
-                    onClick={refreshFlows}
-                    variant="outline" 
-                    size="lg"
-                    className="border-gray-200 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                  >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Atualizar
-                  </Button>
-                  <Button 
-                    onClick={() => navigate('/flows')} 
-                    variant="outline" 
-                    size="lg"
-                    className="border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/20"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    Construtor de Fluxos
-                  </Button>
-                </>
+              {hasLoadedOnce && (
+                <Button 
+                  onClick={refreshFlows}
+                  variant="outline" 
+                  size="lg"
+                  className="border-gray-200 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Atualizar
+                </Button>
+              )}
+              {!isEmpty && (
+                <Button 
+                  onClick={() => navigate('/flows')} 
+                  variant="outline" 
+                  size="lg"
+                  className="border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/20"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Construtor de Fluxos
+                </Button>
               )}
               <Button 
                 onClick={() => setIsCreateDialogOpen(true)}
@@ -192,7 +193,7 @@ export const FlowsList = () => {
             </div>
           </div>
 
-          {flows.length === 0 ? (
+          {isEmpty ? (
             <div className="text-center py-16">
               <div className="max-w-md mx-auto">
                 <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">

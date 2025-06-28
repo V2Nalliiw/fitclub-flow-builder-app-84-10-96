@@ -22,6 +22,7 @@ export const useFlows = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [isEmpty, setIsEmpty] = useState(false);
 
   const { data: flows = [], isLoading, error } = useQuery({
     queryKey: ['flows', user?.id],
@@ -51,6 +52,7 @@ export const useFlows = () => {
         } else {
           console.log('Nenhum fluxo atribuído ao paciente');
           setHasLoadedOnce(true);
+          setIsEmpty(true);
           return [];
         }
       }
@@ -65,19 +67,22 @@ export const useFlows = () => {
       
       console.log('Fluxos carregados:', data?.length || 0);
       setHasLoadedOnce(true);
+      setIsEmpty(!data || data.length === 0);
       return data as Flow[];
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 10, // 10 minutos - cache mais agressivo
-    gcTime: 1000 * 60 * 15, // 15 minutos para garbage collection
+    staleTime: 1000 * 60 * 15, // 15 minutos - cache mais agressivo
+    gcTime: 1000 * 60 * 30, // 30 minutos para garbage collection
     refetchOnWindowFocus: false,
-    refetchOnMount: !hasLoadedOnce, // Só refetch no mount se nunca carregou
+    refetchOnMount: false, // Evita refetch desnecessário no mount
     refetchInterval: false, // Desabilita refetch automático
+    retry: 1, // Apenas uma tentativa em caso de erro
   });
 
   // Função para refresh manual
   const refreshFlows = useCallback(() => {
     setHasLoadedOnce(false);
+    setIsEmpty(false);
     queryClient.invalidateQueries({ queryKey: ['flows'] });
   }, [queryClient]);
 
@@ -107,7 +112,8 @@ export const useFlows = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['flows'] });
-      setHasLoadedOnce(false); // Reset para permitir nova busca
+      setHasLoadedOnce(false);
+      setIsEmpty(false);
       toast.success('Fluxo criado com sucesso!');
     },
     onError: (error) => {
@@ -178,9 +184,10 @@ export const useFlows = () => {
 
   return {
     flows,
-    isLoading: user ? (isLoading && !hasLoadedOnce) : false, // Loading apenas na primeira vez
+    isLoading: isLoading && !hasLoadedOnce, // Loading apenas na primeira vez
     error,
     hasLoadedOnce,
+    isEmpty,
     refreshFlows,
     createFlow: createFlowMutation.mutate,
     updateFlow: updateFlowMutation.mutate,
