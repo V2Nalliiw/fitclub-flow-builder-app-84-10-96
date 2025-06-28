@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -191,7 +190,24 @@ export const DesktopHeaderNavigation = () => {
         {/* Botão de tema (dark mode) - primeiro da direita para esquerda */}
         <ThemeToggle />
 
-        {/* Menu do usuário (avatar) - segundo da direita para esquerda */}
+        {/* Notificações - segundo da direita para esquerda */}
+        <div className="relative">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setNotificationsOpen(!notificationsOpen)}
+          >
+            <Bell className="h-4 w-4" />
+          </Button>
+          
+          {notificationsOpen && (
+            <div className="absolute top-12 right-0 z-50">
+              <NotificationCenter onClose={() => setNotificationsOpen(false)} />
+            </div>
+          )}
+        </div>
+
+        {/* Menu do usuário (avatar) - terceiro da direita para esquerda */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -215,23 +231,6 @@ export const DesktopHeaderNavigation = () => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-
-        {/* Notificações - terceiro da direita para esquerda */}
-        <div className="relative">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setNotificationsOpen(!notificationsOpen)}
-          >
-            <Bell className="h-4 w-4" />
-          </Button>
-          
-          {notificationsOpen && (
-            <div className="absolute top-12 right-0 z-50">
-              <NotificationCenter onClose={() => setNotificationsOpen(false)} />
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
