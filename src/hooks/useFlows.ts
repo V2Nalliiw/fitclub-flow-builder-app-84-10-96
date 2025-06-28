@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useState, useCallback } from 'react';
 
 export interface Flow {
   id: string;
@@ -20,6 +21,7 @@ export interface Flow {
 export const useFlows = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   const { data: flows = [], isLoading, error } = useQuery({
     queryKey: ['flows', user?.id],
@@ -48,6 +50,7 @@ export const useFlows = () => {
           query = query.in('id', flowIds);
         } else {
           console.log('Nenhum fluxo atribuído ao paciente');
+          setHasLoadedOnce(true);
           return [];
         }
       }
@@ -61,12 +64,22 @@ export const useFlows = () => {
       }
       
       console.log('Fluxos carregados:', data?.length || 0);
+      setHasLoadedOnce(true);
       return data as Flow[];
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    staleTime: 1000 * 60 * 10, // 10 minutos - cache mais agressivo
+    gcTime: 1000 * 60 * 15, // 15 minutos para garbage collection
     refetchOnWindowFocus: false,
+    refetchOnMount: !hasLoadedOnce, // Só refetch no mount se nunca carregou
+    refetchInterval: false, // Desabilita refetch automático
   });
+
+  // Função para refresh manual
+  const refreshFlows = useCallback(() => {
+    setHasLoadedOnce(false);
+    queryClient.invalidateQueries({ queryKey: ['flows'] });
+  }, [queryClient]);
 
   const createFlowMutation = useMutation({
     mutationFn: async (flowData: Partial<Flow>) => {
@@ -94,6 +107,7 @@ export const useFlows = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['flows'] });
+      setHasLoadedOnce(false); // Reset para permitir nova busca
       toast.success('Fluxo criado com sucesso!');
     },
     onError: (error) => {
@@ -164,8 +178,10 @@ export const useFlows = () => {
 
   return {
     flows,
-    isLoading: user ? isLoading : false, // Se não há usuário, não está carregando
+    isLoading: user ? (isLoading && !hasLoadedOnce) : false, // Loading apenas na primeira vez
     error,
+    hasLoadedOnce,
+    refreshFlows,
     createFlow: createFlowMutation.mutate,
     updateFlow: updateFlowMutation.mutate,
     deleteFlow: deleteFlowMutation.mutate,

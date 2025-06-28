@@ -6,21 +6,21 @@ import { useFlows } from '@/hooks/useFlows';
 import { useAuth } from '@/contexts/AuthContext';
 import { CreateFlowDialog } from './CreateFlowDialog';
 import { FlowAssignmentModal } from './FlowAssignmentModal';
-import { Eye, Edit, Trash2, Play, UserPlus, Plus, Workflow, ArrowRight, Calendar, Users, Activity } from 'lucide-react';
+import { Eye, Edit, Trash2, Play, UserPlus, Plus, Workflow, ArrowRight, Calendar, Users, Activity, RefreshCw } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export const FlowsList = () => {
-  const { flows, isLoading, deleteFlow } = useFlows();
+  const { flows, isLoading, hasLoadedOnce, refreshFlows, deleteFlow } = useFlows();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [assignmentFlow, setAssignmentFlow] = useState(null);
 
-  // Mostrar loading apenas se há usuário e está realmente carregando
-  if (isLoading && user) {
+  // Mostrar loading apenas na primeira busca
+  if (isLoading && !hasLoadedOnce) {
     return (
       <div className="flex items-center justify-center p-8">
         <LoadingSpinner />
@@ -145,7 +145,7 @@ export const FlowsList = () => {
     );
   }
 
-  // Interface para clínicas - Página de Meus Fluxos (sempre mostrar, mesmo sem fluxos)
+  // Interface para clínicas - Página otimizada sem buscas desnecessárias
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -158,27 +158,38 @@ export const FlowsList = () => {
               </p>
             </div>
             
-            {flows.length > 0 && (
-              <div className="flex gap-3">
-                <Button 
-                  onClick={() => navigate('/flows')} 
-                  variant="outline" 
-                  size="lg"
-                  className="border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/20"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  Construtor de Fluxos
-                </Button>
-                <Button 
-                  onClick={() => setIsCreateDialogOpen(true)}
-                  size="lg"
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Criar Novo Fluxo
-                </Button>
-              </div>
-            )}
+            <div className="flex gap-3">
+              {flows.length > 0 && (
+                <>
+                  <Button 
+                    onClick={refreshFlows}
+                    variant="outline" 
+                    size="lg"
+                    className="border-gray-200 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Atualizar
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/flows')} 
+                    variant="outline" 
+                    size="lg"
+                    className="border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/20"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Construtor de Fluxos
+                  </Button>
+                </>
+              )}
+              <Button 
+                onClick={() => setIsCreateDialogOpen(true)}
+                size="lg"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Novo Fluxo
+              </Button>
+            </div>
           </div>
 
           {flows.length === 0 ? (
