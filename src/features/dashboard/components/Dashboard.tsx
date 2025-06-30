@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Users, Workflow, FileText, Activity } from 'lucide-react';
 import PatientDashboard from '@/pages/PatientDashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MetricCard } from '@/components/dashboard/MetricCard';
@@ -12,7 +13,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export const Dashboard = () => {
   const { user, isLoading } = useAuth();
-  const { metrics, isLoading: metricsLoading } = useDashboardMetrics();
+  const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics();
 
   if (isLoading) {
     return (
@@ -55,27 +56,31 @@ export const Dashboard = () => {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             <MetricCard
               title="Total de Pacientes"
-              value={metrics?.totalPatients || 0}
-              icon="users"
-              trend={{ value: 12, isPositive: true }}
+              value={metrics?.totalUsers || 0}
+              icon={Users}
+              color="text-blue-600"
+              change={{ value: 12, label: "este mês" }}
             />
             <MetricCard
               title="Fluxos Ativos"
               value={metrics?.activeFlows || 0}
-              icon="workflow"
-              trend={{ value: 5, isPositive: true }}
+              icon={Workflow}
+              color="text-green-600"
+              change={{ value: 5, label: "este mês" }}
             />
             <MetricCard
               title="Formulários Respondidos"
-              value={metrics?.completedForms || 0}
-              icon="form"
-              trend={{ value: 8, isPositive: true }}
+              value={metrics?.completedExecutions || 0}
+              icon={FileText}
+              color="text-purple-600"
+              change={{ value: 8, label: "este mês" }}
             />
             <MetricCard
               title="Taxa de Engajamento"
-              value={`${metrics?.engagementRate || 0}%`}
-              icon="activity"
-              trend={{ value: 3, isPositive: false }}
+              value={`${Math.round(((metrics?.completedExecutions || 0) / Math.max(metrics?.totalExecutions || 1, 1)) * 100)}%`}
+              icon={Activity}
+              color="text-orange-600"
+              change={{ value: -3, label: "este mês" }}
             />
           </div>
 
