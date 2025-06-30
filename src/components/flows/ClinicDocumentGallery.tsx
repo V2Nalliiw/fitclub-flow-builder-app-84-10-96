@@ -44,13 +44,22 @@ export const ClinicDocumentGallery: React.FC<ClinicDocumentGalleryProps> = ({
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('clinic_documents')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setDocuments(data || []);
+      // Use rpc call to avoid type issues
+      const { data, error } = await supabase.rpc('get_clinic_documents');
+      
+      if (error) {
+        console.error('Error loading documents via RPC:', error);
+        // Fallback to direct query with type casting
+        const { data: directData, error: directError } = await (supabase as any)
+          .from('clinic_documents')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (directError) throw directError;
+        setDocuments(directData || []);
+      } else {
+        setDocuments(data || []);
+      }
     } catch (error) {
       console.error('Erro ao carregar documentos:', error);
       toast.error('Erro ao carregar documentos');
@@ -91,7 +100,8 @@ export const ClinicDocumentGallery: React.FC<ClinicDocumentGalleryProps> = ({
         // Create hash from file name + size for duplicate detection
         const fileHash = `${file.name}_${file.size}`;
 
-        const { error } = await supabase
+        // Use type casting for the insert operation
+        const { error } = await (supabase as any)
           .from('clinic_documents')
           .insert({
             clinic_id: profile.clinic_id,
@@ -119,7 +129,7 @@ export const ClinicDocumentGallery: React.FC<ClinicDocumentGalleryProps> = ({
 
   const handleDelete = async (document: ClinicDocument) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('clinic_documents')
         .delete()
         .eq('id', document.id);
