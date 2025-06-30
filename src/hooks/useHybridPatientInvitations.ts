@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -97,7 +96,12 @@ export const useHybridPatientInvitations = () => {
         return;
       }
 
-      setInvitations(data || []);
+      const transformedInvitations = (data || []).map(invitation => ({
+        ...invitation,
+        status: invitation.status as 'pending' | 'accepted' | 'expired' | 'cancelled'
+      }));
+
+      setInvitations(transformedInvitations);
     } catch (error) {
       console.error('Erro inesperado:', error);
       toast({

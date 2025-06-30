@@ -16,11 +16,7 @@ interface InternalInvite {
   title: string;
   message: string;
   created_at: string;
-  metadata: {
-    clinic_id: string;
-    invited_by: string;
-    invitation_type: string;
-  };
+  metadata: any;
 }
 
 export const InternalInviteNotifications = () => {
@@ -47,7 +43,15 @@ export const InternalInviteNotifications = () => {
         return;
       }
 
-      setInvites(data || []);
+      const transformedInvites = (data || []).map(notification => ({
+        id: notification.id,
+        title: notification.title,
+        message: notification.message,
+        created_at: notification.created_at,
+        metadata: notification.metadata || {}
+      }));
+
+      setInvites(transformedInvites);
     } catch (error) {
       console.error('Erro ao carregar convites:', error);
     } finally {
@@ -191,7 +195,7 @@ export const InternalInviteNotifications = () => {
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  onClick={() => acceptInvite(invite.id, invite.metadata.clinic_id)}
+                  onClick={() => acceptInvite(invite.id, invite.metadata?.clinic_id)}
                   disabled={!!accepting}
                 >
                   {accepting === invite.id ? (
