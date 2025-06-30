@@ -36,8 +36,31 @@ const queryClient = new QueryClient({
   },
 });
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+const ProtectedRoute = ({ 
+  children, 
+  allowedRoles = ['super_admin', 'clinic', 'patient'] 
+}: { 
+  children: React.ReactNode;
+  allowedRoles?: ('super_admin' | 'clinic' | 'patient')[];
+}) => {
   const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      return;
+    }
+
+    if (!isLoading && user && !allowedRoles.includes(user.role)) {
+      toast({
+        title: "Acesso negado",
+        description: "Você não tem permissão para acessar esta página.",
+        variant: "destructive",
+      });
+      navigate('/dashboard');
+    }
+  }, [user, isLoading, allowedRoles, navigate, toast]);
 
   if (isLoading) {
     return (
@@ -49,6 +72,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (!user) {
     return <AuthForm />;
+  }
+
+  if (!allowedRoles.includes(user.role)) {
+    return null;
   }
 
   return (
@@ -76,6 +103,8 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      
+      {/* Dashboard - Todos os usuários autenticados */}
       <Route 
         path="/dashboard" 
         element={
@@ -84,14 +113,18 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
+      
+      {/* Construtor de Fluxos - Apenas clínicas e super_admin */}
       <Route 
         path="/flows" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={['clinic', 'super_admin']}>
             <FlowBuilder />
           </ProtectedRoute>
         } 
       />
+      
+      {/* Meus Fluxos - Todos os usuários */}
       <Route 
         path="/my-flows" 
         element={
@@ -100,6 +133,8 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
+      
+      {/* Perfil - Todos os usuários */}
       <Route 
         path="/profile" 
         element={
@@ -108,14 +143,18 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
+      
+      {/* Pacientes - Apenas clínicas e super_admin */}
       <Route 
         path="/patients" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={['clinic', 'super_admin']}>
             <Patients />
           </ProtectedRoute>
         } 
       />
+      
+      {/* Configurações - Baseado no papel */}
       <Route 
         path="/settings" 
         element={
@@ -124,70 +163,87 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
+      
+      {/* WhatsApp - Apenas clínicas e super_admin */}
       <Route 
         path="/whatsapp-settings" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={['clinic', 'super_admin']}>
             <WhatsAppSettings />
           </ProtectedRoute>
         } 
       />
+      
+      {/* Equipe - Apenas clínicas e super_admin */}
       <Route 
         path="/team" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={['clinic', 'super_admin']}>
             <Team />
           </ProtectedRoute>
         } 
       />
+      
+      {/* Clínicas - Apenas super_admin */}
       <Route 
         path="/clinics" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={['super_admin']}>
             <Clinics />
           </ProtectedRoute>
         } 
       />
+      
+      {/* Personalização - Apenas super_admin */}
       <Route 
         path="/customization" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={['super_admin']}>
             <Customization />
           </ProtectedRoute>
         } 
       />
+      
+      {/* Preferências - Apenas super_admin */}
       <Route 
         path="/preferences" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={['super_admin']}>
             <Preferences />
           </ProtectedRoute>
         } 
       />
+      
+      {/* Analytics - Clínicas e super_admin */}
       <Route 
         path="/analytics" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={['clinic', 'super_admin']}>
             <Analytics />
           </ProtectedRoute>
         } 
       />
+      
+      {/* Permissões - Apenas super_admin */}
       <Route 
         path="/permissions" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={['super_admin']}>
             <Permissions />
           </ProtectedRoute>
         } 
       />
+      
+      {/* Formulários - Clínicas e super_admin */}
       <Route 
         path="/forms" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={['clinic', 'super_admin']}>
             <Forms />
           </ProtectedRoute>
         } 
       />
+      
       <Route path="/404" element={<NotFound />} />
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>

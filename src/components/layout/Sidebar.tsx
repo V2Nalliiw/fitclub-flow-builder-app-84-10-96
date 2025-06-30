@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   FileText,
@@ -14,6 +13,7 @@ import {
   Calendar,
   HelpCircle,
   Plus,
+  Building2,
 } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 
@@ -65,11 +65,12 @@ export const Sidebar = () => {
       },
     ];
 
+    // Navegação específica para pacientes
     if (user.role === 'patient') {
       return [
         ...baseItems,
         {
-          title: "Dicas e Formulários",
+          title: "Meus Formulários",
           url: "/my-flows",
           icon: FileText,
         },
@@ -81,7 +82,34 @@ export const Sidebar = () => {
       ];
     }
 
-    // For clinics and professionals
+    // Navegação para super_admin
+    if (user.role === 'super_admin') {
+      return [
+        ...baseItems,
+        {
+          title: "Clínicas",
+          url: "/clinics",
+          icon: Building2,
+        },
+        {
+          title: "Configurações",
+          url: "/settings",
+          icon: Settings,
+        },
+        {
+          title: "WhatsApp",
+          url: "/whatsapp-settings",
+          icon: MessagesSquare,
+        },
+        {
+          title: "Analytics",
+          url: "/analytics",
+          icon: Activity,
+        },
+      ];
+    }
+
+    // Navegação para clínicas
     return [
       ...baseItems,
       {
@@ -113,11 +141,6 @@ export const Sidebar = () => {
         title: "WhatsApp",
         url: "/whatsapp-settings",
         icon: MessagesSquare,
-      },
-      {
-        title: "Agendamentos",
-        url: "/appointments",
-        icon: Calendar,
       },
       {
         title: "Configurações",
