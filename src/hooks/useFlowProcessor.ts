@@ -12,6 +12,7 @@ interface FlowStep {
   order: number;
   availableAt: string;
   completed: boolean;
+  canGoBack?: boolean;
   pergunta?: string;
   tipoResposta?: 'escolha-unica' | 'multipla-escolha' | 'texto-livre';
   opcoes?: string[];
@@ -54,44 +55,45 @@ export const useFlowProcessor = () => {
 
       console.log('Processed steps:', steps);
 
-      // Create safe JSON structure for current_step
-      const currentStepData = {
-        steps: steps.map(step => ({
-          nodeId: step.nodeId,
-          nodeType: step.nodeType,
-          title: step.title,
-          description: step.description || null,
-          order: step.order,
-          availableAt: step.availableAt,
-          completed: step.completed,
-          pergunta: step.pergunta || null,
-          tipoResposta: step.tipoResposta || null,
-          opcoes: step.opcoes || null,
-          formId: step.formId || null,
-          tipoConteudo: step.tipoConteudo || null,
-          arquivo: step.arquivo || null,
-          mensagemFinal: step.mensagemFinal || null,
-          delayAmount: step.delayAmount || null,
-          delayType: step.delayType || null
-        })),
-        currentStepIndex: 0,
-        totalSteps: steps.length
+      // Create simplified JSON structure to avoid 400 errors
+      const executionData = {
+        flow_id: flowId,
+        flow_name: flow.name,
+        patient_id: patientId,
+        status: 'pending',
+        current_node: steps[0].nodeId,
+        progress: 0,
+        total_steps: steps.length,
+        completed_steps: 0,
+        current_step: {
+          steps: steps.map(step => ({
+            nodeId: step.nodeId,
+            nodeType: step.nodeType,
+            title: step.title,
+            description: step.description,
+            order: step.order,
+            availableAt: step.availableAt,
+            completed: step.completed,
+            canGoBack: step.canGoBack,
+            pergunta: step.pergunta,
+            tipoResposta: step.tipoResposta,
+            opcoes: step.opcoes,
+            formId: step.formId,
+            tipoConteudo: step.tipoConteudo,
+            arquivo: step.arquivo,
+            mensagemFinal: step.mensagemFinal,
+            delayAmount: step.delayAmount,
+            delayType: step.delayType
+          })),
+          currentStepIndex: 0,
+          totalSteps: steps.length
+        },
+        next_step_available_at: steps[0].availableAt
       };
 
       const { data: execution, error: executionError } = await supabase
         .from('flow_executions')
-        .insert({
-          flow_id: flowId,
-          flow_name: flow.name,
-          patient_id: patientId,
-          status: 'pending',
-          current_node: steps[0].nodeId,
-          progress: 0,
-          total_steps: steps.length,
-          completed_steps: 0,
-          current_step: currentStepData,
-          next_step_available_at: steps[0].availableAt
-        })
+        .insert(executionData)
         .select()
         .single();
 
@@ -122,7 +124,7 @@ export const useFlowProcessor = () => {
 
   const processNodesSequence = async (nodes: FlowNode[], edges: FlowEdge[]): Promise<FlowStep[]> => {
     const steps: FlowStep[] = [];
-    let currentDate = new Date();
+    let currentStepDate = new Date(); // Start with current time
     
     const startNode = nodes.find(node => node.type === 'start');
     if (!startNode) {
@@ -147,8 +149,9 @@ export const useFlowProcessor = () => {
           title: currentNode.data.titulo || currentNode.data.label || `${currentNode.type} ${order}`,
           description: currentNode.data.descricao,
           order,
-          availableAt: currentDate.toISOString(),
-          completed: false
+          availableAt: currentStepDate.toISOString(),
+          completed: false,
+          canGoBack: order > 1 // Allow going back except for first step
         };
 
         // Add type-specific data
@@ -168,23 +171,34 @@ export const useFlowProcessor = () => {
         order++;
       }
 
-      // Process delays - add time to currentDate for subsequent steps
+      // Process delays - ONLY apply delay AFTER current step is completed
       if (currentNode.type === 'delay') {
         const delayAmount = currentNode.data.quantidade || 1;
         const delayType = currentNode.data.tipoIntervalo || 'dias';
         
+        // Add delay info to the PREVIOUS step so it knows it has a delay after completion
+        if (steps.length > 0) {
+          const lastStep = steps[steps.length - 1];
+          lastStep.delayAmount = delayAmount;
+          lastStep.delayType = delayType;
+        }
+        
+        // Calculate next step availability
+        let nextStepDate = new Date(currentStepDate);
         switch (delayType) {
           case 'minutos':
-            currentDate = new Date(currentDate.getTime() + (delayAmount * 60 * 1000));
+            nextStepDate.setMinutes(nextStepDate.getMinutes() + delayAmount);
             break;
           case 'horas':
-            currentDate = new Date(currentDate.getTime() + (delayAmount * 60 * 60 * 1000));
+            nextStepDate.setHours(nextStepDate.getHours() + delayAmount);
             break;
           case 'dias':
           default:
-            currentDate = new Date(currentDate.getTime() + (delayAmount * 24 * 60 * 60 * 1000));
+            nextStepDate.setDate(nextStepDate.getDate() + delayAmount);
             break;
         }
+        
+        currentStepDate = nextStepDate;
       }
 
       // Find next node
@@ -213,37 +227,74 @@ export const useFlowProcessor = () => {
       const currentStepData = execution.current_step as { steps?: any[]; currentStepIndex?: number } | null;
       const currentSteps = currentStepData?.steps || [];
       
-      const updatedSteps = currentSteps.map((step: any) => {
-        if (step.nodeId === stepId) {
-          return { ...step, completed: true, response };
-        }
-        return step;
-      });
+      const stepIndex = currentSteps.findIndex((step: any) => step.nodeId === stepId);
+      if (stepIndex === -1) {
+        throw new Error('Etapa não encontrada');
+      }
 
-      const nextStep = updatedSteps.find((step: any) => !step.completed);
+      const updatedSteps = [...currentSteps];
+      const completedStep = { ...updatedSteps[stepIndex] };
+      completedStep.completed = true;
+      completedStep.response = response;
+      completedStep.completedAt = new Date().toISOString();
+      updatedSteps[stepIndex] = completedStep;
+
       const completedStepsCount = updatedSteps.filter((step: any) => step.completed).length;
       const newProgress = Math.round((completedStepsCount / updatedSteps.length) * 100);
 
-      let updateData: any = {
+      // Find next available step
+      let nextStepIndex = stepIndex + 1;
+      let nextStep = null;
+      let nextAvailableAt = null;
+      let newStatus = 'completed';
+
+      if (nextStepIndex < updatedSteps.length) {
+        nextStep = updatedSteps[nextStepIndex];
+        
+        // If completed step has delay, calculate when next step becomes available
+        if (completedStep.delayAmount && completedStep.delayType) {
+          const delayDate = new Date();
+          switch (completedStep.delayType) {
+            case 'minutos':
+              delayDate.setMinutes(delayDate.getMinutes() + completedStep.delayAmount);
+              break;
+            case 'horas':
+              delayDate.setHours(delayDate.getHours() + completedStep.delayAmount);
+              break;
+            case 'dias':
+            default:
+              delayDate.setDate(delayDate.getDate() + completedStep.delayAmount);
+              break;
+          }
+          
+          nextAvailableAt = delayDate.toISOString();
+          updatedSteps[nextStepIndex] = { ...nextStep, availableAt: nextAvailableAt };
+          newStatus = 'waiting';
+        } else {
+          newStatus = 'pending';
+        }
+      }
+
+      const updateData: any = {
         completed_steps: completedStepsCount,
         progress: newProgress,
         updated_at: new Date().toISOString(),
         current_step: {
-          ...currentStepData,
-          steps: updatedSteps
+          steps: updatedSteps,
+          currentStepIndex: newStatus === 'completed' ? -1 : nextStepIndex,
+          totalSteps: updatedSteps.length
         }
       };
 
-      if (nextStep) {
-        updateData.current_node = nextStep.nodeId;
-        updateData.current_step.currentStepIndex = updatedSteps.findIndex((s: any) => s.nodeId === nextStep.nodeId);
-        updateData.next_step_available_at = nextStep.availableAt;
-        updateData.status = new Date(nextStep.availableAt) <= new Date() ? 'pending' : 'waiting';
-      } else {
+      if (newStatus === 'completed') {
         updateData.status = 'completed';
         updateData.completed_at = new Date().toISOString();
-        updateData.progress = 100;
-        updateData.current_step.currentStepIndex = -1;
+        updateData.current_node = null;
+        updateData.next_step_available_at = null;
+      } else {
+        updateData.status = newStatus;
+        updateData.current_node = nextStep?.nodeId || null;
+        updateData.next_step_available_at = nextAvailableAt;
       }
 
       const { error: updateError } = await supabase
@@ -252,13 +303,26 @@ export const useFlowProcessor = () => {
         .eq('id', executionId);
 
       if (updateError) {
+        console.error('Erro na atualização:', updateError);
         throw updateError;
       }
 
-      toast({
-        title: "Etapa concluída",
-        description: nextStep ? "Próxima etapa será disponibilizada no momento correto" : "Fluxo concluído com sucesso!",
-      });
+      if (newStatus === 'completed') {
+        toast({
+          title: "Fluxo concluído!",
+          description: "Você completou todos os formulários com sucesso!",
+        });
+      } else if (newStatus === 'waiting') {
+        toast({
+          title: "Etapa concluída!",
+          description: "Próxima etapa será liberada automaticamente no tempo programado.",
+        });
+      } else {
+        toast({
+          title: "Etapa concluída!",
+          description: "Continue para a próxima etapa.",
+        });
+      }
 
     } catch (error) {
       console.error('Erro ao completar etapa:', error);
@@ -271,9 +335,69 @@ export const useFlowProcessor = () => {
     }
   }, [toast]);
 
+  const goBackToStep = useCallback(async (executionId: string, targetStepIndex: number) => {
+    try {
+      const { data: execution, error: execError } = await supabase
+        .from('flow_executions')
+        .select('*')
+        .eq('id', executionId)
+        .single();
+
+      if (execError || !execution) {
+        throw new Error('Execução não encontrada');
+      }
+
+      const currentStepData = execution.current_step as { steps?: any[]; currentStepIndex?: number } | null;
+      const currentSteps = currentStepData?.steps || [];
+      
+      if (targetStepIndex < 0 || targetStepIndex >= currentSteps.length) {
+        throw new Error('Índice de etapa inválido');
+      }
+
+      const targetStep = currentSteps[targetStepIndex];
+      if (!targetStep.completed) {
+        throw new Error('Só é possível voltar para etapas já completadas');
+      }
+
+      const updateData = {
+        status: 'pending',
+        current_node: targetStep.nodeId,
+        current_step: {
+          ...currentStepData,
+          currentStepIndex: targetStepIndex
+        },
+        updated_at: new Date().toISOString()
+      };
+
+      const { error: updateError } = await supabase
+        .from('flow_executions')
+        .update(updateData)
+        .eq('id', executionId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      toast({
+        title: "Navegação realizada",
+        description: "Você voltou para a etapa selecionada.",
+      });
+
+    } catch (error) {
+      console.error('Erro ao voltar para etapa:', error);
+      toast({
+        title: "Erro na navegação",
+        description: "Não foi possível voltar para esta etapa",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  }, [toast]);
+
   return {
     processing,
     processFlowAssignment,
     completeFlowStep,
+    goBackToStep,
   };
 };

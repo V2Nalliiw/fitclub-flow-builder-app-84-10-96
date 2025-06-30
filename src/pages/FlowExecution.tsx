@@ -4,13 +4,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, CheckCircle, Play, Clock } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Play, Clock, History } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { toast } from 'sonner';
 import { FlowStepRenderer } from '@/components/flows/FlowStepRenderer';
 import { DelayTimer } from '@/components/flows/DelayTimer';
+import { useFlowProcessor } from '@/hooks/useFlowProcessor';
 
 interface FlowExecution {
   id: string;
@@ -32,10 +33,12 @@ const FlowExecution = () => {
   const { executionId } = useParams<{ executionId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { completeFlowStep, goBackToStep } = useFlowProcessor();
   const [execution, setExecution] = useState<FlowExecution | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [showStepNavigation, setShowStepNavigation] = useState(false);
 
   useEffect(() => {
     if (!executionId || !user) return;
@@ -61,16 +64,17 @@ const FlowExecution = () => {
         console.log('Execution loaded:', data);
         setExecution(data as FlowExecution);
         
-        // Set current step index based on completed steps
-        if (data.current_step && typeof data.current_step === 'object' && 'steps' in data.current_step) {
+        // Set current step index
+        if (data.current_step && typeof data.current_step === 'object' && 'currentStepIndex' in data.current_step) {
           const stepsData = data.current_step as { steps: any[]; currentStepIndex?: number };
           const savedIndex = stepsData.currentStepIndex;
           
           if (typeof savedIndex === 'number' && savedIndex >= 0) {
             setCurrentStepIndex(savedIndex);
           } else {
-            const completedSteps = stepsData.steps.filter((step: any) => step.completed).length;
-            setCurrentStepIndex(completedSteps);
+            // Fallback: find first uncompleted step
+            const firstIncompleteIndex = stepsData.steps.findIndex((step: any) => !step.completed);
+            setCurrentStepIndex(firstIncompleteIndex >= 0 ? firstIncompleteIndex : 0);
           }
         }
       } catch (error) {
@@ -83,6 +87,10 @@ const FlowExecution = () => {
     };
 
     loadExecution();
+
+    // Set up real-time updates
+    const interval = setInterval(loadExecution, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
   }, [executionId, user, navigate]);
 
   const handleStepComplete = async (stepResponse: any) => {
@@ -90,7 +98,6 @@ const FlowExecution = () => {
 
     setUpdating(true);
     try {
-      // Safely extract steps from current_step
       const currentStepData = execution.current_step as { steps?: any[]; currentStepIndex?: number } | null;
       const steps = currentStepData?.steps || [];
       const currentStep = steps[currentStepIndex];
@@ -100,93 +107,87 @@ const FlowExecution = () => {
         return;
       }
 
-      // Update current step as completed
-      const updatedSteps = steps.map((step: any, index: number) => {
-        if (index === currentStepIndex) {
-          return {
-            ...step,
-            completed: true,
-            response: stepResponse,
-            completed_at: new Date().toISOString()
-          };
-        }
-        return step;
-      });
-
-      const completedCount = updatedSteps.filter((step: any) => step.completed).length;
-      const newProgress = Math.round((completedCount / steps.length) * 100);
-      const isCompleted = completedCount >= steps.length;
-
-      // Find next available step
-      let nextStepIndex = currentStepIndex + 1;
-      let nextStep = null;
-      let nextAvailableAt = null;
-
-      if (nextStepIndex < steps.length) {
-        nextStep = steps[nextStepIndex];
-        nextAvailableAt = nextStep.availableAt;
-      }
-
-      // Prepare update data with safe structure
-      const updateData: any = {
-        completed_steps: completedCount,
-        progress: newProgress,
-        updated_at: new Date().toISOString(),
-        current_step: {
-          steps: updatedSteps,
-          currentStepIndex: isCompleted ? -1 : nextStepIndex,
-          totalSteps: steps.length
-        }
-      };
-
-      if (isCompleted) {
-        updateData.status = 'completed';
-        updateData.completed_at = new Date().toISOString();
-        updateData.current_node = null;
-        updateData.next_step_available_at = null;
-      } else if (nextStep) {
-        updateData.current_node = nextStep.nodeId;
-        
-        if (nextAvailableAt && new Date(nextAvailableAt) > new Date()) {
-          updateData.status = 'waiting';
-          updateData.next_step_available_at = nextAvailableAt;
-        } else {
-          updateData.status = 'pending';
-          updateData.next_step_available_at = null;
-        }
-      }
-
-      console.log('Updating execution with data:', updateData);
-
-      const { data, error } = await supabase
+      await completeFlowStep(execution.id, currentStep.nodeId, stepResponse);
+      
+      // Reload execution to get updated state
+      const { data: updatedExecution } = await supabase
         .from('flow_executions')
-        .update(updateData)
+        .select('*')
         .eq('id', execution.id)
-        .select()
         .single();
 
-      if (error) {
-        console.error('Erro ao atualizar execução:', error);
-        toast.error('Erro ao salvar progresso: ' + error.message);
-        return;
-      }
+      if (updatedExecution) {
+        setExecution(updatedExecution as FlowExecution);
+        
+        const updatedStepData = updatedExecution.current_step as { currentStepIndex?: number };
+        if (typeof updatedStepData.currentStepIndex === 'number') {
+          setCurrentStepIndex(updatedStepData.currentStepIndex);
+        }
 
-      setExecution(data as FlowExecution);
-      
-      if (isCompleted) {
-        toast.success('Fluxo concluído com sucesso!');
-        setTimeout(() => navigate('/my-flows'), 2000);
-      } else if (nextStep && (!nextAvailableAt || new Date(nextAvailableAt) <= new Date())) {
-        setCurrentStepIndex(nextStepIndex);
-        toast.success('Etapa concluída! Continuando...');
-      } else if (nextStep) {
-        toast.success('Etapa concluída! Aguardando próxima etapa...');
+        // Check if completed or waiting
+        if (updatedExecution.status === 'completed') {
+          setTimeout(() => navigate('/my-flows'), 2000);
+        }
       }
     } catch (error) {
       console.error('Erro ao completar etapa:', error);
-      toast.error('Erro ao completar etapa');
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleGoBack = async () => {
+    if (!execution || currentStepIndex <= 0) return;
+
+    const targetIndex = currentStepIndex - 1;
+    try {
+      await goBackToStep(execution.id, targetIndex);
+      setCurrentStepIndex(targetIndex);
+      
+      // Reload execution
+      const { data: updatedExecution } = await supabase
+        .from('flow_executions')
+        .select('*')
+        .eq('id', execution.id)
+        .single();
+
+      if (updatedExecution) {
+        setExecution(updatedExecution as FlowExecution);
+      }
+    } catch (error) {
+      console.error('Erro ao voltar etapa:', error);
+    }
+  };
+
+  const handleStepNavigation = async (stepIndex: number) => {
+    if (!execution) return;
+
+    const currentStepData = execution.current_step as { steps?: any[] };
+    const steps = currentStepData?.steps || [];
+    const targetStep = steps[stepIndex];
+
+    if (!targetStep || !targetStep.completed) {
+      toast.error('Você só pode navegar para etapas já completadas');
+      return;
+    }
+
+    try {
+      await goBackToStep(execution.id, stepIndex);
+      setCurrentStepIndex(stepIndex);
+      setShowStepNavigation(false);
+
+      // Reload execution
+      const { data: updatedExecution } = await supabase
+        .from('flow_executions')
+        .select('*')
+        .eq('id', execution.id)
+        .single();
+
+      if (updatedExecution) {
+        setExecution(updatedExecution as FlowExecution);
+      }
+    } catch (error) {
+      console.error('Erro na navegação:', error);
     }
   };
 
@@ -202,6 +203,10 @@ const FlowExecution = () => {
         .then(({ data, error }) => {
           if (!error && data) {
             setExecution(data as FlowExecution);
+            const updatedStepData = data.current_step as { currentStepIndex?: number };
+            if (typeof updatedStepData.currentStepIndex === 'number') {
+              setCurrentStepIndex(updatedStepData.currentStepIndex);
+            }
             toast.success('Próximo formulário liberado!');
           }
         });
@@ -226,29 +231,70 @@ const FlowExecution = () => {
   const steps = currentStepData?.steps || [];
   const currentStep = steps[currentStepIndex];
   const isWaiting = execution.status === 'waiting' && execution.next_step_available_at;
+  const completedSteps = steps.filter((step: any) => step.completed);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/my-flows')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-              {execution.flow_name}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Progresso: {execution.progress}% concluído ({execution.completed_steps} de {steps.length} etapas)
-            </p>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/my-flows')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                {execution.flow_name}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Progresso: {execution.progress}% concluído ({execution.completed_steps} de {steps.length} etapas)
+              </p>
+            </div>
           </div>
+          
+          {completedSteps.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => setShowStepNavigation(!showStepNavigation)}
+              className="flex items-center gap-2"
+            >
+              <History className="h-4 w-4" />
+              Navegar Etapas
+            </Button>
+          )}
         </div>
+
+        {/* Step Navigation */}
+        {showStepNavigation && (
+          <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle>Navegação por Etapas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-2 max-h-60 overflow-y-auto">
+                {steps.map((step: any, index: number) => (
+                  <Button
+                    key={step.nodeId}
+                    variant={index === currentStepIndex ? "default" : step.completed ? "outline" : "ghost"}
+                    disabled={!step.completed && index !== currentStepIndex}
+                    onClick={() => handleStepNavigation(index)}
+                    className="justify-start"
+                  >
+                    <span className="mr-2">
+                      {step.completed ? '✅' : index === currentStepIndex ? '📍' : '⏳'}
+                    </span>
+                    Etapa {index + 1}: {step.title}
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Progress */}
         <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
@@ -308,6 +354,8 @@ const FlowExecution = () => {
               <FlowStepRenderer
                 step={currentStep}
                 onComplete={handleStepComplete}
+                onGoBack={currentStepIndex > 0 ? handleGoBack : undefined}
+                canGoBack={currentStepIndex > 0 && currentStep.canGoBack}
                 isLoading={updating}
               />
             ) : isWaiting ? (
@@ -316,10 +364,11 @@ const FlowExecution = () => {
                   <Clock className="h-12 w-12 text-orange-500" />
                 </div>
                 <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                  Aguardando próxima etapa
+                  Etapa completada!
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
                   Sua próxima etapa será liberada automaticamente no tempo programado.
+                  Você pode fechar esta página e voltar depois.
                 </p>
                 <Button
                   onClick={() => navigate('/my-flows')}

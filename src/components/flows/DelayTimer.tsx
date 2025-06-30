@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Clock, Calendar, Timer } from 'lucide-react';
+import { Clock, Calendar, Timer, CheckCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { formatDistanceToNow, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -22,10 +23,12 @@ export const DelayTimer: React.FC<DelayTimerProps> = ({ availableAt, onDelayExpi
       const now = new Date();
       
       if (isAfter(now, targetDate)) {
-        setIsExpired(true);
-        setTimeRemaining('Disponível agora!');
-        if (onDelayExpired) {
-          onDelayExpired();
+        if (!isExpired) {
+          setIsExpired(true);
+          setTimeRemaining('Disponível agora!');
+          if (onDelayExpired) {
+            onDelayExpired();
+          }
         }
         return;
       }
@@ -52,7 +55,13 @@ export const DelayTimer: React.FC<DelayTimerProps> = ({ availableAt, onDelayExpi
     const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [availableAt, onDelayExpired]);
+  }, [availableAt, onDelayExpired, isExpired]);
+
+  const handleRefresh = () => {
+    if (onDelayExpired) {
+      onDelayExpired();
+    }
+  };
 
   return (
     <Card className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 border-orange-200 dark:border-orange-800">
@@ -60,7 +69,7 @@ export const DelayTimer: React.FC<DelayTimerProps> = ({ availableAt, onDelayExpi
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full flex items-center justify-center">
             {isExpired ? (
-              <Timer className="h-6 w-6 text-white" />
+              <CheckCircle className="h-6 w-6 text-white" />
             ) : (
               <Clock className="h-6 w-6 text-white animate-pulse" />
             )}
@@ -69,7 +78,7 @@ export const DelayTimer: React.FC<DelayTimerProps> = ({ availableAt, onDelayExpi
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {isExpired ? 'Próximo formulário disponível!' : 'Aguardando próximo formulário'}
+                {isExpired ? 'Próximo formulário disponível!' : 'Formulário completado! ✅'}
               </h3>
               <Badge variant={isExpired ? 'default' : 'secondary'} className={
                 isExpired 
@@ -83,30 +92,50 @@ export const DelayTimer: React.FC<DelayTimerProps> = ({ availableAt, onDelayExpi
             <p className="text-gray-600 dark:text-gray-400 mb-3">
               {isExpired 
                 ? 'Você pode continuar com o próximo formulário agora!'
-                : 'O próximo formulário será liberado automaticamente quando o tempo chegar.'
+                : 'Você completou esta etapa com sucesso! O próximo formulário será liberado automaticamente.'
               }
             </p>
             
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
-                <Calendar className="h-4 w-4" />
-                <span>
-                  {formatDistanceToNow(new Date(availableAt), { 
-                    addSuffix: true, 
-                    locale: ptBR 
-                  })}
-                </span>
-              </div>
-              
-              {!isExpired && (
-                <div className="flex items-center gap-1 font-semibold text-orange-600 dark:text-orange-400">
-                  <Timer className="h-4 w-4" />
-                  <span>{timeRemaining}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                  <Calendar className="h-4 w-4" />
+                  <span>
+                    {formatDistanceToNow(new Date(availableAt), { 
+                      addSuffix: true, 
+                      locale: ptBR 
+                    })}
+                  </span>
                 </div>
+                
+                {!isExpired && (
+                  <div className="flex items-center gap-1 font-semibold text-orange-600 dark:text-orange-400">
+                    <Timer className="h-4 w-4" />
+                    <span>{timeRemaining}</span>
+                  </div>
+                )}
+              </div>
+
+              {isExpired && (
+                <Button
+                  onClick={handleRefresh}
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+                  size="sm"
+                >
+                  Continuar Formulário
+                </Button>
               )}
             </div>
           </div>
         </div>
+
+        {!isExpired && (
+          <div className="mt-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3">
+            <p className="text-sm text-blue-800 dark:text-blue-200 text-center">
+              💡 Você pode fechar esta página. O formulário continuará disponível quando o tempo chegar.
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -7,19 +7,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowRight, FileText, MessageCircle, CheckCircle } from 'lucide-react';
-import { DocumentDownload } from './DocumentDownload';
+import { ArrowRight, ArrowLeft, FileText, MessageCircle, CheckCircle } from 'lucide-react';
+import { EnhancedDocumentDisplay } from './EnhancedDocumentDisplay';
 
 interface FlowStepRendererProps {
   step: any;
   onComplete: (response: any) => void;
+  onGoBack?: () => void;
   isLoading?: boolean;
+  canGoBack?: boolean;
 }
 
 export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
   step,
   onComplete,
-  isLoading = false
+  onGoBack,
+  isLoading = false,
+  canGoBack = false
 }) => {
   const [response, setResponse] = useState<any>('');
   const [multipleChoiceResponse, setMultipleChoiceResponse] = useState<string[]>([]);
@@ -154,12 +158,13 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
             </div>
 
             {step.arquivo && (
-              <DocumentDownload
-                fileName={step.arquivo}
+              <EnhancedDocumentDisplay
+                fileName={step.arquivo.split('/').pop() || 'documento'}
                 fileUrl={step.arquivo}
-                title="Documento de Tratamento"
-                description="Material complementar para seu tratamento"
-                fileType={step.tipoConteudo || 'pdf'}
+                fileType={step.tipoConteudo === 'pdf' ? 'application/pdf' : 
+                         step.tipoConteudo === 'video' ? 'video/mp4' : 'image/jpeg'}
+                title="Material de Tratamento"
+                description="Conteúdo complementar para seu acompanhamento"
               />
             )}
 
@@ -174,6 +179,11 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
             <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-4">
               <p className="text-green-800 dark:text-green-200 text-center font-medium">
                 🎉 Clique em "Finalizar" para concluir esta etapa
+                {step.delayAmount && step.delayType && (
+                  <span className="block mt-2 text-sm">
+                    ⏰ Após finalizar, aguarde {step.delayAmount} {step.delayType} para a próxima etapa
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -221,16 +231,27 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
   return (
     <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-center justify-center">
+        <CardTitle className="flex items-center justify-between">
           <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
             Etapa {step.order || 1}
           </span>
+          {canGoBack && onGoBack && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onGoBack}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Voltar
+            </Button>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {renderStepContent()}
         
-        <div className="flex justify-center pt-4">
+        <div className="flex justify-center pt-4 gap-3">
           <Button
             onClick={handleSubmit}
             disabled={!canSubmit() || isLoading}
