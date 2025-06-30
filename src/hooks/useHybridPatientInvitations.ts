@@ -162,7 +162,10 @@ export const useHybridPatientInvitations = () => {
     setIsCreating(true);
 
     try {
-      // Criar notificação para o paciente existente
+      console.log('🔔 Enviando convite interno para:', patient);
+      console.log('👤 Usuário da clínica:', { id: user.id, clinic_id: user.clinic_id });
+      
+      // Criar notificação para o paciente existente usando a categoria correta
       const { error: notificationError } = await supabase
         .from('notifications')
         .insert({
@@ -170,7 +173,7 @@ export const useHybridPatientInvitations = () => {
           title: `Convite da Clínica`,
           message: `Você foi convidado para se juntar à nossa clínica.`,
           type: 'info',
-          category: 'patient_invite',
+          category: 'patient_invite', // Categoria correta que corresponde à política RLS
           metadata: {
             clinic_id: user.clinic_id,
             invited_by: user.id,
@@ -179,7 +182,7 @@ export const useHybridPatientInvitations = () => {
         });
 
       if (notificationError) {
-        console.error('Erro ao criar notificação:', notificationError);
+        console.error('💥 Erro ao criar notificação:', notificationError);
         toast({
           title: "Erro ao enviar convite",
           description: notificationError.message,
@@ -188,6 +191,7 @@ export const useHybridPatientInvitations = () => {
         return false;
       }
 
+      console.log('✅ Convite interno enviado com sucesso');
       toast({
         title: "Convite enviado",
         description: `Convite interno enviado para ${patient.name}`,
@@ -195,7 +199,7 @@ export const useHybridPatientInvitations = () => {
 
       return true;
     } catch (error: any) {
-      console.error('Erro ao convidar paciente existente:', error);
+      console.error('💥 Erro inesperado ao convidar paciente existente:', error);
       toast({
         title: "Erro",
         description: "Não foi possível enviar o convite",
