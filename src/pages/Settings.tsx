@@ -106,7 +106,7 @@ export const Settings = () => {
         </p>
       </div>
 
-      <div className="grid gap-6">
+      <div className="space-y-6">
         {/* Configurações do App - apenas para super admin */}
         {user?.role === 'super_admin' && (
           <Card>
@@ -141,7 +141,7 @@ export const Settings = () => {
         )}
 
         {/* Informações da Clínica */}
-        <Card className="md:col-span-2">
+        <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
@@ -226,73 +226,71 @@ export const Settings = () => {
           </CardContent>
         </Card>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Notificações */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                <CardTitle>Notificações</CardTitle>
+        {/* Notificações - Full width card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              <CardTitle>Notificações</CardTitle>
+            </div>
+            <CardDescription>
+              Configure quando receber notificações
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Novo Paciente</Label>
+                <p className="text-sm text-muted-foreground">Quando um novo paciente se cadastrar</p>
               </div>
-              <CardDescription>
-                Configure quando receber notificações
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Novo Paciente</Label>
-                  <p className="text-sm text-muted-foreground">Quando um novo paciente se cadastrar</p>
-                </div>
-                <Switch
-                  checked={notifications.newPatient}
-                  onCheckedChange={(value) => handleNotificationChange('newPatient', value)}
-                />
+              <Switch
+                checked={notifications.newPatient}
+                onCheckedChange={(value) => handleNotificationChange('newPatient', value)}
+              />
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Lembrete de Consulta</Label>
+                <p className="text-sm text-muted-foreground">Lembretes de consultas agendadas</p>
               </div>
+              <Switch
+                checked={notifications.appointmentReminder}
+                onCheckedChange={(value) => handleNotificationChange('appointmentReminder', value)}
+              />
+            </div>
 
-              <Separator />
+            <Separator />
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Lembrete de Consulta</Label>
-                  <p className="text-sm text-muted-foreground">Lembretes de consultas agendadas</p>
-                </div>
-                <Switch
-                  checked={notifications.appointmentReminder}
-                  onCheckedChange={(value) => handleNotificationChange('appointmentReminder', value)}
-                />
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Fluxo Concluído</Label>
+                <p className="text-sm text-muted-foreground">Quando um paciente completar um fluxo</p>
               </div>
+              <Switch
+                checked={notifications.flowCompletion}
+                onCheckedChange={(value) => handleNotificationChange('flowCompletion', value)}
+              />
+            </div>
 
-              <Separator />
+            <Separator />
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Fluxo Concluído</Label>
-                  <p className="text-sm text-muted-foreground">Quando um paciente completar um fluxo</p>
-                </div>
-                <Switch
-                  checked={notifications.flowCompletion}
-                  onCheckedChange={(value) => handleNotificationChange('flowCompletion', value)}
-                />
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Atualizações do Sistema</Label>
+                <p className="text-sm text-muted-foreground">Notificações sobre atualizações</p>
               </div>
+              <Switch
+                checked={notifications.systemUpdates}
+                onCheckedChange={(value) => handleNotificationChange('systemUpdates', value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Atualizações do Sistema</Label>
-                  <p className="text-sm text-muted-foreground">Notificações sobre atualizações</p>
-                </div>
-                <Switch
-                  checked={notifications.systemUpdates}
-                  onCheckedChange={(value) => handleNotificationChange('systemUpdates', value)}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* WhatsApp Integration */}
+        {/* WhatsApp Integration - Full width card */}
         <WhatsAppSettingsCard />
       </div>
 
