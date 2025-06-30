@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { FlowStepRenderer } from '@/components/flows/FlowStepRenderer';
 import { DelayTimer } from '@/components/flows/DelayTimer';
 import { useFlowProcessor } from '@/hooks/useFlowProcessor';
-import { statusToFrontend, statusToDatabase } from '@/utils/statusMapper';
+import { statusToFrontend } from '@/utils/statusMapper';
 
 interface FlowExecution {
   id: string;
@@ -125,8 +125,8 @@ const FlowExecution = () => {
           setCurrentStepIndex(updatedStepData.currentStepIndex);
         }
 
-        // Check if completed or waiting
-        if (updatedExecution.status === statusToDatabase('concluido')) {
+        // Check if completed
+        if (updatedExecution.status === 'completed') {
           setTimeout(() => navigate('/my-flows'), 2000);
         }
       }
@@ -212,13 +212,13 @@ const FlowExecution = () => {
               supabase
                 .from('flow_executions')
                 .update({
-                  status: statusToDatabase('em-andamento'),
+                  status: 'in-progress', // Use valid status
                   next_step_available_at: null,
                   updated_at: new Date().toISOString()
                 })
                 .eq('id', executionId)
                 .then(() => {
-                  setExecution(prev => prev ? {...prev, status: statusToDatabase('em-andamento'), next_step_available_at: null} : null);
+                  setExecution(prev => prev ? {...prev, status: 'in-progress', next_step_available_at: null} : null);
                   const updatedStepData = data.current_step as { currentStepIndex?: number };
                   if (typeof updatedStepData.currentStepIndex === 'number') {
                     setCurrentStepIndex(updatedStepData.currentStepIndex);
@@ -244,11 +244,11 @@ const FlowExecution = () => {
     return null;
   }
 
-  const isCompleted = execution.status === statusToDatabase('concluido') || execution.progress >= 100;
+  const isCompleted = execution.status === 'completed' || execution.progress >= 100;
   const currentStepData = execution.current_step as { steps?: any[]; currentStepIndex?: number } | null;
   const steps = currentStepData?.steps || [];
   const currentStep = steps[currentStepIndex];
-  const isWaiting = execution.status === statusToDatabase('aguardando') && execution.next_step_available_at;
+  const isWaiting = execution.status === 'pending' && execution.next_step_available_at;
   const completedSteps = steps.filter((step: any) => step.completed);
 
   // Check if delay has expired

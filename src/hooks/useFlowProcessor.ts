@@ -61,7 +61,7 @@ export const useFlowProcessor = () => {
         flow_id: flowId,
         flow_name: flow.name,
         patient_id: patientId,
-        status: statusToDatabase('em-andamento'),
+        status: 'in-progress', // Use valid status
         current_node: steps[0].nodeId,
         progress: 0,
         total_steps: steps.length,
@@ -215,6 +215,8 @@ export const useFlowProcessor = () => {
 
   const completeFlowStep = useCallback(async (executionId: string, stepId: string, response?: any) => {
     try {
+      console.log('useFlowProcessor: Completando step:', { executionId, stepId, response });
+      
       const { data: execution, error: execError } = await supabase
         .from('flow_executions')
         .select('*')
@@ -224,6 +226,8 @@ export const useFlowProcessor = () => {
       if (execError || !execution) {
         throw new Error('Execução não encontrada');
       }
+
+      console.log('useFlowProcessor: Execução atual:', execution);
 
       const currentStepData = execution.current_step as { steps?: any[]; currentStepIndex?: number } | null;
       const currentSteps = currentStepData?.steps || [];
@@ -247,7 +251,7 @@ export const useFlowProcessor = () => {
       let nextStepIndex = stepIndex + 1;
       let nextStep = null;
       let nextAvailableAt = null;
-      let newStatus = statusToDatabase('concluido');
+      let newStatus = 'completed'; // Use valid status
 
       if (nextStepIndex < updatedSteps.length) {
         nextStep = updatedSteps[nextStepIndex];
@@ -270,9 +274,9 @@ export const useFlowProcessor = () => {
           
           nextAvailableAt = delayDate.toISOString();
           updatedSteps[nextStepIndex] = { ...nextStep, availableAt: nextAvailableAt };
-          newStatus = statusToDatabase('aguardando');
+          newStatus = 'pending'; // Use pending for waiting state
         } else {
-          newStatus = statusToDatabase('em-andamento');
+          newStatus = 'in-progress'; // Use valid status
         }
       }
 
@@ -282,12 +286,12 @@ export const useFlowProcessor = () => {
         updated_at: new Date().toISOString(),
         current_step: {
           steps: updatedSteps,
-          currentStepIndex: newStatus === statusToDatabase('concluido') ? -1 : nextStepIndex,
+          currentStepIndex: newStatus === 'completed' ? -1 : nextStepIndex,
           totalSteps: updatedSteps.length
         }
       };
 
-      if (newStatus === statusToDatabase('concluido')) {
+      if (newStatus === 'completed') {
         updateData.status = newStatus;
         updateData.completed_at = new Date().toISOString();
         updateData.current_node = null;
@@ -297,6 +301,8 @@ export const useFlowProcessor = () => {
         updateData.current_node = nextStep?.nodeId || null;
         updateData.next_step_available_at = nextAvailableAt;
       }
+
+      console.log('useFlowProcessor: Dados para atualização:', updateData);
 
       const { error: updateError } = await supabase
         .from('flow_executions')
@@ -308,12 +314,12 @@ export const useFlowProcessor = () => {
         throw updateError;
       }
 
-      if (newStatus === statusToDatabase('concluido')) {
+      if (newStatus === 'completed') {
         toast({
           title: "Fluxo concluído!",
           description: "Você completou todos os formulários com sucesso!",
         });
-      } else if (newStatus === statusToDatabase('aguardando')) {
+      } else if (newStatus === 'pending' && nextAvailableAt) {
         toast({
           title: "Etapa concluída!",
           description: "Próxima etapa será liberada automaticamente no tempo programado.",
@@ -361,7 +367,7 @@ export const useFlowProcessor = () => {
       }
 
       const updateData = {
-        status: statusToDatabase('em-andamento'),
+        status: 'in-progress', // Use valid status
         current_node: targetStep.nodeId,
         current_step: {
           ...currentStepData,
