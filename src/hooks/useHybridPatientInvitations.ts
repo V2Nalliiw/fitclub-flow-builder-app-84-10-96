@@ -34,7 +34,7 @@ export const useHybridPatientInvitations = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Buscar pacientes existentes sem clínica
+  // Buscar pacientes existentes (agora inclui pacientes de outras clínicas também)
   const searchExistingPatients = useCallback(async (searchTerm: string) => {
     console.log('🔍 Iniciando busca por:', searchTerm);
     
@@ -45,106 +45,56 @@ export const useHybridPatientInvitations = () => {
 
     setIsSearching(true);
     try {
-      // 1. Primeiro vamos verificar se o usuário existe na tabela
-      console.log('📋 Buscando todos os perfis para debug...');
-      const { data: allProfiles, error: allError } = await supabase
-        .from('profiles')
-        .select('user_id, name, email, role, clinic_id');
-      
-      console.log('📋 Todos os perfis encontrados:', allProfiles);
-      console.log('📋 Erro na busca geral:', allError);
-
-      // 2. Buscar especificamente por pacientes
-      console.log('👤 Buscando apenas pacientes...');
-      const { data: allPatients, error: patientsError } = await supabase
-        .from('profiles')
-        .select('user_id, name, email, role, clinic_id')
-        .eq('role', 'patient');
-      
-      console.log('👤 Todos os pacientes encontrados:', allPatients);
-      console.log('👤 Erro na busca de pacientes:', patientsError);
-
-      // 3. Buscar pacientes sem clínica
-      console.log('🏥 Buscando pacientes sem clínica...');
-      const { data: patientsWithoutClinic, error: withoutClinicError } = await supabase
+      // Buscar todos os pacientes (não apenas os sem clínica)
+      const { data: patientsData, error } = await supabase
         .from('profiles')
         .select('user_id, name, email, role, clinic_id')
         .eq('role', 'patient')
-        .is('clinic_id', null);
-      
-      console.log('🏥 Pacientes sem clínica:', patientsWithoutClinic);
-      console.log('🏥 Erro na busca sem clínica:', withoutClinicError);
-
-      // 4. Agora vamos fazer a busca com filtro de texto
-      console.log('🔤 Fazendo busca com filtro de texto...');
-      
-      // Busca exata por email
-      const { data: exactEmailMatch, error: exactError } = await supabase
-        .from('profiles')
-        .select('user_id, name, email, role, clinic_id')
-        .eq('role', 'patient')
-        .is('clinic_id', null)
-        .eq('email', searchTerm);
-      
-      console.log('✉️ Busca exata por email:', exactEmailMatch);
-      console.log('✉️ Erro busca exata:', exactError);
-
-      // Busca com ilike para partial match
-      const { data: partialMatch, error: partialError } = await supabase
-        .from('profiles')
-        .select('user_id, name, email, role, clinic_id')
-        .eq('role', 'patient')
-        .is('clinic_id', null)
         .or(`email.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%`);
-      
-      console.log('🔍 Busca com ilike:', partialMatch);
-      console.log('🔍 Erro busca ilike:', partialError);
 
-      // 5. Tentar busca mais ampla (sem filtro de texto)
-      const { data: broadSearch, error: broadError } = await supabase
-        .from('profiles')
-        .select('user_id, name, email, role, clinic_id')
-        .eq('role', 'patient')
-        .is('clinic_id', null);
-      
-      console.log('🌐 Busca ampla (todos pacientes sem clínica):', broadSearch);
-      console.log('🌐 Erro busca ampla:', broadError);
+      console.log('👥 Todos os pacientes encontrados:', patientsData);
+      console.log('❌ Erro na busca:', error);
 
-      // Usar o resultado que tiver dados
-      let finalData = exactEmailMatch;
-      if (!finalData || finalData.length === 0) {
-        finalData = partialMatch;
-      }
-      if (!finalData || finalData.length === 0) {
-        finalData = broadSearch?.filter(p => 
-          p.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-
-      console.log('🎯 Dados finais selecionados:', finalData);
-
-      if (!finalData || finalData.length === 0) {
-        console.log('❌ Nenhum resultado encontrado após todas as tentativas');
-        setExistingPatients([]);
+      if (error) {
+        console.error('Erro na busca de pacientes:', error);
         toast({
-          title: "Nenhum paciente encontrado",
-          description: "Não foram encontrados pacientes disponíveis com esse termo de busca.",
+          title: "Erro na busca",
+          description: error.message,
+          variant: "destructive",
         });
         return;
       }
 
-      const patients: ExistingPatient[] = finalData.map(profile => ({
+      if (!patientsData || patientsData.length === 0) {
+        console.log('❌ Nenhum paciente encontrado');
+        setExistingPatients([]);
+        return;
+      }
+
+      // Filtrar apenas pacientes que não estão na clínica atual
+      const availablePatients = patientsData.filter(patient => 
+        patient.clinic_id !== user?.clinic_id
+      );
+
+      console.log('✅ Pacientes disponíveis (fora da clínica atual):', availablePatients);
+
+      const patients: ExistingPatient[] = availablePatients.map(profile => ({
         id: profile.user_id,
         name: profile.name,
         email: profile.email,
         user_id: profile.user_id,
       }));
 
-      console.log('✅ Pacientes transformados:', patients);
       setExistingPatients(patients);
 
-    } catch (error) {
+      if (patients.length === 0) {
+        toast({
+          title: "Nenhum paciente disponível",
+          description: "Todos os pacientes encontrados já estão em sua clínica ou em outras clínicas.",
+        });
+      }
+
+    } catch (error: any) {
       console.error('💥 Erro inesperado na busca:', error);
       toast({
         title: "Erro inesperado",
@@ -154,7 +104,7 @@ export const useHybridPatientInvitations = () => {
     } finally {
       setIsSearching(false);
     }
-  }, [toast]);
+  }, [toast, user?.clinic_id]);
 
   const loadInvitations = useCallback(async () => {
     if (!user?.clinic_id) {
