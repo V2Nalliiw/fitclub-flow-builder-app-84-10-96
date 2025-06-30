@@ -142,8 +142,8 @@ export const useFlowAssignments = () => {
       }
 
       // Safely parse nodes and edges from Json to proper types
-      const nodes: FlowNode[] = Array.isArray(flow.nodes) ? flow.nodes as FlowNode[] : [];
-      const edges: FlowEdge[] = Array.isArray(flow.edges) ? flow.edges as FlowEdge[] : [];
+      const nodes: FlowNode[] = Array.isArray(flow.nodes) ? (flow.nodes as unknown as FlowNode[]) : [];
+      const edges: FlowEdge[] = Array.isArray(flow.edges) ? (flow.edges as unknown as FlowEdge[]) : [];
 
       // Process flow to create proper execution with steps
       const execution = await processFlowAssignment(
