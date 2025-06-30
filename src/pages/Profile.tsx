@@ -7,8 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { AvatarUpload } from '@/components/ui/avatar-upload';
+import { PatientWhatsAppConfig } from '@/components/patients/PatientWhatsAppConfig';
 import { useAuth } from '@/contexts/AuthContext';
-import { Bell, Lock, User, Save } from 'lucide-react';
+import { Bell, Lock, User, Save, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export const Profile = () => {
@@ -18,7 +19,7 @@ export const Profile = () => {
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    phone: '',
+    phone: user?.phone || '',
     bio: '',
     notifications: {
       email: true,
@@ -46,6 +47,13 @@ export const Profile = () => {
         ...prev.notifications,
         [type]: value
       }
+    }));
+  };
+
+  const handleWhatsAppUpdate = (phone: string) => {
+    setFormData(prev => ({
+      ...prev,
+      phone: phone
     }));
   };
 
@@ -108,79 +116,77 @@ export const Profile = () => {
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Informações Pessoais */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              <CardTitle>Informações Pessoais</CardTitle>
-            </div>
-            <CardDescription>
-              Atualize suas informações básicas
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <AvatarUpload
-                currentAvatar={user?.avatar_url}
-                userName={user?.name}
-                size="lg"
-              />
-              <div className="flex-1">
-                <Label>Foto do Perfil</Label>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Clique na imagem para alterar sua foto de perfil
-                </p>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                <CardTitle>Informações Pessoais</CardTitle>
               </div>
-            </div>
-
-            <div className="grid gap-4">
-              <div>
-                <Label htmlFor="name">Nome Completo</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
+              <CardDescription>
+                Atualize suas informações básicas
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-4">
+                <AvatarUpload
+                  currentAvatar={user?.avatar_url}
+                  userName={user?.name}
+                  size="lg"
                 />
+                <div className="flex-1">
+                  <Label>Foto do Perfil</Label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Clique na imagem para alterar sua foto de perfil
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                />
+              <div className="grid gap-4">
+                <div>
+                  <Label htmlFor="name">Nome Completo</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="bio">Biografia</Label>
+                  <Textarea
+                    id="bio"
+                    value={formData.bio}
+                    onChange={(e) => handleInputChange('bio', e.target.value)}
+                    placeholder="Conte um pouco sobre você..."
+                    rows={3}
+                  />
+                </div>
               </div>
 
-              <div>
-                <Label htmlFor="phone">Telefone</Label>
-                <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  placeholder="(11) 99999-9999"
-                />
-              </div>
+              <Button onClick={handleSaveProfile} disabled={loading} className="w-full">
+                <Save className="h-4 w-4 mr-2" />
+                {loading ? 'Salvando...' : 'Salvar Alterações'}
+              </Button>
+            </CardContent>
+          </Card>
 
-              <div>
-                <Label htmlFor="bio">Biografia</Label>
-                <Textarea
-                  id="bio"
-                  value={formData.bio}
-                  onChange={(e) => handleInputChange('bio', e.target.value)}
-                  placeholder="Conte um pouco sobre você..."
-                  rows={3}
-                />
-              </div>
-            </div>
-
-            <Button onClick={handleSaveProfile} disabled={loading} className="w-full">
-              <Save className="h-4 w-4 mr-2" />
-              {loading ? 'Salvando...' : 'Salvar Alterações'}
-            </Button>
-          </CardContent>
-        </Card>
+          {/* Configuração do WhatsApp */}
+          <PatientWhatsAppConfig 
+            initialPhone={formData.phone}
+            onPhoneUpdate={handleWhatsAppUpdate}
+          />
+        </div>
 
         {/* Segurança e Notificações */}
         <div className="space-y-6">
@@ -272,12 +278,13 @@ export const Profile = () => {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>SMS</Label>
-                  <p className="text-sm text-muted-foreground">Receber SMS importantes</p>
+                  <Label>WhatsApp</Label>
+                  <p className="text-sm text-muted-foreground">Receber formulários via WhatsApp</p>
                 </div>
                 <Switch
-                  checked={formData.notifications.sms}
-                  onCheckedChange={(value) => handleNotificationChange('sms', value)}
+                  checked={!!formData.phone}
+                  disabled={!formData.phone}
+                  onCheckedChange={() => {}}
                 />
               </div>
             </CardContent>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,6 +9,7 @@ export interface Patient {
   name: string;
   email: string;
   phone?: string;
+  whatsapp_verified?: boolean;
   clinic_id: string;
   avatar_url?: string;
   role: string;
@@ -32,7 +32,7 @@ export const usePatients = () => {
 
     setLoading(true);
     try {
-      // Buscar pacientes da clínica específica
+      // Buscar pacientes da clínica específica com informações do WhatsApp
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -50,13 +50,14 @@ export const usePatients = () => {
         return;
       }
 
-      // Transform profiles to Patient format
+      // Transform profiles to Patient format with WhatsApp info
       const transformedPatients: Patient[] = (data || []).map((profile: any) => ({
-        id: profile.user_id, // Use user_id as id for compatibility
+        id: profile.user_id,
         user_id: profile.user_id,
         name: profile.name,
         email: profile.email,
         phone: profile.phone || undefined,
+        whatsapp_verified: !!profile.phone, // Se tem phone, consideramos verificado por enquanto
         clinic_id: profile.clinic_id,
         avatar_url: profile.avatar_url || undefined,
         role: profile.role,
@@ -65,6 +66,7 @@ export const usePatients = () => {
         updated_at: profile.updated_at,
       }));
 
+      console.log('Pacientes carregados com WhatsApp:', transformedPatients);
       setPatients(transformedPatients);
     } catch (error) {
       console.error('Erro inesperado:', error);
@@ -77,6 +79,16 @@ export const usePatients = () => {
       setLoading(false);
     }
   }, [user?.id, user?.clinic_id, toast]);
+
+  const getPatientWhatsApp = useCallback((patientId: string): string | null => {
+    const patient = patients.find(p => p.id === patientId || p.user_id === patientId);
+    return patient?.phone || null;
+  }, [patients]);
+
+  const isPatientWhatsAppVerified = useCallback((patientId: string): boolean => {
+    const patient = patients.find(p => p.id === patientId || p.user_id === patientId);
+    return patient?.whatsapp_verified || false;
+  }, [patients]);
 
   const addPatient = async (patientData: { name: string; email: string; phone?: string }) => {
     if (!user?.id || !user?.clinic_id) {
@@ -243,6 +255,8 @@ export const usePatients = () => {
     addPatient,
     updatePatient,
     deletePatient,
+    getPatientWhatsApp,
+    isPatientWhatsAppVerified,
     refetch: loadPatients,
   };
 };
