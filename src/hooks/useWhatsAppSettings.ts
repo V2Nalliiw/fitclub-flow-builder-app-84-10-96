@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -57,7 +56,12 @@ export const useWhatsAppSettings = () => {
         }
 
         if (globalData) {
-          setSettings(globalData);
+          // Type assertion to ensure provider matches our expected type
+          const typedData: WhatsAppSettings = {
+            ...globalData,
+            provider: globalData.provider as 'evolution' | 'meta' | 'twilio'
+          };
+          setSettings(typedData);
         }
       } else {
         // For clinic users, get their clinic settings
@@ -76,7 +80,12 @@ export const useWhatsAppSettings = () => {
         }
 
         if (data) {
-          setSettings(data);
+          // Type assertion to ensure provider matches our expected type
+          const typedData: WhatsAppSettings = {
+            ...data,
+            provider: data.provider as 'evolution' | 'meta' | 'twilio'
+          };
+          setSettings(typedData);
         }
       }
     } catch (error) {
@@ -159,7 +168,13 @@ export const useWhatsAppSettings = () => {
         return false;
       }
 
-      setSettings(result.data);
+      // Type assertion for the saved data
+      const typedResult: WhatsAppSettings = {
+        ...result.data,
+        provider: result.data.provider as 'evolution' | 'meta' | 'twilio'
+      };
+      
+      setSettings(typedResult);
       toast({
         title: "Configurações salvas",
         description: "As configurações do WhatsApp foram salvas com sucesso",
