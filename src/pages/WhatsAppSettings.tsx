@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { MessageSquare, CheckCircle, AlertCircle, TestTube, Save } from 'lucide-react';
+import { MessageSquare, CheckCircle, AlertCircle, TestTube, Save, Info } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useWhatsApp } from '@/hooks/useWhatsApp';
 import { useWhatsAppSettings } from '@/hooks/useWhatsAppSettings';
 import { WhatsAppSettings as WhatsAppSettingsType } from '@/hooks/useWhatsAppSettings';
@@ -29,7 +30,13 @@ export const WhatsAppSettings = () => {
 
   const handleSave = async () => {
     setIsSaving(true);
-    await saveSettings(formConfig);
+    const success = await saveSettings(formConfig);
+    if (success) {
+      // Test connection after saving
+      setTimeout(() => {
+        testConnection();
+      }, 1000);
+    }
     setIsSaving(false);
   };
 
@@ -127,6 +134,70 @@ export const WhatsAppSettings = () => {
               </>
             )}
 
+            {formConfig.provider === 'meta' && (
+              <>
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    Para usar a Meta API oficial, você precisa de uma conta comercial aprovada no Facebook Business.
+                  </AlertDescription>
+                </Alert>
+                
+                <div>
+                  <Label htmlFor="accessToken">Access Token *</Label>
+                  <Input
+                    id="accessToken"
+                    type="password"
+                    value={formConfig.access_token || ''}
+                    onChange={(e) => setFormConfig({ ...formConfig, access_token: e.target.value })}
+                    placeholder="EAAjSGnSrm3E... (Token da Meta API)"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Token de acesso permanente da sua aplicação Meta
+                  </p>
+                </div>
+                
+                <div>
+                  <Label htmlFor="businessAccountId">Business Account ID *</Label>
+                  <Input
+                    id="businessAccountId"
+                    value={formConfig.business_account_id || ''}
+                    onChange={(e) => setFormConfig({ ...formConfig, business_account_id: e.target.value })}
+                    placeholder="123456789012345"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    ID da sua conta comercial do WhatsApp
+                  </p>
+                </div>
+                
+                <div>
+                  <Label htmlFor="phoneNumberId">Phone Number ID *</Label>
+                  <Input
+                    id="phoneNumberId"
+                    value={formConfig.phone_number || ''}
+                    onChange={(e) => setFormConfig({ ...formConfig, phone_number: e.target.value })}
+                    placeholder="123456789012345"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    ID do número verificado (não é o número do telefone)
+                  </p>
+                </div>
+                
+                <div>
+                  <Label htmlFor="webhookUrl">Webhook URL (Opcional)</Label>
+                  <Input
+                    id="webhookUrl"
+                    value={formConfig.webhook_url || ''}
+                    onChange={(e) => setFormConfig({ ...formConfig, webhook_url: e.target.value })}
+                    placeholder="https://seu-app.com/webhook/whatsapp"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    URL para receber callbacks do WhatsApp
+                  </p>
+                </div>
+              </>
+            )}
+
             {formConfig.provider === 'twilio' && (
               <>
                 <div>
@@ -195,28 +266,61 @@ export const WhatsAppSettings = () => {
                 <span className="text-sm text-muted-foreground">Provedor:</span>
                 <span className="text-sm font-medium capitalize">{formConfig.provider || 'Não configurado'}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Sessão:</span>
-                <span className="text-sm font-medium">{formConfig.session_name || 'Não configurada'}</span>
-              </div>
+              {formConfig.provider === 'evolution' && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Sessão:</span>
+                  <span className="text-sm font-medium">{formConfig.session_name || 'Não configurada'}</span>
+                </div>
+              )}
+              {formConfig.provider === 'meta' && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Business Account:</span>
+                    <span className="text-sm font-medium">{formConfig.business_account_id || 'Não configurado'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Phone Number ID:</span>
+                    <span className="text-sm font-medium">{formConfig.phone_number || 'Não configurado'}</span>
+                  </div>
+                </>
+              )}
             </div>
 
             <Separator />
 
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Como configurar:</h4>
-              <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-                <li>Escolha seu provedor de API WhatsApp</li>
-                <li>Insira suas credenciais de acesso</li>
-                <li>Teste a conexão</li>
-                <li>Salve as configurações</li>
-              </ol>
+              {formConfig.provider === 'meta' ? (
+                <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                  <li>Acesse o Facebook Business Manager</li>
+                  <li>Configure sua conta comercial do WhatsApp</li>
+                  <li>Obtenha o Access Token permanente</li>
+                  <li>Copie o Business Account ID e Phone Number ID</li>
+                  <li>Cole as informações nos campos acima</li>
+                  <li>Teste a conexão</li>
+                </ol>
+              ) : (
+                <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                  <li>Escolha seu provedor de API WhatsApp</li>
+                  <li>Insira suas credenciais de acesso</li>
+                  <li>Teste a conexão</li>
+                  <li>Salve as configurações</li>
+                </ol>
+              )}
             </div>
 
             {isConnected && (
               <div className="p-3 bg-green-50 rounded-lg border border-green-200">
                 <p className="text-xs text-green-700">
                   ✅ WhatsApp conectado com sucesso! Os formulários agora serão enviados automaticamente.
+                </p>
+              </div>
+            )}
+
+            {formConfig.provider === 'meta' && !isConnected && formConfig.access_token && (
+              <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                <p className="text-xs text-orange-700">
+                  ⚠️ Verifique se todos os campos estão preenchidos corretamente e se o token ainda é válido.
                 </p>
               </div>
             )}

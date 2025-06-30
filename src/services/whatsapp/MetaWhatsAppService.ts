@@ -10,10 +10,18 @@ export class MetaWhatsAppService {
 
   async testConnection(): Promise<boolean> {
     if (!this.config || this.config.provider !== 'meta') {
+      console.error('Meta WhatsApp: Configuração inválida');
+      return false;
+    }
+
+    if (!this.config.access_token || !this.config.business_account_id) {
+      console.error('Meta WhatsApp: Access token ou Business Account ID não fornecidos');
       return false;
     }
 
     try {
+      console.log('Testando conexão Meta WhatsApp...');
+      
       const response = await fetch(
         `https://graph.facebook.com/v18.0/${this.config.business_account_id}`,
         {
@@ -23,9 +31,16 @@ export class MetaWhatsAppService {
         }
       );
 
-      return response.ok;
+      if (response.ok) {
+        console.log('Meta WhatsApp: Conexão bem-sucedida');
+        return true;
+      } else {
+        const errorData = await response.json();
+        console.error('Meta WhatsApp: Erro na conexão:', errorData);
+        return false;
+      }
     } catch (error) {
-      console.error('Erro ao testar conexão Meta WhatsApp:', error);
+      console.error('Meta WhatsApp: Erro ao testar conexão:', error);
       return false;
     }
   }
@@ -34,11 +49,20 @@ export class MetaWhatsAppService {
     if (!this.config || this.config.provider !== 'meta') {
       return {
         success: false,
-        error: 'Configuração do WhatsApp não encontrada ou inválida',
+        error: 'Configuração do Meta WhatsApp não encontrada ou inválida',
+      };
+    }
+
+    if (!this.config.access_token || !this.config.phone_number) {
+      return {
+        success: false,
+        error: 'Access token ou Phone Number ID não configurados',
       };
     }
 
     try {
+      console.log('Enviando mensagem via Meta WhatsApp para:', phoneNumber);
+      
       const response = await fetch(
         `https://graph.facebook.com/v18.0/${this.config.phone_number}/messages`,
         {
@@ -59,6 +83,7 @@ export class MetaWhatsAppService {
       );
 
       const data = await response.json();
+      console.log('Meta WhatsApp: Resposta da API:', data);
 
       if (!response.ok) {
         return {
@@ -72,7 +97,7 @@ export class MetaWhatsAppService {
         messageId: data.messages?.[0]?.id,
       };
     } catch (error) {
-      console.error('Erro ao enviar mensagem via Meta WhatsApp:', error);
+      console.error('Meta WhatsApp: Erro ao enviar mensagem:', error);
       return {
         success: false,
         error: 'Erro de conexão com a API do WhatsApp',
@@ -89,11 +114,20 @@ export class MetaWhatsAppService {
     if (!this.config || this.config.provider !== 'meta') {
       return {
         success: false,
-        error: 'Configuração do WhatsApp não encontrada ou inválida',
+        error: 'Configuração do Meta WhatsApp não encontrada ou inválida',
+      };
+    }
+
+    if (!this.config.access_token || !this.config.phone_number) {
+      return {
+        success: false,
+        error: 'Access token ou Phone Number ID não configurados',
       };
     }
 
     try {
+      console.log('Enviando mídia via Meta WhatsApp para:', phoneNumber);
+      
       // First upload the media
       const uploadResponse = await this.uploadMedia(mediaUrl, mediaType);
       if (!uploadResponse.success) {
@@ -122,6 +156,7 @@ export class MetaWhatsAppService {
       );
 
       const data = await response.json();
+      console.log('Meta WhatsApp: Resposta do envio de mídia:', data);
 
       if (!response.ok) {
         return {
@@ -135,7 +170,7 @@ export class MetaWhatsAppService {
         messageId: data.messages?.[0]?.id,
       };
     } catch (error) {
-      console.error('Erro ao enviar mídia via Meta WhatsApp:', error);
+      console.error('Meta WhatsApp: Erro ao enviar mídia:', error);
       return {
         success: false,
         error: 'Erro de conexão com a API do WhatsApp',
@@ -144,23 +179,33 @@ export class MetaWhatsAppService {
   }
 
   private async uploadMedia(mediaUrl: string, mediaType: string): Promise<SendMessageResponse & { mediaId?: string }> {
+    if (!this.config?.access_token || !this.config?.phone_number) {
+      return {
+        success: false,
+        error: 'Configuração inválida para upload de mídia',
+      };
+    }
+
     try {
+      console.log('Fazendo upload de mídia para Meta WhatsApp:', mediaUrl);
+      
       const formData = new FormData();
       formData.append('file', mediaUrl);
       formData.append('type', mediaType);
 
       const response = await fetch(
-        `https://graph.facebook.com/v18.0/${this.config!.phone_number}/media`,
+        `https://graph.facebook.com/v18.0/${this.config.phone_number}/media`,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${this.config!.access_token}`,
+            'Authorization': `Bearer ${this.config.access_token}`,
           },
           body: formData,
         }
       );
 
       const data = await response.json();
+      console.log('Meta WhatsApp: Resposta do upload:', data);
 
       if (!response.ok) {
         return {
@@ -174,7 +219,7 @@ export class MetaWhatsAppService {
         mediaId: data.id,
       };
     } catch (error) {
-      console.error('Erro ao fazer upload de mídia:', error);
+      console.error('Meta WhatsApp: Erro ao fazer upload de mídia:', error);
       return {
         success: false,
         error: 'Erro ao fazer upload da mídia',
@@ -199,11 +244,20 @@ export class MetaWhatsAppService {
     if (!this.config || this.config.provider !== 'meta') {
       return {
         success: false,
-        error: 'Configuração do WhatsApp não encontrada ou inválida',
+        error: 'Configuração do Meta WhatsApp não encontrada ou inválida',
+      };
+    }
+
+    if (!this.config.access_token || !this.config.phone_number) {
+      return {
+        success: false,
+        error: 'Access token ou Phone Number ID não configurados',
       };
     }
 
     try {
+      console.log('Enviando template via Meta WhatsApp:', templateName);
+      
       const response = await fetch(
         `https://graph.facebook.com/v18.0/${this.config.phone_number}/messages`,
         {
@@ -236,6 +290,7 @@ export class MetaWhatsAppService {
       );
 
       const data = await response.json();
+      console.log('Meta WhatsApp: Resposta do template:', data);
 
       if (!response.ok) {
         return {
@@ -249,7 +304,7 @@ export class MetaWhatsAppService {
         messageId: data.messages?.[0]?.id,
       };
     } catch (error) {
-      console.error('Erro ao enviar template via Meta WhatsApp:', error);
+      console.error('Meta WhatsApp: Erro ao enviar template:', error);
       return {
         success: false,
         error: 'Erro de conexão com a API do WhatsApp',
