@@ -60,6 +60,32 @@ export const useFlowProcessor = () => {
       console.log('Processed steps:', steps);
 
       // Create flow execution with proper structure
+      // Convert FlowStep[] to Json-compatible format
+      const currentStepData = {
+        steps: steps.map(step => ({
+          ...step,
+          // Ensure all properties are JSON-serializable
+          nodeId: step.nodeId,
+          nodeType: step.nodeType,
+          title: step.title,
+          description: step.description || null,
+          order: step.order,
+          availableAt: step.availableAt,
+          completed: step.completed,
+          pergunta: step.pergunta || null,
+          tipoResposta: step.tipoResposta || null,
+          opcoes: step.opcoes || null,
+          formId: step.formId || null,
+          tipoConteudo: step.tipoConteudo || null,
+          arquivo: step.arquivo || null,
+          mensagemFinal: step.mensagemFinal || null,
+          delayAmount: step.delayAmount || null,
+          delayType: step.delayType || null
+        })),
+        currentStepIndex: 0,
+        totalSteps: steps.length
+      };
+
       const { data: execution, error: executionError } = await supabase
         .from('flow_executions')
         .insert({
@@ -71,11 +97,7 @@ export const useFlowProcessor = () => {
           progress: 0,
           total_steps: steps.length,
           completed_steps: 0,
-          current_step: {
-            steps: steps,
-            currentStepIndex: 0,
-            totalSteps: steps.length
-          },
+          current_step: currentStepData as any, // Cast to any for Json compatibility
           next_step_available_at: steps[0].availableAt
         })
         .select()

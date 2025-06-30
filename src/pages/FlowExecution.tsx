@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,8 +60,9 @@ const FlowExecution = () => {
         setExecution(data as FlowExecution);
         
         // Set current step index based on completed steps
-        if (data.current_step?.steps) {
-          const completedSteps = data.current_step.steps.filter((step: any) => step.completed).length;
+        if (data.current_step && typeof data.current_step === 'object' && 'steps' in data.current_step) {
+          const stepsData = data.current_step as { steps: any[] };
+          const completedSteps = stepsData.steps.filter((step: any) => step.completed).length;
           setCurrentStepIndex(completedSteps);
         }
       } catch (error) {
@@ -82,7 +82,9 @@ const FlowExecution = () => {
 
     setUpdating(true);
     try {
-      const steps = execution.current_step?.steps || [];
+      // Safely extract steps from current_step
+      const currentStepData = execution.current_step as { steps?: any[] } | null;
+      const steps = currentStepData?.steps || [];
       const currentStep = steps[currentStepIndex];
       
       if (!currentStep) {
@@ -130,7 +132,7 @@ const FlowExecution = () => {
         progress: newProgress,
         updated_at: new Date().toISOString(),
         current_step: {
-          ...execution.current_step,
+          ...currentStepData,
           steps: updatedSteps,
           currentStepIndex: isCompleted ? -1 : nextStepIndex
         }
@@ -192,7 +194,8 @@ const FlowExecution = () => {
   }
 
   const isCompleted = execution.status === 'completed' || execution.progress >= 100;
-  const steps = execution.current_step?.steps || [];
+  const currentStepData = execution.current_step as { steps?: any[] } | null;
+  const steps = currentStepData?.steps || [];
   const currentStep = steps[currentStepIndex];
   const isWaiting = execution.status === 'waiting' && execution.next_step_available_at;
 

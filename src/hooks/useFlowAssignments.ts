@@ -1,9 +1,11 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useFlowProcessor } from './useFlowProcessor';
+import { FlowNode, FlowEdge } from '@/types/flow';
 
 export interface FlowAssignment {
   id: string;
@@ -139,12 +141,16 @@ export const useFlowAssignments = () => {
         throw new Error('Fluxo não encontrado');
       }
 
+      // Safely parse nodes and edges from Json to proper types
+      const nodes: FlowNode[] = Array.isArray(flow.nodes) ? flow.nodes as FlowNode[] : [];
+      const edges: FlowEdge[] = Array.isArray(flow.edges) ? flow.edges as FlowEdge[] : [];
+
       // Process flow to create proper execution with steps
       const execution = await processFlowAssignment(
         flowId,
         user.id,
-        flow.nodes || [],
-        flow.edges || []
+        nodes,
+        edges
       );
 
       console.log('Execução criada:', execution);
