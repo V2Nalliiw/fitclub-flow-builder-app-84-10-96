@@ -365,7 +365,7 @@ export const useWhatsAppSettings = () => {
     // This happens when settings exist but clinic_id is null (inherited from global)
     // OR when the settings ID is our special inherited marker
     const usingGlobal = settings?.clinic_id === null || settings?.id === 'inherited-global';
-    console.log('useWhatsAppSettings: Clinic user - usando global:', usingGlobal);
+    console.log('useWhatsAppSettings: Usuário da clínica - usando global:', usingGlobal);
     return usingGlobal;
   };
 

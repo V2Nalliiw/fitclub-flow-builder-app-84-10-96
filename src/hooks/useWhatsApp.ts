@@ -217,6 +217,9 @@ export const useWhatsApp = () => {
     const config = getWhatsAppConfig();
     const usingGlobal = isUsingGlobalSettings();
     
+    console.log('useWhatsApp: sendMessage - config:', config);
+    console.log('useWhatsApp: sendMessage - usando global:', usingGlobal);
+    
     if (!config || !config.is_active) {
       const configType = usingGlobal ? "global" : "da clínica";
       const errorMsg = !config ? 
