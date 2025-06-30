@@ -48,15 +48,34 @@ export const useHybridPatientInvitations = () => {
       console.log('Executando query no Supabase...');
       
       // Primeiro, vamos fazer uma busca mais ampla para debug
-      const { data: allPatients, error: debugError } = await supabase
+      const { data: allProfiles, error: debugError } = await supabase
+        .from('profiles')
+        .select('user_id, name, email, role, clinic_id')
+        .limit(50);
+
+      console.log('Todos os perfis encontrados:', allProfiles);
+      console.log('Erro na busca de debug:', debugError);
+
+      // Buscar apenas pacientes
+      const { data: allPatients, error: patientsError } = await supabase
         .from('profiles')
         .select('user_id, name, email, role, clinic_id')
         .eq('role', 'patient');
 
       console.log('Todos os pacientes encontrados:', allPatients);
-      console.log('Erro na busca de debug:', debugError);
+      console.log('Erro na busca de pacientes:', patientsError);
 
-      // Agora a busca específica
+      // Buscar pacientes sem clínica
+      const { data: patientsWithoutClinic, error: noClinicError } = await supabase
+        .from('profiles')
+        .select('user_id, name, email, role, clinic_id')
+        .eq('role', 'patient')
+        .is('clinic_id', null);
+
+      console.log('Pacientes sem clínica:', patientsWithoutClinic);
+      console.log('Erro na busca sem clínica:', noClinicError);
+
+      // Agora a busca específica com filtro de texto
       const { data, error } = await supabase
         .from('profiles')
         .select('user_id, name, email')
@@ -76,6 +95,19 @@ export const useHybridPatientInvitations = () => {
           variant: "destructive",
         });
         return;
+      }
+
+      // Se não há pacientes no sistema, mostrar mensagem informativa
+      if (allPatients && allPatients.length === 0) {
+        toast({
+          title: "Nenhum paciente encontrado",
+          description: "Não há pacientes cadastrados no sistema ainda.",
+        });
+      } else if (patientsWithoutClinic && patientsWithoutClinic.length === 0) {
+        toast({
+          title: "Nenhum paciente disponível",
+          description: "Todos os pacientes já estão vinculados a uma clínica.",
+        });
       }
 
       const patients: ExistingPatient[] = (data || []).map(profile => ({
@@ -99,7 +131,6 @@ export const useHybridPatientInvitations = () => {
     }
   }, [toast]);
 
-  // Carregar convites da nova tabela
   const loadInvitations = useCallback(async () => {
     if (!user?.clinic_id) {
       setLoading(false);
@@ -130,7 +161,7 @@ export const useHybridPatientInvitations = () => {
       }));
 
       setInvitations(transformedInvitations);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro inesperado:', error);
       toast({
         title: "Erro inesperado",
