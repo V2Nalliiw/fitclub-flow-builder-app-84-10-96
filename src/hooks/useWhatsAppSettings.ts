@@ -40,96 +40,71 @@ export const useWhatsAppSettings = () => {
     console.log('useWhatsAppSettings: Carregando configurações para usuário:', user);
     setLoading(true);
     try {
-      if (user.role === 'super_admin') {
-        // Super admin only loads global settings
-        console.log('useWhatsAppSettings: Carregando configurações globais (super admin)');
-        const { data: globalData, error: globalError } = await supabase
-          .from('whatsapp_settings')
-          .select('*')
-          .is('clinic_id', null)
-          .single();
+      // Sempre carrega as configurações globais primeiro
+      console.log('useWhatsAppSettings: Carregando configurações globais');
+      const { data: globalData, error: globalError } = await supabase
+        .from('whatsapp_settings')
+        .select('*')
+        .is('clinic_id', null)
+        .single();
 
-        console.log('useWhatsAppSettings: Resultado global:', { globalData, globalError });
+      console.log('useWhatsAppSettings: Resultado global:', { globalData, globalError });
 
-        if (globalError && globalError.code !== 'PGRST116') {
-          console.error('Erro ao carregar configurações globais do WhatsApp:', globalError);
-          toast({
-            title: "Erro ao carregar configurações",
-            description: globalError.message,
-            variant: "destructive",
-          });
-          return;
-        }
+      if (globalError && globalError.code !== 'PGRST116') {
+        console.error('Erro ao carregar configurações globais do WhatsApp:', globalError);
+      }
 
-        if (globalData) {
-          const typedData: WhatsAppSettings = {
-            ...globalData,
-            provider: globalData.provider as 'evolution' | 'meta' | 'twilio'
-          };
-          console.log('useWhatsAppSettings: Configurações globais carregadas:', typedData);
-          setSettings(typedData);
-          setGlobalSettings(typedData);
-        } else {
-          console.log('useWhatsAppSettings: Nenhuma configuração global encontrada');
-          setSettings(null);
-          setGlobalSettings(null);
-        }
+      // Define as configurações globais
+      let typedGlobalData: WhatsAppSettings | null = null;
+      if (globalData) {
+        typedGlobalData = {
+          ...globalData,
+          provider: globalData.provider as 'evolution' | 'meta' | 'twilio'
+        };
+        console.log('useWhatsAppSettings: Configurações globais carregadas:', typedGlobalData);
+        setGlobalSettings(typedGlobalData);
       } else {
-        // For clinic users, load both clinic and global settings
+        console.log('useWhatsAppSettings: Nenhuma configuração global encontrada');
+        setGlobalSettings(null);
+      }
+
+      if (user.role === 'super_admin') {
+        // Super admin trabalha apenas com configurações globais
+        console.log('useWhatsAppSettings: Super admin - usando configurações globais');
+        setSettings(typedGlobalData);
+      } else {
+        // Para usuários de clínica, tenta carregar configurações da clínica
         console.log('useWhatsAppSettings: Carregando configurações da clínica:', user.clinic_id);
         
-        // Load clinic settings
         const { data: clinicData, error: clinicError } = await supabase
           .from('whatsapp_settings')
           .select('*')
           .eq('clinic_id', user.clinic_id)
           .single();
 
-        // Load global settings as fallback
-        const { data: globalData, error: globalError } = await supabase
-          .from('whatsapp_settings')
-          .select('*')
-          .is('clinic_id', null)
-          .single();
-
         console.log('useWhatsAppSettings: Resultado da clínica:', { clinicData, clinicError });
-        console.log('useWhatsAppSettings: Resultado global (fallback):', { globalData, globalError });
 
-        // Set global settings
-        if (globalData) {
-          const typedGlobalData: WhatsAppSettings = {
-            ...globalData,
-            provider: globalData.provider as 'evolution' | 'meta' | 'twilio'
-          };
-          setGlobalSettings(typedGlobalData);
-        }
-
-        // Set clinic settings (primary) or use global as fallback
         if (clinicData) {
-          const typedData: WhatsAppSettings = {
+          // Clínica tem suas próprias configurações
+          const typedClinicData: WhatsAppSettings = {
             ...clinicData,
             provider: clinicData.provider as 'evolution' | 'meta' | 'twilio'
           };
-          console.log('useWhatsAppSettings: Configurações da clínica carregadas:', typedData);
-          setSettings(typedData);
-        } else if (globalData) {
-          // Use global settings as fallback for the clinic
-          const typedGlobalData: WhatsAppSettings = {
-            ...globalData,
-            provider: globalData.provider as 'evolution' | 'meta' | 'twilio'
-          };
-          console.log('useWhatsAppSettings: Usando configurações globais como fallback para clínica');
-          setSettings(typedGlobalData);
+          console.log('useWhatsAppSettings: Usando configurações específicas da clínica:', typedClinicData);
+          setSettings(typedClinicData);
         } else {
-          console.log('useWhatsAppSettings: Nenhuma configuração encontrada');
-          setSettings(null);
+          // Clínica não tem configurações próprias, usa as globais como fallback
+          if (typedGlobalData) {
+            console.log('useWhatsAppSettings: Clínica usando configurações globais como fallback');
+            setSettings(typedGlobalData);
+          } else {
+            console.log('useWhatsAppSettings: Nenhuma configuração disponível (nem da clínica nem global)');
+            setSettings(null);
+          }
         }
 
         if (clinicError && clinicError.code !== 'PGRST116') {
           console.error('Erro ao carregar configurações da clínica:', clinicError);
-        }
-        if (globalError && globalError.code !== 'PGRST116') {
-          console.error('Erro ao carregar configurações globais:', globalError);
         }
       }
     } catch (error) {
@@ -160,49 +135,95 @@ export const useWhatsAppSettings = () => {
       // Determine clinic_id based on user role
       const clinicId = user.role === 'super_admin' ? null : user.clinic_id;
       
-      // Check if we have existing clinic settings (not global fallback)
-      const hasClinicSettings = settings?.clinic_id === clinicId;
-      
-      if (settings?.id && hasClinicSettings) {
-        // Update existing settings
-        result = await supabase
-          .from('whatsapp_settings')
-          .update({
-            provider: settingsData.provider || 'evolution',
-            base_url: settingsData.base_url || null,
-            api_key: settingsData.api_key || null,
-            session_name: settingsData.session_name || null,
-            account_sid: settingsData.account_sid || null,
-            auth_token: settingsData.auth_token || null,
-            phone_number: settingsData.phone_number || null,
-            access_token: settingsData.access_token || null,
-            business_account_id: settingsData.business_account_id || null,
-            webhook_url: settingsData.webhook_url || null,
-            is_active: settingsData.is_active ?? false,
-          })
-          .eq('id', settings.id)
-          .select()
-          .single();
+      // Para super admin, sempre trabalha com configurações globais
+      if (user.role === 'super_admin') {
+        if (settings?.id && settings.clinic_id === null) {
+          // Update existing global settings
+          result = await supabase
+            .from('whatsapp_settings')
+            .update({
+              provider: settingsData.provider || 'evolution',
+              base_url: settingsData.base_url || null,
+              api_key: settingsData.api_key || null,
+              session_name: settingsData.session_name || null,
+              account_sid: settingsData.account_sid || null,
+              auth_token: settingsData.auth_token || null,
+              phone_number: settingsData.phone_number || null,
+              access_token: settingsData.access_token || null,
+              business_account_id: settingsData.business_account_id || null,
+              webhook_url: settingsData.webhook_url || null,
+              is_active: settingsData.is_active ?? false,
+            })
+            .eq('id', settings.id)
+            .select()
+            .single();
+        } else {
+          // Create new global settings
+          result = await supabase
+            .from('whatsapp_settings')
+            .insert({
+              clinic_id: null,
+              provider: settingsData.provider || 'evolution',
+              base_url: settingsData.base_url || null,
+              api_key: settingsData.api_key || null,
+              session_name: settingsData.session_name || null,
+              account_sid: settingsData.account_sid || null,
+              auth_token: settingsData.auth_token || null,
+              phone_number: settingsData.phone_number || null,
+              access_token: settingsData.access_token || null,
+              business_account_id: settingsData.business_account_id || null,
+              webhook_url: settingsData.webhook_url || null,
+              is_active: settingsData.is_active ?? false,
+            })
+            .select()
+            .single();
+        }
       } else {
-        // Create new settings
-        result = await supabase
-          .from('whatsapp_settings')
-          .insert({
-            clinic_id: clinicId,
-            provider: settingsData.provider || 'evolution',
-            base_url: settingsData.base_url || null,
-            api_key: settingsData.api_key || null,
-            session_name: settingsData.session_name || null,
-            account_sid: settingsData.account_sid || null,
-            auth_token: settingsData.auth_token || null,
-            phone_number: settingsData.phone_number || null,
-            access_token: settingsData.access_token || null,
-            business_account_id: settingsData.business_account_id || null,
-            webhook_url: settingsData.webhook_url || null,
-            is_active: settingsData.is_active ?? false,
-          })
-          .select()
-          .single();
+        // Para usuários de clínica
+        // Verifica se tem configurações específicas da clínica (não herdadas)
+        const hasOwnClinicSettings = settings?.clinic_id === clinicId;
+        
+        if (settings?.id && hasOwnClinicSettings) {
+          // Update existing clinic settings
+          result = await supabase
+            .from('whatsapp_settings')
+            .update({
+              provider: settingsData.provider || 'evolution',
+              base_url: settingsData.base_url || null,
+              api_key: settingsData.api_key || null,
+              session_name: settingsData.session_name || null,
+              account_sid: settingsData.account_sid || null,
+              auth_token: settingsData.auth_token || null,
+              phone_number: settingsData.phone_number || null,
+              access_token: settingsData.access_token || null,
+              business_account_id: settingsData.business_account_id || null,
+              webhook_url: settingsData.webhook_url || null,
+              is_active: settingsData.is_active ?? false,
+            })
+            .eq('id', settings.id)
+            .select()
+            .single();
+        } else {
+          // Create new clinic-specific settings
+          result = await supabase
+            .from('whatsapp_settings')
+            .insert({
+              clinic_id: clinicId,
+              provider: settingsData.provider || 'evolution',
+              base_url: settingsData.base_url || null,
+              api_key: settingsData.api_key || null,
+              session_name: settingsData.session_name || null,
+              account_sid: settingsData.account_sid || null,
+              auth_token: settingsData.auth_token || null,
+              phone_number: settingsData.phone_number || null,
+              access_token: settingsData.access_token || null,
+              business_account_id: settingsData.business_account_id || null,
+              webhook_url: settingsData.webhook_url || null,
+              is_active: settingsData.is_active ?? false,
+            })
+            .select()
+            .single();
+        }
       }
 
       if (result.error) {
@@ -222,6 +243,12 @@ export const useWhatsAppSettings = () => {
       };
       
       setSettings(typedResult);
+      
+      // Se salvou configurações globais, atualiza também as globais
+      if (user.role === 'super_admin') {
+        setGlobalSettings(typedResult);
+      }
+      
       toast({
         title: "Configurações salvas",
         description: "As configurações do WhatsApp foram salvas com sucesso",
@@ -240,15 +267,18 @@ export const useWhatsAppSettings = () => {
   };
 
   const getWhatsAppConfig = (): WhatsAppConfig | null => {
-    console.log('useWhatsAppSettings: getWhatsAppConfig chamado, settings:', settings);
+    console.log('useWhatsAppSettings: getWhatsAppConfig chamado');
+    console.log('useWhatsAppSettings: Current settings:', settings);
+    console.log('useWhatsAppSettings: Global settings:', globalSettings);
+    console.log('useWhatsAppSettings: User role:', user?.role);
     
     if (!settings) {
-      console.log('useWhatsAppSettings: Settings não encontradas');
+      console.log('useWhatsAppSettings: Nenhuma configuração encontrada');
       return null;
     }
 
     if (!settings.is_active) {
-      console.log('useWhatsAppSettings: Settings não estão ativas');
+      console.log('useWhatsAppSettings: Configuração não está ativa');
       return null;
     }
 
@@ -266,7 +296,7 @@ export const useWhatsAppSettings = () => {
       is_active: settings.is_active,
     };
 
-    console.log('useWhatsAppSettings: Config gerada:', config);
+    console.log('useWhatsAppSettings: Config retornada:', config);
     return config;
   };
 
@@ -281,6 +311,7 @@ export const useWhatsAppSettings = () => {
   };
 
   const isUsingGlobalSettings = () => {
+    // Retorna true se estiver usando configurações globais como fallback
     return settings?.clinic_id === null && user?.role !== 'super_admin';
   };
 

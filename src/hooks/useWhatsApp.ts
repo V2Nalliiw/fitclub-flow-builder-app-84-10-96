@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { whatsappService } from '@/services/whatsapp/WhatsAppService';
 import { WhatsAppConfig, SendMessageResponse } from '@/services/whatsapp/types';
@@ -14,10 +13,12 @@ export const useWhatsApp = () => {
   const { trackWhatsAppSent } = useAnalytics();
 
   const checkConnection = useCallback(async () => {
-    console.log('useWhatsApp: Verificando conexão...', { settings });
+    console.log('useWhatsApp: Verificando conexão...');
+    console.log('useWhatsApp: Settings atuais:', settings);
+    console.log('useWhatsApp: Usando global?', isUsingGlobalSettings());
     
     const config = getWhatsAppConfig();
-    console.log('useWhatsApp: Config obtida:', config);
+    console.log('useWhatsApp: Config obtida do getWhatsAppConfig:', config);
     
     if (!config) {
       console.log('useWhatsApp: Configuração não encontrada');
@@ -31,7 +32,7 @@ export const useWhatsApp = () => {
       return false;
     }
 
-    // Verificar credenciais específicas para Meta
+    // Verificar credenciais específicas para cada provider
     if (config.provider === 'meta') {
       const hasMetaCredentials = config.access_token && config.business_account_id && config.phone_number;
       console.log('useWhatsApp: Verificando credenciais Meta:', {
@@ -43,6 +44,34 @@ export const useWhatsApp = () => {
       
       if (!hasMetaCredentials) {
         console.log('useWhatsApp: Credenciais Meta incompletas');
+        setIsConnected(false);
+        return false;
+      }
+    } else if (config.provider === 'evolution') {
+      const hasEvolutionCredentials = config.base_url && config.api_key && config.session_name;
+      console.log('useWhatsApp: Verificando credenciais Evolution:', {
+        hasBaseUrl: !!config.base_url,
+        hasApiKey: !!config.api_key,
+        hasSessionName: !!config.session_name,
+        allCredentialsPresent: hasEvolutionCredentials
+      });
+      
+      if (!hasEvolutionCredentials) {
+        console.log('useWhatsApp: Credenciais Evolution incompletas');
+        setIsConnected(false);
+        return false;
+      }
+    } else if (config.provider === 'twilio') {
+      const hasTwilioCredentials = config.account_sid && config.auth_token && config.phone_number;
+      console.log('useWhatsApp: Verificando credenciais Twilio:', {
+        hasAccountSid: !!config.account_sid,
+        hasAuthToken: !!config.auth_token,
+        hasPhoneNumber: !!config.phone_number,
+        allCredentialsPresent: hasTwilioCredentials
+      });
+      
+      if (!hasTwilioCredentials) {
+        console.log('useWhatsApp: Credenciais Twilio incompletas');
         setIsConnected(false);
         return false;
       }
@@ -59,7 +88,7 @@ export const useWhatsApp = () => {
       setIsConnected(false);
       return false;
     }
-  }, [getWhatsAppConfig, settings]);
+  }, [getWhatsAppConfig, settings, isUsingGlobalSettings]);
 
   useEffect(() => {
     console.log('useWhatsApp: Effect executado, settings mudaram:', settings);
@@ -74,6 +103,9 @@ export const useWhatsApp = () => {
   ): Promise<SendMessageResponse> => {
     const config = getWhatsAppConfig();
     const usingGlobal = isUsingGlobalSettings();
+    
+    console.log('useWhatsApp: sendFormLink - config:', config);
+    console.log('useWhatsApp: sendFormLink - usando global:', usingGlobal);
     
     if (!config || !config.is_active) {
       const configType = usingGlobal ? "global" : "da clínica";
@@ -229,7 +261,9 @@ export const useWhatsApp = () => {
     const config = getWhatsAppConfig();
     const usingGlobal = isUsingGlobalSettings();
     
-    console.log('useWhatsApp: testConnection chamado, config:', config);
+    console.log('useWhatsApp: testConnection chamado');
+    console.log('useWhatsApp: testConnection - config:', config);
+    console.log('useWhatsApp: testConnection - usando global:', usingGlobal);
     
     if (!config) {
       const configType = usingGlobal ? "global (admin)" : "da clínica";
