@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { whatsappService } from '@/services/whatsapp/WhatsAppService';
 import { WhatsAppConfig, SendMessageResponse } from '@/services/whatsapp/types';
@@ -110,7 +111,7 @@ export const useWhatsApp = () => {
     if (!config || !config.is_active) {
       const configType = usingGlobal ? "global" : "da clínica";
       const errorMsg = !config ? 
-        `Configure o WhatsApp ${usingGlobal ? 'global (admin)' : 'da clínica'} nas configurações antes de enviar mensagens.` : 
+        `Configure o WhatsApp ${usingGlobal ? 'global (nas configurações do admin)' : 'da clínica'} antes de enviar mensagens.` : 
         `Ative o WhatsApp ${configType} nas configurações antes de enviar mensagens.`;
       
       toast({
@@ -163,7 +164,7 @@ export const useWhatsApp = () => {
     if (!config || !config.is_active) {
       const configType = usingGlobal ? "global" : "da clínica";
       const errorMsg = !config ? 
-        `Configure o WhatsApp ${usingGlobal ? 'global (admin)' : 'da clínica'} nas configurações antes de enviar mensagens.` : 
+        `Configure o WhatsApp ${usingGlobal ? 'global (nas configurações do admin)' : 'da clínica'} antes de enviar mensagens.` : 
         `Ative o WhatsApp ${configType} nas configurações antes de enviar mensagens.`;
       
       toast({
@@ -219,7 +220,7 @@ export const useWhatsApp = () => {
     if (!config || !config.is_active) {
       const configType = usingGlobal ? "global" : "da clínica";
       const errorMsg = !config ? 
-        `Configure o WhatsApp ${usingGlobal ? 'global (admin)' : 'da clínica'} nas configurações antes de enviar mensagens.` : 
+        `Configure o WhatsApp ${usingGlobal ? 'global (nas configurações do admin)' : 'da clínica'} antes de enviar mensagens.` : 
         `Ative o WhatsApp ${configType} nas configurações antes de enviar mensagens.`;
       
       toast({
@@ -266,7 +267,7 @@ export const useWhatsApp = () => {
     console.log('useWhatsApp: testConnection - usando global:', usingGlobal);
     
     if (!config) {
-      const configType = usingGlobal ? "global (admin)" : "da clínica";
+      const configType = usingGlobal ? "global (configure nas configurações do admin)" : "da clínica";
       toast({
         title: "Configuração não encontrada",
         description: `Configure o WhatsApp ${configType} primeiro.`,

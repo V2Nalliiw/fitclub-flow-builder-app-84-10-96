@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -311,8 +310,21 @@ export const useWhatsAppSettings = () => {
   };
 
   const isUsingGlobalSettings = () => {
-    // Retorna true se estiver usando configurações globais como fallback
-    return settings?.clinic_id === null && user?.role !== 'super_admin';
+    console.log('useWhatsAppSettings: isUsingGlobalSettings chamado');
+    console.log('useWhatsAppSettings: Current settings:', settings);
+    console.log('useWhatsAppSettings: User role:', user?.role);
+    
+    // Super admin never "uses" global settings - they manage them directly
+    if (user?.role === 'super_admin') {
+      console.log('useWhatsAppSettings: Super admin - retornando false');
+      return false;
+    }
+    
+    // For clinic users: return true if they are using global settings as fallback
+    // This happens when settings exist but clinic_id is null (inherited from global)
+    const usingGlobal = settings?.clinic_id === null;
+    console.log('useWhatsAppSettings: Clinic user - usando global:', usingGlobal);
+    return usingGlobal;
   };
 
   useEffect(() => {
