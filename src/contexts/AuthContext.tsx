@@ -50,6 +50,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         avatar_url: (data as any).avatar_url,
         clinic_id: (data as any).clinic_id,
         is_chief: (data as any).is_chief,
+        phone: (data as any).phone,
         created_at: (data as any).created_at,
         updated_at: (data as any).updated_at,
       };
@@ -109,6 +110,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           avatar_url: updates.avatar_url,
           clinic_id: updates.clinic_id,
           is_chief: updates.is_chief,
+          phone: updates.phone,
         })
         .eq('user_id', user.id);
 

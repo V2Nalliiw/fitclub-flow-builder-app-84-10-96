@@ -7,6 +7,7 @@ export interface User {
   avatar_url?: string;
   clinic_id?: string;
   is_chief?: boolean;
+  phone?: string;
   created_at: string;
   updated_at: string;
 }

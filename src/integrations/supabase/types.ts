@@ -345,6 +345,7 @@ export type Database = {
           email: string
           is_chief: boolean | null
           name: string
+          phone: string | null
           role: string
           updated_at: string | null
           user_id: string
@@ -356,6 +357,7 @@ export type Database = {
           email: string
           is_chief?: boolean | null
           name: string
+          phone?: string | null
           role?: string
           updated_at?: string | null
           user_id: string
@@ -367,6 +369,7 @@ export type Database = {
           email?: string
           is_chief?: boolean | null
           name?: string
+          phone?: string | null
           role?: string
           updated_at?: string | null
           user_id?: string
