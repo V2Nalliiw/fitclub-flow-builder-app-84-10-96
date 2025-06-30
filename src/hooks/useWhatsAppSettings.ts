@@ -37,15 +37,6 @@ export const useWhatsAppSettings = () => {
       return;
     }
 
-    // Pacientes não precisam carregar configurações do WhatsApp
-    if (user.role === 'patient') {
-      console.log('useWhatsAppSettings: Paciente não carrega configurações do WhatsApp');
-      setSettings(null);
-      setGlobalSettings(null);
-      setLoading(false);
-      return;
-    }
-
     console.log('useWhatsAppSettings: Carregando configurações para usuário:', user);
     setLoading(true);
     try {
@@ -82,7 +73,7 @@ export const useWhatsAppSettings = () => {
         console.log('useWhatsAppSettings: Super admin - usando configurações globais');
         setSettings(typedGlobalData);
       } else if (user.clinic_id) {
-        // Para usuários de clínica (admin, professional, clinic)
+        // Para usuários de clínica (admin, professional, clinic, patient)
         console.log('useWhatsAppSettings: Carregando configurações da clínica:', user.clinic_id);
         
         const { data: clinicData, error: clinicError } = await supabase
@@ -315,12 +306,6 @@ export const useWhatsAppSettings = () => {
     console.log('useWhatsAppSettings: Global settings:', globalSettings);
     console.log('useWhatsAppSettings: User role:', user?.role);
     
-    // Pacientes não precisam de configuração do WhatsApp
-    if (user?.role === 'patient') {
-      console.log('useWhatsAppSettings: Paciente não precisa de configuração do WhatsApp');
-      return null;
-    }
-    
     if (!settings) {
       console.log('useWhatsAppSettings: Nenhuma configuração encontrada');
       return null;
@@ -376,13 +361,7 @@ export const useWhatsAppSettings = () => {
       return false;
     }
     
-    // Pacientes não usam configurações do WhatsApp
-    if (user?.role === 'patient') {
-      console.log('useWhatsAppSettings: Paciente - retornando false');
-      return false;
-    }
-    
-    // For clinic users: return true if they are using global settings as fallback
+    // For clinic users (including patients): return true if they are using global settings as fallback
     // This happens when settings exist but clinic_id is null (inherited from global)
     // OR when the settings ID is our special inherited marker
     const usingGlobal = settings?.clinic_id === null || settings?.id === 'inherited-global';
