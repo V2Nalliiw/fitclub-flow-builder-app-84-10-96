@@ -30,20 +30,25 @@ export const useWhatsAppSettings = () => {
 
   const loadSettings = useCallback(async () => {
     if (!user) {
+      console.log('useWhatsAppSettings: Usuário não encontrado');
       setLoading(false);
       return;
     }
 
+    console.log('useWhatsAppSettings: Carregando configurações para usuário:', user);
     setLoading(true);
     try {
       let query = supabase.from('whatsapp_settings').select('*');
       
       // For super admin, get global settings (clinic_id is null) first, then clinic settings
       if (user.role === 'super_admin') {
+        console.log('useWhatsAppSettings: Carregando configurações globais (super admin)');
         // Try to get global settings first
         const { data: globalData, error: globalError } = await query
           .is('clinic_id', null)
           .single();
+
+        console.log('useWhatsAppSettings: Resultado global:', { globalData, globalError });
 
         if (globalError && globalError.code !== 'PGRST116') {
           console.error('Erro ao carregar configurações globais do WhatsApp:', globalError);
@@ -61,13 +66,20 @@ export const useWhatsAppSettings = () => {
             ...globalData,
             provider: globalData.provider as 'evolution' | 'meta' | 'twilio'
           };
+          console.log('useWhatsAppSettings: Configurações globais carregadas:', typedData);
           setSettings(typedData);
+        } else {
+          console.log('useWhatsAppSettings: Nenhuma configuração global encontrada');
+          setSettings(null);
         }
       } else {
+        console.log('useWhatsAppSettings: Carregando configurações da clínica:', user.clinic_id);
         // For clinic users, get their clinic settings
         const { data, error } = await query
           .eq('clinic_id', user.clinic_id)
           .single();
+
+        console.log('useWhatsAppSettings: Resultado da clínica:', { data, error });
 
         if (error && error.code !== 'PGRST116') {
           console.error('Erro ao carregar configurações do WhatsApp:', error);
@@ -85,7 +97,11 @@ export const useWhatsAppSettings = () => {
             ...data,
             provider: data.provider as 'evolution' | 'meta' | 'twilio'
           };
+          console.log('useWhatsAppSettings: Configurações da clínica carregadas:', typedData);
           setSettings(typedData);
+        } else {
+          console.log('useWhatsAppSettings: Nenhuma configuração da clínica encontrada');
+          setSettings(null);
         }
       }
     } catch (error) {
@@ -193,9 +209,19 @@ export const useWhatsAppSettings = () => {
   };
 
   const getWhatsAppConfig = (): WhatsAppConfig | null => {
-    if (!settings || !settings.is_active) return null;
+    console.log('useWhatsAppSettings: getWhatsAppConfig chamado, settings:', settings);
+    
+    if (!settings) {
+      console.log('useWhatsAppSettings: Settings não encontradas');
+      return null;
+    }
 
-    return {
+    if (!settings.is_active) {
+      console.log('useWhatsAppSettings: Settings não estão ativas');
+      return null;
+    }
+
+    const config: WhatsAppConfig = {
       provider: settings.provider,
       base_url: settings.base_url,
       api_key: settings.api_key,
@@ -208,6 +234,9 @@ export const useWhatsAppSettings = () => {
       webhook_url: settings.webhook_url,
       is_active: settings.is_active,
     };
+
+    console.log('useWhatsAppSettings: Config gerada:', config);
+    return config;
   };
 
   const toggleActive = async () => {

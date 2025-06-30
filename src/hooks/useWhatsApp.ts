@@ -10,25 +10,61 @@ export const useWhatsApp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const { toast } = useToast();
-  const { getWhatsAppConfig } = useWhatsAppSettings();
+  const { settings, getWhatsAppConfig } = useWhatsAppSettings();
   const { trackWhatsAppSent } = useAnalytics();
 
   const checkConnection = useCallback(async () => {
+    console.log('useWhatsApp: Verificando conexão...', { settings });
+    
     const config = getWhatsAppConfig();
+    console.log('useWhatsApp: Config obtida:', config);
+    
     if (!config) {
+      console.log('useWhatsApp: Configuração não encontrada');
       setIsConnected(false);
       return false;
     }
 
-    whatsappService.setConfig(config);
-    const connected = await whatsappService.testConnection();
-    setIsConnected(connected);
-    return connected;
-  }, [getWhatsAppConfig]);
+    if (!config.is_active) {
+      console.log('useWhatsApp: Configuração não está ativa');
+      setIsConnected(false);
+      return false;
+    }
+
+    // Verificar credenciais específicas para Meta
+    if (config.provider === 'meta') {
+      const hasMetaCredentials = config.access_token && config.business_account_id && config.phone_number;
+      console.log('useWhatsApp: Verificando credenciais Meta:', {
+        hasAccessToken: !!config.access_token,
+        hasBusinessAccountId: !!config.business_account_id,
+        hasPhoneNumber: !!config.phone_number,
+        allCredentialsPresent: hasMetaCredentials
+      });
+      
+      if (!hasMetaCredentials) {
+        console.log('useWhatsApp: Credenciais Meta incompletas');
+        setIsConnected(false);
+        return false;
+      }
+    }
+
+    try {
+      whatsappService.setConfig(config);
+      const connected = await whatsappService.testConnection();
+      console.log('useWhatsApp: Resultado do teste de conexão:', connected);
+      setIsConnected(connected);
+      return connected;
+    } catch (error) {
+      console.error('useWhatsApp: Erro ao testar conexão:', error);
+      setIsConnected(false);
+      return false;
+    }
+  }, [getWhatsAppConfig, settings]);
 
   useEffect(() => {
+    console.log('useWhatsApp: Effect executado, settings mudaram:', settings);
     checkConnection();
-  }, [checkConnection]);
+  }, [checkConnection, settings]);
 
   const sendFormLink = useCallback(async (
     phoneNumber: string, 
@@ -37,10 +73,11 @@ export const useWhatsApp = () => {
     customMessage?: string
   ): Promise<SendMessageResponse> => {
     const config = getWhatsAppConfig();
-    if (!config) {
+    if (!config || !config.is_active) {
+      const errorMsg = !config ? "Configure o WhatsApp nas configurações antes de enviar mensagens." : "Ative o WhatsApp nas configurações antes de enviar mensagens.";
       toast({
         title: "WhatsApp não configurado",
-        description: "Configure o WhatsApp nas configurações antes de enviar mensagens.",
+        description: errorMsg,
         variant: "destructive",
       });
       return { success: false, error: "WhatsApp não configurado" };
@@ -82,10 +119,11 @@ export const useWhatsApp = () => {
     message?: string
   ): Promise<SendMessageResponse> => {
     const config = getWhatsAppConfig();
-    if (!config) {
+    if (!config || !config.is_active) {
+      const errorMsg = !config ? "Configure o WhatsApp nas configurações antes de enviar mensagens." : "Ative o WhatsApp nas configurações antes de enviar mensagens.";
       toast({
         title: "WhatsApp não configurado",
-        description: "Configure o WhatsApp nas configurações antes de enviar mensagens.",
+        description: errorMsg,
         variant: "destructive",
       });
       return { success: false, error: "WhatsApp não configurado" };
@@ -130,10 +168,11 @@ export const useWhatsApp = () => {
     message: string
   ): Promise<SendMessageResponse> => {
     const config = getWhatsAppConfig();
-    if (!config) {
+    if (!config || !config.is_active) {
+      const errorMsg = !config ? "Configure o WhatsApp nas configurações antes de enviar mensagens." : "Ative o WhatsApp nas configurações antes de enviar mensagens.";
       toast({
         title: "WhatsApp não configurado",
-        description: "Configure o WhatsApp nas configurações antes de enviar mensagens.",
+        description: errorMsg,
         variant: "destructive",
       });
       return { success: false, error: "WhatsApp não configurado" };
@@ -167,10 +206,21 @@ export const useWhatsApp = () => {
 
   const testConnection = useCallback(async (): Promise<boolean> => {
     const config = getWhatsAppConfig();
+    console.log('useWhatsApp: testConnection chamado, config:', config);
+    
     if (!config) {
       toast({
         title: "Configuração não encontrada",
         description: "Configure o WhatsApp primeiro.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!config.is_active) {
+      toast({
+        title: "WhatsApp inativo",
+        description: "Ative o WhatsApp nas configurações primeiro.",
         variant: "destructive",
       });
       return false;

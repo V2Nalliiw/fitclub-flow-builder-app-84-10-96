@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { MessageSquare, CheckCircle, AlertCircle, TestTube, Save, Info, Crown } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useWhatsApp } from '@/hooks/useWhatsApp';
@@ -25,12 +26,14 @@ export const WhatsAppSettings = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
+    console.log('WhatsAppSettings: Settings carregadas:', settings);
     if (settings) {
       setFormConfig(settings);
     }
   }, [settings]);
 
   const handleSave = async () => {
+    console.log('WhatsAppSettings: Salvando configurações:', formConfig);
     setIsSaving(true);
     const success = await saveSettings(formConfig);
     if (success) {
@@ -108,6 +111,25 @@ export const WhatsAppSettings = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Campo de Ativação */}
+            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
+              <div className="space-y-1">
+                <Label htmlFor="is_active" className="text-base font-medium">
+                  Ativar WhatsApp
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  {formConfig.is_active ? 'WhatsApp está ativo' : 'WhatsApp está inativo'}
+                </p>
+              </div>
+              <Switch
+                id="is_active"
+                checked={formConfig.is_active || false}
+                onCheckedChange={(checked) => 
+                  setFormConfig({ ...formConfig, is_active: checked })
+                }
+              />
+            </div>
+
             <div>
               <Label htmlFor="provider">Provedor de API</Label>
               <Select
@@ -289,6 +311,12 @@ export const WhatsAppSettings = () => {
                 </Badge>
               </div>
               <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Ativo:</span>
+                <Badge variant={formConfig.is_active ? 'default' : 'secondary'}>
+                  {formConfig.is_active ? 'Sim' : 'Não'}
+                </Badge>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Provedor:</span>
                 <span className="text-sm font-medium capitalize">{formConfig.provider || 'Não configurado'}</span>
               </div>
@@ -353,6 +381,14 @@ export const WhatsAppSettings = () => {
               <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
                 <p className="text-xs text-orange-700">
                   ⚠️ Verifique se todos os campos estão preenchidos corretamente e se o token ainda é válido.
+                </p>
+              </div>
+            )}
+
+            {!formConfig.is_active && (
+              <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                <p className="text-xs text-red-700">
+                  ❌ WhatsApp está inativo. Ative o WhatsApp para começar a usar.
                 </p>
               </div>
             )}
