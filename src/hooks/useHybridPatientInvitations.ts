@@ -34,9 +34,10 @@ export const useHybridPatientInvitations = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Buscar pacientes existentes (agora inclui pacientes de outras clínicas também)
+  // Buscar pacientes existentes (agora com a nova política RLS)
   const searchExistingPatients = useCallback(async (searchTerm: string) => {
     console.log('🔍 Iniciando busca por:', searchTerm);
+    console.log('👤 Usuário atual:', { id: user?.id, role: user?.role, clinic_id: user?.clinic_id });
     
     if (!searchTerm || searchTerm.length < 2) {
       setExistingPatients([]);
@@ -45,40 +46,41 @@ export const useHybridPatientInvitations = () => {
 
     setIsSearching(true);
     try {
-      // Buscar todos os pacientes (não apenas os sem clínica)
+      // Buscar pacientes sem clínica (clinic_id IS NULL) - agora permitido pela nova política RLS
       const { data: patientsData, error } = await supabase
         .from('profiles')
         .select('user_id, name, email, role, clinic_id')
         .eq('role', 'patient')
+        .is('clinic_id', null) // Buscar apenas pacientes sem clínica
         .or(`email.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%`);
 
-      console.log('👥 Todos os pacientes encontrados:', patientsData);
-      console.log('❌ Erro na busca:', error);
+      console.log('🔍 Consulta executada com sucesso');
+      console.log('📊 Dados retornados:', patientsData);
+      console.log('❌ Erro (se houver):', error);
 
       if (error) {
-        console.error('Erro na busca de pacientes:', error);
+        console.error('💥 Erro na busca de pacientes:', error);
         toast({
           title: "Erro na busca",
-          description: error.message,
+          description: `Erro: ${error.message}`,
           variant: "destructive",
         });
         return;
       }
 
       if (!patientsData || patientsData.length === 0) {
-        console.log('❌ Nenhum paciente encontrado');
+        console.log('❌ Nenhum paciente encontrado na busca');
         setExistingPatients([]);
+        toast({
+          title: "Nenhum paciente encontrado",
+          description: "Não foram encontrados pacientes disponíveis com esse termo de busca.",
+        });
         return;
       }
 
-      // Filtrar apenas pacientes que não estão na clínica atual
-      const availablePatients = patientsData.filter(patient => 
-        patient.clinic_id !== user?.clinic_id
-      );
+      console.log('✅ Pacientes encontrados:', patientsData.length);
 
-      console.log('✅ Pacientes disponíveis (fora da clínica atual):', availablePatients);
-
-      const patients: ExistingPatient[] = availablePatients.map(profile => ({
+      const patients: ExistingPatient[] = patientsData.map(profile => ({
         id: profile.user_id,
         name: profile.name,
         email: profile.email,
@@ -86,13 +88,12 @@ export const useHybridPatientInvitations = () => {
       }));
 
       setExistingPatients(patients);
+      console.log('✅ Pacientes processados e definidos no estado:', patients);
 
-      if (patients.length === 0) {
-        toast({
-          title: "Nenhum paciente disponível",
-          description: "Todos os pacientes encontrados já estão em sua clínica ou em outras clínicas.",
-        });
-      }
+      toast({
+        title: "Busca concluída",
+        description: `${patients.length} paciente(s) encontrado(s)`,
+      });
 
     } catch (error: any) {
       console.error('💥 Erro inesperado na busca:', error);
@@ -104,7 +105,7 @@ export const useHybridPatientInvitations = () => {
     } finally {
       setIsSearching(false);
     }
-  }, [toast, user?.clinic_id]);
+  }, [toast, user?.clinic_id, user?.id, user?.role]);
 
   const loadInvitations = useCallback(async () => {
     if (!user?.clinic_id) {
@@ -206,7 +207,6 @@ export const useHybridPatientInvitations = () => {
     }
   };
 
-  // Convidar novo paciente (via email)
   const inviteNewPatient = async (invitationData: {
     name: string;
     email: string;
@@ -306,7 +306,6 @@ export const useHybridPatientInvitations = () => {
     }
   };
 
-  // Atualizar status do convite
   const updateInvitation = async (invitationId: string, status: 'cancelled' | 'expired') => {
     try {
       const { error } = await supabase
@@ -342,7 +341,6 @@ export const useHybridPatientInvitations = () => {
     }
   };
 
-  // Reenviar convite
   const resendInvitation = async (invitationId: string) => {
     try {
       const expiresAt = new Date();

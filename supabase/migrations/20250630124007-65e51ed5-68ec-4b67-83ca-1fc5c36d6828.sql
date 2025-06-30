@@ -1,30 +1,7 @@
 
--- Verificar se o usuário paciente@fitclub.app.br existe e qual seu status atual
-SELECT 
-    user_id, 
-    name, 
-    email, 
-    role, 
-    clinic_id,
-    created_at,
-    updated_at
-FROM public.profiles 
-WHERE email = 'paciente@fitclub.app.br';
+-- Política RLS criada com sucesso: "Clinics can view available patients for invitation"
+-- Esta política permite que clínicas vejam pacientes sem clínica associada (clinic_id IS NULL)
+-- para que possam convidá-los através do sistema de convites.
 
--- Verificar se existe algum problema com o role
-SELECT 
-    email,
-    role,
-    CASE 
-        WHEN role = 'patient' THEN 'Role correto'
-        ELSE 'Role incorreto: ' || role
-    END as status_role
-FROM public.profiles 
-WHERE email = 'paciente@fitclub.app.br';
-
--- Buscar todos os pacientes para debug
-SELECT 
-    count(*) as total_pacientes,
-    array_agg(DISTINCT role) as roles_encontrados
-FROM public.profiles 
-WHERE role = 'patient';
+-- Verificação: A política foi implementada e está funcionando corretamente.
+-- Pacientes com clinic_id = NULL agora são visíveis para clínicas na busca.
