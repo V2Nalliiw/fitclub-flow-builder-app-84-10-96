@@ -10,7 +10,7 @@ export const useWhatsApp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const { toast } = useToast();
-  const { settings, getWhatsAppConfig } = useWhatsAppSettings();
+  const { settings, getWhatsAppConfig, isUsingGlobalSettings } = useWhatsAppSettings();
   const { trackWhatsAppSent } = useAnalytics();
 
   const checkConnection = useCallback(async () => {
@@ -73,8 +73,14 @@ export const useWhatsApp = () => {
     customMessage?: string
   ): Promise<SendMessageResponse> => {
     const config = getWhatsAppConfig();
+    const usingGlobal = isUsingGlobalSettings();
+    
     if (!config || !config.is_active) {
-      const errorMsg = !config ? "Configure o WhatsApp nas configurações antes de enviar mensagens." : "Ative o WhatsApp nas configurações antes de enviar mensagens.";
+      const configType = usingGlobal ? "global" : "da clínica";
+      const errorMsg = !config ? 
+        `Configure o WhatsApp ${usingGlobal ? 'global (admin)' : 'da clínica'} nas configurações antes de enviar mensagens.` : 
+        `Ative o WhatsApp ${configType} nas configurações antes de enviar mensagens.`;
+      
       toast({
         title: "WhatsApp não configurado",
         description: errorMsg,
@@ -93,9 +99,10 @@ export const useWhatsApp = () => {
       const result = await whatsappService.sendMessage(phoneNumber, message);
       
       if (result.success) {
+        const configSource = usingGlobal ? " (usando API global)" : "";
         toast({
           title: "Link enviado",
-          description: `Formulário enviado para ${phoneNumber}`,
+          description: `Formulário enviado para ${phoneNumber}${configSource}`,
         });
         trackWhatsAppSent(phoneNumber, 'form_link');
       } else {
@@ -110,7 +117,7 @@ export const useWhatsApp = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [getWhatsAppConfig, toast, trackWhatsAppSent]);
+  }, [getWhatsAppConfig, toast, trackWhatsAppSent, isUsingGlobalSettings]);
 
   const sendMedia = useCallback(async (
     phoneNumber: string,
@@ -119,8 +126,14 @@ export const useWhatsApp = () => {
     message?: string
   ): Promise<SendMessageResponse> => {
     const config = getWhatsAppConfig();
+    const usingGlobal = isUsingGlobalSettings();
+    
     if (!config || !config.is_active) {
-      const errorMsg = !config ? "Configure o WhatsApp nas configurações antes de enviar mensagens." : "Ative o WhatsApp nas configurações antes de enviar mensagens.";
+      const configType = usingGlobal ? "global" : "da clínica";
+      const errorMsg = !config ? 
+        `Configure o WhatsApp ${usingGlobal ? 'global (admin)' : 'da clínica'} nas configurações antes de enviar mensagens.` : 
+        `Ative o WhatsApp ${configType} nas configurações antes de enviar mensagens.`;
+      
       toast({
         title: "WhatsApp não configurado",
         description: errorMsg,
@@ -144,9 +157,10 @@ export const useWhatsApp = () => {
       );
       
       if (result.success) {
+        const configSource = usingGlobal ? " (usando API global)" : "";
         toast({
           title: "Conteúdo enviado",
-          description: `Mídia enviada para ${phoneNumber}`,
+          description: `Mídia enviada para ${phoneNumber}${configSource}`,
         });
         trackWhatsAppSent(phoneNumber, 'media');
       } else {
@@ -161,15 +175,21 @@ export const useWhatsApp = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [getWhatsAppConfig, toast, trackWhatsAppSent]);
+  }, [getWhatsAppConfig, toast, trackWhatsAppSent, isUsingGlobalSettings]);
 
   const sendMessage = useCallback(async (
     phoneNumber: string,
     message: string
   ): Promise<SendMessageResponse> => {
     const config = getWhatsAppConfig();
+    const usingGlobal = isUsingGlobalSettings();
+    
     if (!config || !config.is_active) {
-      const errorMsg = !config ? "Configure o WhatsApp nas configurações antes de enviar mensagens." : "Ative o WhatsApp nas configurações antes de enviar mensagens.";
+      const configType = usingGlobal ? "global" : "da clínica";
+      const errorMsg = !config ? 
+        `Configure o WhatsApp ${usingGlobal ? 'global (admin)' : 'da clínica'} nas configurações antes de enviar mensagens.` : 
+        `Ative o WhatsApp ${configType} nas configurações antes de enviar mensagens.`;
+      
       toast({
         title: "WhatsApp não configurado",
         description: errorMsg,
@@ -185,9 +205,10 @@ export const useWhatsApp = () => {
       const result = await whatsappService.sendMessage(phoneNumber, message);
       
       if (result.success) {
+        const configSource = usingGlobal ? " (usando API global)" : "";
         toast({
           title: "Mensagem enviada",
-          description: `Mensagem enviada para ${phoneNumber}`,
+          description: `Mensagem enviada para ${phoneNumber}${configSource}`,
         });
         trackWhatsAppSent(phoneNumber, 'text');
       } else {
@@ -202,25 +223,29 @@ export const useWhatsApp = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [getWhatsAppConfig, toast, trackWhatsAppSent]);
+  }, [getWhatsAppConfig, toast, trackWhatsAppSent, isUsingGlobalSettings]);
 
   const testConnection = useCallback(async (): Promise<boolean> => {
     const config = getWhatsAppConfig();
+    const usingGlobal = isUsingGlobalSettings();
+    
     console.log('useWhatsApp: testConnection chamado, config:', config);
     
     if (!config) {
+      const configType = usingGlobal ? "global (admin)" : "da clínica";
       toast({
         title: "Configuração não encontrada",
-        description: "Configure o WhatsApp primeiro.",
+        description: `Configure o WhatsApp ${configType} primeiro.`,
         variant: "destructive",
       });
       return false;
     }
 
     if (!config.is_active) {
+      const configType = usingGlobal ? "global" : "da clínica";
       toast({
         title: "WhatsApp inativo",
-        description: "Ative o WhatsApp nas configurações primeiro.",
+        description: `Ative o WhatsApp ${configType} nas configurações primeiro.`,
         variant: "destructive",
       });
       return false;
@@ -233,11 +258,12 @@ export const useWhatsApp = () => {
       const connected = await whatsappService.testConnection();
       setIsConnected(connected);
       
+      const configSource = usingGlobal ? " (API global)" : " (API da clínica)";
       toast({
         title: connected ? "Conexão OK" : "Sem conexão",
         description: connected ? 
-          "WhatsApp está funcionando corretamente." : 
-          "Verifique as configurações do WhatsApp.",
+          `WhatsApp está funcionando corretamente${configSource}.` : 
+          `Verifique as configurações do WhatsApp${configSource}.`,
         variant: connected ? "default" : "destructive",
       });
       
@@ -245,7 +271,7 @@ export const useWhatsApp = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [getWhatsAppConfig, toast]);
+  }, [getWhatsAppConfig, toast, isUsingGlobalSettings]);
 
   return {
     isLoading,
@@ -254,5 +280,6 @@ export const useWhatsApp = () => {
     sendMedia,
     sendMessage,
     testConnection,
+    isUsingGlobalSettings,
   };
 };

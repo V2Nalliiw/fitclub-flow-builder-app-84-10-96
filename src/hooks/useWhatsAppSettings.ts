@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,6 +27,7 @@ export const useWhatsAppSettings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [settings, setSettings] = useState<WhatsAppSettings | null>(null);
+  const [globalSettings, setGlobalSettings] = useState<WhatsAppSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadSettings = useCallback(async () => {
@@ -38,13 +40,12 @@ export const useWhatsAppSettings = () => {
     console.log('useWhatsAppSettings: Carregando configurações para usuário:', user);
     setLoading(true);
     try {
-      let query = supabase.from('whatsapp_settings').select('*');
-      
-      // For super admin, get global settings (clinic_id is null) first, then clinic settings
       if (user.role === 'super_admin') {
+        // Super admin only loads global settings
         console.log('useWhatsAppSettings: Carregando configurações globais (super admin)');
-        // Try to get global settings first
-        const { data: globalData, error: globalError } = await query
+        const { data: globalData, error: globalError } = await supabase
+          .from('whatsapp_settings')
+          .select('*')
           .is('clinic_id', null)
           .single();
 
@@ -61,47 +62,74 @@ export const useWhatsAppSettings = () => {
         }
 
         if (globalData) {
-          // Type assertion to ensure provider matches our expected type
           const typedData: WhatsAppSettings = {
             ...globalData,
             provider: globalData.provider as 'evolution' | 'meta' | 'twilio'
           };
           console.log('useWhatsAppSettings: Configurações globais carregadas:', typedData);
           setSettings(typedData);
+          setGlobalSettings(typedData);
         } else {
           console.log('useWhatsAppSettings: Nenhuma configuração global encontrada');
           setSettings(null);
+          setGlobalSettings(null);
         }
       } else {
+        // For clinic users, load both clinic and global settings
         console.log('useWhatsAppSettings: Carregando configurações da clínica:', user.clinic_id);
-        // For clinic users, get their clinic settings
-        const { data, error } = await query
+        
+        // Load clinic settings
+        const { data: clinicData, error: clinicError } = await supabase
+          .from('whatsapp_settings')
+          .select('*')
           .eq('clinic_id', user.clinic_id)
           .single();
 
-        console.log('useWhatsAppSettings: Resultado da clínica:', { data, error });
+        // Load global settings as fallback
+        const { data: globalData, error: globalError } = await supabase
+          .from('whatsapp_settings')
+          .select('*')
+          .is('clinic_id', null)
+          .single();
 
-        if (error && error.code !== 'PGRST116') {
-          console.error('Erro ao carregar configurações do WhatsApp:', error);
-          toast({
-            title: "Erro ao carregar configurações",
-            description: error.message,
-            variant: "destructive",
-          });
-          return;
+        console.log('useWhatsAppSettings: Resultado da clínica:', { clinicData, clinicError });
+        console.log('useWhatsAppSettings: Resultado global (fallback):', { globalData, globalError });
+
+        // Set global settings
+        if (globalData) {
+          const typedGlobalData: WhatsAppSettings = {
+            ...globalData,
+            provider: globalData.provider as 'evolution' | 'meta' | 'twilio'
+          };
+          setGlobalSettings(typedGlobalData);
         }
 
-        if (data) {
-          // Type assertion to ensure provider matches our expected type
+        // Set clinic settings (primary) or use global as fallback
+        if (clinicData) {
           const typedData: WhatsAppSettings = {
-            ...data,
-            provider: data.provider as 'evolution' | 'meta' | 'twilio'
+            ...clinicData,
+            provider: clinicData.provider as 'evolution' | 'meta' | 'twilio'
           };
           console.log('useWhatsAppSettings: Configurações da clínica carregadas:', typedData);
           setSettings(typedData);
+        } else if (globalData) {
+          // Use global settings as fallback for the clinic
+          const typedGlobalData: WhatsAppSettings = {
+            ...globalData,
+            provider: globalData.provider as 'evolution' | 'meta' | 'twilio'
+          };
+          console.log('useWhatsAppSettings: Usando configurações globais como fallback para clínica');
+          setSettings(typedGlobalData);
         } else {
-          console.log('useWhatsAppSettings: Nenhuma configuração da clínica encontrada');
+          console.log('useWhatsAppSettings: Nenhuma configuração encontrada');
           setSettings(null);
+        }
+
+        if (clinicError && clinicError.code !== 'PGRST116') {
+          console.error('Erro ao carregar configurações da clínica:', clinicError);
+        }
+        if (globalError && globalError.code !== 'PGRST116') {
+          console.error('Erro ao carregar configurações globais:', globalError);
         }
       }
     } catch (error) {
@@ -132,7 +160,10 @@ export const useWhatsAppSettings = () => {
       // Determine clinic_id based on user role
       const clinicId = user.role === 'super_admin' ? null : user.clinic_id;
       
-      if (settings?.id) {
+      // Check if we have existing clinic settings (not global fallback)
+      const hasClinicSettings = settings?.clinic_id === clinicId;
+      
+      if (settings?.id && hasClinicSettings) {
         // Update existing settings
         result = await supabase
           .from('whatsapp_settings')
@@ -249,16 +280,22 @@ export const useWhatsAppSettings = () => {
     return success;
   };
 
+  const isUsingGlobalSettings = () => {
+    return settings?.clinic_id === null && user?.role !== 'super_admin';
+  };
+
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
 
   return {
     settings,
+    globalSettings,
     loading,
     saveSettings,
     getWhatsAppConfig,
     toggleActive,
     refetch: loadSettings,
+    isUsingGlobalSettings,
   };
 };

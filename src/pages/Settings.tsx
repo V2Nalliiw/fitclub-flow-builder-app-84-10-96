@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { LogoUpload } from '@/components/ui/logo-upload';
-import { Building2, Save, Bell, Key, Palette, Crown } from 'lucide-react';
+import { WhatsAppSettingsCard } from '@/components/whatsapp/WhatsAppSettingsCard';
+import { Building2, Save, Bell, Crown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAppSettings } from '@/hooks/useAppSettings';
@@ -36,13 +38,6 @@ export const Settings = () => {
     systemUpdates: false,
   });
 
-  const [integrations, setIntegrations] = useState({
-    whatsapp: '',
-    telegram: '',
-    email_smtp: '',
-    sms_provider: '',
-  });
-
   const handleClinicDataChange = (field: string, value: string) => {
     setClinicData(prev => ({
       ...prev,
@@ -52,13 +47,6 @@ export const Settings = () => {
 
   const handleNotificationChange = (field: string, value: boolean) => {
     setNotifications(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleIntegrationChange = (field: string, value: string) => {
-    setIntegrations(prev => ({
       ...prev,
       [field]: value
     }));
@@ -83,7 +71,6 @@ export const Settings = () => {
 
     const logoUrl = await uploadClinicLogo(file, user.clinic_id);
     if (logoUrl) {
-      // Aqui seria atualizada a logo da clínica no banco
       toast({
         title: "Logo atualizado",
         description: "Logo da clínica foi atualizado com sucesso",
@@ -172,7 +159,7 @@ export const Settings = () => {
                 <div className="md:col-span-2">
                   <LogoUpload
                     onUpload={handleClinicLogoUpload}
-                    currentLogo={undefined} // Logo da clínica seria carregado aqui
+                    currentLogo={undefined}
                     uploading={uploading}
                     label="Logo da Clínica"
                   />
@@ -303,61 +290,10 @@ export const Settings = () => {
               </div>
             </CardContent>
           </Card>
-
-          {/* Integrações */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Key className="h-5 w-5" />
-                <CardTitle>Integrações</CardTitle>
-              </div>
-              <CardDescription>
-                Configure integrações com serviços externos
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="whatsapp">WhatsApp Business API</Label>
-                <Input
-                  id="whatsapp"
-                  value={integrations.whatsapp}
-                  onChange={(e) => handleIntegrationChange('whatsapp', e.target.value)}
-                  placeholder="Token da API"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="telegram">Telegram Bot</Label>
-                <Input
-                  id="telegram"
-                  value={integrations.telegram}
-                  onChange={(e) => handleIntegrationChange('telegram', e.target.value)}
-                  placeholder="Token do Bot"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="email-smtp">Servidor SMTP</Label>
-                <Input
-                  id="email-smtp"
-                  value={integrations.email_smtp}
-                  onChange={(e) => handleIntegrationChange('email_smtp', e.target.value)}
-                  placeholder="smtp.servidor.com"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="sms-provider">Provedor SMS</Label>
-                <Input
-                  id="sms-provider"
-                  value={integrations.sms_provider}
-                  onChange={(e) => handleIntegrationChange('sms_provider', e.target.value)}
-                  placeholder="Chave da API"
-                />
-              </div>
-            </CardContent>
-          </Card>
         </div>
+
+        {/* WhatsApp Integration */}
+        <WhatsAppSettingsCard />
       </div>
 
       <div className="flex justify-end">
