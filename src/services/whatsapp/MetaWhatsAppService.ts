@@ -6,64 +6,111 @@ export class MetaWhatsAppService {
 
   setConfig(config: WhatsAppConfig) {
     this.config = config;
+    console.log('Meta WhatsApp: Configuração definida', {
+      provider: config.provider,
+      hasAccessToken: !!config.access_token,
+      hasBusinessAccountId: !!config.business_account_id,
+      hasPhoneNumber: !!config.phone_number,
+    });
   }
 
   async testConnection(): Promise<boolean> {
     if (!this.config || this.config.provider !== 'meta') {
-      console.error('Meta WhatsApp: Configuração inválida');
+      console.error('Meta WhatsApp: Configuração inválida ou provedor incorreto', {
+        hasConfig: !!this.config,
+        provider: this.config?.provider
+      });
       return false;
     }
 
     if (!this.config.access_token || !this.config.business_account_id) {
-      console.error('Meta WhatsApp: Access token ou Business Account ID não fornecidos');
+      console.error('Meta WhatsApp: Credenciais obrigatórias não fornecidas', {
+        hasAccessToken: !!this.config.access_token,
+        hasBusinessAccountId: !!this.config.business_account_id,
+        accessTokenPreview: this.config.access_token ? `${this.config.access_token.substring(0, 10)}...` : 'não fornecido'
+      });
       return false;
     }
 
     try {
-      console.log('Testando conexão Meta WhatsApp...');
+      console.log('Meta WhatsApp: Iniciando teste de conexão...');
       
-      // Primeiro teste: verificar se o business account é válido
-      const businessResponse = await fetch(
-        `https://graph.facebook.com/v18.0/${this.config.business_account_id}?fields=id,name`,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.config.access_token}`,
-          },
-        }
-      );
+      // Teste 1: Verificar se o business account é válido
+      const businessUrl = `https://graph.facebook.com/v18.0/${this.config.business_account_id}?fields=id,name`;
+      console.log('Meta WhatsApp: Testando URL do business:', businessUrl);
+      
+      const businessResponse = await fetch(businessUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.config.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('Meta WhatsApp: Status da resposta do business:', businessResponse.status);
 
       if (!businessResponse.ok) {
-        const errorData = await businessResponse.json();
-        console.error('Meta WhatsApp: Erro no business account:', errorData);
+        const errorText = await businessResponse.text();
+        console.error('Meta WhatsApp: Erro na resposta do business account:', {
+          status: businessResponse.status,
+          statusText: businessResponse.statusText,
+          errorText
+        });
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          console.error('Meta WhatsApp: Dados do erro parseados:', errorData);
+        } catch (e) {
+          console.error('Meta WhatsApp: Não foi possível parsear o erro como JSON');
+        }
+        
         return false;
       }
 
-      // Segundo teste: verificar se o phone number ID é válido
+      const businessData = await businessResponse.json();
+      console.log('Meta WhatsApp: Business account válido:', businessData);
+
+      // Teste 2: Verificar se o phone number ID é válido (se fornecido)
       if (this.config.phone_number) {
-        const phoneResponse = await fetch(
-          `https://graph.facebook.com/v18.0/${this.config.phone_number}?fields=id,display_phone_number,verified_name`,
-          {
-            headers: {
-              'Authorization': `Bearer ${this.config.access_token}`,
-            },
-          }
-        );
+        const phoneUrl = `https://graph.facebook.com/v18.0/${this.config.phone_number}?fields=id,display_phone_number,verified_name,quality_rating`;
+        console.log('Meta WhatsApp: Testando URL do phone number:', phoneUrl);
+        
+        const phoneResponse = await fetch(phoneUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${this.config.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        console.log('Meta WhatsApp: Status da resposta do phone number:', phoneResponse.status);
 
         if (!phoneResponse.ok) {
-          const phoneErrorData = await phoneResponse.json();
-          console.error('Meta WhatsApp: Erro no phone number:', phoneErrorData);
+          const phoneErrorText = await phoneResponse.text();
+          console.error('Meta WhatsApp: Erro na resposta do phone number:', {
+            status: phoneResponse.status,
+            statusText: phoneResponse.statusText,
+            errorText: phoneErrorText
+          });
+          
+          try {
+            const phoneErrorData = JSON.parse(phoneErrorText);
+            console.error('Meta WhatsApp: Dados do erro do phone parseados:', phoneErrorData);
+          } catch (e) {
+            console.error('Meta WhatsApp: Não foi possível parsear o erro do phone como JSON');
+          }
+          
           return false;
         }
 
         const phoneData = await phoneResponse.json();
-        console.log('Meta WhatsApp: Phone number verificado:', phoneData);
+        console.log('Meta WhatsApp: Phone number verificado com sucesso:', phoneData);
       }
 
-      const businessData = await businessResponse.json();
-      console.log('Meta WhatsApp: Conexão bem-sucedida com business:', businessData.name);
+      console.log('Meta WhatsApp: Conexão bem-sucedida!');
       return true;
     } catch (error) {
-      console.error('Meta WhatsApp: Erro ao testar conexão:', error);
+      console.error('Meta WhatsApp: Erro de rede ou exceção durante o teste:', error);
       return false;
     }
   }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,8 @@ import {
   Globe,
   Phone,
   Building2,
-  TestTube
+  TestTube,
+  Loader2
 } from 'lucide-react';
 import { useWhatsAppSettings } from '@/hooks/useWhatsAppSettings';
 import { useWhatsApp } from '@/hooks/useWhatsApp';
@@ -35,13 +35,18 @@ export const WhatsAppApiChecker = () => {
 
   const [businessInfo, setBusinessInfo] = useState<any>(null);
   const [phoneInfo, setPhoneInfo] = useState<any>(null);
+  const [errorDetails, setErrorDetails] = useState<string>('');
+  const [isDetailedTesting, setIsDetailedTesting] = useState(false);
 
-  const runMetaApiTests = async () => {
+  const runDetailedMetaApiTests = async () => {
     if (!settings || !settings.is_active || settings.provider !== 'meta') {
+      setErrorDetails('Configuração Meta não encontrada ou inativa');
       return;
     }
 
-    console.log('Iniciando testes da Meta API...');
+    console.log('Meta WhatsApp: Iniciando testes detalhados...');
+    setIsDetailedTesting(true);
+    setErrorDetails('');
     
     // Reset dos resultados
     setTestResults({
@@ -52,6 +57,20 @@ export const WhatsAppApiChecker = () => {
     });
 
     try {
+      // Validação inicial
+      if (!settings.access_token || !settings.business_account_id) {
+        setErrorDetails('Access Token ou Business Account ID não configurados');
+        setTestResults({
+          connection: 'error',
+          business: 'error',
+          phoneNumber: 'error',
+          permissions: 'error'
+        });
+        return;
+      }
+
+      console.log('Meta WhatsApp: Testando conexão básica...');
+      
       // Test 1: Conexão básica
       const connected = await testConnection();
       setTestResults(prev => ({ 
@@ -59,64 +78,96 @@ export const WhatsAppApiChecker = () => {
         connection: connected ? 'success' : 'error' 
       }));
 
-      if (connected) {
-        // Test 2: Informações do Business Account
+      if (!connected) {
+        setErrorDetails('Falha na conexão básica. Verifique os logs do console para mais detalhes.');
+        setTestResults({
+          connection: 'error',
+          business: 'error',
+          phoneNumber: 'error',
+          permissions: 'error'
+        });
+        return;
+      }
+
+      // Test 2: Informações do Business Account
+      console.log('Meta WhatsApp: Obtendo informações do Business Account...');
+      try {
+        const businessResponse = await fetch(
+          `https://graph.facebook.com/v18.0/${settings.business_account_id}?fields=id,name`,
+          {
+            headers: {
+              'Authorization': `Bearer ${settings.access_token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        
+        if (businessResponse.ok) {
+          const businessData = await businessResponse.json();
+          setBusinessInfo(businessData);
+          setTestResults(prev => ({ ...prev, business: 'success' }));
+          console.log('Meta WhatsApp: Business info obtida:', businessData);
+        } else {
+          const errorText = await businessResponse.text();
+          console.error('Meta WhatsApp: Erro no business:', errorText);
+          setErrorDetails(`Erro no Business Account: ${errorText}`);
+          setTestResults(prev => ({ ...prev, business: 'error' }));
+        }
+      } catch (error) {
+        console.error('Meta WhatsApp: Exceção no business test:', error);
+        setErrorDetails(`Erro ao testar Business Account: ${error}`);
+        setTestResults(prev => ({ ...prev, business: 'error' }));
+      }
+
+      // Test 3: Informações do Phone Number
+      if (settings.phone_number) {
+        console.log('Meta WhatsApp: Obtendo informações do Phone Number...');
         try {
-          const businessResponse = await fetch(
-            `https://graph.facebook.com/v18.0/${settings.business_account_id}?fields=id,name`,
+          const phoneResponse = await fetch(
+            `https://graph.facebook.com/v18.0/${settings.phone_number}?fields=id,display_phone_number,verified_name,quality_rating`,
             {
               headers: {
                 'Authorization': `Bearer ${settings.access_token}`,
+                'Content-Type': 'application/json',
               },
             }
           );
           
-          if (businessResponse.ok) {
-            const businessData = await businessResponse.json();
-            setBusinessInfo(businessData);
-            setTestResults(prev => ({ ...prev, business: 'success' }));
+          if (phoneResponse.ok) {
+            const phoneData = await phoneResponse.json();
+            setPhoneInfo(phoneData);
+            setTestResults(prev => ({ ...prev, phoneNumber: 'success' }));
+            console.log('Meta WhatsApp: Phone info obtida:', phoneData);
           } else {
-            setTestResults(prev => ({ ...prev, business: 'error' }));
-          }
-        } catch {
-          setTestResults(prev => ({ ...prev, business: 'error' }));
-        }
-
-        // Test 3: Informações do Phone Number
-        if (settings.phone_number) {
-          try {
-            const phoneResponse = await fetch(
-              `https://graph.facebook.com/v18.0/${settings.phone_number}?fields=id,display_phone_number,verified_name,quality_rating`,
-              {
-                headers: {
-                  'Authorization': `Bearer ${settings.access_token}`,
-                },
-              }
-            );
-            
-            if (phoneResponse.ok) {
-              const phoneData = await phoneResponse.json();
-              setPhoneInfo(phoneData);
-              setTestResults(prev => ({ ...prev, phoneNumber: 'success' }));
-            } else {
-              setTestResults(prev => ({ ...prev, phoneNumber: 'error' }));
-            }
-          } catch {
+            const errorText = await phoneResponse.text();
+            console.error('Meta WhatsApp: Erro no phone:', errorText);
+            setErrorDetails(`Erro no Phone Number: ${errorText}`);
             setTestResults(prev => ({ ...prev, phoneNumber: 'error' }));
           }
+        } catch (error) {
+          console.error('Meta WhatsApp: Exceção no phone test:', error);
+          setErrorDetails(`Erro ao testar Phone Number: ${error}`);
+          setTestResults(prev => ({ ...prev, phoneNumber: 'error' }));
         }
-
-        // Test 4: Permissões básicas
-        setTestResults(prev => ({ ...prev, permissions: 'success' }));
+      } else {
+        setTestResults(prev => ({ ...prev, phoneNumber: 'error' }));
+        setErrorDetails('Phone Number ID não configurado');
       }
+
+      // Test 4: Permissões básicas
+      setTestResults(prev => ({ ...prev, permissions: 'success' }));
+      
     } catch (error) {
-      console.error('Erro nos testes da Meta API:', error);
+      console.error('Meta WhatsApp: Erro geral nos testes:', error);
+      setErrorDetails(`Erro geral: ${error}`);
       setTestResults({
         connection: 'error',
         business: 'error',
         phoneNumber: 'error',
         permissions: 'error'
       });
+    } finally {
+      setIsDetailedTesting(false);
     }
   };
 
@@ -257,13 +308,33 @@ export const WhatsAppApiChecker = () => {
             </div>
 
             <Button 
-              onClick={runMetaApiTests} 
+              onClick={runDetailedMetaApiTests} 
               className="w-full" 
-              disabled={isLoading}
+              disabled={isLoading || isDetailedTesting}
             >
-              <TestTube className="h-4 w-4 mr-2" />
-              {isLoading ? 'Testando...' : 'Testar Meta WhatsApp API'}
+              {isDetailedTesting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Testando...
+                </>
+              ) : (
+                <>
+                  <TestTube className="h-4 w-4 mr-2" />
+                  Testar Meta WhatsApp API (Detalhado)
+                </>
+              )}
             </Button>
+
+            {errorDetails && (
+              <Alert variant="destructive">
+                <XCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Erro Detalhado:</strong> {errorDetails}
+                  <br />
+                  <small>Verifique o console do navegador para mais informações técnicas.</small>
+                </AlertDescription>
+              </Alert>
+            )}
 
             {testResults.connection === 'success' && (
               <Alert className="bg-green-50 border-green-200">
