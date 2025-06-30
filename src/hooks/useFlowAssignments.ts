@@ -136,14 +136,14 @@ export const useFlowAssignments = () => {
         throw new Error('Fluxo não encontrado');
       }
 
-      // Create flow execution
+      // Create flow execution with correct status
       const { data: execution, error: executionError } = await supabase
         .from('flow_executions')
         .insert({
           flow_id: flowId,
           flow_name: flow.name,
           patient_id: user.id,
-          status: 'em-andamento',
+          status: 'pending', // Using correct status from database constraint
           current_node: 'start',
           progress: 0,
           total_steps: (flow.nodes as any[])?.length || 0,

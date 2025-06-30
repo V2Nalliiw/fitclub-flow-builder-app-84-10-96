@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,9 +7,11 @@ import { Play, ArrowRight, Workflow, Activity, FileText, Clock } from 'lucide-re
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { useNavigate } from 'react-router-dom';
 
 export const PatientFlowsList = () => {
   const { assignments, isLoading, startFlowExecution, isStarting } = useFlowAssignments();
+  const navigate = useNavigate();
 
   console.log('PatientFlowsList - Assignments:', assignments);
 
@@ -62,12 +63,21 @@ export const PatientFlowsList = () => {
     );
   }
 
-  const handleStartFlow = (assignment: any) => {
+  const handleStartFlow = async (assignment: any) => {
     console.log('Iniciando fluxo:', assignment);
-    startFlowExecution({ 
-      assignmentId: assignment.id, 
-      flowId: assignment.flow_id 
-    });
+    try {
+      const execution = await startFlowExecution({ 
+        assignmentId: assignment.id, 
+        flowId: assignment.flow_id 
+      });
+      
+      if (execution) {
+        // Redirect to flow execution page
+        navigate(`/flow-execution/${execution.id}`);
+      }
+    } catch (error) {
+      console.error('Erro ao iniciar fluxo:', error);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -196,6 +206,7 @@ export const PatientFlowsList = () => {
                     <Button 
                       className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium py-3 rounded-lg transition-all duration-200 group"
                       size="lg"
+                      onClick={() => navigate(`/flow-execution/${assignment.id}`)}
                     >
                       <Activity className="h-4 w-4 mr-2" />
                       Continuar Formulários

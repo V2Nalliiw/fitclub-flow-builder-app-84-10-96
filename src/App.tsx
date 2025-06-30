@@ -25,6 +25,7 @@ import Permissions from "@/pages/Permissions";
 import { Forms } from "@/pages/Forms";
 import { WhatsAppSettings } from "@/pages/WhatsAppSettings";
 import MyFlows from "@/pages/MyFlows";
+import FlowExecution from "@/pages/FlowExecution";
 import NotFound from "@/pages/NotFound";
 
 import { RealtimeNotificationProvider } from "@/components/notifications/RealtimeNotificationProvider";
@@ -242,6 +243,16 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute allowedRoles={['clinic', 'super_admin']}>
             <Forms />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Flow Execution - Apenas pacientes */}
+      <Route 
+        path="/flow-execution/:executionId" 
+        element={
+          <ProtectedRoute allowedRoles={['patient']}>
+            <FlowExecution />
           </ProtectedRoute>
         } 
       />
