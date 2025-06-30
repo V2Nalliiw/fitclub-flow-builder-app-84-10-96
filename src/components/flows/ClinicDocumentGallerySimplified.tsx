@@ -44,12 +44,15 @@ export const ClinicDocumentGallerySimplified: React.FC<ClinicDocumentGalleryProp
     if (!user) return;
 
     try {
-      // Use manual SQL query with fetch to avoid type issues
+      // Use direct URL constants to avoid accessing protected properties
+      const SUPABASE_URL = "https://oilnybhaboefqyhjrmvl.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pbG55YmhhYm9lZnF5aGpybXZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA4NzQ2NzksImV4cCI6MjA2NjQ1MDY3OX0.QzSb4EzbVXh3UmWhHiMNP9fsctIJv2Uqg2Bia6ntZAY";
+      
       const response = await fetch(
-        `${supabase.supabaseUrl}/rest/v1/clinic_documents?select=*&order=created_at.desc`,
+        `${SUPABASE_URL}/rest/v1/clinic_documents?select=*&order=created_at.desc`,
         {
           headers: {
-            'apikey': supabase.supabaseKey,
+            'apikey': SUPABASE_ANON_KEY,
             'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
             'Content-Type': 'application/json'
           }
@@ -115,13 +118,16 @@ export const ClinicDocumentGallerySimplified: React.FC<ClinicDocumentGalleryProp
           created_by: user.id
         };
 
-        // Use fetch for the insert to avoid type issues
+        // Use direct URL constants to avoid accessing protected properties
+        const SUPABASE_URL = "https://oilnybhaboefqyhjrmvl.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pbG55YmhhYm9lZnF5aGpybXZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA4NzQ2NzksImV4cCI6MjA2NjQ1MDY3OX0.QzSb4EzbVXh3UmWhHiMNP9fsctIJv2Uqg2Bia6ntZAY";
+        
         const response = await fetch(
-          `${supabase.supabaseUrl}/rest/v1/clinic_documents`,
+          `${SUPABASE_URL}/rest/v1/clinic_documents`,
           {
             method: 'POST',
             headers: {
-              'apikey': supabase.supabaseKey,
+              'apikey': SUPABASE_ANON_KEY,
               'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
               'Content-Type': 'application/json',
               'Prefer': 'return=minimal'
@@ -147,12 +153,16 @@ export const ClinicDocumentGallerySimplified: React.FC<ClinicDocumentGalleryProp
 
   const handleDelete = async (document: ClinicDocument) => {
     try {
+      // Use direct URL constants to avoid accessing protected properties
+      const SUPABASE_URL = "https://oilnybhaboefqyhjrmvl.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pbG55YmhhYm9lZnF5aGpybXZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA4NzQ2NzksImV4cCI6MjA2NjQ1MDY3OX0.QzSb4EzbVXh3UmWhHiMNP9fsctIJv2Uqg2Bia6ntZAY";
+      
       const response = await fetch(
-        `${supabase.supabaseUrl}/rest/v1/clinic_documents?id=eq.${document.id}`,
+        `${SUPABASE_URL}/rest/v1/clinic_documents?id=eq.${document.id}`,
         {
           method: 'DELETE',
           headers: {
-            'apikey': supabase.supabaseKey,
+            'apikey': SUPABASE_ANON_KEY,
             'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
             'Content-Type': 'application/json'
           }
