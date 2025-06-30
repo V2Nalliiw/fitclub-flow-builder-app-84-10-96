@@ -187,44 +187,47 @@ export const useWhatsAppSettings = () => {
       } else {
         // Para usuários de clínica
         // Verifica se tem configurações específicas da clínica (não herdadas)
-        const hasOwnClinicSettings = settings?.clinic_id === clinicId;
+        const hasOwnClinicSettings = settings?.clinic_id === clinicId && settings?.id !== 'inherited-global';
         
         if (settings?.id && hasOwnClinicSettings) {
           // Update existing clinic settings
           result = await supabase
             .from('whatsapp_settings')
             .update({
-              provider: settingsData.provider || 'evolution',
-              base_url: settingsData.base_url || null,
-              api_key: settingsData.api_key || null,
-              session_name: settingsData.session_name || null,
-              account_sid: settingsData.account_sid || null,
-              auth_token: settingsData.auth_token || null,
-              phone_number: settingsData.phone_number || null,
-              access_token: settingsData.access_token || null,
-              business_account_id: settingsData.business_account_id || null,
-              webhook_url: settingsData.webhook_url || null,
-              is_active: settingsData.is_active ?? false,
+              provider: settingsData.provider || settings.provider,
+              base_url: settingsData.base_url ?? settings.base_url,
+              api_key: settingsData.api_key ?? settings.api_key,
+              session_name: settingsData.session_name ?? settings.session_name,
+              account_sid: settingsData.account_sid ?? settings.account_sid,
+              auth_token: settingsData.auth_token ?? settings.auth_token,
+              phone_number: settingsData.phone_number ?? settings.phone_number,
+              access_token: settingsData.access_token ?? settings.access_token,
+              business_account_id: settingsData.business_account_id ?? settings.business_account_id,
+              webhook_url: settingsData.webhook_url ?? settings.webhook_url,
+              is_active: settingsData.is_active ?? settings.is_active,
             })
             .eq('id', settings.id)
             .select()
             .single();
         } else {
           // Create new clinic-specific settings
+          // Se está herdando configurações globais, usa elas como base
+          const baseSettings = globalSettings || {};
+          
           result = await supabase
             .from('whatsapp_settings')
             .insert({
               clinic_id: clinicId,
-              provider: settingsData.provider || 'evolution',
-              base_url: settingsData.base_url || null,
-              api_key: settingsData.api_key || null,
-              session_name: settingsData.session_name || null,
-              account_sid: settingsData.account_sid || null,
-              auth_token: settingsData.auth_token || null,
-              phone_number: settingsData.phone_number || null,
-              access_token: settingsData.access_token || null,
-              business_account_id: settingsData.business_account_id || null,
-              webhook_url: settingsData.webhook_url || null,
+              provider: settingsData.provider || baseSettings.provider || 'evolution',
+              base_url: settingsData.base_url ?? baseSettings.base_url,
+              api_key: settingsData.api_key ?? baseSettings.api_key,
+              session_name: settingsData.session_name ?? baseSettings.session_name,
+              account_sid: settingsData.account_sid ?? baseSettings.account_sid,
+              auth_token: settingsData.auth_token ?? baseSettings.auth_token,
+              phone_number: settingsData.phone_number ?? baseSettings.phone_number,
+              access_token: settingsData.access_token ?? baseSettings.access_token,
+              business_account_id: settingsData.business_account_id ?? baseSettings.business_account_id,
+              webhook_url: settingsData.webhook_url ?? baseSettings.webhook_url,
               is_active: settingsData.is_active ?? false,
             })
             .select()
@@ -285,6 +288,12 @@ export const useWhatsAppSettings = () => {
 
     if (!settings.is_active) {
       console.log('useWhatsAppSettings: Configuração não está ativa');
+      return null;
+    }
+
+    // Se está usando configurações herdadas, mas elas não estão ativas na clínica
+    if (settings.id === 'inherited-global' && !settings.is_active) {
+      console.log('useWhatsAppSettings: Configurações globais herdadas não estão ativas para a clínica');
       return null;
     }
 
