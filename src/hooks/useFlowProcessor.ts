@@ -5,14 +5,23 @@ import { useToast } from '@/hooks/use-toast';
 import { FlowNode, FlowEdge } from '@/types/flow';
 
 interface FlowStep {
-  [key: string]: any; // Make it JSON-compatible
   nodeId: string;
   nodeType: string;
   title: string;
   description?: string;
   order: number;
-  availableAt: string; // Changed from Date to string for JSON compatibility
+  availableAt: string;
+  completed: boolean;
+  // Question-specific fields
+  pergunta?: string;
+  tipoResposta?: 'escolha-unica' | 'multipla-escolha' | 'texto-livre';
+  opcoes?: string[];
+  // Form-specific fields
   formId?: string;
+  tipoConteudo?: 'pdf' | 'imagem' | 'video' | 'ebook';
+  arquivo?: string;
+  mensagemFinal?: string;
+  // Delay-specific fields
   delayAmount?: number;
   delayType?: 'minutos' | 'horas' | 'dias';
 }
@@ -30,7 +39,7 @@ export const useFlowProcessor = () => {
     setProcessing(true);
     
     try {
-      // Primeiro, buscar dados do fluxo
+      // Get flow data
       const { data: flow, error: flowError } = await supabase
         .from('flows')
         .select('name')
@@ -41,44 +50,45 @@ export const useFlowProcessor = () => {
         throw new Error('Fluxo não encontrado');
       }
 
-      // Processar nós para criar sequência de steps
+      // Process nodes to create steps sequence
       const steps = await processNodesSequence(nodes, edges);
       
       if (steps.length === 0) {
         throw new Error('Nenhuma etapa válida encontrada no fluxo');
       }
 
-      // Criar execução do fluxo
+      console.log('Processed steps:', steps);
+
+      // Create flow execution with proper structure
       const { data: execution, error: executionError } = await supabase
         .from('flow_executions')
         .insert({
           flow_id: flowId,
-          flow_name: (flow as any).name,
+          flow_name: flow.name,
           patient_id: patientId,
-          status: 'em-andamento',
+          status: 'pending',
           current_node: steps[0].nodeId,
           progress: 0,
           total_steps: steps.length,
           completed_steps: 0,
           current_step: {
-            id: steps[0].nodeId,
-            type: steps[0].nodeType,
-            title: steps[0].title,
-            description: steps[0].description,
-            completed: false,
-            steps: steps, // Now JSON-compatible
-          } as any,
+            steps: steps,
+            currentStepIndex: 0,
+            totalSteps: steps.length
+          },
+          next_step_available_at: steps[0].availableAt
         })
         .select()
         .single();
 
       if (executionError) {
+        console.error('Erro ao criar execução:', executionError);
         throw executionError;
       }
 
       toast({
         title: "Fluxo iniciado",
-        description: `O fluxo "${(flow as any).name}" foi iniciado para o paciente`,
+        description: `O fluxo "${flow.name}" foi iniciado com sucesso`,
       });
 
       return execution;
@@ -100,35 +110,54 @@ export const useFlowProcessor = () => {
     const steps: FlowStep[] = [];
     let currentDate = new Date();
     
-    // Encontrar nó inicial
+    // Find start node
     const startNode = nodes.find(node => node.type === 'start');
     if (!startNode) {
       throw new Error('Fluxo deve ter um nó de início');
     }
 
-    // Percorrer o fluxo seguindo as conexões
+    // Traverse the flow following connections
     let currentNodeId = startNode.id;
     let order = 1;
 
-    while (currentNodeId) {
+    const processedNodes = new Set<string>(); // Prevent infinite loops
+
+    while (currentNodeId && !processedNodes.has(currentNodeId)) {
+      processedNodes.add(currentNodeId);
+      
       const currentNode = nodes.find(n => n.id === currentNodeId);
       if (!currentNode) break;
 
-      // Processar apenas nós que geram steps para o paciente
-      if (['formStart', 'formSelect', 'question'].includes(currentNode.type)) {
-        steps.push({
+      // Process nodes that generate steps for the patient
+      if (['formStart', 'formEnd', 'question'].includes(currentNode.type)) {
+        const step: FlowStep = {
           nodeId: currentNode.id,
           nodeType: currentNode.type,
           title: currentNode.data.titulo || currentNode.data.label || `${currentNode.type} ${order}`,
           description: currentNode.data.descricao,
           order,
-          availableAt: currentDate.toISOString(), // Convert to string
-          formId: currentNode.data.formId,
-        });
+          availableAt: currentDate.toISOString(),
+          completed: false
+        };
+
+        // Add type-specific data
+        if (currentNode.type === 'question') {
+          step.pergunta = currentNode.data.pergunta;
+          step.tipoResposta = currentNode.data.tipoResposta;
+          step.opcoes = currentNode.data.opcoes;
+        } else if (currentNode.type === 'formEnd') {
+          step.tipoConteudo = currentNode.data.tipoConteudo;
+          step.arquivo = currentNode.data.arquivo;
+          step.mensagemFinal = currentNode.data.mensagemFinal;
+        } else if (currentNode.type === 'formStart') {
+          step.formId = currentNode.data.formId;
+        }
+
+        steps.push(step);
         order++;
       }
 
-      // Processar delays
+      // Process delays
       if (currentNode.type === 'delay') {
         const delayAmount = currentNode.data.quantidade || 1;
         const delayType = currentNode.data.tipoIntervalo || 'dias';
@@ -147,11 +176,11 @@ export const useFlowProcessor = () => {
         }
       }
 
-      // Encontrar próximo nó
+      // Find next node
       const nextEdge = edges.find(edge => edge.source === currentNodeId);
       currentNodeId = nextEdge ? nextEdge.target : null;
 
-      // Evitar loops infinitos
+      // Break on end node
       if (currentNode.type === 'end') break;
     }
 

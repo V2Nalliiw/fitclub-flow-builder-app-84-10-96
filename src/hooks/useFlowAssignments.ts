@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useFlowProcessor } from './useFlowProcessor';
 
 export interface FlowAssignment {
   id: string;
@@ -35,6 +36,7 @@ export const useFlowAssignments = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { processFlowAssignment } = useFlowProcessor();
 
   const { data: assignments = [], isLoading } = useQuery({
     queryKey: ['flow-assignments', user?.id],
@@ -125,7 +127,7 @@ export const useFlowAssignments = () => {
         throw updateError;
       }
 
-      // Get flow data to create execution
+      // Get flow data with nodes and edges
       const { data: flow, error: flowError } = await supabase
         .from('flows')
         .select('*')
@@ -137,33 +139,13 @@ export const useFlowAssignments = () => {
         throw new Error('Fluxo não encontrado');
       }
 
-      // Create flow execution with correct status
-      const { data: execution, error: executionError } = await supabase
-        .from('flow_executions')
-        .insert({
-          flow_id: flowId,
-          flow_name: flow.name,
-          patient_id: user.id,
-          status: 'pending',
-          current_node: 'start',
-          progress: 0,
-          total_steps: (flow.nodes as any[])?.length || 0,
-          completed_steps: 0,
-          current_step: {
-            id: 'start',
-            type: 'start',
-            title: 'Início',
-            description: 'Fluxo iniciado',
-            completed: false,
-          },
-        })
-        .select()
-        .single();
-
-      if (executionError) {
-        console.error('Erro ao criar execução:', executionError);
-        throw executionError;
-      }
+      // Process flow to create proper execution with steps
+      const execution = await processFlowAssignment(
+        flowId,
+        user.id,
+        flow.nodes || [],
+        flow.edges || []
+      );
 
       console.log('Execução criada:', execution);
       return execution;
