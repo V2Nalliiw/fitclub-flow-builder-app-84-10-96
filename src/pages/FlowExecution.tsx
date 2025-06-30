@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { FlowStepRenderer } from '@/components/flows/FlowStepRenderer';
 import { DelayTimer } from '@/components/flows/DelayTimer';
 import { useFlowProcessor } from '@/hooks/useFlowProcessor';
+import { statusToFrontend, statusToDatabase } from '@/utils/statusMapper';
 
 interface FlowExecution {
   id: string;
@@ -88,8 +89,8 @@ const FlowExecution = () => {
 
     loadExecution();
 
-    // Set up real-time updates
-    const interval = setInterval(loadExecution, 30000); // Refresh every 30 seconds
+    // Set up real-time updates - check more frequently for delay expirations
+    const interval = setInterval(loadExecution, 10000); // Check every 10 seconds
     return () => clearInterval(interval);
   }, [executionId, user, navigate]);
 
@@ -125,7 +126,7 @@ const FlowExecution = () => {
         }
 
         // Check if completed or waiting
-        if (updatedExecution.status === 'completed') {
+        if (updatedExecution.status === statusToDatabase('concluido')) {
           setTimeout(() => navigate('/my-flows'), 2000);
         }
       }
@@ -192,7 +193,7 @@ const FlowExecution = () => {
   };
 
   const handleDelayExpired = () => {
-    // Reload execution to get updated status
+    // Force reload execution to get updated status when delay expires
     if (executionId && user) {
       supabase
         .from('flow_executions')
@@ -202,12 +203,29 @@ const FlowExecution = () => {
         .single()
         .then(({ data, error }) => {
           if (!error && data) {
-            setExecution(data as FlowExecution);
-            const updatedStepData = data.current_step as { currentStepIndex?: number };
-            if (typeof updatedStepData.currentStepIndex === 'number') {
-              setCurrentStepIndex(updatedStepData.currentStepIndex);
+            // Check if delay has actually expired
+            const now = new Date();
+            const nextAvailable = data.next_step_available_at ? new Date(data.next_step_available_at) : null;
+            
+            if (!nextAvailable || now >= nextAvailable) {
+              // Update status to active if delay expired
+              supabase
+                .from('flow_executions')
+                .update({
+                  status: statusToDatabase('em-andamento'),
+                  next_step_available_at: null,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', executionId)
+                .then(() => {
+                  setExecution(prev => prev ? {...prev, status: statusToDatabase('em-andamento'), next_step_available_at: null} : null);
+                  const updatedStepData = data.current_step as { currentStepIndex?: number };
+                  if (typeof updatedStepData.currentStepIndex === 'number') {
+                    setCurrentStepIndex(updatedStepData.currentStepIndex);
+                  }
+                  toast.success('Próximo formulário liberado!');
+                });
             }
-            toast.success('Próximo formulário liberado!');
           }
         });
     }
@@ -226,12 +244,16 @@ const FlowExecution = () => {
     return null;
   }
 
-  const isCompleted = execution.status === 'completed' || execution.progress >= 100;
+  const isCompleted = execution.status === statusToDatabase('concluido') || execution.progress >= 100;
   const currentStepData = execution.current_step as { steps?: any[]; currentStepIndex?: number } | null;
   const steps = currentStepData?.steps || [];
   const currentStep = steps[currentStepIndex];
-  const isWaiting = execution.status === 'waiting' && execution.next_step_available_at;
+  const isWaiting = execution.status === statusToDatabase('aguardando') && execution.next_step_available_at;
   const completedSteps = steps.filter((step: any) => step.completed);
+
+  // Check if delay has expired
+  const delayExpired = execution.next_step_available_at ? 
+    new Date() >= new Date(execution.next_step_available_at) : false;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 p-6">
@@ -253,6 +275,8 @@ const FlowExecution = () => {
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
                 Progresso: {execution.progress}% concluído ({execution.completed_steps} de {steps.length} etapas)
+                {isWaiting && !delayExpired && ' • Aguardando próxima etapa'}
+                {isWaiting && delayExpired && ' • Próxima etapa disponível!'}
               </p>
             </div>
           </div>
@@ -309,8 +333,8 @@ const FlowExecution = () => {
           </CardContent>
         </Card>
 
-        {/* Delay Timer - Show when waiting */}
-        {isWaiting && execution.next_step_available_at && (
+        {/* Delay Timer - Show when waiting and delay hasn't expired */}
+        {isWaiting && execution.next_step_available_at && !delayExpired && (
           <DelayTimer
             availableAt={execution.next_step_available_at}
             onDelayExpired={handleDelayExpired}
@@ -323,12 +347,14 @@ const FlowExecution = () => {
             <CardTitle className="flex items-center gap-2">
               {isCompleted ? (
                 <CheckCircle className="h-6 w-6 text-green-500" />
-              ) : isWaiting ? (
+              ) : isWaiting && !delayExpired ? (
                 <Clock className="h-6 w-6 text-orange-500" />
               ) : (
                 <Play className="h-6 w-6 text-blue-500" />
               )}
-              {isCompleted ? 'Fluxo Concluído!' : isWaiting ? 'Aguardando Próxima Etapa' : 'Etapa Atual'}
+              {isCompleted ? 'Fluxo Concluído!' : 
+               isWaiting && !delayExpired ? 'Aguardando Próxima Etapa' : 
+               'Etapa Atual'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -350,7 +376,7 @@ const FlowExecution = () => {
                   Voltar aos Formulários
                 </Button>
               </div>
-            ) : currentStep && !isWaiting ? (
+            ) : currentStep && (!isWaiting || delayExpired) ? (
               <FlowStepRenderer
                 step={currentStep}
                 onComplete={handleStepComplete}
@@ -358,7 +384,7 @@ const FlowExecution = () => {
                 canGoBack={currentStepIndex > 0 && currentStep.canGoBack}
                 isLoading={updating}
               />
-            ) : isWaiting ? (
+            ) : (
               <div className="text-center py-8">
                 <div className="w-20 h-20 bg-orange-100 dark:bg-orange-950/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Clock className="h-12 w-12 text-orange-500" />
@@ -373,19 +399,6 @@ const FlowExecution = () => {
                 <Button
                   onClick={() => navigate('/my-flows')}
                   variant="outline"
-                >
-                  Voltar aos Formulários
-                </Button>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-600 dark:text-gray-400">
-                  Nenhuma etapa disponível no momento.
-                </p>
-                <Button
-                  onClick={() => navigate('/my-flows')}
-                  variant="outline"
-                  className="mt-4"
                 >
                   Voltar aos Formulários
                 </Button>

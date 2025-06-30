@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { FlowNode, FlowEdge } from '@/types/flow';
+import { statusToDatabase } from '@/utils/statusMapper';
 
 interface FlowStep {
   nodeId: string;
@@ -60,7 +61,7 @@ export const useFlowProcessor = () => {
         flow_id: flowId,
         flow_name: flow.name,
         patient_id: patientId,
-        status: 'pending',
+        status: statusToDatabase('em-andamento'),
         current_node: steps[0].nodeId,
         progress: 0,
         total_steps: steps.length,
@@ -183,7 +184,7 @@ export const useFlowProcessor = () => {
           lastStep.delayType = delayType;
         }
         
-        // Calculate next step availability
+        // Calculate next step availability (only used for reference, actual calculation done on completion)
         let nextStepDate = new Date(currentStepDate);
         switch (delayType) {
           case 'minutos':
@@ -246,7 +247,7 @@ export const useFlowProcessor = () => {
       let nextStepIndex = stepIndex + 1;
       let nextStep = null;
       let nextAvailableAt = null;
-      let newStatus = 'completed';
+      let newStatus = statusToDatabase('concluido');
 
       if (nextStepIndex < updatedSteps.length) {
         nextStep = updatedSteps[nextStepIndex];
@@ -269,9 +270,9 @@ export const useFlowProcessor = () => {
           
           nextAvailableAt = delayDate.toISOString();
           updatedSteps[nextStepIndex] = { ...nextStep, availableAt: nextAvailableAt };
-          newStatus = 'waiting';
+          newStatus = statusToDatabase('aguardando');
         } else {
-          newStatus = 'pending';
+          newStatus = statusToDatabase('em-andamento');
         }
       }
 
@@ -281,13 +282,13 @@ export const useFlowProcessor = () => {
         updated_at: new Date().toISOString(),
         current_step: {
           steps: updatedSteps,
-          currentStepIndex: newStatus === 'completed' ? -1 : nextStepIndex,
+          currentStepIndex: newStatus === statusToDatabase('concluido') ? -1 : nextStepIndex,
           totalSteps: updatedSteps.length
         }
       };
 
-      if (newStatus === 'completed') {
-        updateData.status = 'completed';
+      if (newStatus === statusToDatabase('concluido')) {
+        updateData.status = newStatus;
         updateData.completed_at = new Date().toISOString();
         updateData.current_node = null;
         updateData.next_step_available_at = null;
@@ -307,12 +308,12 @@ export const useFlowProcessor = () => {
         throw updateError;
       }
 
-      if (newStatus === 'completed') {
+      if (newStatus === statusToDatabase('concluido')) {
         toast({
           title: "Fluxo concluído!",
           description: "Você completou todos os formulários com sucesso!",
         });
-      } else if (newStatus === 'waiting') {
+      } else if (newStatus === statusToDatabase('aguardando')) {
         toast({
           title: "Etapa concluída!",
           description: "Próxima etapa será liberada automaticamente no tempo programado.",
@@ -360,7 +361,7 @@ export const useFlowProcessor = () => {
       }
 
       const updateData = {
-        status: 'pending',
+        status: statusToDatabase('em-andamento'),
         current_node: targetStep.nodeId,
         current_step: {
           ...currentStepData,
