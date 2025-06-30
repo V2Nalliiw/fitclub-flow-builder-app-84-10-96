@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -95,7 +96,13 @@ export const useWhatsAppSettings = () => {
           // Clínica não tem configurações próprias, usa as globais como fallback
           if (typedGlobalData) {
             console.log('useWhatsAppSettings: Clínica usando configurações globais como fallback');
-            setSettings(typedGlobalData);
+            // Cria uma versão das configurações globais marcada como herdada
+            const inheritedGlobalSettings = {
+              ...typedGlobalData,
+              id: 'inherited-global', // ID especial para indicar herança
+              clinic_id: null, // Mantém null para indicar que é global
+            };
+            setSettings(inheritedGlobalSettings);
           } else {
             console.log('useWhatsAppSettings: Nenhuma configuração disponível (nem da clínica nem global)');
             setSettings(null);
@@ -322,7 +329,8 @@ export const useWhatsAppSettings = () => {
     
     // For clinic users: return true if they are using global settings as fallback
     // This happens when settings exist but clinic_id is null (inherited from global)
-    const usingGlobal = settings?.clinic_id === null;
+    // OR when the settings ID is our special inherited marker
+    const usingGlobal = settings?.clinic_id === null || settings?.id === 'inherited-global';
     console.log('useWhatsAppSettings: Clinic user - usando global:', usingGlobal);
     return usingGlobal;
   };
