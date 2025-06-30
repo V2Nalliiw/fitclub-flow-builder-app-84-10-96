@@ -9,6 +9,7 @@ import { MessageSquare, CheckCircle, AlertCircle, Save, Trash2 } from 'lucide-re
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePatientWhatsApp } from '@/hooks/usePatientWhatsApp';
 
 interface PatientWhatsAppConfigProps {
   initialPhone?: string;
@@ -18,11 +19,13 @@ interface PatientWhatsAppConfigProps {
 export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWhatsAppConfigProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { sendMessageToPatient } = usePatientWhatsApp();
   const [phone, setPhone] = useState(initialPhone || '');
   const [isVerified, setIsVerified] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [showVerification, setShowVerification] = useState(false);
+  const [sentCode, setSentCode] = useState('');
 
   const formatPhoneNumber = (value: string) => {
     // Remove tudo que não é número
@@ -50,6 +53,10 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
     return formattedPhone.replace(/\D/g, '');
   };
 
+  const generateVerificationCode = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  };
+
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhoneNumber(e.target.value);
     setPhone(formatted);
@@ -70,6 +77,25 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
 
     setIsLoading(true);
     try {
+      // Gerar código de verificação
+      const code = generateVerificationCode();
+      setSentCode(code);
+      
+      // Enviar código via WhatsApp usando o serviço real
+      const verificationMessage = `🔐 *Código de Verificação FitClub*\n\nSeu código de verificação é: *${code}*\n\nEste código expira em 5 minutos.\n\n_Não compartilhe este código com ninguém._`;
+      
+      const result = await sendMessageToPatient(user.id, verificationMessage);
+      
+      if (!result.success) {
+        toast({
+          title: "Erro ao enviar código",
+          description: "Não foi possível enviar o código de verificação. Verifique se o WhatsApp está configurado nas configurações da clínica.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Salvar telefone temporariamente (não verificado ainda)
       const { error } = await supabase
         .from('profiles')
         .update({ phone: cleanPhone })
@@ -78,16 +104,27 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
       if (error) throw error;
 
       toast({
-        title: "WhatsApp salvo",
-        description: "Seu número de WhatsApp foi salvo com sucesso",
+        title: "Código enviado",
+        description: "Código de verificação enviado para seu WhatsApp",
       });
       
       onPhoneUpdate?.(cleanPhone);
-      
-      // Simular envio de código de verificação
       setShowVerification(true);
       
+      // Configurar timeout para expirar o código
+      setTimeout(() => {
+        setSentCode('');
+        if (showVerification) {
+          toast({
+            title: "Código expirado",
+            description: "O código de verificação expirou. Solicite um novo código.",
+            variant: "destructive",
+          });
+        }
+      }, 300000); // 5 minutos
+      
     } catch (error: any) {
+      console.error('Erro ao salvar telefone:', error);
       toast({
         title: "Erro ao salvar",
         description: error.message,
@@ -108,14 +145,23 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
       return;
     }
 
+    if (!sentCode) {
+      toast({
+        title: "Código expirado",
+        description: "O código de verificação expirou. Solicite um novo código.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Simular verificação do código
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (verificationCode === '123456') {
+      if (verificationCode === sentCode) {
+        // Marcar como verificado (aqui você pode adicionar uma flag no banco de dados se necessário)
         setIsVerified(true);
         setShowVerification(false);
+        setSentCode('');
+        
         toast({
           title: "WhatsApp verificado",
           description: "Seu WhatsApp foi verificado com sucesso",
@@ -123,7 +169,7 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
       } else {
         toast({
           title: "Código incorreto",
-          description: "O código informado está incorreto",
+          description: "O código informado está incorreto. Verifique e tente novamente.",
           variant: "destructive",
         });
       }
@@ -147,6 +193,7 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
       setPhone('');
       setIsVerified(false);
       setShowVerification(false);
+      setSentCode('');
       onPhoneUpdate?.('');
       
       toast({
@@ -163,6 +210,13 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleResendCode = () => {
+    setShowVerification(false);
+    setSentCode('');
+    setVerificationCode('');
+    handleSavePhone();
   };
 
   return (
@@ -214,7 +268,7 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
               className="flex-1"
             >
               <Save className="h-4 w-4 mr-2" />
-              {isLoading ? 'Salvando...' : 'Salvar e Verificar'}
+              {isLoading ? 'Enviando código...' : 'Enviar Código de Verificação'}
             </Button>
             {phone && (
               <Button 
@@ -231,7 +285,7 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
             <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-sm text-blue-700">
                 Enviamos um código de verificação para seu WhatsApp. 
-                Digite o código abaixo para confirmar.
+                Digite o código de 6 dígitos abaixo para confirmar.
               </p>
             </div>
             <div>
@@ -239,11 +293,14 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
               <Input
                 id="verification"
                 value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                placeholder="123456"
+                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="000000"
                 maxLength={6}
                 disabled={isLoading}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                O código expira em 5 minutos
+              </p>
             </div>
             <div className="flex gap-2">
               <Button 
@@ -255,12 +312,24 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => setShowVerification(false)}
+                onClick={handleResendCode}
                 disabled={isLoading}
               >
-                Cancelar
+                Reenviar
               </Button>
             </div>
+            <Button 
+              variant="ghost" 
+              onClick={() => {
+                setShowVerification(false);
+                setSentCode('');
+                setVerificationCode('');
+              }}
+              disabled={isLoading}
+              className="w-full"
+            >
+              Cancelar
+            </Button>
           </div>
         )}
 
@@ -268,6 +337,14 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
           <div className="p-3 bg-green-50 rounded-lg border border-green-200">
             <p className="text-sm text-green-700">
               ✅ Seu WhatsApp está verificado e você receberá notificações e formulários neste número.
+            </p>
+          </div>
+        )}
+        
+        {!isVerified && phone && (
+          <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+            <p className="text-sm text-yellow-700">
+              ⚠️ Seu número foi salvo mas ainda não foi verificado. Complete a verificação para receber mensagens.
             </p>
           </div>
         )}
