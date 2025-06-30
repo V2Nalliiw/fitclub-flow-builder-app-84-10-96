@@ -72,8 +72,8 @@ export const useWhatsAppSettings = () => {
         // Super admin trabalha apenas com configurações globais
         console.log('useWhatsAppSettings: Super admin - usando configurações globais');
         setSettings(typedGlobalData);
-      } else {
-        // Para usuários de clínica, tenta carregar configurações da clínica
+      } else if (user.clinic_id) {
+        // Para usuários de clínica (incluindo pacientes), tenta carregar configurações da clínica
         console.log('useWhatsAppSettings: Carregando configurações da clínica:', user.clinic_id);
         
         const { data: clinicData, error: clinicError } = await supabase
@@ -112,6 +112,10 @@ export const useWhatsAppSettings = () => {
         if (clinicError) {
           console.error('Erro ao carregar configurações da clínica:', clinicError);
         }
+      } else {
+        // Usuário sem clínica definida
+        console.log('useWhatsAppSettings: Usuário sem clinic_id definido');
+        setSettings(null);
       }
     } catch (error) {
       console.error('Erro inesperado:', error);
@@ -130,6 +134,16 @@ export const useWhatsAppSettings = () => {
       toast({
         title: "Erro",
         description: "Usuário não identificado",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Pacientes não podem salvar configurações
+    if (user.role === 'patient') {
+      toast({
+        title: "Acesso negado",
+        description: "Apenas administradores podem alterar as configurações do WhatsApp",
         variant: "destructive",
       });
       return false;
@@ -347,11 +361,11 @@ export const useWhatsAppSettings = () => {
       return false;
     }
     
-    // For clinic users: return true if they are using global settings as fallback
+    // For clinic users (including patients): return true if they are using global settings as fallback
     // This happens when settings exist but clinic_id is null (inherited from global)
     // OR when the settings ID is our special inherited marker
     const usingGlobal = settings?.clinic_id === null || settings?.id === 'inherited-global';
-    console.log('useWhatsAppSettings: Clinic user - usando global:', usingGlobal);
+    console.log('useWhatsAppSettings: Clinic user/patient - usando global:', usingGlobal);
     return usingGlobal;
   };
 
