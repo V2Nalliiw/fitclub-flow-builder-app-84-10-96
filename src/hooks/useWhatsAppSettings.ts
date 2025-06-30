@@ -212,13 +212,24 @@ export const useWhatsAppSettings = () => {
         } else {
           // Create new clinic-specific settings
           // Se está herdando configurações globais, usa elas como base
-          const baseSettings = globalSettings || {};
+          const baseSettings = globalSettings || {
+            provider: 'evolution' as const,
+            base_url: null,
+            api_key: null,
+            session_name: null,
+            account_sid: null,
+            auth_token: null,
+            phone_number: null,
+            access_token: null,
+            business_account_id: null,
+            webhook_url: null,
+          };
           
           result = await supabase
             .from('whatsapp_settings')
             .insert({
               clinic_id: clinicId,
-              provider: settingsData.provider || baseSettings.provider || 'evolution',
+              provider: settingsData.provider || baseSettings.provider,
               base_url: settingsData.base_url ?? baseSettings.base_url,
               api_key: settingsData.api_key ?? baseSettings.api_key,
               session_name: settingsData.session_name ?? baseSettings.session_name,
