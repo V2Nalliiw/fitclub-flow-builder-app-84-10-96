@@ -9,7 +9,7 @@ import { MessageSquare, CheckCircle, AlertCircle, Save, Trash2 } from 'lucide-re
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePatientWhatsApp } from '@/hooks/usePatientWhatsApp';
+import { useWhatsApp } from '@/hooks/useWhatsApp';
 
 interface PatientWhatsAppConfigProps {
   initialPhone?: string;
@@ -19,7 +19,7 @@ interface PatientWhatsAppConfigProps {
 export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWhatsAppConfigProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { sendMessageToPatient } = usePatientWhatsApp();
+  const { sendMessage } = useWhatsApp();
   const [phone, setPhone] = useState(initialPhone || '');
   const [isVerified, setIsVerified] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -81,15 +81,25 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
       const code = generateVerificationCode();
       setSentCode(code);
       
-      // Enviar código via WhatsApp usando o serviço real
+      console.log('PatientWhatsAppConfig: Iniciando envio do código de verificação');
+      console.log('PatientWhatsAppConfig: Número limpo:', cleanPhone);
+      console.log('PatientWhatsAppConfig: Código gerado:', code);
+      
+      // Enviar código via WhatsApp usando o serviço diretamente
       const verificationMessage = `🔐 *Código de Verificação FitClub*\n\nSeu código de verificação é: *${code}*\n\nEste código expira em 5 minutos.\n\n_Não compartilhe este código com ninguém._`;
       
-      const result = await sendMessageToPatient(user.id, verificationMessage);
+      console.log('PatientWhatsAppConfig: Enviando mensagem para:', cleanPhone);
+      console.log('PatientWhatsAppConfig: Mensagem:', verificationMessage);
+      
+      const result = await sendMessage(cleanPhone, verificationMessage);
+      
+      console.log('PatientWhatsAppConfig: Resultado do envio:', result);
       
       if (!result.success) {
+        console.error('PatientWhatsAppConfig: Falha no envio:', result.error);
         toast({
           title: "Erro ao enviar código",
-          description: "Não foi possível enviar o código de verificação. Verifique se o WhatsApp está configurado nas configurações da clínica.",
+          description: result.error || "Não foi possível enviar o código de verificação. Verifique se o WhatsApp está configurado nas configurações da clínica.",
           variant: "destructive",
         });
         return;
@@ -103,6 +113,7 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
 
       if (error) throw error;
 
+      console.log('PatientWhatsAppConfig: Código enviado com sucesso!');
       toast({
         title: "Código enviado",
         description: "Código de verificação enviado para seu WhatsApp",
@@ -124,7 +135,7 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
       }, 300000); // 5 minutos
       
     } catch (error: any) {
-      console.error('Erro ao salvar telefone:', error);
+      console.error('PatientWhatsAppConfig: Erro ao salvar telefone:', error);
       toast({
         title: "Erro ao salvar",
         description: error.message,
@@ -162,11 +173,13 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
         setShowVerification(false);
         setSentCode('');
         
+        console.log('PatientWhatsAppConfig: WhatsApp verificado com sucesso!');
         toast({
           title: "WhatsApp verificado",
           description: "Seu WhatsApp foi verificado com sucesso",
         });
       } else {
+        console.log('PatientWhatsAppConfig: Código incorreto fornecido');
         toast({
           title: "Código incorreto",
           description: "O código informado está incorreto. Verifique e tente novamente.",
