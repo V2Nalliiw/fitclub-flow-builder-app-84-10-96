@@ -5,10 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { ArrowRight, FileText, HelpCircle, Clock, CheckCircle } from 'lucide-react';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ArrowRight, FileText, MessageCircle, CheckCircle } from 'lucide-react';
+import { DocumentDownload } from './DocumentDownload';
 
 interface FlowStepRendererProps {
   step: any;
@@ -16,44 +16,35 @@ interface FlowStepRendererProps {
   isLoading?: boolean;
 }
 
-export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({ 
-  step, 
-  onComplete, 
-  isLoading = false 
+export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
+  step,
+  onComplete,
+  isLoading = false
 }) => {
-  const [response, setResponse] = useState<any>({});
-  const [multiSelectValues, setMultiSelectValues] = useState<string[]>([]);
+  const [response, setResponse] = useState<any>('');
+  const [multipleChoiceResponse, setMultipleChoiceResponse] = useState<string[]>([]);
 
   const handleSubmit = () => {
     let finalResponse = response;
     
-    if (step.nodeType === 'question' && step.tipoResposta === 'multipla-escolha') {
-      finalResponse = { ...response, selectedOptions: multiSelectValues };
+    if (step.tipoResposta === 'multipla-escolha') {
+      finalResponse = multipleChoiceResponse;
     }
     
-    onComplete(finalResponse);
+    onComplete({
+      nodeId: step.nodeId,
+      nodeType: step.nodeType,
+      question: step.pergunta,
+      answer: finalResponse,
+      timestamp: new Date().toISOString()
+    });
   };
 
-  const handleMultiSelectChange = (value: string, checked: boolean) => {
+  const handleMultipleChoiceChange = (option: string, checked: boolean) => {
     if (checked) {
-      setMultiSelectValues(prev => [...prev, value]);
+      setMultipleChoiceResponse(prev => [...prev, option]);
     } else {
-      setMultiSelectValues(prev => prev.filter(v => v !== value));
-    }
-  };
-
-  const getStepIcon = () => {
-    switch (step.nodeType) {
-      case 'formStart':
-        return <FileText className="h-6 w-6 text-blue-500" />;
-      case 'question':
-        return <HelpCircle className="h-6 w-6 text-purple-500" />;
-      case 'delay':
-        return <Clock className="h-6 w-6 text-orange-500" />;
-      case 'formEnd':
-        return <CheckCircle className="h-6 w-6 text-green-500" />;
-      default:
-        return <FileText className="h-6 w-6 text-gray-500" />;
+      setMultipleChoiceResponse(prev => prev.filter(item => item !== option));
     }
   };
 
@@ -61,34 +52,25 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
     switch (step.nodeType) {
       case 'formStart':
         return (
-          <div className="space-y-4">
-            <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-6 text-center">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                {step.title || 'Início do Formulário'}
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FileText className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                {step.title}
               </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                {step.description || 'Vamos começar este formulário. Clique em continuar quando estiver pronto.'}
-              </p>
+              {step.description && (
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  {step.description}
+                </p>
+              )}
             </div>
-            <div className="flex justify-center">
-              <Button
-                onClick={handleSubmit}
-                disabled={isLoading}
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-8 py-3"
-                size="lg"
-              >
-                {isLoading ? (
-                  <>
-                    <LoadingSpinner className="mr-2 h-5 w-5" />
-                    Carregando...
-                  </>
-                ) : (
-                  <>
-                    Continuar
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </>
-                )}
-              </Button>
+            
+            <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-4">
+              <p className="text-green-800 dark:text-green-200 text-center font-medium">
+                ✅ Clique em "Continuar" para iniciar este formulário
+              </p>
             </div>
           </div>
         );
@@ -96,193 +78,175 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
       case 'question':
         return (
           <div className="space-y-6">
-            <div className="bg-purple-50 dark:bg-purple-950/20 rounded-lg p-6">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageCircle className="h-8 w-8 text-white" />
+              </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                {step.pergunta || step.title || 'Pergunta'}
+                {step.pergunta || step.title}
               </h3>
-              
-              {step.tipoResposta === 'texto-livre' && (
-                <div className="space-y-2">
-                  <Label htmlFor="response">Sua resposta:</Label>
-                  <Textarea
-                    id="response"
-                    placeholder="Digite sua resposta aqui..."
-                    value={response.text || ''}
-                    onChange={(e) => setResponse({ ...response, text: e.target.value })}
-                    rows={4}
-                  />
-                </div>
-              )}
+            </div>
 
-              {step.tipoResposta === 'escolha-unica' && step.opcoes && (
-                <div className="space-y-4">
-                  <Label>Selecione uma opção:</Label>
-                  <RadioGroup
-                    value={response.selectedOption || ''}
-                    onValueChange={(value) => setResponse({ ...response, selectedOption: value })}
-                  >
-                    {step.opcoes.map((opcao: string, index: number) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <RadioGroupItem value={opcao} id={`option-${index}`} />
-                        <Label htmlFor={`option-${index}`}>{opcao}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
+            {step.tipoResposta === 'escolha-unica' && step.opcoes && (
+              <RadioGroup value={response} onValueChange={setResponse}>
+                <div className="space-y-3">
+                  {step.opcoes.map((opcao: string, index: number) => (
+                    <div key={index} className="flex items-center space-x-2 p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                      <RadioGroupItem value={opcao} id={`option-${index}`} />
+                      <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
+                        {opcao}
+                      </Label>
+                    </div>
+                  ))}
                 </div>
-              )}
+              </RadioGroup>
+            )}
 
-              {step.tipoResposta === 'multipla-escolha' && step.opcoes && (
-                <div className="space-y-4">
-                  <Label>Selecione uma ou mais opções:</Label>
-                  <div className="space-y-2">
-                    {step.opcoes.map((opcao: string, index: number) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`option-${index}`}
-                          checked={multiSelectValues.includes(opcao)}
-                          onCheckedChange={(checked) => handleMultiSelectChange(opcao, checked as boolean)}
-                        />
-                        <Label htmlFor={`option-${index}`}>{opcao}</Label>
-                      </div>
-                    ))}
+            {step.tipoResposta === 'multipla-escolha' && step.opcoes && (
+              <div className="space-y-3">
+                {step.opcoes.map((opcao: string, index: number) => (
+                  <div key={index} className="flex items-center space-x-2 p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <Checkbox
+                      id={`checkbox-${index}`}
+                      checked={multipleChoiceResponse.includes(opcao)}
+                      onCheckedChange={(checked) => handleMultipleChoiceChange(opcao, !!checked)}
+                    />
+                    <Label htmlFor={`checkbox-${index}`} className="flex-1 cursor-pointer">
+                      {opcao}
+                    </Label>
                   </div>
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
 
-            <div className="flex justify-center">
-              <Button
-                onClick={handleSubmit}
-                disabled={isLoading || !isResponseValid()}
-                className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white px-8 py-3"
-                size="lg"
-              >
-                {isLoading ? (
-                  <>
-                    <LoadingSpinner className="mr-2 h-5 w-5" />
-                    Salvando...
-                  </>
-                ) : (
-                  <>
-                    Continuar
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </>
-                )}
-              </Button>
-            </div>
+            {step.tipoResposta === 'texto-livre' && (
+              <div className="space-y-3">
+                <Label htmlFor="text-response" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Sua resposta:
+                </Label>
+                <Textarea
+                  id="text-response"
+                  value={response}
+                  onChange={(e) => setResponse(e.target.value)}
+                  placeholder="Digite sua resposta aqui..."
+                  className="min-h-[120px]"
+                />
+              </div>
+            )}
           </div>
         );
 
       case 'formEnd':
         return (
-          <div className="space-y-4">
-            <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-6 text-center">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                {step.title || 'Formulário Concluído'}
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                {step.title}
               </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {step.description || step.mensagemFinal || 'Parabéns! Você concluiu esta seção do formulário.'}
-              </p>
-              
-              {step.tipoConteudo && (
-                <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg border">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Conteúdo disponível: {step.tipoConteudo}
-                  </p>
-                  {step.arquivo && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Arquivo: {step.arquivo}
-                    </p>
-                  )}
-                </div>
+              {step.description && (
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  {step.description}
+                </p>
               )}
             </div>
-            <div className="flex justify-center">
-              <Button
-                onClick={handleSubmit}
-                disabled={isLoading}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-3"
-                size="lg"
-              >
-                {isLoading ? (
-                  <>
-                    <LoadingSpinner className="mr-2 h-5 w-5" />
-                    Finalizando...
-                  </>
-                ) : (
-                  <>
-                    Continuar
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </>
-                )}
-              </Button>
+
+            {step.arquivo && (
+              <DocumentDownload
+                fileName={step.arquivo}
+                fileUrl={step.arquivo}
+                title="Documento de Tratamento"
+                description="Material complementar para seu tratamento"
+                fileType={step.tipoConteudo || 'pdf'}
+              />
+            )}
+
+            {step.mensagemFinal && (
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-lg p-6 border border-purple-200 dark:border-purple-800">
+                <p className="text-purple-800 dark:text-purple-200 text-center font-medium">
+                  {step.mensagemFinal}
+                </p>
+              </div>
+            )}
+
+            <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-4">
+              <p className="text-green-800 dark:text-green-200 text-center font-medium">
+                🎉 Clique em "Finalizar" para concluir esta etapa
+              </p>
             </div>
           </div>
         );
 
       default:
         return (
-          <div className="space-y-4">
-            <div className="bg-gray-50 dark:bg-gray-950/20 rounded-lg p-6 text-center">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                {step.title || 'Etapa do Formulário'}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                {step.description || 'Continue para a próxima etapa.'}
-              </p>
-            </div>
-            <div className="flex justify-center">
-              <Button
-                onClick={handleSubmit}
-                disabled={isLoading}
-                className="bg-gradient-to-r from-gray-500 to-slate-600 hover:from-gray-600 hover:to-slate-700 text-white px-8 py-3"
-                size="lg"
-              >
-                {isLoading ? (
-                  <>
-                    <LoadingSpinner className="mr-2 h-5 w-5" />
-                    Carregando...
-                  </>
-                ) : (
-                  <>
-                    Continuar
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </>
-                )}
-              </Button>
-            </div>
+          <div className="text-center py-8">
+            <p className="text-gray-600 dark:text-gray-400">
+              Tipo de etapa não reconhecida: {step.nodeType}
+            </p>
           </div>
         );
     }
   };
 
-  const isResponseValid = () => {
-    if (step.nodeType !== 'question') return true;
+  const canSubmit = () => {
+    if (step.nodeType === 'formStart' || step.nodeType === 'formEnd') {
+      return true;
+    }
     
-    switch (step.tipoResposta) {
-      case 'texto-livre':
-        return response.text && response.text.trim().length > 0;
-      case 'escolha-unica':
-        return response.selectedOption;
-      case 'multipla-escolha':
-        return multiSelectValues.length > 0;
+    if (step.nodeType === 'question') {
+      if (step.tipoResposta === 'multipla-escolha') {
+        return multipleChoiceResponse.length > 0;
+      }
+      return response && response.toString().trim().length > 0;
+    }
+    
+    return false;
+  };
+
+  const getButtonText = () => {
+    switch (step.nodeType) {
+      case 'formStart':
+        return 'Continuar';
+      case 'formEnd':
+        return 'Finalizar';
+      case 'question':
+        return 'Responder';
       default:
-        return true;
+        return 'Continuar';
     }
   };
 
   return (
-    <Card className="border-0 shadow-sm">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-3">
-          {getStepIcon()}
-          <span className="text-lg">
-            Etapa {step.order || 1} de {step.totalSteps || 1}
+    <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-center justify-center">
+          <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Etapa {step.order || 1}
           </span>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
         {renderStepContent()}
+        
+        <div className="flex justify-center pt-4">
+          <Button
+            onClick={handleSubmit}
+            disabled={!canSubmit() || isLoading}
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-8 py-3 font-medium"
+            size="lg"
+          >
+            {isLoading ? (
+              'Processando...'
+            ) : (
+              <>
+                {getButtonText()}
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </>
+            )}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

@@ -12,16 +12,13 @@ interface FlowStep {
   order: number;
   availableAt: string;
   completed: boolean;
-  // Question-specific fields
   pergunta?: string;
   tipoResposta?: 'escolha-unica' | 'multipla-escolha' | 'texto-livre';
   opcoes?: string[];
-  // Form-specific fields
   formId?: string;
   tipoConteudo?: 'pdf' | 'imagem' | 'video' | 'ebook';
   arquivo?: string;
   mensagemFinal?: string;
-  // Delay-specific fields
   delayAmount?: number;
   delayType?: 'minutos' | 'horas' | 'dias';
 }
@@ -39,7 +36,6 @@ export const useFlowProcessor = () => {
     setProcessing(true);
     
     try {
-      // Get flow data
       const { data: flow, error: flowError } = await supabase
         .from('flows')
         .select('name')
@@ -50,7 +46,6 @@ export const useFlowProcessor = () => {
         throw new Error('Fluxo não encontrado');
       }
 
-      // Process nodes to create steps sequence
       const steps = await processNodesSequence(nodes, edges);
       
       if (steps.length === 0) {
@@ -59,12 +54,9 @@ export const useFlowProcessor = () => {
 
       console.log('Processed steps:', steps);
 
-      // Create flow execution with proper structure
-      // Convert FlowStep[] to Json-compatible format
+      // Create safe JSON structure for current_step
       const currentStepData = {
         steps: steps.map(step => ({
-          ...step,
-          // Ensure all properties are JSON-serializable
           nodeId: step.nodeId,
           nodeType: step.nodeType,
           title: step.title,
@@ -97,7 +89,7 @@ export const useFlowProcessor = () => {
           progress: 0,
           total_steps: steps.length,
           completed_steps: 0,
-          current_step: currentStepData as any, // Cast to any for Json compatibility
+          current_step: currentStepData,
           next_step_available_at: steps[0].availableAt
         })
         .select()
@@ -132,17 +124,14 @@ export const useFlowProcessor = () => {
     const steps: FlowStep[] = [];
     let currentDate = new Date();
     
-    // Find start node
     const startNode = nodes.find(node => node.type === 'start');
     if (!startNode) {
       throw new Error('Fluxo deve ter um nó de início');
     }
 
-    // Traverse the flow following connections
     let currentNodeId = startNode.id;
     let order = 1;
-
-    const processedNodes = new Set<string>(); // Prevent infinite loops
+    const processedNodes = new Set<string>();
 
     while (currentNodeId && !processedNodes.has(currentNodeId)) {
       processedNodes.add(currentNodeId);
@@ -179,21 +168,21 @@ export const useFlowProcessor = () => {
         order++;
       }
 
-      // Process delays
+      // Process delays - add time to currentDate for subsequent steps
       if (currentNode.type === 'delay') {
         const delayAmount = currentNode.data.quantidade || 1;
         const delayType = currentNode.data.tipoIntervalo || 'dias';
         
         switch (delayType) {
           case 'minutos':
-            currentDate.setMinutes(currentDate.getMinutes() + delayAmount);
+            currentDate = new Date(currentDate.getTime() + (delayAmount * 60 * 1000));
             break;
           case 'horas':
-            currentDate.setHours(currentDate.getHours() + delayAmount);
+            currentDate = new Date(currentDate.getTime() + (delayAmount * 60 * 60 * 1000));
             break;
           case 'dias':
           default:
-            currentDate.setDate(currentDate.getDate() + delayAmount);
+            currentDate = new Date(currentDate.getTime() + (delayAmount * 24 * 60 * 60 * 1000));
             break;
         }
       }
@@ -211,7 +200,6 @@ export const useFlowProcessor = () => {
 
   const completeFlowStep = useCallback(async (executionId: string, stepId: string, response?: any) => {
     try {
-      // Buscar execução atual
       const { data: execution, error: execError } = await supabase
         .from('flow_executions')
         .select('*')
@@ -222,10 +210,9 @@ export const useFlowProcessor = () => {
         throw new Error('Execução não encontrada');
       }
 
-      const executionData = execution as any;
-      const currentSteps = executionData.current_step?.steps || [];
+      const currentStepData = execution.current_step as { steps?: any[]; currentStepIndex?: number } | null;
+      const currentSteps = currentStepData?.steps || [];
       
-      // Encontrar o step atual e marcar como concluído
       const updatedSteps = currentSteps.map((step: any) => {
         if (step.nodeId === stepId) {
           return { ...step, completed: true, response };
@@ -233,39 +220,30 @@ export const useFlowProcessor = () => {
         return step;
       });
 
-      // Encontrar próximo step disponível
       const nextStep = updatedSteps.find((step: any) => !step.completed);
-
-      // Atualizar progresso
       const completedStepsCount = updatedSteps.filter((step: any) => step.completed).length;
-      const newCompletedSteps = executionData.completed_steps + 1;
       const newProgress = Math.round((completedStepsCount / updatedSteps.length) * 100);
 
       let updateData: any = {
-        completed_steps: newCompletedSteps,
+        completed_steps: completedStepsCount,
         progress: newProgress,
         updated_at: new Date().toISOString(),
         current_step: {
-          ...executionData.current_step,
+          ...currentStepData,
           steps: updatedSteps
         }
       };
 
       if (nextStep) {
-        // Ativar próximo step
         updateData.current_node = nextStep.nodeId;
-        updateData.current_step.id = nextStep.nodeId;
-        updateData.current_step.type = nextStep.nodeType;
-        updateData.current_step.title = nextStep.title;
-        updateData.current_step.description = nextStep.description;
-        updateData.current_step.completed = false;
+        updateData.current_step.currentStepIndex = updatedSteps.findIndex((s: any) => s.nodeId === nextStep.nodeId);
         updateData.next_step_available_at = nextStep.availableAt;
-        updateData.status = new Date(nextStep.availableAt) <= new Date() ? 'em-andamento' : 'aguardando';
+        updateData.status = new Date(nextStep.availableAt) <= new Date() ? 'pending' : 'waiting';
       } else {
-        // Fluxo concluído
-        updateData.status = 'concluido';
+        updateData.status = 'completed';
         updateData.completed_at = new Date().toISOString();
         updateData.progress = 100;
+        updateData.current_step.currentStepIndex = -1;
       }
 
       const { error: updateError } = await supabase
