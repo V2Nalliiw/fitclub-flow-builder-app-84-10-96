@@ -46,11 +46,11 @@ export const useWhatsAppSettings = () => {
         .from('whatsapp_settings')
         .select('*')
         .is('clinic_id', null)
-        .single();
+        .maybeSingle();
 
       console.log('useWhatsAppSettings: Resultado global:', { globalData, globalError });
 
-      if (globalError && globalError.code !== 'PGRST116') {
+      if (globalError) {
         console.error('Erro ao carregar configurações globais do WhatsApp:', globalError);
       }
 
@@ -80,7 +80,7 @@ export const useWhatsAppSettings = () => {
           .from('whatsapp_settings')
           .select('*')
           .eq('clinic_id', user.clinic_id)
-          .single();
+          .maybeSingle();
 
         console.log('useWhatsAppSettings: Resultado da clínica:', { clinicData, clinicError });
 
@@ -109,7 +109,7 @@ export const useWhatsAppSettings = () => {
           }
         }
 
-        if (clinicError && clinicError.code !== 'PGRST116') {
+        if (clinicError) {
           console.error('Erro ao carregar configurações da clínica:', clinicError);
         }
       }
