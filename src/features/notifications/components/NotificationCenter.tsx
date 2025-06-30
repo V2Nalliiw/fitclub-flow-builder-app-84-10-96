@@ -16,16 +16,23 @@ import {
   User,
   FileText,
   Calendar,
-  Settings
+  Settings,
+  UserPlus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNotifications } from '@/hooks/useNotifications';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface NotificationCenterProps {
   onClose?: () => void;
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose }) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const { 
     notifications, 
     isLoading, 
@@ -34,8 +41,77 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
     deleteNotification 
   } = useNotifications();
   const [filter, setFilter] = useState<'all' | 'unread' | 'actionable'>('all');
+  const [processingInvite, setProcessingInvite] = useState<string | null>(null);
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  const handleAcceptInvite = async (notificationId: string, clinicId: string) => {
+    if (!user?.id) return;
+
+    setProcessingInvite(notificationId);
+    try {
+      console.log('🎯 Aceitando convite:', { notificationId, clinicId, userId: user.id });
+
+      // Atualizar o perfil do usuário com o clinic_id
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ clinic_id: clinicId })
+        .eq('user_id', user.id);
+
+      if (profileError) {
+        console.error('💥 Erro ao aceitar convite:', profileError);
+        toast({
+          title: "Erro ao aceitar convite",
+          description: profileError.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Marcar a notificação como lida
+      await markAsRead(notificationId);
+
+      console.log('✅ Convite aceito com sucesso');
+      toast({
+        title: "Convite aceito",
+        description: "Você agora faz parte da clínica!",
+      });
+
+      // Recarregar a página para atualizar o contexto
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+
+    } catch (error) {
+      console.error('💥 Erro inesperado ao aceitar convite:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível aceitar o convite",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingInvite(null);
+    }
+  };
+
+  const handleRejectInvite = async (notificationId: string) => {
+    try {
+      console.log('❌ Rejeitando convite:', notificationId);
+      await markAsRead(notificationId);
+      
+      toast({
+        title: "Convite rejeitado",
+        description: "O convite foi rejeitado",
+      });
+    } catch (error) {
+      console.error('💥 Erro ao rejeitar convite:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível rejeitar o convite",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -49,6 +125,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'patient': return <User className="h-3 w-3" />;
+      case 'patient_invite': return <UserPlus className="h-3 w-3" />;
       case 'flow': return <FileText className="h-3 w-3" />;
       case 'team': return <Calendar className="h-3 w-3" />;
       default: return <Settings className="h-3 w-3" />;
@@ -58,7 +135,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
   const filteredNotifications = notifications.filter(notification => {
     switch (filter) {
       case 'unread': return !notification.read;
-      case 'actionable': return notification.actionable;
+      case 'actionable': return notification.actionable || notification.category === 'patient_invite';
       default: return true;
     }
   });
@@ -77,11 +154,71 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
     }
   };
 
+  const renderNotificationActions = (notification: any) => {
+    // Convites de paciente têm ações especiais
+    if (notification.category === 'patient_invite' && !notification.read) {
+      const clinicId = notification.metadata?.clinic_id;
+      const isProcessing = processingInvite === notification.id;
+      
+      return (
+        <div className="flex gap-2 mt-2">
+          <Button
+            size="sm"
+            onClick={() => handleAcceptInvite(notification.id, clinicId)}
+            disabled={isProcessing}
+            className="h-6 px-2 text-xs"
+          >
+            {isProcessing ? (
+              <LoadingSpinner size="sm" />
+            ) : (
+              <CheckCircle className="h-3 w-3 mr-1" />
+            )}
+            Aceitar
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handleRejectInvite(notification.id)}
+            disabled={isProcessing}
+            className="h-6 px-2 text-xs"
+          >
+            <X className="h-3 w-3 mr-1" />
+            Rejeitar
+          </Button>
+        </div>
+      );
+    }
+
+    // Ações padrão para outras notificações
+    return (
+      <div className="flex gap-1">
+        {!notification.read && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2"
+            onClick={() => markAsRead(notification.id)}
+          >
+            <Check className="h-3 w-3" />
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 px-2"
+          onClick={() => deleteNotification(notification.id)}
+        >
+          <X className="h-3 w-3" />
+        </Button>
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <Card className="w-full max-w-md">
         <CardContent className="flex items-center justify-center p-8">
-          <p className="text-muted-foreground">Carregando notificações...</p>
+          <LoadingSpinner size="lg" />
         </CardContent>
       </Card>
     );
@@ -148,7 +285,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
               <div key={notification.id}>
                 <div className={cn(
                   "p-4 hover:bg-accent/50 cursor-pointer transition-colors",
-                  !notification.read && "bg-accent/20"
+                  !notification.read && "bg-accent/20",
+                  notification.category === 'patient_invite' && !notification.read && "bg-blue-50 border-l-4 border-blue-500"
                 )}>
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 mt-0.5">
@@ -166,7 +304,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
                         <div className="flex items-center gap-1">
                           {getCategoryIcon(notification.category)}
                           <span className="text-xs text-muted-foreground capitalize">
-                            {notification.category}
+                            {notification.category === 'patient_invite' ? 'convite' : notification.category}
                           </span>
                         </div>
                       </div>
@@ -180,26 +318,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
                           {formatTimestamp(notification.timestamp)}
                         </span>
                         
-                        <div className="flex gap-1">
-                          {!notification.read && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 px-2"
-                              onClick={() => markAsRead(notification.id)}
-                            >
-                              <Check className="h-3 w-3" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 px-2"
-                            onClick={() => deleteNotification(notification.id)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
+                        {renderNotificationActions(notification)}
                       </div>
                     </div>
                   </div>
