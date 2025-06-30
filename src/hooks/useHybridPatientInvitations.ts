@@ -36,6 +36,8 @@ export const useHybridPatientInvitations = () => {
 
   // Buscar pacientes existentes sem clínica
   const searchExistingPatients = useCallback(async (searchTerm: string) => {
+    console.log('Iniciando busca por:', searchTerm);
+    
     if (!searchTerm || searchTerm.length < 2) {
       setExistingPatients([]);
       return;
@@ -43,6 +45,18 @@ export const useHybridPatientInvitations = () => {
 
     setIsSearching(true);
     try {
+      console.log('Executando query no Supabase...');
+      
+      // Primeiro, vamos fazer uma busca mais ampla para debug
+      const { data: allPatients, error: debugError } = await supabase
+        .from('profiles')
+        .select('user_id, name, email, role, clinic_id')
+        .eq('role', 'patient');
+
+      console.log('Todos os pacientes encontrados:', allPatients);
+      console.log('Erro na busca de debug:', debugError);
+
+      // Agora a busca específica
       const { data, error } = await supabase
         .from('profiles')
         .select('user_id, name, email')
@@ -51,8 +65,16 @@ export const useHybridPatientInvitations = () => {
         .or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
         .limit(10);
 
+      console.log('Resultado da busca específica:', data);
+      console.log('Erro na busca específica:', error);
+
       if (error) {
         console.error('Erro ao buscar pacientes:', error);
+        toast({
+          title: "Erro na busca",
+          description: error.message,
+          variant: "destructive",
+        });
         return;
       }
 
@@ -63,13 +85,19 @@ export const useHybridPatientInvitations = () => {
         user_id: profile.user_id,
       }));
 
+      console.log('Pacientes transformados:', patients);
       setExistingPatients(patients);
     } catch (error) {
       console.error('Erro inesperado na busca:', error);
+      toast({
+        title: "Erro inesperado",
+        description: "Ocorreu um erro inesperado na busca",
+        variant: "destructive",
+      });
     } finally {
       setIsSearching(false);
     }
-  }, []);
+  }, [toast]);
 
   // Carregar convites da nova tabela
   const loadInvitations = useCallback(async () => {
