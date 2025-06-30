@@ -1,6 +1,6 @@
 
 export interface WhatsAppConfig {
-  provider: 'evolution' | 'twilio' | 'meta';
+  provider: 'evolution' | 'meta' | 'twilio';
   base_url?: string;
   api_key?: string;
   session_name?: string;
@@ -10,38 +10,46 @@ export interface WhatsAppConfig {
   access_token?: string;
   business_account_id?: string;
   webhook_url?: string;
-  is_active?: boolean;
+  is_active: boolean;
 }
 
 export interface WhatsAppMessage {
-  id?: string;
+  id: string;
+  from: string;
   to: string;
-  message: string;
-  mediaUrl?: string;
-  mediaType?: 'image' | 'document' | 'video' | 'audio';
-  status?: 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
-  sentAt?: string;
-  deliveredAt?: string;
-  formId?: string;
-  patientId?: string;
-}
-
-export interface WhatsAppContact {
-  phoneNumber: string;
-  name?: string;
-  lastMessage?: string;
-  lastMessageAt?: string;
+  body: string;
+  type: 'text' | 'image' | 'document' | 'audio' | 'video';
+  timestamp: number;
+  status: 'sent' | 'delivered' | 'read' | 'failed';
 }
 
 export interface SendMessageResponse {
   success: boolean;
   messageId?: string;
   error?: string;
+  response?: any;
 }
 
-export interface MediaUploadResponse {
-  success: boolean;
+export interface MediaUploadResponse extends SendMessageResponse {
   mediaId?: string;
   mediaUrl?: string;
-  error?: string;
+}
+
+export interface TemplateMessage {
+  name: string;
+  language: string;
+  parameters?: string[];
+}
+
+export interface BusinessProfile {
+  id: string;
+  name: string;
+  phone_numbers?: any[];
+}
+
+export interface PhoneNumberInfo {
+  id: string;
+  display_phone_number: string;
+  verified_name?: string;
+  quality_rating?: string;
 }
