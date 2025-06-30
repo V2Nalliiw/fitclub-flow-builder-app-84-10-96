@@ -381,6 +381,68 @@ export type Database = {
           },
         ]
       }
+      whatsapp_settings: {
+        Row: {
+          access_token: string | null
+          account_sid: string | null
+          api_key: string | null
+          auth_token: string | null
+          base_url: string | null
+          business_account_id: string | null
+          clinic_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          phone_number: string | null
+          provider: string
+          session_name: string | null
+          updated_at: string
+          webhook_url: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          account_sid?: string | null
+          api_key?: string | null
+          auth_token?: string | null
+          base_url?: string | null
+          business_account_id?: string | null
+          clinic_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          phone_number?: string | null
+          provider: string
+          session_name?: string | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          account_sid?: string | null
+          api_key?: string | null
+          auth_token?: string | null
+          base_url?: string | null
+          business_account_id?: string | null
+          clinic_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          phone_number?: string | null
+          provider?: string
+          session_name?: string | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_settings_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: true
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

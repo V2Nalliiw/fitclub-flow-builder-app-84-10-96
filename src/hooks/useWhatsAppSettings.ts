@@ -7,7 +7,7 @@ import { WhatsAppConfig } from '@/services/whatsapp/types';
 
 export interface WhatsAppSettings {
   id: string;
-  clinic_id: string;
+  clinic_id: string | null;
   provider: 'evolution' | 'meta' | 'twilio';
   base_url?: string;
   api_key?: string;
@@ -30,52 +30,54 @@ export const useWhatsAppSettings = () => {
   const [loading, setLoading] = useState(true);
 
   const loadSettings = useCallback(async () => {
-    if (!user?.clinic_id) {
+    if (!user) {
       setLoading(false);
       return;
     }
 
     setLoading(true);
     try {
-      // Since whatsapp_settings table doesn't exist, we'll use notifications table to store settings
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('category', 'whatsapp_settings')
-        .eq('metadata->>clinic_id', user.clinic_id)
-        .single();
+      let query = supabase.from('whatsapp_settings').select('*');
+      
+      // For super admin, get global settings (clinic_id is null) first, then clinic settings
+      if (user.role === 'super_admin') {
+        // Try to get global settings first
+        const { data: globalData, error: globalError } = await query
+          .is('clinic_id', null)
+          .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        console.error('Erro ao carregar configurações do WhatsApp:', error);
-        toast({
-          title: "Erro ao carregar configurações",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
+        if (globalError && globalError.code !== 'PGRST116') {
+          console.error('Erro ao carregar configurações globais do WhatsApp:', globalError);
+          toast({
+            title: "Erro ao carregar configurações",
+            description: globalError.message,
+            variant: "destructive",
+          });
+          return;
+        }
 
-      if (data) {
-        // Transform notification data to WhatsAppSettings
-        const metadata = data.metadata as any;
-        const transformedSettings: WhatsAppSettings = {
-          id: data.id,
-          clinic_id: user.clinic_id,
-          provider: metadata.provider || 'evolution',
-          base_url: metadata.base_url,
-          api_key: metadata.api_key,
-          session_name: metadata.session_name,
-          account_sid: metadata.account_sid,
-          auth_token: metadata.auth_token,
-          phone_number: metadata.phone_number,
-          access_token: metadata.access_token,
-          business_account_id: metadata.business_account_id,
-          webhook_url: metadata.webhook_url,
-          is_active: metadata.is_active || false,
-          created_at: data.created_at || '',
-          updated_at: data.updated_at || '',
-        };
-        setSettings(transformedSettings);
+        if (globalData) {
+          setSettings(globalData);
+        }
+      } else {
+        // For clinic users, get their clinic settings
+        const { data, error } = await query
+          .eq('clinic_id', user.clinic_id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Erro ao carregar configurações do WhatsApp:', error);
+          toast({
+            title: "Erro ao carregar configurações",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (data) {
+          setSettings(data);
+        }
       }
     } catch (error) {
       console.error('Erro inesperado:', error);
@@ -87,44 +89,40 @@ export const useWhatsAppSettings = () => {
     } finally {
       setLoading(false);
     }
-  }, [user?.clinic_id, toast]);
+  }, [user, toast]);
 
   const saveSettings = async (settingsData: Partial<WhatsAppSettings>) => {
-    if (!user?.clinic_id) {
+    if (!user) {
       toast({
         title: "Erro",
-        description: "Clínica não identificada",
+        description: "Usuário não identificado",
         variant: "destructive",
       });
       return false;
     }
 
-    // Prepare metadata with all WhatsApp settings
-    const metadata = {
-      clinic_id: user.clinic_id,
-      provider: settingsData.provider || 'evolution',
-      base_url: settingsData.base_url || null,
-      api_key: settingsData.api_key || null,
-      session_name: settingsData.session_name || null,
-      account_sid: settingsData.account_sid || null,
-      auth_token: settingsData.auth_token || null,
-      phone_number: settingsData.phone_number || null,
-      access_token: settingsData.access_token || null,
-      business_account_id: settingsData.business_account_id || null,
-      webhook_url: settingsData.webhook_url || null,
-      is_active: settingsData.is_active ?? false,
-    };
-
     try {
       let result;
+      
+      // Determine clinic_id based on user role
+      const clinicId = user.role === 'super_admin' ? null : user.clinic_id;
+      
       if (settings?.id) {
         // Update existing settings
         result = await supabase
-          .from('notifications')
+          .from('whatsapp_settings')
           .update({
-            title: 'WhatsApp Settings',
-            message: 'Configurações do WhatsApp',
-            metadata: metadata
+            provider: settingsData.provider || 'evolution',
+            base_url: settingsData.base_url || null,
+            api_key: settingsData.api_key || null,
+            session_name: settingsData.session_name || null,
+            account_sid: settingsData.account_sid || null,
+            auth_token: settingsData.auth_token || null,
+            phone_number: settingsData.phone_number || null,
+            access_token: settingsData.access_token || null,
+            business_account_id: settingsData.business_account_id || null,
+            webhook_url: settingsData.webhook_url || null,
+            is_active: settingsData.is_active ?? false,
           })
           .eq('id', settings.id)
           .select()
@@ -132,14 +130,20 @@ export const useWhatsAppSettings = () => {
       } else {
         // Create new settings
         result = await supabase
-          .from('notifications')
+          .from('whatsapp_settings')
           .insert({
-            user_id: user.id,
-            title: 'WhatsApp Settings',
-            message: 'Configurações do WhatsApp',
-            type: 'settings',
-            category: 'whatsapp_settings',
-            metadata: metadata
+            clinic_id: clinicId,
+            provider: settingsData.provider || 'evolution',
+            base_url: settingsData.base_url || null,
+            api_key: settingsData.api_key || null,
+            session_name: settingsData.session_name || null,
+            account_sid: settingsData.account_sid || null,
+            auth_token: settingsData.auth_token || null,
+            phone_number: settingsData.phone_number || null,
+            access_token: settingsData.access_token || null,
+            business_account_id: settingsData.business_account_id || null,
+            webhook_url: settingsData.webhook_url || null,
+            is_active: settingsData.is_active ?? false,
           })
           .select()
           .single();
@@ -155,27 +159,7 @@ export const useWhatsAppSettings = () => {
         return false;
       }
 
-      // Transform and set the updated settings
-      const updatedMetadata = result.data.metadata as any;
-      const transformedSettings: WhatsAppSettings = {
-        id: result.data.id,
-        clinic_id: user.clinic_id,
-        provider: updatedMetadata.provider || 'evolution',
-        base_url: updatedMetadata.base_url,
-        api_key: updatedMetadata.api_key,
-        session_name: updatedMetadata.session_name,
-        account_sid: updatedMetadata.account_sid,
-        auth_token: updatedMetadata.auth_token,
-        phone_number: updatedMetadata.phone_number,
-        access_token: updatedMetadata.access_token,
-        business_account_id: updatedMetadata.business_account_id,
-        webhook_url: updatedMetadata.webhook_url,
-        is_active: updatedMetadata.is_active || false,
-        created_at: result.data.created_at || '',
-        updated_at: result.data.updated_at || '',
-      };
-
-      setSettings(transformedSettings);
+      setSettings(result.data);
       toast({
         title: "Configurações salvas",
         description: "As configurações do WhatsApp foram salvas com sucesso",

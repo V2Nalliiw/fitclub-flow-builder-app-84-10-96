@@ -7,13 +7,15 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { MessageSquare, CheckCircle, AlertCircle, TestTube, Save, Info } from 'lucide-react';
+import { MessageSquare, CheckCircle, AlertCircle, TestTube, Save, Info, Crown } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useWhatsApp } from '@/hooks/useWhatsApp';
 import { useWhatsAppSettings } from '@/hooks/useWhatsAppSettings';
 import { WhatsAppSettings as WhatsAppSettingsType } from '@/hooks/useWhatsAppSettings';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const WhatsAppSettings = () => {
+  const { user } = useAuth();
   const { isConnected, isLoading, testConnection } = useWhatsApp();
   const { settings, saveSettings } = useWhatsAppSettings();
   const [formConfig, setFormConfig] = useState<Partial<WhatsAppSettingsType>>({
@@ -44,12 +46,23 @@ export const WhatsAppSettings = () => {
     await testConnection();
   };
 
+  const isGlobalSettings = user?.role === 'super_admin';
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Configurações WhatsApp</h1>
-          <p className="text-muted-foreground">Configure a integração para envio automático de formulários</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            {isGlobalSettings && <Crown className="h-8 w-8 text-yellow-500" />}
+            Configurações WhatsApp
+            {isGlobalSettings && <span className="text-lg text-muted-foreground">(Global)</span>}
+          </h1>
+          <p className="text-muted-foreground">
+            {isGlobalSettings 
+              ? 'Configure as configurações globais do WhatsApp para todas as clínicas'
+              : 'Configure a integração para envio automático de formulários'
+            }
+          </p>
         </div>
         
         <div className="flex items-center gap-2">
@@ -69,6 +82,16 @@ export const WhatsAppSettings = () => {
         </div>
       </div>
 
+      {isGlobalSettings && (
+        <Alert>
+          <Crown className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Configurações Globais:</strong> Estas configurações serão aplicadas como padrão para todas as clínicas. 
+            Cada clínica pode sobrescrever essas configurações com suas próprias configurações específicas.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid gap-6 md:grid-cols-2">
         {/* Configuração Principal */}
         <Card>
@@ -78,7 +101,10 @@ export const WhatsAppSettings = () => {
               Configuração de Conexão
             </CardTitle>
             <CardDescription>
-              Configure sua API do WhatsApp para envio automático
+              {isGlobalSettings 
+                ? 'Configure as credenciais globais do WhatsApp'
+                : 'Configure sua API do WhatsApp para envio automático'
+              }
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -265,6 +291,12 @@ export const WhatsAppSettings = () => {
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Provedor:</span>
                 <span className="text-sm font-medium capitalize">{formConfig.provider || 'Não configurado'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Tipo:</span>
+                <span className="text-sm font-medium">
+                  {isGlobalSettings ? 'Global' : 'Clínica'}
+                </span>
               </div>
               {formConfig.provider === 'evolution' && (
                 <div className="flex justify-between">
