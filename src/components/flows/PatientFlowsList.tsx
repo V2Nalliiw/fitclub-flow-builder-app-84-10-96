@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,19 +66,10 @@ export const PatientFlowsList = () => {
 
   const handleStartFlow = async (assignment: any) => {
     console.log('Iniciando fluxo:', assignment);
-    try {
-      const execution = await startFlowExecution({ 
-        assignmentId: assignment.id, 
-        flowId: assignment.flow_id 
-      });
-      
-      if (execution) {
-        // Redirect to flow execution page
-        navigate(`/flow-execution/${execution.id}`);
-      }
-    } catch (error) {
-      console.error('Erro ao iniciar fluxo:', error);
-    }
+    startFlowExecution({ 
+      assignmentId: assignment.id, 
+      flowId: assignment.flow_id 
+    });
   };
 
   const getStatusColor = (status: string) => {

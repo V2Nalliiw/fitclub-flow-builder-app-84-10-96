@@ -1,8 +1,8 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export interface FlowAssignment {
   id: string;
@@ -34,6 +34,7 @@ export interface FlowAssignment {
 export const useFlowAssignments = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: assignments = [], isLoading } = useQuery({
     queryKey: ['flow-assignments', user?.id],
@@ -143,7 +144,7 @@ export const useFlowAssignments = () => {
           flow_id: flowId,
           flow_name: flow.name,
           patient_id: user.id,
-          status: 'pending', // Using correct status from database constraint
+          status: 'pending',
           current_node: 'start',
           progress: 0,
           total_steps: (flow.nodes as any[])?.length || 0,
@@ -167,9 +168,12 @@ export const useFlowAssignments = () => {
       console.log('Execução criada:', execution);
       return execution;
     },
-    onSuccess: () => {
+    onSuccess: (execution) => {
       queryClient.invalidateQueries({ queryKey: ['flow-assignments'] });
       toast.success('Fluxo iniciado com sucesso!');
+      if (execution?.id) {
+        navigate(`/flow-execution/${execution.id}`);
+      }
     },
     onError: (error: any) => {
       console.error('Erro ao iniciar fluxo:', error);
