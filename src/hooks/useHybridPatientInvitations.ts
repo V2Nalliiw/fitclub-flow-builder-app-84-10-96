@@ -45,110 +45,43 @@ export const useHybridPatientInvitations = () => {
 
     setIsSearching(true);
     try {
-      console.log('Executando query no Supabase...');
-      
-      // Buscar todos os perfis para debug
-      const { data: allProfiles, error: debugError } = await supabase
-        .from('profiles')
-        .select('user_id, name, email, role, clinic_id')
-        .limit(50);
-
-      console.log('Todos os perfis encontrados:', allProfiles);
-      console.log('Erro na busca de debug:', debugError);
-
-      // Buscar pacientes especificamente
-      const { data: allPatients, error: patientsError } = await supabase
-        .from('profiles')
-        .select('user_id, name, email, role, clinic_id')
-        .eq('role', 'patient');
-
-      console.log('Todos os pacientes encontrados:', allPatients);
-      console.log('Erro na busca de pacientes:', patientsError);
-
-      // Buscar pacientes sem clínica (clinic_id = null)
-      const { data: patientsWithoutClinic, error: noClinicError } = await supabase
-        .from('profiles')
-        .select('user_id, name, email, role, clinic_id')
-        .eq('role', 'patient')
-        .is('clinic_id', null);
-
-      console.log('Pacientes sem clínica:', patientsWithoutClinic);
-      console.log('Erro na busca sem clínica:', noClinicError);
-
-      // Agora fazer a busca com o filtro de texto - vou tentar diferentes abordagens
-      console.log('Fazendo busca com filtro de texto...');
-      
-      // Primeira tentativa: busca exata por email
-      const { data: exactEmailMatch, error: exactError } = await supabase
+      // Busca simplificada: pacientes sem clínica que correspondem ao termo de busca
+      const { data, error } = await supabase
         .from('profiles')
         .select('user_id, name, email, role, clinic_id')
         .eq('role', 'patient')
         .is('clinic_id', null)
-        .eq('email', searchTerm);
+        .or(`email.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%`);
 
-      console.log('Busca exata por email:', exactEmailMatch);
-      console.log('Erro busca exata:', exactError);
+      console.log('Resultado da busca:', data);
+      console.log('Erro da busca:', error);
 
-      // Segunda tentativa: busca com ilike
-      const { data: ilikeSearch, error: ilikeError } = await supabase
-        .from('profiles')
-        .select('user_id, name, email, role, clinic_id')
-        .eq('role', 'patient')
-        .is('clinic_id', null)
-        .ilike('email', `%${searchTerm}%`);
-
-      console.log('Busca com ilike:', ilikeSearch);
-      console.log('Erro busca ilike:', ilikeError);
-
-      // Terceira tentativa: busca ampla sem filtros de texto
-      const { data: broadSearch, error: broadError } = await supabase
-        .from('profiles')
-        .select('user_id, name, email, role, clinic_id')
-        .eq('role', 'patient')
-        .is('clinic_id', null);
-
-      console.log('Busca ampla (todos pacientes sem clínica):', broadSearch);
-      console.log('Erro busca ampla:', broadError);
-
-      // Usar o resultado que tiver dados
-      let finalData = exactEmailMatch;
-      if (!finalData || finalData.length === 0) {
-        finalData = ilikeSearch;
-      }
-      if (!finalData || finalData.length === 0) {
-        // Se ainda não encontrou, filtrar manualmente da busca ampla
-        finalData = (broadSearch || []).filter(profile => 
-          profile.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          profile.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+      if (error) {
+        console.error('Erro na busca:', error);
+        toast({
+          title: "Erro na busca",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
       }
 
-      console.log('Dados finais selecionados:', finalData);
-
-      if (!finalData || finalData.length === 0) {
-        console.log('Nenhum resultado encontrado após todas as tentativas');
-        if (allPatients && allPatients.length === 0) {
-          toast({
-            title: "Nenhum paciente encontrado",
-            description: "Não há pacientes cadastrados no sistema ainda.",
-          });
-        } else if (patientsWithoutClinic && patientsWithoutClinic.length === 0) {
-          toast({
-            title: "Nenhum paciente disponível",
-            description: "Todos os pacientes já estão vinculados a uma clínica.",
-          });
-        }
-      }
-
-      const patients: ExistingPatient[] = (finalData || []).map(profile => ({
+      const patients: ExistingPatient[] = (data || []).map(profile => ({
         id: profile.user_id,
         name: profile.name,
         email: profile.email,
         user_id: profile.user_id,
       }));
 
-      console.log('Pacientes transformados:', patients);
+      console.log('Pacientes encontrados:', patients);
       setExistingPatients(patients);
+
+      if (patients.length === 0) {
+        toast({
+          title: "Nenhum paciente encontrado",
+          description: "Não foram encontrados pacientes disponíveis com esse termo de busca.",
+        });
+      }
     } catch (error) {
       console.error('Erro inesperado na busca:', error);
       toast({
