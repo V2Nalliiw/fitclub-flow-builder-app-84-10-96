@@ -13,7 +13,7 @@ export interface UploadedFile {
   uploadedAt: string;
 }
 
-export type UploadBucket = 'user-uploads' | 'clinic-logos' | 'media-files';
+export type UploadBucket = 'user-uploads' | 'clinic-logos' | 'media-files' | 'flow-documents';
 
 export const useFileUpload = (bucket: UploadBucket = 'user-uploads') => {
   const { user } = useAuth();
