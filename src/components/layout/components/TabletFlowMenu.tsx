@@ -53,7 +53,7 @@ export const TabletFlowMenu = ({
   };
 
   return (
-    <div className="fixed top-[calc(4rem+0.5rem)] left-1/2 transform -translate-x-1/2 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-full shadow-lg px-6 py-3">
+    <div className="fixed top-[calc(4rem+5px)] left-1/2 transform -translate-x-1/2 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-full shadow-lg px-6 py-3">
       <div className="flex items-center gap-3">
         {/* Campo Nome do Fluxo */}
         <Input
