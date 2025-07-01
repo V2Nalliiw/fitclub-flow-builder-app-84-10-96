@@ -114,7 +114,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
               </h3>
             </div>
 
-            {step.tipoResposta === 'escolha-unica' && step.opcoes && (
+            {step.tipoResposta === 'escolha-unica' && step.opcoes && Array.isArray(step.opcoes) && (
               <RadioGroup value={response} onValueChange={setResponse}>
                 <div className="space-y-3">
                   {step.opcoes.map((opcao: string, index: number) => (
@@ -129,7 +129,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
               </RadioGroup>
             )}
 
-            {step.tipoResposta === 'multipla-escolha' && step.opcoes && (
+            {step.tipoResposta === 'multipla-escolha' && step.opcoes && Array.isArray(step.opcoes) && (
               <div className="space-y-3">
                 {step.opcoes.map((opcao: string, index: number) => (
                   <div key={index} className="flex items-center space-x-2 p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">

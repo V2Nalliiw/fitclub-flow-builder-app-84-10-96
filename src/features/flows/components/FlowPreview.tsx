@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, ArrowLeft, Check, FileText, Clock } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, FileText, Clock, Calculator, GitBranch } from 'lucide-react';
 import { Node, Edge } from '@xyflow/react';
 
 interface FlowPreviewProps {
@@ -17,6 +18,7 @@ interface FlowPreviewProps {
 export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
   const [currentNodeId, setCurrentNodeId] = useState<string>('');
   const [responses, setResponses] = useState<Record<string, any>>({});
+  const [calculatorResults, setCalculatorResults] = useState<Record<string, number>>({});
   const [isCompleted, setIsCompleted] = useState(false);
 
   // Encontra o nó inicial
@@ -63,6 +65,14 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
         ...prev,
         [currentNodeId]: value
       }));
+
+      // Se é resultado de calculadora, salva também no calculatorResults
+      if (currentNode.type === 'calculator' && typeof value === 'number') {
+        setCalculatorResults(prev => ({
+          ...prev,
+          [currentNodeId]: value
+        }));
+      }
     }
 
     // Encontra o próximo nó
@@ -88,13 +98,212 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
       }
     }
     setResponses({});
+    setCalculatorResults({});
     setIsCompleted(false);
+  };
+
+  const renderCalculatorNode = (node: Node) => {
+    const { data } = node;
+    const [fieldValues, setFieldValues] = useState<Record<string, number>>({});
+
+    const handleFieldChange = (fieldId: string, value: number) => {
+      setFieldValues(prev => ({ ...prev, [fieldId]: value }));
+    };
+
+    const calculateResult = () => {
+      try {
+        const fields = Array.isArray(data?.calculatorFields) ? data.calculatorFields : [];
+        let formula = String(data?.formula || '');
+        
+        // Substitui as nomenclaturas pelos valores
+        fields.forEach((field: any) => {
+          const value = fieldValues[field.id] || 0;
+          formula = formula.replace(new RegExp(field.nomenclatura, 'g'), value.toString());
+        });
+        
+        // Calcula o resultado
+        const result = eval(formula);
+        handleNext(result);
+      } catch (error) {
+        console.error('Erro no cálculo:', error);
+        handleNext(0);
+      }
+    };
+
+    const canCalculate = () => {
+      const fields = Array.isArray(data?.calculatorFields) ? data.calculatorFields : [];
+      return fields.every((field: any) => fieldValues[field.id] !== undefined);
+    };
+
+    return (
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader className="text-center">
+          <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+            <Calculator className="h-6 w-6 text-blue-600" />
+          </div>
+          <CardTitle className="text-xl">{String(data?.label || 'Calculadora')}</CardTitle>
+          {data?.resultLabel && (
+            <p className="text-muted-foreground">{String(data.resultLabel)}</p>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {Array.isArray(data?.calculatorFields) && data.calculatorFields.map((field: any) => (
+            <div key={field.id} className="space-y-2">
+              <Label htmlFor={field.id}>
+                {field.pergunta}
+              </Label>
+              <div className="flex items-center space-x-2">
+                {field.prefixo && <span className="text-sm text-muted-foreground">{field.prefixo}</span>}
+                <Input
+                  id={field.id}
+                  type="number"
+                  step={field.tipo === 'decimal' ? '0.01' : '1'}
+                  value={fieldValues[field.id] || ''}
+                  onChange={(e) => handleFieldChange(field.id, parseFloat(e.target.value) || 0)}
+                  placeholder="0"
+                />
+                {field.sufixo && <span className="text-sm text-muted-foreground">{field.sufixo}</span>}
+              </div>
+            </div>
+          ))}
+          
+          <Button 
+            onClick={calculateResult}
+            disabled={!canCalculate()}
+            className="w-full mt-4"
+          >
+            Calcular
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const renderConditionsNode = (node: Node) => {
+    const { data } = node;
+    
+    // Pega o resultado mais recente da calculadora
+    const calculatorResult = Object.values(calculatorResults).pop() || 0;
+    
+    const evaluateConditions = (result: number, conditions: any[]) => {
+      for (const condition of conditions) {
+        const fieldValue = result;
+        
+        switch (condition.operador) {
+          case 'igual':
+            if (fieldValue === condition.valor) return condition;
+            break;
+          case 'maior':
+            if (fieldValue > condition.valor) return condition;
+            break;
+          case 'menor':
+            if (fieldValue < condition.valor) return condition;
+            break;
+          case 'maior_igual':
+            if (fieldValue >= condition.valor) return condition;
+            break;
+          case 'menor_igual':
+            if (fieldValue <= condition.valor) return condition;
+            break;
+          case 'diferente':
+            if (fieldValue !== condition.valor) return condition;
+            break;
+          case 'entre':
+            if (fieldValue >= condition.valor && fieldValue <= (condition.valorFinal || 0)) return condition;
+            break;
+        }
+      }
+      return null;
+    };
+
+    const conditions = Array.isArray(data?.conditions) ? data.conditions : [];
+    const matchedCondition = evaluateConditions(calculatorResult, conditions);
+
+    return (
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader className="text-center">
+          <div className="mx-auto w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+            <GitBranch className="h-6 w-6 text-purple-600" />
+          </div>
+          <CardTitle className="text-xl">{String(data?.label || 'Avaliação de Condições')}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="text-center py-4">
+            <div className="text-2xl font-bold text-gray-800 mb-4">
+              Resultado: {calculatorResult.toFixed(2)}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {conditions.map((condition: any, index: number) => {
+              const isMatched = matchedCondition?.id === condition.id;
+              
+              return (
+                <div
+                  key={condition.id || index}
+                  className={`p-4 rounded-lg border-2 transition-colors ${
+                    isMatched 
+                      ? 'border-green-500 bg-green-50' 
+                      : 'border-gray-200 bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">
+                        {condition.label}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {condition.operador === 'entre' 
+                          ? `${condition.campo} entre ${condition.valor} e ${condition.valorFinal}`
+                          : `${condition.campo} ${condition.operador} ${condition.valor}`
+                        }
+                      </div>
+                    </div>
+                    
+                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      isMatched
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {isMatched ? '✓ Atendida' : 'Não atendida'}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {matchedCondition && (
+            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+              <h4 className="font-semibold text-green-800 mb-2">
+                Resultado da Avaliação:
+              </h4>
+              <p className="text-green-700">
+                {matchedCondition.label}
+              </p>
+            </div>
+          )}
+
+          <Button onClick={() => handleNext(matchedCondition)} className="w-full mt-4">
+            Continuar
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </CardContent>
+      </Card>
+    );
   };
 
   const renderNode = (node: Node) => {
     const { data } = node;
 
     switch (node.type) {
+      case 'calculator':
+        return renderCalculatorNode(node);
+
+      case 'conditions':
+        return renderConditionsNode(node);
+
       case 'formStart':
         return (
           <Card className="w-full max-w-md mx-auto">
@@ -287,7 +496,7 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
                   return (
                     <div key={nodeId} className="p-2 bg-muted rounded">
                       <p className="text-sm font-medium">
-                        {String(node?.data?.pergunta || `Nó ${nodeId}`)}
+                        {String(node?.data?.pergunta || node?.data?.label || `Nó ${nodeId}`)}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {typeof response === 'string' ? response : JSON.stringify(response)}
