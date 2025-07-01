@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import {
   addEdge,
@@ -147,7 +148,7 @@ export const FlowBuilder = () => {
 
       <div className="flex h-[calc(100vh-64px)]">
         {/* Sidebar */}
-        <FlowBuilderSidbar
+        <FlowBuilderSidebar
           onAddNode={addNode}
           onClearAll={clearAllNodes}
           onAutoArrange={autoArrangeNodes}
@@ -204,3 +205,4 @@ export const FlowBuilder = () => {
     </div>
   );
 };
+
