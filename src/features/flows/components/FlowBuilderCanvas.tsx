@@ -76,23 +76,6 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
     },
   }));
 
-  // Passar as funções para os nós
-  const enhancedNodes = nodes.map(node => {
-    console.log('FlowBuilderCanvas - Preparing node:', {
-      id: node.id,
-      type: node.type,
-      hasDeleteFunction: !!onDeleteNode
-    });
-    
-    return {
-      ...node,
-      data: {
-        ...node.data,
-        onDelete: onDeleteNode,
-      }
-    };
-  });
-
   const canvasHeight = isFullscreen || isMobile ? '100vh' : 'calc(100vh - 4rem)';
   const canvasWidth = '100%';
 
@@ -105,7 +88,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
       }}
     >
       <ReactFlow
-        nodes={enhancedNodes}
+        nodes={nodes}
         edges={enhancedEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}

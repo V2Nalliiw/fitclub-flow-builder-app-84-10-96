@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import {
   addEdge,
@@ -9,21 +8,10 @@ import {
   Background,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useFlowBuilder } from '@/hooks/useFlowBuilder';
 import FlowBuilderSidebar from './FlowBuilderSidebar';
 import { FlowBuilderCanvas } from './FlowBuilderCanvas';
+import { FlowBuilderTopMenu } from './FlowBuilderTopMenu';
 import { NodeConfigModal } from './NodeConfigModal';
 import { FlowPreviewModal } from './FlowPreviewModal';
 import { StartNode } from './nodes/StartNode';
@@ -54,8 +42,6 @@ export const FlowBuilder = () => {
   const {
     flowName,
     setFlowName,
-    flowDescription,
-    setFlowDescription,
     nodes,
     edges,
     onNodesChange,
@@ -105,46 +91,34 @@ export const FlowBuilder = () => {
     setIsConditionsConfigOpen(false);
   };
 
+  // Preparar os nós com as funções de edição e exclusão
+  const enhancedNodes = nodes.map(node => ({
+    ...node,
+    data: {
+      ...node.data,
+      onDelete: deleteNode,
+      onEdit: () => {
+        onNodeClick({} as any, node);
+        handleNodeConfigModal();
+      }
+    }
+  }));
+
   return (
     <div className="h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Top Toolbar */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div>
-            <Label htmlFor="flow-name" className="text-sm text-gray-700 dark:text-gray-300">
-              Nome do Fluxo:
-            </Label>
-            <Input
-              id="flow-name"
-              className="mt-1 block w-full sm:text-sm sm:leading-5"
-              placeholder="Nome do fluxo"
-              value={flowName}
-              onChange={(e) => setFlowName(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="flow-description" className="text-sm text-gray-700 dark:text-gray-300">
-              Descrição:
-            </Label>
-            <Textarea
-              id="flow-description"
-              className="mt-1 block w-full sm:text-sm sm:leading-5"
-              placeholder="Descrição do fluxo (opcional)"
-              value={flowDescription}
-              onChange={(e) => setFlowDescription(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          <Button variant="outline" onClick={openPreview}>
-            Visualizar
-          </Button>
-          <Button onClick={saveFlow} disabled={!canSave || isSaving}>
-            {isSaving ? 'Salvando...' : (isEditing ? 'Atualizar Fluxo' : 'Salvar Fluxo')}
-          </Button>
-        </div>
-      </div>
+      {/* Top Menu */}
+      <FlowBuilderTopMenu
+        flowName={flowName}
+        setFlowName={setFlowName}
+        nodeCount={nodes.length}
+        onAutoArrange={autoArrangeNodes}
+        onClearAll={clearAllNodes}
+        onPreview={openPreview}
+        onSave={saveFlow}
+        isSaving={isSaving}
+        canSave={canSave}
+        isEditing={isEditing}
+      />
 
       <div className="flex h-[calc(100vh-64px)]">
         {/* Sidebar */}
@@ -160,7 +134,7 @@ export const FlowBuilder = () => {
         {/* Canvas */}
         <div className="flex-1 relative">
           <FlowBuilderCanvas
-            nodes={nodes}
+            nodes={enhancedNodes}
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
@@ -205,4 +179,3 @@ export const FlowBuilder = () => {
     </div>
   );
 };
-
