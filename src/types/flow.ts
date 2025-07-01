@@ -1,3 +1,4 @@
+
 export interface FlowNode {
   id: string;
   type: 'start' | 'end' | 'formStart' | 'formEnd' | 'formSelect' | 'delay' | 'question' | 'calculator' | 'conditions';
@@ -39,8 +40,9 @@ export interface CalculatorField {
 export interface ConditionRule {
   id: string;
   campo: string;
-  operador: 'igual' | 'maior' | 'menor' | 'maior_igual' | 'menor_igual' | 'diferente';
+  operador: 'igual' | 'maior' | 'menor' | 'maior_igual' | 'menor_igual' | 'diferente' | 'entre';
   valor: number;
+  valorFinal?: number; // Para o operador "entre"
   label: string;
 }
 

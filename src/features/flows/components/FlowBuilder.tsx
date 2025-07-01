@@ -4,12 +4,9 @@ import {
   addEdge,
   useNodesState,
   useEdgesState,
-  Controls,
-  Background,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useFlowBuilder } from '@/hooks/useFlowBuilder';
-import FlowBuilderSidebar from './FlowBuilderSidebar';
 import { FlowBuilderCanvas } from './FlowBuilderCanvas';
 import { FlowBuilderTopMenu } from './FlowBuilderTopMenu';
 import { NodeConfigModal } from './NodeConfigModal';
@@ -115,36 +112,25 @@ export const FlowBuilder = () => {
         onClearAll={clearAllNodes}
         onPreview={openPreview}
         onSave={saveFlow}
+        onAddNode={addNode}
         isSaving={isSaving}
         canSave={canSave}
         isEditing={isEditing}
       />
 
-      <div className="flex h-[calc(100vh-64px)]">
-        {/* Sidebar */}
-        <FlowBuilderSidebar
-          onAddNode={addNode}
-          onClearAll={clearAllNodes}
-          onAutoArrange={autoArrangeNodes}
-          selectedNode={selectedNode}
-          onConfigureNode={handleNodeConfigModal}
+      {/* Canvas ocupando toda a tela */}
+      <div className="h-[calc(100vh-64px)]">
+        <FlowBuilderCanvas
+          nodes={enhancedNodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onNodeDoubleClick={onNodeDoubleClick}
+          onNodeClick={onNodeClick}
           onDeleteNode={deleteNode}
+          onDuplicateNode={() => {}}
         />
-
-        {/* Canvas */}
-        <div className="flex-1 relative">
-          <FlowBuilderCanvas
-            nodes={enhancedNodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onNodeDoubleClick={onNodeDoubleClick}
-            onNodeClick={onNodeClick}
-            onDeleteNode={deleteNode}
-            onDuplicateNode={() => {}}
-          />
-        </div>
       </div>
 
       {/* Modals */}

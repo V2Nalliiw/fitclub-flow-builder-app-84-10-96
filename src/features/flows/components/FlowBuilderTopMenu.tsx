@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowUpDown, Trash2, Eye, Save } from 'lucide-react';
+import { ArrowUpDown, Eraser, Eye, Save, Play, Square, Clock, FileText, CheckCircle, MessageCircle, Calculator, GitBranch } from 'lucide-react';
 
 interface FlowBuilderTopMenuProps {
   flowName: string;
@@ -12,6 +12,7 @@ interface FlowBuilderTopMenuProps {
   onClearAll: () => void;
   onPreview: () => void;
   onSave: () => void;
+  onAddNode: (type: string) => void;
   isSaving: boolean;
   canSave: boolean;
   isEditing: boolean;
@@ -25,6 +26,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
   onClearAll,
   onPreview,
   onSave,
+  onAddNode,
   isSaving,
   canSave,
   isEditing,
@@ -41,7 +43,92 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
         <span className="text-sm text-gray-500">{nodeCount} nós</span>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1">
+        {/* Nós de Controle de Fluxo */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddNode('start')}
+          title="Início"
+        >
+          <Play className="h-4 w-4 text-green-600" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddNode('end')}
+          title="Fim"
+        >
+          <Square className="h-4 w-4 text-red-600" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddNode('delay')}
+          title="Aguardar"
+        >
+          <Clock className="h-4 w-4 text-orange-600" />
+        </Button>
+
+        {/* Separador */}
+        <div className="w-px h-6 bg-gray-300 mx-1" />
+
+        {/* Nós de Formulários */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddNode('formStart')}
+          title="Início Form"
+        >
+          <FileText className="h-4 w-4 text-blue-600" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddNode('formEnd')}
+          title="Fim Form"
+        >
+          <CheckCircle className="h-4 w-4 text-green-600" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddNode('question')}
+          title="Pergunta"
+        >
+          <MessageCircle className="h-4 w-4 text-purple-600" />
+        </Button>
+
+        {/* Separador */}
+        <div className="w-px h-6 bg-gray-300 mx-1" />
+
+        {/* Nós de Lógica e Cálculos */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddNode('calculator')}
+          title="Calculadora"
+        >
+          <Calculator className="h-4 w-4 text-orange-600" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddNode('conditions')}
+          title="Condições"
+        >
+          <GitBranch className="h-4 w-4 text-purple-600" />
+        </Button>
+
+        {/* Separador */}
+        <div className="w-px h-6 bg-gray-300 mx-1" />
+
+        {/* Ações */}
         <Button
           variant="ghost"
           size="sm"
@@ -57,7 +144,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           onClick={onClearAll}
           title="Apagar todos os nós"
         >
-          <Trash2 className="h-4 w-4 text-red-600" />
+          <Eraser className="h-4 w-4 text-red-600" />
         </Button>
         
         <Button
