@@ -16,7 +16,8 @@ import {
   Eraser,
   Loader2,
   Plus,
-  X
+  X,
+  Shuffle
 } from 'lucide-react';
 import { FlowNode } from '@/types/flow';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
@@ -28,6 +29,7 @@ interface TabletFlowMenuProps {
   onPreviewFlow?: () => void;
   onSaveFlow?: () => void;
   onClearAllNodes?: () => void;
+  onAutoArrange?: () => void;
   isSaving?: boolean;
   canSave?: boolean;
 }
@@ -39,6 +41,7 @@ export const TabletFlowMenu = ({
   onPreviewFlow = () => {},
   onSaveFlow = () => {},
   onClearAllNodes = () => {},
+  onAutoArrange = () => {},
   isSaving = false,
   canSave = true
 }: TabletFlowMenuProps) => {
@@ -57,12 +60,12 @@ export const TabletFlowMenu = ({
   const handleAddNode = (type: FlowNode['type']) => {
     console.log('Adicionando nó do tipo:', type);
     onAddNode(type);
-    setIsOpen(false); // Fecha o menu após adicionar o nó
+    setIsOpen(false);
   };
 
   const handleAction = (action: () => void) => {
     action();
-    setIsOpen(false); // Fecha o menu após executar a ação
+    setIsOpen(false);
   };
 
   // Desktop: menu inline original
@@ -147,18 +150,18 @@ export const TabletFlowMenu = ({
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button
-          className="fixed top-20 left-4 z-50 bg-[#5D8701] hover:bg-[#4a6e01] text-white dark:bg-[#5D8701] dark:hover:bg-[#4a6e01] h-12 w-12 p-0 rounded-full shadow-lg"
+          className="fixed top-20 left-4 z-50 bg-[#5D8701] hover:bg-[#4a6e01] text-white dark:bg-[#5D8701] dark:hover:bg-[#4a6e01] h-14 w-14 p-0 rounded-full shadow-lg"
           title="Abrir menu de ferramentas"
         >
           <Plus className="h-6 w-6" />
         </Button>
       </SheetTrigger>
       
-      <SheetContent side="left" className="w-80 p-6">
+      <SheetContent side="left" className="w-80 p-6 overflow-y-auto">
         <div className="space-y-6">
           {/* Cabeçalho */}
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Ferramentas do Fluxo</h2>
+            <h2 className="text-lg font-semibold">Menu do Fluxo</h2>
           </div>
 
           {/* Campo Nome do Fluxo */}
@@ -171,6 +174,8 @@ export const TabletFlowMenu = ({
               className="dark:bg-transparent dark:border-gray-700 dark:text-gray-100"
             />
           </div>
+
+          <Separator />
 
           {/* Seção de Nós */}
           <div className="space-y-3">
@@ -222,6 +227,18 @@ export const TabletFlowMenu = ({
                 )}
                 {isSaving ? 'Salvando...' : 'Salvar Fluxo'}
               </Button>
+
+              {/* Botão Organizar */}
+              {onAutoArrange && (
+                <Button
+                  variant="outline"
+                  onClick={() => handleAction(onAutoArrange)}
+                  className="w-full justify-start"
+                >
+                  <Shuffle className="h-4 w-4 mr-2" />
+                  Organizar Nós
+                </Button>
+              )}
 
               {/* Botão Limpar */}
               <Button
