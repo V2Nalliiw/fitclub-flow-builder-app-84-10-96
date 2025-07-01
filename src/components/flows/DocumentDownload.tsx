@@ -14,7 +14,7 @@ interface DocumentDownloadProps {
   title?: string;
 }
 
-export const DocumentDownload: React.FC<DocumentDownloadProps> = ({ document, title }) => {
+export const DocumentDownload: React.FC<DocumentDownloadProps> = ({ document: doc, title }) => {
   const getFileIcon = (type: string) => {
     if (type?.includes('video')) return <Film className="h-6 w-6" />;
     if (type?.includes('image')) return <Image className="h-6 w-6" />;
@@ -30,8 +30,8 @@ export const DocumentDownload: React.FC<DocumentDownloadProps> = ({ document, ti
 
   const handleDownload = () => {
     const link = document.createElement('a');
-    link.href = document.url;
-    link.download = document.name;
+    link.href = doc.url;
+    link.download = doc.name;
     link.target = '_blank';
     document.body.appendChild(link);
     link.click();
@@ -39,7 +39,7 @@ export const DocumentDownload: React.FC<DocumentDownloadProps> = ({ document, ti
   };
 
   const handleView = () => {
-    window.open(document.url, '_blank');
+    window.open(doc.url, '_blank');
   };
 
   return (
@@ -47,16 +47,16 @@ export const DocumentDownload: React.FC<DocumentDownloadProps> = ({ document, ti
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 bg-gradient-to-r from-[#5D8701] to-[#4a6e01] rounded-lg flex items-center justify-center text-white">
-            {getFileIcon(document.type || '')}
+            {getFileIcon(doc.type || '')}
           </div>
           
           <div className="flex-1 min-w-0">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-              {title || document.name}
+              {title || doc.name}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-              {getFileTypeLabel(document.type || '')}
-              {document.size && ` • ${document.size}`}
+              {getFileTypeLabel(doc.type || '')}
+              {doc.size && ` • ${doc.size}`}
             </p>
             
             <div className="flex gap-2">

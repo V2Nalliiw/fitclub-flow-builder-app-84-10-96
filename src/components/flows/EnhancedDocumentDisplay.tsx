@@ -37,7 +37,7 @@ interface EnhancedDocumentDisplayProps {
 }
 
 export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = ({
-  document,
+  document: doc,
   title,
   showMetadata = true,
   onView,
@@ -75,7 +75,7 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
     if (onView) {
       onView();
     } else {
-      window.open(document.url, '_blank');
+      window.open(doc.url, '_blank');
     }
   };
 
@@ -84,8 +84,8 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
       onDownload();
     } else {
       const link = document.createElement('a');
-      link.href = document.url;
-      link.download = document.name;
+      link.href = doc.url;
+      link.download = doc.name;
       link.target = '_blank';
       document.body.appendChild(link);
       link.click();
@@ -93,8 +93,8 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
     }
   };
 
-  const isImage = document.type?.includes('image');
-  const isVideo = document.type?.includes('video');
+  const isImage = doc.type?.includes('image');
+  const isVideo = doc.type?.includes('video');
 
   return (
     <Card className="bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 overflow-hidden">
@@ -102,29 +102,29 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3 flex-1">
             <div className="w-10 h-10 bg-gradient-to-r from-[#5D8701] to-[#4a6e01] rounded-lg flex items-center justify-center text-white flex-shrink-0">
-              {getFileIcon(document.type || '')}
+              {getFileIcon(doc.type || '')}
             </div>
             <div className="flex-1 min-w-0">
               <CardTitle className="text-lg text-gray-900 dark:text-gray-100 line-clamp-2">
-                {title || document.name}
+                {title || doc.name}
               </CardTitle>
-              {document.description && (
+              {doc.description && (
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
-                  {document.description}
+                  {doc.description}
                 </p>
               )}
             </div>
           </div>
           
           <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-            {document.category && (
-              <Badge className={getCategoryColor(document.category)}>
-                {document.category}
+            {doc.category && (
+              <Badge className={getCategoryColor(doc.category)}>
+                {doc.category}
               </Badge>
             )}
-            {document.version && (
+            {doc.version && (
               <Badge variant="outline" className="text-xs">
-                v{document.version}
+                v{doc.version}
               </Badge>
             )}
           </div>
@@ -136,8 +136,8 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
         {isImage && !imageError && (
           <div className="relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
             <img
-              src={document.url}
-              alt={document.name}
+              src={doc.url}
+              alt={doc.name}
               className="w-full h-48 object-cover"
               onError={() => setImageError(true)}
             />
@@ -149,7 +149,7 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
         {isVideo && (
           <div className="relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
             <video
-              src={document.url}
+              src={doc.url}
               className="w-full h-48 object-cover"
               controls={false}
               poster=""
@@ -167,23 +167,23 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
               <FileText className="h-4 w-4" />
-              <span>{getFileTypeLabel(document.type || '')}</span>
+              <span>{getFileTypeLabel(doc.type || '')}</span>
             </div>
             
-            {document.size && (
+            {doc.size && (
               <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                 <span className="w-4 h-4 flex items-center justify-center text-xs font-mono">
                   📁
                 </span>
-                <span>{document.size}</span>
+                <span>{doc.size}</span>
               </div>
             )}
 
-            {document.uploadedAt && (
+            {doc.uploadedAt && (
               <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                 <Calendar className="h-4 w-4" />
                 <span>
-                  {formatDistanceToNow(new Date(document.uploadedAt), {
+                  {formatDistanceToNow(new Date(doc.uploadedAt), {
                     addSuffix: true,
                     locale: ptBR
                   })}
@@ -191,10 +191,10 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
               </div>
             )}
 
-            {document.uploadedBy && (
+            {doc.uploadedBy && (
               <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                 <User className="h-4 w-4" />
-                <span>{document.uploadedBy}</span>
+                <span>{doc.uploadedBy}</span>
               </div>
             )}
           </div>

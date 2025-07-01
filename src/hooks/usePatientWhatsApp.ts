@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { usePatients } from './usePatients';
 import { useWhatsApp } from './useWhatsApp';
 import { useToast } from '@/hooks/use-toast';
@@ -8,6 +8,8 @@ export const usePatientWhatsApp = () => {
   const { getPatientWhatsApp, isPatientWhatsAppVerified } = usePatients();
   const { sendFormLink, sendMessage, sendMedia } = useWhatsApp();
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
 
   const sendFormToPatient = useCallback(async (
     patientId: string,
@@ -79,11 +81,43 @@ export const usePatientWhatsApp = () => {
     return await sendMedia(whatsappNumber, mediaUrl, mediaType, message);
   }, [getPatientWhatsApp, sendMedia, toast]);
 
+  const saveWhatsAppNumber = useCallback(async (phoneNumber: string) => {
+    setLoading(true);
+    try {
+      // Simulate API call to save WhatsApp number
+      console.log('Saving WhatsApp number:', phoneNumber);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setIsConnected(true);
+      return { success: true };
+    } catch (error) {
+      console.error('Error saving WhatsApp number:', error);
+      return { success: false, error: 'Failed to save WhatsApp number' };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const testConnection = useCallback(async () => {
+    try {
+      // Simulate API call to test connection
+      console.log('Testing WhatsApp connection');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return true;
+    } catch (error) {
+      console.error('Error testing connection:', error);
+      return false;
+    }
+  }, []);
+
   return {
     sendFormToPatient,
     sendMessageToPatient,
     sendMediaToPatient,
     getPatientWhatsApp,
     isPatientWhatsAppVerified,
+    isConnected,
+    saveWhatsAppNumber,
+    testConnection,
+    loading,
   };
 };
