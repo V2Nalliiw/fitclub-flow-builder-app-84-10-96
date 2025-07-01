@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useFlows } from '@/hooks/useFlows';
 import { CreateFlowDialog } from './CreateFlowDialog';
 import { FlowAssignmentModal } from './FlowAssignmentModal';
-import { Eye, Edit, Trash2, UserPlus, Plus, Workflow, RefreshCw, Activity, Users, Calendar } from 'lucide-react';
+import { Eye, Edit, Trash2, UserPlus, Plus, Workflow, RefreshCw, Activity, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
@@ -29,22 +29,23 @@ export const ClinicFlowsList = () => {
 
   if (!hasLoadedOnce || isEmpty) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-6">
-        <div className="max-w-7xl mx-auto space-y-8">
-          <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-8 shadow-sm">
-            <div className="flex items-center justify-between mb-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-4 md:p-6">
+        <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
+          <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6 md:p-8 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-0 mb-6 md:mb-8">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Meus Fluxos</h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-2 text-lg">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Meus Fluxos</h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-2 text-base md:text-lg">
                   Crie e gerencie seus fluxos de tratamento e formulários para pacientes
                 </p>
               </div>
               
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Button 
                   onClick={refreshFlows}
                   variant="outline" 
                   size="lg"
+                  className="w-full sm:w-auto"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Tentar Novamente
@@ -53,6 +54,7 @@ export const ClinicFlowsList = () => {
                   onClick={() => navigate('/flows')} 
                   variant="outline" 
                   size="lg"
+                  className="w-full sm:w-auto"
                 >
                   <Eye className="h-4 w-4 mr-2" />
                   Construtor de Fluxos
@@ -60,7 +62,7 @@ export const ClinicFlowsList = () => {
                 <Button 
                   onClick={() => setIsCreateDialogOpen(true)}
                   size="lg"
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="w-full sm:w-auto bg-[#5D8701] hover:bg-[#4a6e01] text-white"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Criar Novo Fluxo
@@ -68,21 +70,21 @@ export const ClinicFlowsList = () => {
               </div>
             </div>
 
-            <div className="text-center py-16">
+            <div className="text-center py-12 md:py-16">
               <div className="max-w-md mx-auto">
-                <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Workflow className="h-10 w-10 text-white" />
+                <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-r from-[#5D8701] to-[#4a6e01] rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Workflow className="h-8 w-8 md:h-10 md:w-10 text-white" />
                 </div>
-                <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                <h3 className="text-xl md:text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Nenhum fluxo encontrado
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+                <p className="text-gray-600 dark:text-gray-400 mb-6 md:mb-8 leading-relaxed">
                   Comece criando seu primeiro fluxo usando o construtor de fluxos.
                 </p>
                 <Button 
                   onClick={() => navigate('/flows')}
                   size="lg"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
+                  className="bg-[#5D8701] hover:bg-[#4a6e01] text-white px-6 md:px-8 py-3"
                 >
                   <Plus className="h-5 w-5 mr-2" />
                   Criar Primeiro Fluxo
@@ -107,22 +109,23 @@ export const ClinicFlowsList = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-8 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
+        <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6 md:p-8 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-0 mb-6 md:mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Meus Fluxos</h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-2 text-lg">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Meus Fluxos</h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-2 text-base md:text-lg">
                 Crie e gerencie seus fluxos de tratamento e formulários para pacientes
               </p>
             </div>
             
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button 
                 onClick={refreshFlows}
                 variant="outline" 
                 size="lg"
+                className="w-full sm:w-auto"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Atualizar
@@ -131,6 +134,7 @@ export const ClinicFlowsList = () => {
                 onClick={() => navigate('/flows')} 
                 variant="outline" 
                 size="lg"
+                className="w-full sm:w-auto"
               >
                 <Eye className="h-4 w-4 mr-2" />
                 Construtor de Fluxos
@@ -138,7 +142,7 @@ export const ClinicFlowsList = () => {
               <Button 
                 onClick={() => setIsCreateDialogOpen(true)}
                 size="lg"
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="w-full sm:w-auto bg-[#5D8701] hover:bg-[#4a6e01] text-white"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Criar Novo Fluxo
@@ -146,13 +150,13 @@ export const ClinicFlowsList = () => {
             </div>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {flows.map((flow) => (
               <Card key={flow.id} className="group hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
-                <CardHeader>
+                <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1 flex-1">
-                      <CardTitle className="text-lg text-gray-900 dark:text-gray-100 group-hover:text-blue-600 transition-colors">
+                      <CardTitle className="text-lg text-gray-900 dark:text-gray-100 group-hover:text-[#5D8701] transition-colors line-clamp-1">
                         {flow.name}
                       </CardTitle>
                       {flow.description && (
@@ -173,12 +177,12 @@ export const ClinicFlowsList = () => {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center gap-2">
-                      <Activity className="h-4 w-4 text-blue-500" />
+                      <Activity className="h-4 w-4 text-[#5D8701]" />
                       <span className="text-gray-500 dark:text-gray-500">Etapas:</span>
                       <span className="font-medium text-gray-900 dark:text-gray-100">{flow.nodes?.length || 0}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-green-500" />
+                      <Users className="h-4 w-4 text-[#5D8701]" />
                       <span className="text-gray-500 dark:text-gray-500">Conexões:</span>
                       <span className="font-medium text-gray-900 dark:text-gray-100">{flow.edges?.length || 0}</span>
                     </div>
@@ -192,39 +196,40 @@ export const ClinicFlowsList = () => {
                       })}
                     </p>
 
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-4 gap-2">
                       <Button 
                         size="sm" 
                         variant="outline"
                         onClick={() => navigate(`/flows?edit=${flow.id}`)}
-                        className="flex-1"
+                        className="p-2 h-9"
+                        title="Ver fluxo"
                       >
-                        <Eye className="h-4 w-4 mr-1" />
-                        Ver
+                        <Eye className="h-4 w-4" />
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline"
                         onClick={() => navigate(`/flows?edit=${flow.id}`)}
-                        className="flex-1"
+                        className="p-2 h-9"
+                        title="Editar fluxo"
                       >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Editar
+                        <Edit className="h-4 w-4" />
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline"
                         onClick={() => setAssignmentFlow(flow)}
-                        className="flex-1"
+                        className="p-2 h-9"
+                        title="Atribuir fluxo"
                       >
-                        <UserPlus className="h-4 w-4 mr-1" />
-                        Atribuir
+                        <UserPlus className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => deleteFlow(flow.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
+                        className="p-2 h-9 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
+                        title="Deletar fluxo"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

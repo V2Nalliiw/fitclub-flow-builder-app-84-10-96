@@ -3,14 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HybridPatientInvitationDialog } from '@/components/patients/HybridPatientInvitationDialog';
 import { HybridPatientInvitationsList } from '@/components/patients/HybridPatientInvitationsList';
+import { PatientsActiveList } from '@/components/patients/PatientsActiveList';
 import { Users, UserPlus, Mail, Bell } from 'lucide-react';
 
 export const Patients = () => {
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto p-4 md:p-6 space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Pacientes</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Pacientes</h1>
           <p className="text-muted-foreground">
             Gerencie seus pacientes e convites da clínica
           </p>
@@ -22,15 +23,15 @@ export const Patients = () => {
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="invitations" className="flex items-center gap-2">
             <Mail className="h-4 w-4" />
-            Convites
+            <span className="hidden sm:inline">Convites</span>
           </TabsTrigger>
           <TabsTrigger value="internal" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
-            Notificações
+            <span className="hidden sm:inline">Notificações</span>
           </TabsTrigger>
           <TabsTrigger value="patients" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Pacientes Ativos
+            <span className="hidden sm:inline">Pacientes Ativos</span>
           </TabsTrigger>
         </TabsList>
 
@@ -86,13 +87,7 @@ export const Patients = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col items-center justify-center py-8">
-                <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-lg font-medium">Em desenvolvimento</p>
-                <p className="text-muted-foreground text-center">
-                  A lista de pacientes ativos será implementada em breve
-                </p>
-              </div>
+              <PatientsActiveList />
             </CardContent>
           </Card>
         </TabsContent>
