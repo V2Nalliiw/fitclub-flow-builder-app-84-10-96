@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,8 +12,8 @@ const PatientDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { hasAccess } = useRoleBasedAccess(['patient']);
-  const { flows: patientFlows, loading: flowsLoading } = usePatientFlows();
-  const { assignments, loading: assignmentsLoading } = useFlowAssignments();
+  const { executions: patientFlows, loading: flowsLoading } = usePatientFlows();
+  const { assignments, isLoading: assignmentsLoading } = useFlowAssignments();
 
   if (!hasAccess) {
     return null;
