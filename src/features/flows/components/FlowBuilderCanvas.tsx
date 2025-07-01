@@ -87,11 +87,13 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         width: canvasWidth
       }}
     >
-      <style jsx>{`
+      <style>{`
         .react-flow__handle {
           border: 2px solid white !important;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
           transition: all 0.2s ease !important;
+          opacity: 1 !important;
+          visibility: visible !important;
         }
         
         .react-flow__handle:hover {
@@ -112,6 +114,19 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         .react-flow__node-conditions .react-flow__handle {
           opacity: 1 !important;
           visibility: visible !important;
+          z-index: 10 !important;
+        }
+        
+        /* Handles específicos para nós de condições */
+        .react-flow__node-conditions .react-flow__handle[data-handleid^="condition-"] {
+          border: 3px solid white !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+        }
+        
+        /* Handles específicos para nós de pergunta */
+        .react-flow__node-question .react-flow__handle[data-handleid^="opcao-"] {
+          border: 3px solid white !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
         }
         
         /* Feedback visual para conexões */
@@ -123,6 +138,23 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         .react-flow__edge:hover {
           stroke: #6b7280 !important;
           stroke-width: 3px !important;
+        }
+        
+        /* Melhorar contraste dos handles */
+        .react-flow__handle.react-flow__handle-top,
+        .react-flow__handle.react-flow__handle-bottom,
+        .react-flow__handle.react-flow__handle-left,
+        .react-flow__handle.react-flow__handle-right {
+          border: 2px solid white !important;
+          min-width: 12px !important;
+          min-height: 12px !important;
+        }
+        
+        /* Handles dinâmicos com melhor visibilidade */
+        .react-flow__handle[style*="position: absolute"] {
+          position: absolute !important;
+          z-index: 20 !important;
+          pointer-events: all !important;
         }
       `}</style>
       
