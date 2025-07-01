@@ -57,11 +57,12 @@ export const PatientFlowsList = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'concluido':
         return 'bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-300';
-      case 'in-progress':
+      case 'em-andamento':
         return 'bg-[#5D8701]/10 text-[#5D8701] dark:bg-[#5D8701]/20 dark:text-[#5D8701]';
-      case 'pending':
+      case 'pausado':
+      case 'aguardando':
         return 'bg-orange-100 text-orange-800 dark:bg-orange-950/20 dark:text-orange-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
@@ -70,11 +71,12 @@ export const PatientFlowsList = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'concluido':
         return <CheckCircle className="h-4 w-4" />;
-      case 'in-progress':
+      case 'em-andamento':
         return <Play className="h-4 w-4" />;
-      case 'pending':
+      case 'pausado':
+      case 'aguardando':
         return <Clock className="h-4 w-4" />;
       default:
         return <FileText className="h-4 w-4" />;
@@ -83,12 +85,14 @@ export const PatientFlowsList = () => {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'concluido':
         return 'Concluído';
-      case 'in-progress':
+      case 'em-andamento':
         return 'Em Andamento';
-      case 'pending':
-        return 'Pendente';
+      case 'pausado':
+        return 'Pausado';
+      case 'aguardando':
+        return 'Aguardando';
       default:
         return 'Novo';
     }
@@ -111,7 +115,7 @@ export const PatientFlowsList = () => {
         </div>
 
         {/* Lista de Execuções */}
-        <div className="grid gap-4 md:gap-6 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
           {executions.map((execution) => (
             <Card 
               key={execution.id} 
@@ -141,12 +145,12 @@ export const PatientFlowsList = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                     <span>Progresso</span>
-                    <span>{execution.progress}%</span>
+                    <span>{execution.progresso}%</span>
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div 
                       className="bg-gradient-to-r from-[#5D8701] to-[#4a6e01] h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${execution.progress}%` }}
+                      style={{ width: `${execution.progresso}%` }}
                     ></div>
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -158,7 +162,7 @@ export const PatientFlowsList = () => {
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <Calendar className="h-4 w-4" />
                   <span>
-                    Iniciado {formatDistanceToNow(new Date(execution.created_at), { 
+                    Iniciado {formatDistanceToNow(new Date(execution.started_at), { 
                       addSuffix: true, 
                       locale: ptBR 
                     })}
@@ -185,8 +189,8 @@ export const PatientFlowsList = () => {
                     navigate(`/flow-execution/${execution.id}`);
                   }}
                 >
-                  {execution.status === 'completed' ? 'Ver Resultados' : 
-                   execution.status === 'in-progress' ? 'Continuar' : 'Iniciar'}
+                  {execution.status === 'concluido' ? 'Ver Resultados' : 
+                   execution.status === 'em-andamento' ? 'Continuar' : 'Iniciar'}
                 </Button>
               </CardContent>
             </Card>
