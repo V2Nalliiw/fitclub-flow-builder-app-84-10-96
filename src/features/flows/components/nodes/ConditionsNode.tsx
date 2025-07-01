@@ -33,13 +33,18 @@ const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
   };
 
   return (
-    <div className="px-4 py-3 shadow-md rounded-lg bg-white border-2 border-purple-200 min-w-[220px] relative group">
-      <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-purple-400" />
+    <div className="px-4 py-3 shadow-md rounded-lg bg-white dark:bg-gray-800 border-2 border-purple-200 dark:border-purple-700 min-w-[220px] relative group">
+      {/* Handle de entrada centralizado na borda esquerda */}
+      <Handle 
+        type="target" 
+        position={Position.Left} 
+        className="w-3 h-3 !bg-purple-400 !left-0 !transform !-translate-x-1/2 !top-1/2 !-translate-y-1/2" 
+      />
       
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <GitBranch className="h-4 w-4 text-purple-600" />
-          <div className="text-purple-800 font-bold text-sm">Condições</div>
+          <div className="text-purple-800 dark:text-purple-200 font-bold text-sm">Condições</div>
         </div>
         
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -47,24 +52,24 @@ const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
             variant="ghost"
             size="sm"
             onClick={handleEdit}
-            className="h-6 w-6 p-0 hover:bg-purple-100"
+            className="h-6 w-6 p-0 hover:bg-purple-100 dark:hover:bg-purple-800"
           >
-            <Settings className="h-3 w-3 text-purple-600" />
+            <Settings className="h-3 w-3 text-purple-600 dark:text-purple-300" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleDelete}
-            className="h-6 w-6 p-0 hover:bg-red-100"
+            className="h-6 w-6 p-0 hover:bg-red-100 dark:hover:bg-red-800"
           >
-            <Trash2 className="h-3 w-3 text-red-600" />
+            <Trash2 className="h-3 w-3 text-red-600 dark:text-red-400" />
           </Button>
         </div>
       </div>
       
-      <div className="text-gray-700 text-xs mb-3 font-medium">{data.label}</div>
+      <div className="text-gray-700 dark:text-gray-300 text-xs mb-3 font-medium">{data.label}</div>
       
-      <div className="text-xs text-gray-500 mb-4">
+      <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
         <div className="flex items-center gap-1">
           <span>🔀</span>
           <span>{conditionCount} condições configuradas</span>
@@ -77,7 +82,7 @@ const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
           {conditions.map((condition, index) => (
             <div
               key={condition.id || index}
-              className="flex items-center gap-2 text-xs p-1 bg-purple-50 rounded border"
+              className="flex items-center gap-2 text-xs p-1 bg-purple-50 dark:bg-purple-900/30 rounded border"
             >
               <div 
                 className="w-2 h-2 rounded-full"
@@ -91,28 +96,23 @@ const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
         </div>
       )}
 
-      {/* Handles dinâmicos para cada condição com melhor espaçamento */}
+      {/* Handles de saída alinhados na borda direita do card */}
       {conditions.map((condition, index) => {
         const totalConditions = conditions.length;
-        const spacing = totalConditions > 1 ? 180 / (totalConditions - 1) : 0;
-        const startAngle = totalConditions > 1 ? -90 : 0;
-        const angle = startAngle + (index * spacing);
-        
-        // Converte ângulo para posição
-        const radius = 35;
-        const x = Math.cos((angle * Math.PI) / 180) * radius;
-        const y = Math.sin((angle * Math.PI) / 180) * radius;
+        const cardHeight = 140; // altura aproximada do card
+        const handleSpacing = Math.min(32, cardHeight / (totalConditions + 1));
+        const startY = -(cardHeight / 2) + (handleSpacing * 2);
+        const offsetY = startY + (index * handleSpacing);
         
         return (
           <React.Fragment key={condition.id || index}>
             <Handle
               type="source"
-              position={Position.Bottom}
+              position={Position.Right}
               id={`condition-${index}`}
-              className="!w-3 !h-3 !border-2 !border-white !shadow-md"
+              className="!w-3 !h-3 !border-2 !border-white !shadow-md !right-0 !transform !translate-x-1/2"
               style={{
-                left: `calc(50% + ${x}px)`,
-                top: `calc(100% + ${y}px)`,
+                top: `calc(50% + ${offsetY}px)`,
                 backgroundColor: `hsl(${(index * 360) / conditions.length}, 70%, 60%)`,
                 zIndex: 10,
               }}
@@ -120,11 +120,11 @@ const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
             
             {/* Tooltip para identificar a condição */}
             <div
-              className="absolute pointer-events-none opacity-0 hover:opacity-100 transition-opacity z-20 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap"
+              className="absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 bg-black dark:bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap"
               style={{
-                left: `calc(50% + ${x}px)`,
-                top: `calc(100% + ${y + 20}px)`,
-                transform: 'translateX(-50%)',
+                right: '-10px',
+                top: `calc(50% + ${offsetY}px)`,
+                transform: 'translate(100%, -50%)',
               }}
             >
               {condition.label}
@@ -137,8 +137,8 @@ const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
       {conditionCount === 0 && (
         <Handle 
           type="source" 
-          position={Position.Bottom} 
-          className="w-3 h-3 !bg-purple-400" 
+          position={Position.Right} 
+          className="w-3 h-3 !bg-purple-400 !right-0 !transform !translate-x-1/2 !top-1/2 !-translate-y-1/2" 
         />
       )}
     </div>
