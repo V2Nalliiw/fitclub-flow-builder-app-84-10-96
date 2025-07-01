@@ -87,6 +87,45 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         width: canvasWidth
       }}
     >
+      <style jsx>{`
+        .react-flow__handle {
+          border: 2px solid white !important;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+          transition: all 0.2s ease !important;
+        }
+        
+        .react-flow__handle:hover {
+          transform: scale(1.2) !important;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+        }
+        
+        .react-flow__handle.connecting {
+          box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3) !important;
+        }
+        
+        .react-flow__handle.connectionindicator {
+          box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.3) !important;
+        }
+        
+        /* Melhorar visibilidade dos handles múltiplos */
+        .react-flow__node-question .react-flow__handle,
+        .react-flow__node-conditions .react-flow__handle {
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+        
+        /* Feedback visual para conexões */
+        .react-flow__edge.selected {
+          stroke: #3b82f6 !important;
+          stroke-width: 3px !important;
+        }
+        
+        .react-flow__edge:hover {
+          stroke: #6b7280 !important;
+          stroke-width: 3px !important;
+        }
+      `}</style>
+      
       <ReactFlow
         nodes={nodes}
         edges={enhancedEdges}
@@ -116,6 +155,11 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         zoomOnScroll={true}
         zoomOnPinch={true}
         zoomOnDoubleClick={false}
+        connectionLineStyle={{
+          stroke: '#3b82f6',
+          strokeWidth: 2,
+          strokeDasharray: '5,5',
+        }}
       >
         <Controls 
           position={isMobile ? "bottom-left" : "bottom-right"}
