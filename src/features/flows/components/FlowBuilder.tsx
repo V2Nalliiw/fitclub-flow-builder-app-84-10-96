@@ -22,6 +22,8 @@ import CalculatorNode from './nodes/CalculatorNode';
 import ConditionsNode from './nodes/ConditionsNode';
 import CalculatorNodeConfig from './CalculatorNodeConfig';
 import ConditionsNodeConfig from './ConditionsNodeConfig';
+import { TabletFlowMenu } from '@/components/layout/components/TabletFlowMenu';
+import { useBreakpoints } from '@/hooks/use-breakpoints';
 
 const nodeTypes = {
   start: StartNode,
@@ -36,6 +38,7 @@ const nodeTypes = {
 };
 
 export const FlowBuilder = () => {
+  const { isDesktop } = useBreakpoints();
   const {
     flowName,
     setFlowName,
@@ -103,23 +106,40 @@ export const FlowBuilder = () => {
 
   return (
     <div className="h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Top Menu */}
-      <FlowBuilderTopMenu
-        flowName={flowName}
-        setFlowName={setFlowName}
-        nodeCount={nodes.length}
-        onAutoArrange={autoArrangeNodes}
-        onClearAll={clearAllNodes}
-        onPreview={openPreview}
-        onSave={saveFlow}
-        onAddNode={addNode}
-        isSaving={isSaving}
-        canSave={canSave}
-        isEditing={isEditing}
-      />
+      {/* Top Menu - apenas no desktop */}
+      {isDesktop && (
+        <FlowBuilderTopMenu
+          flowName={flowName}
+          setFlowName={setFlowName}
+          nodeCount={nodes.length}
+          onAutoArrange={autoArrangeNodes}
+          onClearAll={clearAllNodes}
+          onPreview={openPreview}
+          onSave={saveFlow}
+          onAddNode={addNode}
+          isSaving={isSaving}
+          canSave={canSave}
+          isEditing={isEditing}
+        />
+      )}
 
-      {/* Canvas ocupando toda a tela */}
-      <div className="h-[calc(100vh-64px)]">
+      {/* Menu flutuante para tablet e mobile */}
+      {!isDesktop && (
+        <TabletFlowMenu
+          flowName={flowName}
+          onFlowNameChange={setFlowName}
+          onAddNode={addNode}
+          onPreviewFlow={openPreview}
+          onSaveFlow={saveFlow}
+          onClearAllNodes={clearAllNodes}
+          onAutoArrange={autoArrangeNodes}
+          isSaving={isSaving}
+          canSave={canSave}
+        />
+      )}
+
+      {/* Canvas - altura ajustada baseado no breakpoint */}
+      <div className={isDesktop ? "h-[calc(100vh-64px)]" : "h-screen"}>
         <FlowBuilderCanvas
           nodes={enhancedNodes}
           edges={edges}
