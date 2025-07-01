@@ -17,6 +17,8 @@ import { FormEndNode } from './nodes/FormEndNode';
 import { FormSelectNode } from './nodes/FormSelectNode';
 import { DelayNode } from './nodes/DelayNode';
 import { QuestionNode } from './nodes/QuestionNode';
+import CalculatorNode from './nodes/CalculatorNode';
+import ConditionsNode from './nodes/ConditionsNode';
 import { SimpleDeleteEdge } from './SimpleDeleteEdge';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
 
@@ -28,6 +30,8 @@ const nodeTypes = {
   formSelect: FormSelectNode,
   delay: DelayNode,
   question: QuestionNode,
+  calculator: CalculatorNode,
+  conditions: ConditionsNode,
 };
 
 const edgeTypes = {

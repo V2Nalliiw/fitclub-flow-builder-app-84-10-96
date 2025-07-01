@@ -1,12 +1,13 @@
+
 import React, { useState } from 'react';
-import ReactFlow, {
+import {
   addEdge,
   useNodesState,
   useEdgesState,
   Controls,
   Background,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,17 +21,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useFlowBuilder } from '@/hooks/useFlowBuilder';
-import { FlowBuilderSidebar } from './FlowBuilderSidebar';
+import FlowBuilderSidebar from './FlowBuilderSidebar';
 import { FlowBuilderCanvas } from './FlowBuilderCanvas';
 import { NodeConfigModal } from './NodeConfigModal';
 import { FlowPreviewModal } from './FlowPreviewModal';
-import StartNode from './nodes/StartNode';
-import EndNode from './nodes/EndNode';
-import FormStartNode from './nodes/FormStartNode';
-import FormEndNode from './nodes/FormEndNode';
-import FormSelectNode from './nodes/FormSelectNode';
-import DelayNode from './nodes/DelayNode';
-import QuestionNode from './nodes/QuestionNode';
+import { StartNode } from './nodes/StartNode';
+import { EndNode } from './nodes/EndNode';
+import { FormStartNode } from './nodes/FormStartNode';
+import { FormEndNode } from './nodes/FormEndNode';
+import { FormSelectNode } from './nodes/FormSelectNode';
+import { DelayNode } from './nodes/DelayNode';
+import { QuestionNode } from './nodes/QuestionNode';
 import CalculatorNode from './nodes/CalculatorNode';
 import ConditionsNode from './nodes/ConditionsNode';
 import CalculatorNodeConfig from './CalculatorNodeConfig';
@@ -138,15 +139,15 @@ export const FlowBuilder = () => {
           <Button variant="outline" onClick={openPreview}>
             Visualizar
           </Button>
-          <Button onClick={saveFlow} disabled={!canSave} loading={isSaving}>
-            {isEditing ? 'Atualizar Fluxo' : 'Salvar Fluxo'}
+          <Button onClick={saveFlow} disabled={!canSave || isSaving}>
+            {isSaving ? 'Salvando...' : (isEditing ? 'Atualizar Fluxo' : 'Salvar Fluxo')}
           </Button>
         </div>
       </div>
 
       <div className="flex h-[calc(100vh-64px)]">
         {/* Sidebar */}
-        <FlowBuilderSidebar
+        <FlowBuilderSidbar
           onAddNode={addNode}
           onClearAll={clearAllNodes}
           onAutoArrange={autoArrangeNodes}
@@ -165,7 +166,8 @@ export const FlowBuilder = () => {
             onConnect={onConnect}
             onNodeDoubleClick={onNodeDoubleClick}
             onNodeClick={onNodeClick}
-            nodeTypes={nodeTypes}
+            onDeleteNode={deleteNode}
+            onDuplicateNode={() => {}}
           />
         </div>
       </div>
@@ -197,6 +199,7 @@ export const FlowBuilder = () => {
         onClose={closePreview}
         nodes={nodes}
         edges={edges}
+        flowName={flowName}
       />
     </div>
   );
