@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -109,35 +108,35 @@ export const Profile = () => {
   };
 
   return (
-    <div className="container mx-auto py-4 md:py-6 space-y-4 md:space-y-6 px-4">
-      <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold">Meu Perfil</h1>
-        <p className="text-sm md:text-base text-muted-foreground">Gerencie suas informações pessoais e preferências</p>
+    <div className="container mx-auto py-6 space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Meu Perfil</h1>
+        <p className="text-muted-foreground">Gerencie suas informações pessoais e preferências</p>
       </div>
 
-      <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2">
         {/* Informações Pessoais */}
-        <div className="space-y-4 md:space-y-6">
+        <div className="space-y-6">
           <Card>
-            <CardHeader className="pb-4">
+            <CardHeader>
               <div className="flex items-center gap-2">
-                <User className="h-4 w-4 md:h-5 md:w-5" />
-                <CardTitle className="text-lg md:text-xl">Informações Pessoais</CardTitle>
+                <User className="h-5 w-5" />
+                <CardTitle>Informações Pessoais</CardTitle>
               </div>
-              <CardDescription className="text-sm">
+              <CardDescription>
                 Atualize suas informações básicas
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex items-center gap-4">
                 <AvatarUpload
                   currentAvatar={user?.avatar_url}
                   userName={user?.name}
                   size="lg"
                 />
-                <div className="flex-1 min-w-0">
-                  <Label className="text-sm md:text-base">Foto do Perfil</Label>
-                  <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                <div className="flex-1">
+                  <Label>Foto do Perfil</Label>
+                  <p className="text-sm text-muted-foreground mt-1">
                     Clique na imagem para alterar sua foto de perfil
                   </p>
                 </div>
@@ -145,44 +144,37 @@ export const Profile = () => {
 
               <div className="grid gap-4">
                 <div>
-                  <Label htmlFor="name" className="text-sm md:text-base">Nome Completo</Label>
+                  <Label htmlFor="name">Nome Completo</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    className="mt-1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="email" className="text-sm md:text-base">Email</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    className="mt-1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="bio" className="text-sm md:text-base">Biografia</Label>
+                  <Label htmlFor="bio">Biografia</Label>
                   <Textarea
                     id="bio"
                     value={formData.bio}
                     onChange={(e) => handleInputChange('bio', e.target.value)}
                     placeholder="Conte um pouco sobre você..."
                     rows={3}
-                    className="mt-1 resize-none"
                   />
                 </div>
               </div>
 
-              <Button 
-                onClick={handleSaveProfile} 
-                disabled={loading} 
-                className="w-full bg-[#5D8701] hover:bg-[#4a6e01] text-white min-h-[44px]"
-              >
+              <Button onClick={handleSaveProfile} disabled={loading} className="w-full">
                 <Save className="h-4 w-4 mr-2" />
                 {loading ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
@@ -197,57 +189,50 @@ export const Profile = () => {
         </div>
 
         {/* Segurança e Notificações */}
-        <div className="space-y-4 md:space-y-6">
+        <div className="space-y-6">
           {/* Alterar Senha */}
           <Card>
-            <CardHeader className="pb-4">
+            <CardHeader>
               <div className="flex items-center gap-2">
-                <Lock className="h-4 w-4 md:h-5 md:w-5" />
-                <CardTitle className="text-lg md:text-xl">Segurança</CardTitle>
+                <Lock className="h-5 w-5" />
+                <CardTitle>Segurança</CardTitle>
               </div>
-              <CardDescription className="text-sm">
+              <CardDescription>
                 Altere sua senha de acesso
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="current-password" className="text-sm md:text-base">Senha Atual</Label>
+                <Label htmlFor="current-password">Senha Atual</Label>
                 <Input
                   id="current-password"
                   type="password"
                   value={passwordData.current}
                   onChange={(e) => setPasswordData(prev => ({ ...prev, current: e.target.value }))}
-                  className="mt-1"
                 />
               </div>
 
               <div>
-                <Label htmlFor="new-password" className="text-sm md:text-base">Nova Senha</Label>
+                <Label htmlFor="new-password">Nova Senha</Label>
                 <Input
                   id="new-password"
                   type="password"
                   value={passwordData.new}
                   onChange={(e) => setPasswordData(prev => ({ ...prev, new: e.target.value }))}
-                  className="mt-1"
                 />
               </div>
 
               <div>
-                <Label htmlFor="confirm-password" className="text-sm md:text-base">Confirmar Nova Senha</Label>
+                <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
                 <Input
                   id="confirm-password"
                   type="password"
                   value={passwordData.confirm}
                   onChange={(e) => setPasswordData(prev => ({ ...prev, confirm: e.target.value }))}
-                  className="mt-1"
                 />
               </div>
 
-              <Button 
-                onClick={handleChangePassword} 
-                disabled={loading} 
-                className="w-full bg-[#5D8701] hover:bg-[#4a6e01] text-white min-h-[44px]"
-              >
+              <Button onClick={handleChangePassword} disabled={loading} className="w-full">
                 Alterar Senha
               </Button>
             </CardContent>
@@ -255,20 +240,20 @@ export const Profile = () => {
 
           {/* Preferências de Notificação */}
           <Card>
-            <CardHeader className="pb-4">
+            <CardHeader>
               <div className="flex items-center gap-2">
-                <Bell className="h-4 w-4 md:h-5 md:w-5" />
-                <CardTitle className="text-lg md:text-xl">Notificações</CardTitle>
+                <Bell className="h-5 w-5" />
+                <CardTitle>Notificações</CardTitle>
               </div>
-              <CardDescription className="text-sm">
+              <CardDescription>
                 Configure como deseja receber notificações
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between py-2">
-                <div className="flex-1 min-w-0 pr-4">
-                  <Label className="text-sm md:text-base">Email</Label>
-                  <p className="text-xs md:text-sm text-muted-foreground">Receber notificações por email</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Email</Label>
+                  <p className="text-sm text-muted-foreground">Receber notificações por email</p>
                 </div>
                 <Switch
                   checked={formData.notifications.email}
@@ -278,10 +263,10 @@ export const Profile = () => {
 
               <Separator />
 
-              <div className="flex items-center justify-between py-2">
-                <div className="flex-1 min-w-0 pr-4">
-                  <Label className="text-sm md:text-base">Push</Label>
-                  <p className="text-xs md:text-sm text-muted-foreground">Notificações push no navegador</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Push</Label>
+                  <p className="text-sm text-muted-foreground">Notificações push no navegador</p>
                 </div>
                 <Switch
                   checked={formData.notifications.push}
@@ -291,10 +276,10 @@ export const Profile = () => {
 
               <Separator />
 
-              <div className="flex items-center justify-between py-2">
-                <div className="flex-1 min-w-0 pr-4">
-                  <Label className="text-sm md:text-base">WhatsApp</Label>
-                  <p className="text-xs md:text-sm text-muted-foreground">Receber formulários via WhatsApp</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>WhatsApp</Label>
+                  <p className="text-sm text-muted-foreground">Receber formulários via WhatsApp</p>
                 </div>
                 <Switch
                   checked={!!formData.phone}

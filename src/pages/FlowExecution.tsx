@@ -258,7 +258,7 @@ const FlowExecution = () => {
     new Date() >= new Date(execution.next_step_available_at) : false;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -352,7 +352,7 @@ const FlowExecution = () => {
               ) : isWaiting && !delayExpired ? (
                 <Clock className="h-6 w-6 text-orange-500" />
               ) : (
-                <Play className="h-6 w-6 text-[#5D8701]" />
+                <Play className="h-6 w-6 text-blue-500" />
               )}
               {isCompleted ? 'Fluxo Concluído!' : 
                isWaiting && !delayExpired ? 'Aguardando Próxima Etapa' : 

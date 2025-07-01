@@ -1,231 +1,208 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  FileText, 
-  Download, 
-  Eye, 
-  Film, 
-  Image, 
-  ExternalLink,
-  Clock,
-  User,
-  Calendar
-} from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Download, Eye, Play, Pause, Volume2, VolumeX, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface EnhancedDocumentDisplayProps {
-  document: {
-    id: string;
-    name: string;
-    url: string;
-    type?: string;
-    size?: string;
-    description?: string;
-    uploadedAt?: string;
-    uploadedBy?: string;
-    category?: string;
-    version?: string;
-  };
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
   title?: string;
-  showMetadata?: boolean;
-  onView?: () => void;
-  onDownload?: () => void;
+  description?: string;
 }
 
 export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = ({
-  document: doc,
+  fileName,
+  fileUrl,
+  fileType,
   title,
-  showMetadata = true,
-  onView,
-  onDownload
+  description
 }) => {
-  const [imageError, setImageError] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [videoPlaying, setVideoPlaying] = useState(false);
+  const [videoMuted, setVideoMuted] = useState(false);
+  const [fileExists, setFileExists] = useState(true);
+  const [checkingFile, setCheckingFile] = useState(true);
 
-  const getFileIcon = (type: string) => {
-    if (type?.includes('video')) return <Film className="h-6 w-6" />;
-    if (type?.includes('image')) return <Image className="h-6 w-6" />;
-    return <FileText className="h-6 w-6" />;
-  };
+  useEffect(() => {
+    checkFileExists();
+  }, [fileUrl]);
 
-  const getFileTypeLabel = (type: string) => {
-    if (type?.includes('video')) return 'Vídeo';
-    if (type?.includes('image')) return 'Imagem';
-    if (type?.includes('pdf')) return 'PDF';
-    return 'Documento';
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category?.toLowerCase()) {
-      case 'educativo':
-        return 'bg-[#5D8701]/10 text-[#5D8701] dark:bg-[#5D8701]/20 dark:text-[#5D8701]';
-      case 'formulário':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
-      case 'orientação':
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-950/20 dark:text-orange-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+  const checkFileExists = async () => {
+    setCheckingFile(true);
+    try {
+      const response = await fetch(fileUrl, { method: 'HEAD' });
+      setFileExists(response.ok && response.status === 200);
+    } catch (error) {
+      console.error('Erro ao verificar arquivo:', error);
+      setFileExists(false);
+    } finally {
+      setCheckingFile(false);
     }
   };
 
-  const handleView = () => {
-    if (onView) {
-      onView();
-    } else {
-      window.open(doc.url, '_blank');
+  const handleDownload = async () => {
+    if (!fileExists) {
+      toast.error('Arquivo não encontrado');
+      return;
     }
-  };
 
-  const handleDownload = () => {
-    if (onDownload) {
-      onDownload();
-    } else {
+    setDownloading(true);
+    try {
+      const response = await fetch(fileUrl);
+      const blob = await response.blob();
+      
+      if (blob.size === 0) {
+        toast.error('Arquivo está vazio ou corrompido');
+        return;
+      }
+
       const link = document.createElement('a');
-      link.href = doc.url;
-      link.download = doc.name;
-      link.target = '_blank';
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+      
+      toast.success('Download iniciado!');
+    } catch (error) {
+      console.error('Erro ao baixar arquivo:', error);
+      toast.error('Erro ao baixar arquivo');
+    } finally {
+      setDownloading(false);
     }
   };
 
-  const isImage = doc.type?.includes('image');
-  const isVideo = doc.type?.includes('video');
+  const handlePreview = () => {
+    if (!fileExists) {
+      toast.error('Arquivo não encontrado');
+      return;
+    }
+    window.open(fileUrl, '_blank');
+  };
 
-  return (
-    <Card className="bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 overflow-hidden">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3 flex-1">
-            <div className="w-10 h-10 bg-gradient-to-r from-[#5D8701] to-[#4a6e01] rounded-lg flex items-center justify-center text-white flex-shrink-0">
-              {getFileIcon(doc.type || '')}
-            </div>
-            <div className="flex-1 min-w-0">
-              <CardTitle className="text-lg text-gray-900 dark:text-gray-100 line-clamp-2">
-                {title || doc.name}
-              </CardTitle>
-              {doc.description && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
-                  {doc.description}
-                </p>
-              )}
-            </div>
+  if (checkingFile) {
+    return (
+      <Card className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-950/20 dark:to-gray-900/20">
+        <CardContent className="p-6 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Verificando arquivo...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!fileExists) {
+    return (
+      <Card className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 border-red-200 dark:border-red-800">
+        <CardContent className="p-6 text-center">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-950/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="h-8 w-8 text-red-500" />
           </div>
-          
-          <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-            {doc.category && (
-              <Badge className={getCategoryColor(doc.category)}>
-                {doc.category}
-              </Badge>
-            )}
-            {doc.version && (
-              <Badge variant="outline" className="text-xs">
-                v{doc.version}
-              </Badge>
-            )}
+          <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">
+            Arquivo não encontrado
+          </h3>
+          <p className="text-red-700 dark:text-red-300 mb-4">
+            O arquivo "{fileName}" não está disponível no momento.
+          </p>
+          <p className="text-sm text-red-600 dark:text-red-400">
+            Entre em contato com sua clínica para obter o documento.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const renderContent = () => {
+    if (fileType.startsWith('image/')) {
+      return (
+        <div className="space-y-4">
+          <img
+            src={fileUrl}
+            alt={title || fileName}
+            className="w-full max-w-2xl mx-auto rounded-lg shadow-sm"
+            onError={() => {
+              console.error('Erro ao carregar imagem');
+              setFileExists(false);
+            }}
+          />
+        </div>
+      );
+    }
+
+    if (fileType.startsWith('video/')) {
+      return (
+        <div className="space-y-4">
+          <div className="relative bg-black rounded-lg overflow-hidden max-w-2xl mx-auto">
+            <video
+              src={fileUrl}
+              controls
+              className="w-full"
+              onPlay={() => setVideoPlaying(true)}
+              onPause={() => setVideoPlaying(false)}
+              onVolumeChange={(e) => setVideoMuted((e.target as HTMLVideoElement).muted)}
+              onError={() => {
+                console.error('Erro ao carregar vídeo');
+                setFileExists(false);
+              }}
+            >
+              Seu browser não suporta reprodução de vídeo.
+            </video>
           </div>
         </div>
-      </CardHeader>
+      );
+    }
 
-      <CardContent className="space-y-4">
-        {/* Preview para imagens */}
-        {isImage && !imageError && (
-          <div className="relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
-            <img
-              src={doc.url}
-              alt={doc.name}
-              className="w-full h-48 object-cover"
-              onError={() => setImageError(true)}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-          </div>
-        )}
+    // Para PDFs e outros documentos
+    return (
+      <div className="text-center py-8">
+        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Eye className="h-10 w-10 text-red-500" />
+        </div>
+        <p className="text-gray-600 mb-4">
+          📎 {fileName}
+        </p>
+        <Button
+          onClick={handlePreview}
+          variant="outline"
+          className="mb-2"
+        >
+          <Eye className="h-4 w-4 mr-2" />
+          Visualizar PDF
+        </Button>
+      </div>
+    );
+  };
 
-        {/* Preview para vídeos */}
-        {isVideo && (
-          <div className="relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
-            <video
-              src={doc.url}
-              className="w-full h-48 object-cover"
-              controls={false}
-              poster=""
-            />
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center">
-                <Film className="h-8 w-8 text-gray-700" />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Metadata */}
-        {showMetadata && (
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-              <FileText className="h-4 w-4" />
-              <span>{getFileTypeLabel(doc.type || '')}</span>
-            </div>
-            
-            {doc.size && (
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <span className="w-4 h-4 flex items-center justify-center text-xs font-mono">
-                  📁
-                </span>
-                <span>{doc.size}</span>
-              </div>
-            )}
-
-            {doc.uploadedAt && (
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <Calendar className="h-4 w-4" />
-                <span>
-                  {formatDistanceToNow(new Date(doc.uploadedAt), {
-                    addSuffix: true,
-                    locale: ptBR
-                  })}
-                </span>
-              </div>
-            )}
-
-            {doc.uploadedBy && (
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <User className="h-4 w-4" />
-                <span>{doc.uploadedBy}</span>
-              </div>
+  return (
+    <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-purple-200 dark:border-purple-800">
+      <CardContent className="p-6 space-y-6">
+        {title && (
+          <div className="text-center">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              {title}
+            </h3>
+            {description && (
+              <p className="text-gray-600 dark:text-gray-400">
+                {description}
+              </p>
             )}
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-2 pt-2">
+        {renderContent()}
+
+        <div className="flex justify-center gap-3">
           <Button
-            variant="outline"
-            size="sm"
-            onClick={handleView}
-            className="flex items-center gap-2 flex-1"
-          >
-            <Eye className="h-4 w-4" />
-            Visualizar
-          </Button>
-          <Button
-            size="sm"
             onClick={handleDownload}
-            className="flex items-center gap-2 flex-1 bg-gradient-to-r from-[#5D8701] to-[#4a6e01] hover:from-[#4a6e01] hover:to-[#3a5701] text-white"
+            disabled={downloading}
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
           >
-            <Download className="h-4 w-4" />
-            Download
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleView}
-            className="px-3"
-          >
-            <ExternalLink className="h-4 w-4" />
+            <Download className="h-4 w-4 mr-2" />
+            {downloading ? 'Baixando...' : 'Baixar'}
           </Button>
         </div>
       </CardContent>

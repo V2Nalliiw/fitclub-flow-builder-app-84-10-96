@@ -1,161 +1,155 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle, AlertTriangle, Info, ChevronRight } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { GitBranch, ArrowRight } from 'lucide-react';
 
 interface ConditionsStepRendererProps {
-  conditions: any[];
-  calculatorResult: number;
-  onComplete: () => void;
+  step: any;
+  onComplete: (response: any) => void;
   isLoading?: boolean;
+  calculatorResult?: number;
 }
 
 export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
-  conditions,
-  calculatorResult,
+  step,
   onComplete,
-  isLoading = false
+  isLoading = false,
+  calculatorResult = 0
 }) => {
-  const getConditionIcon = (condition: any, isActive: boolean) => {
-    if (!isActive) return <Info className="h-5 w-5 text-gray-400" />;
-    
-    switch (condition.severity) {
-      case 'high':
-        return <AlertTriangle className="h-5 w-5 text-red-500" />;
-      case 'medium':
-        return <AlertTriangle className="h-5 w-5 text-orange-500" />;
-      case 'low':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      default:
-        return <Info className="h-5 w-5 text-[#5D8701]" />;
+  const [selectedCondition, setSelectedCondition] = useState<string | null>(null);
+
+  const evaluateConditions = (result: number, conditions: any[]) => {
+    for (const condition of conditions) {
+      const fieldValue = result; // Usando o resultado da calculadora
+      
+      switch (condition.operador) {
+        case 'igual':
+          if (fieldValue === condition.valor) return condition;
+          break;
+        case 'maior':
+          if (fieldValue > condition.valor) return condition;
+          break;
+        case 'menor':
+          if (fieldValue < condition.valor) return condition;
+          break;
+        case 'maior_igual':
+          if (fieldValue >= condition.valor) return condition;
+          break;
+        case 'menor_igual':
+          if (fieldValue <= condition.valor) return condition;
+          break;
+        case 'diferente':
+          if (fieldValue !== condition.valor) return condition;
+          break;
+        case 'entre':
+          if (fieldValue >= condition.valor && fieldValue <= (condition.valorFinal || 0)) return condition;
+          break;
+      }
     }
+    return null;
   };
 
-  const getConditionColor = (condition: any, isActive: boolean) => {
-    if (!isActive) return 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-950/50';
+  const handleComplete = () => {
+    const conditions = step.conditions || [];
+    const matchedCondition = evaluateConditions(calculatorResult, conditions);
     
-    switch (condition.severity) {
-      case 'high':
-        return 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20';
-      case 'medium':
-        return 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/20';
-      case 'low':
-        return 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20';
-      default:
-        return 'border-[#5D8701]/20 dark:border-[#5D8701]/30 bg-[#5D8701]/5 dark:bg-[#5D8701]/10';
-    }
+    onComplete({
+      nodeId: step.nodeId,
+      nodeType: 'conditions',
+      result: calculatorResult,
+      matchedCondition: matchedCondition,
+      conditionLabel: matchedCondition?.label || 'Nenhuma condição atendida',
+      timestamp: new Date().toISOString()
+    });
   };
 
-  const getSeverityBadge = (severity: string, isActive: boolean) => {
-    if (!isActive) return null;
-    
-    const variants = {
-      high: 'bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-300',
-      medium: 'bg-orange-100 text-orange-800 dark:bg-orange-950/20 dark:text-orange-300',
-      low: 'bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-300',
-      normal: 'bg-[#5D8701]/10 text-[#5D8701] dark:bg-[#5D8701]/20 dark:text-[#5D8701]'
-    };
-
-    const labels = {
-      high: 'Alta Prioridade',
-      medium: 'Média Prioridade',
-      low: 'Baixa Prioridade',
-      normal: 'Normal'
-    };
-
-    return (
-      <Badge className={variants[severity as keyof typeof variants] || variants.normal}>
-        {labels[severity as keyof typeof labels] || 'Normal'}
-      </Badge>
-    );
-  };
+  const conditions = step.conditions || [];
+  const matchedCondition = evaluateConditions(calculatorResult, conditions);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-gray-700 to-gray-800 dark:from-gray-800 dark:to-gray-900 rounded-lg p-6 text-white">
-        <div className="flex items-center gap-3 mb-4">
-          <CheckCircle className="h-8 w-8" />
-          <div>
-            <h3 className="text-xl font-semibold">Avaliação de Condições</h3>
-            <p className="text-white/90">Baseado no seu resultado: {calculatorResult.toFixed(1)}</p>
+    <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <GitBranch className="h-6 w-6 text-purple-500" />
+          {step.title || 'Avaliação de Condições'}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="text-center py-4">
+          <div className="text-2xl font-bold text-gray-800 mb-4">
+            Resultado: {calculatorResult.toFixed(2)}
           </div>
-        </div>
-      </div>
-
-      {/* Conditions List */}
-      <div className="space-y-4">
-        {conditions.map((condition, index) => {
-          const isActive = calculatorResult >= (condition.minValue || 0) && 
-                          calculatorResult <= (condition.maxValue || Infinity);
           
-          return (
-            <div
-              key={index}
-              className={`rounded-lg border-2 p-4 transition-all ${getConditionColor(condition, isActive)}`}
-            >
-              <div className="flex items-start gap-3">
-                {getConditionIcon(condition, isActive)}
-                <div className="flex-1">
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className={`font-semibold ${
-                      isActive 
-                        ? 'text-gray-900 dark:text-gray-100' 
-                        : 'text-gray-600 dark:text-gray-400'
-                    }`}>
-                      {condition.title}
-                    </h4>
-                    {getSeverityBadge(condition.severity, isActive)}
+          {step.description && (
+            <p className="text-gray-600 mb-6">{step.description}</p>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="font-semibold text-lg">Condições Avaliadas:</h3>
+          
+          {conditions.map((condition: any, index: number) => {
+            const isMatched = matchedCondition?.id === condition.id;
+            
+            return (
+              <div
+                key={condition.id}
+                className={`p-4 rounded-lg border-2 transition-colors ${
+                  isMatched 
+                    ? 'border-green-500 bg-green-50 dark:bg-green-950/20' 
+                    : 'border-gray-200 bg-gray-50 dark:bg-gray-800'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-gray-900 dark:text-gray-100">
+                      {condition.label}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      {condition.operador === 'entre' 
+                        ? `${condition.campo} entre ${condition.valor} e ${condition.valorFinal}`
+                        : `${condition.campo} ${condition.operador} ${condition.valor}`
+                      }
+                    </div>
                   </div>
                   
-                  <p className={`text-sm mb-3 ${
-                    isActive 
-                      ? 'text-gray-700 dark:text-gray-300' 
-                      : 'text-gray-500 dark:text-gray-500'
+                  <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    isMatched
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                      : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
                   }`}>
-                    {condition.description}
-                  </p>
-
-                  {condition.recommendations && isActive && (
-                    <div className="mt-3 p-3 bg-white/50 dark:bg-gray-900/50 rounded border">
-                      <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
-                        Recomendações:
-                      </h5>
-                      <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
-                        {condition.recommendations.map((rec: string, recIndex: number) => (
-                          <li key={recIndex} className="flex items-start gap-2">
-                            <span className="text-[#5D8701] font-bold">•</span>
-                            <span>{rec}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {condition.range && (
-                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-500">
-                      Faixa de valores: {condition.range}
-                    </div>
-                  )}
+                    {isMatched ? '✓ Atendida' : 'Não atendida'}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
 
-      {/* Action Button */}
-      <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-800">
-        <Button
-          onClick={onComplete}
-          disabled={isLoading}
-          className="bg-gradient-to-r from-[#5D8701] to-[#4a6e01] hover:from-[#4a6e01] hover:to-[#3a5701] text-white px-8 py-3 text-lg"
-        >
-          {isLoading ? 'Processando...' : 'Continuar'}
-          <ChevronRight className="ml-2 h-5 w-5" />
-        </Button>
-      </div>
-    </div>
+        {matchedCondition && (
+          <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+            <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">
+              Resultado da Avaliação:
+            </h4>
+            <p className="text-green-700 dark:text-green-300">
+              {matchedCondition.label}
+            </p>
+          </div>
+        )}
+
+        <div className="flex justify-center pt-4">
+          <Button
+            onClick={handleComplete}
+            disabled={isLoading}
+            className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-8 py-3 font-medium"
+            size="lg"
+          >
+            {isLoading ? 'Processando...' : 'Continuar'}
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
