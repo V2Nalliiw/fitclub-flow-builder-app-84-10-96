@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -285,7 +286,7 @@ const FlowExecution = () => {
           {completedSteps.length > 0 && (
             <Button
               variant="outline"
-              onClick={()={() => setShowStepNavigation(!showStepNavigation)}
+              onClick={() => setShowStepNavigation(!showStepNavigation)}
               className="flex items-center gap-2"
             >
               <History className="h-4 w-4" />
