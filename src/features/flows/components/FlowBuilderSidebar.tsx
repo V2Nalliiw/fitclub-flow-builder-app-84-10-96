@@ -1,134 +1,111 @@
-
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Play, Square, Clock, FileText, CheckCircle, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Plus, Save, Settings, Eye } from 'lucide-react';
-import { FlowBuilderToolbar } from './FlowBuilderToolbar';
-import { FlowNode } from '@/types/flow';
-import { Node } from '@xyflow/react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Calculator, GitBranch } from 'lucide-react';
 
 interface FlowBuilderSidebarProps {
-  flowName: string;
-  selectedNode: Node | null;
-  onFlowNameChange: (name: string) => void;
-  onAddNode: (type: FlowNode['type']) => void;
+  onAddNode: (type: string) => void;
+  onClearAll: () => void;
+  onAutoArrange: () => void;
+  selectedNode: any;
+  onConfigureNode: () => void;
   onDeleteNode: (nodeId: string) => void;
-  onClearAllNodes: () => void;
-  onSaveFlow: () => void;
-  onPreviewFlow: () => void;
 }
 
-export const FlowBuilderSidebar: React.FC<FlowBuilderSidebarProps> = ({
-  flowName,
-  selectedNode,
-  onFlowNameChange,
+const FlowBuilderSidebar: React.FC<FlowBuilderSidebarProps> = ({
   onAddNode,
+  onClearAll,
+  onAutoArrange,
+  selectedNode,
+  onConfigureNode,
   onDeleteNode,
-  onClearAllNodes,
-  onSaveFlow,
-  onPreviewFlow,
 }) => {
+  const nodeCategories = [
+    {
+      title: "Controle de Fluxo",
+      nodes: [
+        { type: 'start', label: 'Início', icon: Play, description: 'Ponto de início do fluxo' },
+        { type: 'end', label: 'Fim', icon: Square, description: 'Ponto de fim do fluxo' },
+        { type: 'delay', label: 'Aguardar', icon: Clock, description: 'Pausa por tempo determinado' },
+      ]
+    },
+    {
+      title: "Formulários",
+      nodes: [
+        { type: 'formStart', label: 'Início Form', icon: FileText, description: 'Início de formulário' },
+        { type: 'formEnd', label: 'Fim Form', icon: CheckCircle, description: 'Fim de formulário' },
+        { type: 'question', label: 'Pergunta', icon: MessageCircle, description: 'Pergunta individual' },
+      ]
+    },
+    {
+      title: "Lógica e Cálculos",
+      nodes: [
+        { type: 'calculator', label: 'Calculadora', icon: Calculator, description: 'Coleta dados e calcula resultado' },
+        { type: 'conditions', label: 'Condições', icon: GitBranch, description: 'Decisões baseadas em condições' },
+      ]
+    }
+  ];
+
   return (
-    <Card className="w-80 h-fit">
+    <Card className="w-64 flex-shrink-0 border-r bg-gray-100 dark:bg-gray-950">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Settings className="h-5 w-5" />
-          Construtor de Fluxos
-        </CardTitle>
+        <CardTitle>Construtor de Fluxos</CardTitle>
+        <CardDescription>Arraste e configure os nós</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div>
-          <Label htmlFor="flowName">Nome do Fluxo</Label>
-          <Input
-            id="flowName"
-            value={flowName}
-            onChange={(e) => onFlowNameChange(e.target.value)}
-            className="mt-1"
-            placeholder="Digite o nome do fluxo..."
-          />
-        </div>
-
-        <div>
-          <Label className="text-sm font-medium mb-3 block">Adicionar Nós</Label>
-          <div className="grid grid-cols-1 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onAddNode('formStart')}
-              className="justify-start text-xs h-9"
-            >
-              <Plus className="h-3 w-3 mr-2" />
-              Início de Formulário
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onAddNode('formEnd')}
-              className="justify-start text-xs h-9"
-            >
-              <Plus className="h-3 w-3 mr-2" />
-              Fim de Formulário
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onAddNode('question')}
-              className="justify-start text-xs h-9"
-            >
-              <Plus className="h-3 w-3 mr-2" />
-              Pergunta
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onAddNode('delay')}
-              className="justify-start text-xs h-9"
-            >
-              <Plus className="h-3 w-3 mr-2" />
-              Aguardar Tempo
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onAddNode('end')}
-              className="justify-start text-xs h-9"
-            >
-              <Plus className="h-3 w-3 mr-2" />
-              Fim do Fluxo
-            </Button>
+      <CardContent className="p-2 space-y-4">
+        <ScrollArea className="h-[calc(100vh-180px)]">
+          <div className="space-y-4">
+            {nodeCategories.map((category, index) => (
+              <div key={index} className="space-y-2">
+                <h4 className="text-sm font-bold px-2">{category.title}</h4>
+                <div className="space-y-1">
+                  {category.nodes.map((node) => (
+                    <Button
+                      key={node.type}
+                      variant="ghost"
+                      className="w-full justify-start px-3.5"
+                      onClick={() => onAddNode(node.type)}
+                    >
+                      <node.icon className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
+                      <span>{node.label}</span>
+                    </Button>
+                  ))}
+                </div>
+                {index < nodeCategories.length - 1 && <Separator />}
+              </div>
+            ))}
           </div>
-        </div>
-
-        <FlowBuilderToolbar
-          selectedNode={selectedNode}
-          onDeleteNode={onDeleteNode}
-          onClearAllNodes={onClearAllNodes}
-        />
-
-        <div className="pt-4 border-t">
-          <p className="text-xs text-muted-foreground mb-3">
-            💡 Dica: Clique duas vezes em um nó para configurá-lo
-          </p>
-          
-          <div className="space-y-2">
-            <Button 
-              onClick={onPreviewFlow} 
-              variant="outline" 
-              className="w-full"
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Visualizar Formulário
-            </Button>
-            
-            <Button onClick={onSaveFlow} className="w-full bg-[#5D8701] hover:bg-[#4a6e01]">
-              <Save className="h-4 w-4 mr-2" />
-              Salvar Fluxo
-            </Button>
-          </div>
+        </ScrollArea>
+        <div className="mt-4 space-y-2">
+          <Separator />
+          <Button variant="outline" className="w-full" onClick={onClearAll}>
+            Limpar Tudo
+          </Button>
+          <Button variant="outline" className="w-full" onClick={onAutoArrange}>
+            Organizar Nós
+          </Button>
         </div>
       </CardContent>
+      {selectedNode && (
+        <div className="p-4">
+          <Separator />
+          <h4 className="mb-2 text-sm font-bold">Nó Selecionado</h4>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {selectedNode.type}: {selectedNode.data.label}
+          </p>
+          <Button variant="secondary" className="w-full mt-2" onClick={onConfigureNode}>
+            Configurar Nó
+          </Button>
+          <Button variant="destructive" className="w-full mt-2" onClick={() => onDeleteNode(selectedNode.id)}>
+            Excluir Nó
+          </Button>
+        </div>
+      )}
     </Card>
   );
 };
+
+export default FlowBuilderSidebar;

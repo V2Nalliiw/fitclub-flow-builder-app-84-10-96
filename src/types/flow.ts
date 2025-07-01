@@ -1,6 +1,6 @@
 export interface FlowNode {
   id: string;
-  type: 'start' | 'end' | 'formStart' | 'formEnd' | 'formSelect' | 'delay' | 'question';
+  type: 'start' | 'end' | 'formStart' | 'formEnd' | 'formSelect' | 'delay' | 'question' | 'calculator' | 'conditions';
   position: { x: number; y: number };
   data: {
     label: string;
@@ -18,7 +18,30 @@ export interface FlowNode {
     // Campos para formulário selecionado
     formId?: string;
     formName?: string;
+    // Campos específicos para o nó calculadora
+    calculatorFields?: CalculatorField[];
+    formula?: string;
+    resultLabel?: string;
+    // Campos específicos para o nó condições
+    conditions?: ConditionRule[];
   };
+}
+
+export interface CalculatorField {
+  id: string;
+  nomenclatura: string;
+  pergunta: string;
+  prefixo?: string;
+  sufixo?: string;
+  tipo: 'numero' | 'decimal';
+}
+
+export interface ConditionRule {
+  id: string;
+  campo: string;
+  operador: 'igual' | 'maior' | 'menor' | 'maior_igual' | 'menor_igual' | 'diferente';
+  valor: number;
+  label: string;
 }
 
 export interface FlowEdge {

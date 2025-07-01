@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowRight, ArrowLeft, FileText, MessageCircle, CheckCircle } from 'lucide-react';
 import { EnhancedDocumentDisplay } from './EnhancedDocumentDisplay';
+import { CalculatorStepRenderer } from './CalculatorStepRenderer';
 
 interface FlowStepRendererProps {
   step: any;
@@ -54,6 +54,15 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
 
   const renderStepContent = () => {
     switch (step.nodeType) {
+      case 'calculator':
+        return (
+          <CalculatorStepRenderer
+            step={step}
+            onComplete={onComplete}
+            isLoading={isLoading}
+          />
+        );
+
       case 'formStart':
         return (
           <div className="space-y-6">

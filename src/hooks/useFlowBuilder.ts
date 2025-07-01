@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { useFlows } from './useFlows';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -89,6 +88,8 @@ export const useFlowBuilder = () => {
       case 'formSelect': return 'Formulário Selecionado';
       case 'delay': return 'Aguardar Tempo';
       case 'question': return 'Pergunta';
+      case 'calculator': return 'Calculadora';
+      case 'conditions': return 'Condições';
       default: return 'Novo Nó';
     }
   };

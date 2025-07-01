@@ -1,17 +1,54 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import ReactFlow, {
+  addEdge,
+  useNodesState,
+  useEdgesState,
+  Controls,
+  Background,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useFlowBuilder } from '@/hooks/useFlowBuilder';
+import { FlowBuilderSidebar } from './FlowBuilderSidebar';
 import { FlowBuilderCanvas } from './FlowBuilderCanvas';
 import { NodeConfigModal } from './NodeConfigModal';
 import { FlowPreviewModal } from './FlowPreviewModal';
-import { TopToolbar } from './TopToolbar';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { useFlowBuilder } from '@/hooks/useFlowBuilder';
-import { useIsMobile } from '@/hooks/use-mobile';
+import StartNode from './nodes/StartNode';
+import EndNode from './nodes/EndNode';
+import FormStartNode from './nodes/FormStartNode';
+import FormEndNode from './nodes/FormEndNode';
+import FormSelectNode from './nodes/FormSelectNode';
+import DelayNode from './nodes/DelayNode';
+import QuestionNode from './nodes/QuestionNode';
+import CalculatorNode from './nodes/CalculatorNode';
+import ConditionsNode from './nodes/ConditionsNode';
+import CalculatorNodeConfig from './CalculatorNodeConfig';
+import ConditionsNodeConfig from './ConditionsNodeConfig';
+
+const nodeTypes = {
+  start: StartNode,
+  end: EndNode,
+  formStart: FormStartNode,
+  formEnd: FormEndNode,
+  formSelect: FormSelectNode,
+  delay: DelayNode,
+  question: QuestionNode,
+  calculator: CalculatorNode,
+  conditions: ConditionsNode,
+};
 
 export const FlowBuilder = () => {
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const isMobile = useIsMobile();
-  
   const {
     flowName,
     setFlowName,
@@ -23,11 +60,9 @@ export const FlowBuilder = () => {
     onEdgesChange,
     onConnect,
     selectedNode,
-    setSelectedNode,
     isConfigModalOpen,
     setIsConfigModalOpen,
     isPreviewModalOpen,
-    isLoading,
     addNode,
     deleteNode,
     clearAllNodes,
@@ -40,90 +75,121 @@ export const FlowBuilder = () => {
     saveFlow,
     isSaving,
     canSave,
+    isEditing,
   } = useFlowBuilder();
 
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
-  };
+  const [isCalculatorConfigOpen, setIsCalculatorConfigOpen] = useState(false);
+  const [isConditionsConfigOpen, setIsConditionsConfigOpen] = useState(false);
 
-  const handleSaveFlow = async () => {
-    console.log('FlowBuilder - handleSaveFlow chamado');
-    await saveFlow();
-  };
+  const handleNodeConfigModal = () => {
+    if (!selectedNode) return;
 
-  const openPreviewModal = () => {
-    if (nodes.length === 0) {
-      return;
-    }
-    openPreview();
-  };
-
-  // Handle escape key to exit fullscreen
-  useEffect(() => {
-    const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isFullscreen) {
-        setIsFullscreen(false);
-      }
-    };
-
-    if (isFullscreen) {
-      document.addEventListener('keydown', handleEscapeKey);
-      document.body.style.overflow = 'hidden';
+    if (selectedNode.type === 'calculator') {
+      setIsCalculatorConfigOpen(true);
+    } else if (selectedNode.type === 'conditions') {
+      setIsConditionsConfigOpen(true);
     } else {
-      document.body.style.overflow = 'auto';
+      setIsConfigModalOpen(true);
     }
+  };
 
-    return () => {
-      document.removeEventListener('keydown', handleEscapeKey);
-      document.body.style.overflow = 'auto';
-    };
-  }, [isFullscreen]);
+  const handleCalculatorConfigSave = (data: any) => {
+    handleNodeConfigSave(data);
+    setIsCalculatorConfigOpen(false);
+  };
 
-  const containerClasses = isFullscreen 
-    ? 'fixed inset-0 z-50 bg-background' 
-    : isMobile 
-      ? 'fixed inset-0 bg-background' 
-      : 'w-full h-screen';
+  const handleConditionsConfigSave = (data: any) => {
+    handleNodeConfigSave(data);
+    setIsConditionsConfigOpen(false);
+  };
 
   return (
-    <div className={`relative overflow-hidden ${containerClasses}`}>
-      <FlowBuilderCanvas
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onNodeDoubleClick={onNodeDoubleClick}
-        onNodeClick={onNodeClick}
-        onDeleteNode={deleteNode}
-        onDuplicateNode={() => {}} // Não implementado ainda
-        isFullscreen={isFullscreen}
-      />
+    <div className="h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Top Toolbar */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <div>
+            <Label htmlFor="flow-name" className="text-sm text-gray-700 dark:text-gray-300">
+              Nome do Fluxo:
+            </Label>
+            <Input
+              id="flow-name"
+              className="mt-1 block w-full sm:text-sm sm:leading-5"
+              placeholder="Nome do fluxo"
+              value={flowName}
+              onChange={(e) => setFlowName(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="flow-description" className="text-sm text-gray-700 dark:text-gray-300">
+              Descrição:
+            </Label>
+            <Textarea
+              id="flow-description"
+              className="mt-1 block w-full sm:text-sm sm:leading-5"
+              placeholder="Descrição do fluxo (opcional)"
+              value={flowDescription}
+              onChange={(e) => setFlowDescription(e.target.value)}
+            />
+          </div>
+        </div>
 
-      <TopToolbar
-        flowName={flowName}
-        selectedNode={selectedNode}
-        onFlowNameChange={setFlowName}
-        onDeleteNode={deleteNode}
-        onClearAllNodes={clearAllNodes}
-        onAutoArrangeNodes={autoArrangeNodes}
-        onSaveFlow={handleSaveFlow}
-        onPreviewFlow={openPreviewModal}
-        onToggleFullscreen={toggleFullscreen}
-        isFullscreen={isFullscreen}
-        onAddNode={addNode}
-        isSaving={isSaving}
-        canSave={canSave}
-      />
+        <div className="flex items-center space-x-4">
+          <Button variant="outline" onClick={openPreview}>
+            Visualizar
+          </Button>
+          <Button onClick={saveFlow} disabled={!canSave} loading={isSaving}>
+            {isEditing ? 'Atualizar Fluxo' : 'Salvar Fluxo'}
+          </Button>
+        </div>
+      </div>
 
+      <div className="flex h-[calc(100vh-64px)]">
+        {/* Sidebar */}
+        <FlowBuilderSidebar
+          onAddNode={addNode}
+          onClearAll={clearAllNodes}
+          onAutoArrange={autoArrangeNodes}
+          selectedNode={selectedNode}
+          onConfigureNode={handleNodeConfigModal}
+          onDeleteNode={deleteNode}
+        />
+
+        {/* Canvas */}
+        <div className="flex-1 relative">
+          <FlowBuilderCanvas
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onNodeDoubleClick={onNodeDoubleClick}
+            onNodeClick={onNodeClick}
+            nodeTypes={nodeTypes}
+          />
+        </div>
+      </div>
+
+      {/* Modals */}
       <NodeConfigModal
         isOpen={isConfigModalOpen}
-        onClose={() => {
-          setIsConfigModalOpen(false);
-          setSelectedNode(null);
-        }}
+        onClose={() => setIsConfigModalOpen(false)}
         node={selectedNode}
         onSave={handleNodeConfigSave}
+      />
+
+      <CalculatorNodeConfig
+        isOpen={isCalculatorConfigOpen}
+        onClose={() => setIsCalculatorConfigOpen(false)}
+        onSave={handleCalculatorConfigSave}
+        initialData={selectedNode?.data}
+      />
+
+      <ConditionsNodeConfig
+        isOpen={isConditionsConfigOpen}
+        onClose={() => setIsConditionsConfigOpen(false)}
+        onSave={handleConditionsConfigSave}
+        initialData={selectedNode?.data}
       />
 
       <FlowPreviewModal
@@ -131,20 +197,7 @@ export const FlowBuilder = () => {
         onClose={closePreview}
         nodes={nodes}
         edges={edges}
-        flowName={flowName}
       />
-
-      {/* Loading Overlay */}
-      {(isLoading || isSaving) && (
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <LoadingSpinner size="lg" />
-            <div className="text-sm text-muted-foreground">
-              {isSaving ? 'Salvando fluxo...' : 'Processando operação...'}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
