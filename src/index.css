@@ -289,9 +289,9 @@ input:focus, textarea:focus, select:focus {
   }
 }
 
-/* Dark mode specific overrides */
+/* Dark mode specific overrides - Fixed gradients */
 .dark {
-  /* Dark mode background gradients */
+  /* Dark mode background gradients - usando tons de cinza */
   --tw-gradient-from: #0a0a0a;
   --tw-gradient-to: #1a1a1a;
 }
@@ -436,4 +436,12 @@ input:focus, textarea:focus, select:focus {
     min-width: 48px;
     padding: 0.75rem;
   }
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
