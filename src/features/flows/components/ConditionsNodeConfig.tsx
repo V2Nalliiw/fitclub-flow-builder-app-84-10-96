@@ -33,6 +33,7 @@ const ConditionsNodeConfig: React.FC<ConditionsNodeConfigProps> = ({
     { value: 'maior_igual', label: 'Maior ou igual (≥)' },
     { value: 'menor_igual', label: 'Menor ou igual (≤)' },
     { value: 'diferente', label: 'Diferente de (≠)' },
+    { value: 'entre', label: 'Entre (x a y)' },
   ];
 
   const addCondition = () => {
@@ -55,6 +56,16 @@ const ConditionsNodeConfig: React.FC<ConditionsNodeConfigProps> = ({
 
   const removeCondition = (index: number) => {
     setConditions(conditions.filter((_, i) => i !== index));
+  };
+
+  const getOperatorPreview = (condition: ConditionRule) => {
+    const operatorLabel = operadores.find(op => op.value === condition.operador)?.label || '';
+    
+    if (condition.operador === 'entre') {
+      return `Se ${condition.campo} entre ${condition.valor} e ${condition.valorFinal || 0}`;
+    }
+    
+    return `Se ${condition.campo} ${operatorLabel.toLowerCase()} ${condition.valor}`;
   };
 
   const handleSave = () => {
@@ -146,7 +157,7 @@ const ConditionsNodeConfig: React.FC<ConditionsNodeConfigProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
                     <Label>Operador</Label>
                     <Select
@@ -166,7 +177,7 @@ const ConditionsNodeConfig: React.FC<ConditionsNodeConfigProps> = ({
                     </Select>
                   </div>
                   <div>
-                    <Label>Valor</Label>
+                    <Label>Valor {condition.operador === 'entre' ? 'Inicial' : ''}</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -175,10 +186,22 @@ const ConditionsNodeConfig: React.FC<ConditionsNodeConfigProps> = ({
                       placeholder="Ex: 25, 18.5"
                     />
                   </div>
+                  {condition.operador === 'entre' && (
+                    <div>
+                      <Label>Valor Final</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={condition.valorFinal || ''}
+                        onChange={(e) => updateCondition(index, { valorFinal: parseFloat(e.target.value) || 0 })}
+                        placeholder="Ex: 30, 24.9"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="bg-gray-50 p-2 rounded text-sm">
-                  <strong>Preview:</strong> Se {condition.campo} {operadores.find(op => op.value === condition.operador)?.label.toLowerCase()} {condition.valor}
+                  <strong>Preview:</strong> {getOperatorPreview(condition)}
                 </div>
               </div>
             ))}
