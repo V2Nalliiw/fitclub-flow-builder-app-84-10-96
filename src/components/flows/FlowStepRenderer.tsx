@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowRight, ArrowLeft, FileText, MessageCircle, CheckCircle } from 'lucide-react';
 import { EnhancedDocumentDisplay } from './EnhancedDocumentDisplay';
 import { CalculatorStepRenderer } from './CalculatorStepRenderer';
+import { ConditionsStepRenderer } from './ConditionsStepRenderer';
 
 interface FlowStepRendererProps {
   step: any;
@@ -16,6 +18,7 @@ interface FlowStepRendererProps {
   onGoBack?: () => void;
   isLoading?: boolean;
   canGoBack?: boolean;
+  calculatorResult?: number;
 }
 
 export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
@@ -23,7 +26,8 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
   onComplete,
   onGoBack,
   isLoading = false,
-  canGoBack = false
+  canGoBack = false,
+  calculatorResult
 }) => {
   const [response, setResponse] = useState<any>('');
   const [multipleChoiceResponse, setMultipleChoiceResponse] = useState<string[]>([]);
@@ -60,6 +64,16 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
             step={step}
             onComplete={onComplete}
             isLoading={isLoading}
+          />
+        );
+
+      case 'conditions':
+        return (
+          <ConditionsStepRenderer
+            step={step}
+            onComplete={onComplete}
+            isLoading={isLoading}
+            calculatorResult={calculatorResult || 0}
           />
         );
 
@@ -210,7 +224,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
   };
 
   const canSubmit = () => {
-    if (step.nodeType === 'formStart' || step.nodeType === 'formEnd') {
+    if (step.nodeType === 'formStart' || step.nodeType === 'formEnd' || step.nodeType === 'calculator' || step.nodeType === 'conditions') {
       return true;
     }
     
@@ -232,10 +246,19 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
         return 'Finalizar';
       case 'question':
         return 'Responder';
+      case 'calculator':
+        return 'Calcular';
+      case 'conditions':
+        return 'Continuar';
       default:
         return 'Continuar';
     }
   };
+
+  // Para calculadora e condições, o conteúdo já tem seus próprios botões
+  if (step.nodeType === 'calculator' || step.nodeType === 'conditions') {
+    return renderStepContent();
+  }
 
   return (
     <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">

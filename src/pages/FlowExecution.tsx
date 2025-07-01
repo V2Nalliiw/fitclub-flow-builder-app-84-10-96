@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +11,6 @@ import { toast } from 'sonner';
 import { FlowStepRenderer } from '@/components/flows/FlowStepRenderer';
 import { DelayTimer } from '@/components/flows/DelayTimer';
 import { useFlowProcessor } from '@/hooks/useFlowProcessor';
-import { statusToFrontend } from '@/utils/statusMapper';
 
 interface FlowExecution {
   id: string;
@@ -65,7 +63,6 @@ const FlowExecution = () => {
         console.log('Execution loaded:', data);
         setExecution(data as FlowExecution);
         
-        // Set current step index
         if (data.current_step && typeof data.current_step === 'object' && 'currentStepIndex' in data.current_step) {
           const stepsData = data.current_step as { steps: any[]; currentStepIndex?: number };
           const savedIndex = stepsData.currentStepIndex;
@@ -73,7 +70,6 @@ const FlowExecution = () => {
           if (typeof savedIndex === 'number' && savedIndex >= 0) {
             setCurrentStepIndex(savedIndex);
           } else {
-            // Fallback: find first uncompleted step
             const firstIncompleteIndex = stepsData.steps.findIndex((step: any) => !step.completed);
             setCurrentStepIndex(firstIncompleteIndex >= 0 ? firstIncompleteIndex : 0);
           }
@@ -89,8 +85,7 @@ const FlowExecution = () => {
 
     loadExecution();
 
-    // Set up real-time updates - check more frequently for delay expirations
-    const interval = setInterval(loadExecution, 10000); // Check every 10 seconds
+    const interval = setInterval(loadExecution, 10000);
     return () => clearInterval(interval);
   }, [executionId, user, navigate]);
 
@@ -110,7 +105,6 @@ const FlowExecution = () => {
 
       await completeFlowStep(execution.id, currentStep.nodeId, stepResponse);
       
-      // Reload execution to get updated state
       const { data: updatedExecution } = await supabase
         .from('flow_executions')
         .select('*')
@@ -125,7 +119,6 @@ const FlowExecution = () => {
           setCurrentStepIndex(updatedStepData.currentStepIndex);
         }
 
-        // Check if completed
         if (updatedExecution.status === 'completed') {
           setTimeout(() => navigate('/my-flows'), 2000);
         }
@@ -245,13 +238,21 @@ const FlowExecution = () => {
   }
 
   const isCompleted = execution.status === 'completed' || execution.progress >= 100;
-  const currentStepData = execution.current_step as { steps?: any[]; currentStepIndex?: number } | null;
+  const currentStepData = execution.current_step as { 
+    steps?: any[]; 
+    currentStepIndex?: number; 
+    calculatorResults?: Record<string, number>;
+  } | null;
   const steps = currentStepData?.steps || [];
   const currentStep = steps[currentStepIndex];
   const isWaiting = execution.status === 'pending' && execution.next_step_available_at;
   const completedSteps = steps.filter((step: any) => step.completed);
 
-  // Check if delay has expired
+  // Get calculator result for conditions step
+  const calculatorResults = currentStepData?.calculatorResults || {};
+  const calculatorResult = currentStep?.calculatorResult || 
+    Object.values(calculatorResults).pop() || 0;
+
   const delayExpired = execution.next_step_available_at ? 
     new Date() >= new Date(execution.next_step_available_at) : false;
 
@@ -284,7 +285,7 @@ const FlowExecution = () => {
           {completedSteps.length > 0 && (
             <Button
               variant="outline"
-              onClick={() => setShowStepNavigation(!showStepNavigation)}
+              onClick={()={() => setShowStepNavigation(!showStepNavigation)}
               className="flex items-center gap-2"
             >
               <History className="h-4 w-4" />
@@ -380,9 +381,8 @@ const FlowExecution = () => {
               <FlowStepRenderer
                 step={currentStep}
                 onComplete={handleStepComplete}
-                onGoBack={currentStepIndex > 0 ? handleGoBack : undefined}
-                canGoBack={currentStepIndex > 0 && currentStep.canGoBack}
                 isLoading={updating}
+                calculatorResult={calculatorResult}
               />
             ) : (
               <div className="text-center py-8">

@@ -3,7 +3,6 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { FlowNode, FlowEdge } from '@/types/flow';
-import { statusToDatabase } from '@/utils/statusMapper';
 
 interface FlowStep {
   nodeId: string;
@@ -23,6 +22,11 @@ interface FlowStep {
   mensagemFinal?: string;
   delayAmount?: number;
   delayType?: 'minutos' | 'horas' | 'dias';
+  calculatorFields?: any[];
+  formula?: string;
+  resultLabel?: string;
+  conditions?: any[];
+  calculatorResult?: number;
 }
 
 export const useFlowProcessor = () => {
@@ -56,12 +60,11 @@ export const useFlowProcessor = () => {
 
       console.log('Processed steps:', steps);
 
-      // Create simplified JSON structure to avoid 400 errors
       const executionData = {
         flow_id: flowId,
         flow_name: flow.name,
         patient_id: patientId,
-        status: 'in-progress', // Use valid status
+        status: 'in-progress',
         current_node: steps[0].nodeId,
         progress: 0,
         total_steps: steps.length,
@@ -84,10 +87,16 @@ export const useFlowProcessor = () => {
             arquivo: step.arquivo,
             mensagemFinal: step.mensagemFinal,
             delayAmount: step.delayAmount,
-            delayType: step.delayType
+            delayType: step.delayType,
+            calculatorFields: step.calculatorFields,
+            formula: step.formula,
+            resultLabel: step.resultLabel,
+            conditions: step.conditions,
+            calculatorResult: step.calculatorResult
           })),
           currentStepIndex: 0,
-          totalSteps: steps.length
+          totalSteps: steps.length,
+          calculatorResults: {}
         },
         next_step_available_at: steps[0].availableAt
       };
@@ -125,7 +134,7 @@ export const useFlowProcessor = () => {
 
   const processNodesSequence = async (nodes: FlowNode[], edges: FlowEdge[]): Promise<FlowStep[]> => {
     const steps: FlowStep[] = [];
-    let currentStepDate = new Date(); // Start with current time
+    let currentStepDate = new Date();
     
     const startNode = nodes.find(node => node.type === 'start');
     if (!startNode) {
@@ -143,7 +152,7 @@ export const useFlowProcessor = () => {
       if (!currentNode) break;
 
       // Process nodes that generate steps for the patient
-      if (['formStart', 'formEnd', 'question'].includes(currentNode.type)) {
+      if (['formStart', 'formEnd', 'question', 'calculator', 'conditions'].includes(currentNode.type)) {
         const step: FlowStep = {
           nodeId: currentNode.id,
           nodeType: currentNode.type,
@@ -152,7 +161,7 @@ export const useFlowProcessor = () => {
           order,
           availableAt: currentStepDate.toISOString(),
           completed: false,
-          canGoBack: order > 1 // Allow going back except for first step
+          canGoBack: order > 1
         };
 
         // Add type-specific data
@@ -166,25 +175,29 @@ export const useFlowProcessor = () => {
           step.mensagemFinal = currentNode.data.mensagemFinal;
         } else if (currentNode.type === 'formStart') {
           step.formId = currentNode.data.formId;
+        } else if (currentNode.type === 'calculator') {
+          step.calculatorFields = currentNode.data.calculatorFields;
+          step.formula = currentNode.data.formula;
+          step.resultLabel = currentNode.data.resultLabel;
+        } else if (currentNode.type === 'conditions') {
+          step.conditions = currentNode.data.conditions;
         }
 
         steps.push(step);
         order++;
       }
 
-      // Process delays - ONLY apply delay AFTER current step is completed
+      // Process delays
       if (currentNode.type === 'delay') {
         const delayAmount = currentNode.data.quantidade || 1;
         const delayType = currentNode.data.tipoIntervalo || 'dias';
         
-        // Add delay info to the PREVIOUS step so it knows it has a delay after completion
         if (steps.length > 0) {
           const lastStep = steps[steps.length - 1];
           lastStep.delayAmount = delayAmount;
           lastStep.delayType = delayType;
         }
         
-        // Calculate next step availability (only used for reference, actual calculation done on completion)
         let nextStepDate = new Date(currentStepDate);
         switch (delayType) {
           case 'minutos':
@@ -206,7 +219,6 @@ export const useFlowProcessor = () => {
       const nextEdge = edges.find(edge => edge.source === currentNodeId);
       currentNodeId = nextEdge ? nextEdge.target : null;
 
-      // Break on end node
       if (currentNode.type === 'end') break;
     }
 
@@ -229,7 +241,11 @@ export const useFlowProcessor = () => {
 
       console.log('useFlowProcessor: Execução atual:', execution);
 
-      const currentStepData = execution.current_step as { steps?: any[]; currentStepIndex?: number } | null;
+      const currentStepData = execution.current_step as { 
+        steps?: any[]; 
+        currentStepIndex?: number; 
+        calculatorResults?: Record<string, number>;
+      } | null;
       const currentSteps = currentStepData?.steps || [];
       
       const stepIndex = currentSteps.findIndex((step: any) => step.nodeId === stepId);
@@ -242,6 +258,14 @@ export const useFlowProcessor = () => {
       completedStep.completed = true;
       completedStep.response = response;
       completedStep.completedAt = new Date().toISOString();
+
+      // Store calculator results for use in conditions
+      let updatedCalculatorResults = { ...(currentStepData?.calculatorResults || {}) };
+      if (response?.nodeType === 'calculator' && response?.result !== undefined) {
+        updatedCalculatorResults[stepId] = response.result;
+        completedStep.calculatorResult = response.result;
+      }
+
       updatedSteps[stepIndex] = completedStep;
 
       const completedStepsCount = updatedSteps.filter((step: any) => step.completed).length;
@@ -251,12 +275,17 @@ export const useFlowProcessor = () => {
       let nextStepIndex = stepIndex + 1;
       let nextStep = null;
       let nextAvailableAt = null;
-      let newStatus = 'completed'; // Use valid status
+      let newStatus = 'completed';
 
       if (nextStepIndex < updatedSteps.length) {
         nextStep = updatedSteps[nextStepIndex];
         
-        // If completed step has delay, calculate when next step becomes available
+        // Pass calculator result to conditions step
+        if (nextStep.nodeType === 'conditions' && response?.result !== undefined) {
+          nextStep.calculatorResult = response.result;
+          updatedSteps[nextStepIndex] = nextStep;
+        }
+        
         if (completedStep.delayAmount && completedStep.delayType) {
           const delayDate = new Date();
           switch (completedStep.delayType) {
@@ -274,9 +303,9 @@ export const useFlowProcessor = () => {
           
           nextAvailableAt = delayDate.toISOString();
           updatedSteps[nextStepIndex] = { ...nextStep, availableAt: nextAvailableAt };
-          newStatus = 'pending'; // Use pending for waiting state
+          newStatus = 'pending';
         } else {
-          newStatus = 'in-progress'; // Use valid status
+          newStatus = 'in-progress';
         }
       }
 
@@ -287,7 +316,8 @@ export const useFlowProcessor = () => {
         current_step: {
           steps: updatedSteps,
           currentStepIndex: newStatus === 'completed' ? -1 : nextStepIndex,
-          totalSteps: updatedSteps.length
+          totalSteps: updatedSteps.length,
+          calculatorResults: updatedCalculatorResults
         }
       };
 
