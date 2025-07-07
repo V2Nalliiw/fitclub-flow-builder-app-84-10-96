@@ -7,6 +7,7 @@ import { MessageSquare, Calendar, CheckCircle, Clock, FileText } from 'lucide-re
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PatientResponsesTimeline } from './PatientResponsesTimeline';
+import { usePatientResponses } from '@/hooks/usePatientResponses';
 
 interface PatientFeedbackModalProps {
   isOpen: boolean;
@@ -19,35 +20,9 @@ export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
   onClose,
   patient
 }) => {
-  if (!patient) return null;
+  const { responses, responseCount, loading } = usePatientResponses(patient?.user_id);
 
-  // Mock data - replace with real data
-  const mockResponses = [
-    {
-      id: '1',
-      flowName: 'Avaliação Inicial',
-      stepTitle: 'Questionário de Saúde',
-      response: 'Não tenho nenhuma condição médica pré-existente',
-      completedAt: '2024-01-15T10:30:00Z',
-      status: 'completed'
-    },
-    {
-      id: '2',
-      flowName: 'Check-up Semanal',
-      stepTitle: 'Como você está se sentindo?',
-      response: 'Me sinto muito melhor esta semana, com mais energia',
-      completedAt: '2024-01-14T15:45:00Z',
-      status: 'completed'
-    },
-    {
-      id: '3',
-      flowName: 'Exercícios Diários',
-      stepTitle: 'Quantos exercícios você fez hoje?',
-      response: '5 exercícios de fortalecimento',
-      completedAt: '2024-01-13T09:15:00Z',
-      status: 'completed'
-    }
-  ];
+  if (!patient) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -69,23 +44,25 @@ export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Total de Respostas</span>
-                  <Badge variant="secondary" className="bg-[#5D8701]/10 text-[#5D8701]">
-                    {mockResponses.length}
+                  <Badge variant="secondary" className="bg-primary/10 text-primary">
+                    {responseCount}
                   </Badge>
                 </div>
+                {responses.length > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Última Resposta</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-500">
+                      {formatDistanceToNow(new Date(responses[0]?.completedAt), { 
+                        addSuffix: true, 
+                        locale: ptBR 
+                      })}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Última Resposta</span>
-                  <span className="text-xs text-gray-500 dark:text-gray-500">
-                    {formatDistanceToNow(new Date(mockResponses[0]?.completedAt), { 
-                      addSuffix: true, 
-                      locale: ptBR 
-                    })}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Taxa de Resposta</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Status</span>
                   <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200">
-                    100%
+                    {responses.length > 0 ? 'Ativo' : 'Aguardando'}
                   </Badge>
                 </div>
               </CardContent>
@@ -123,7 +100,14 @@ export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
               </CardHeader>
               <CardContent className="h-[calc(100%-4rem)]">
                 <ScrollArea className="h-full pr-4">
-                  <PatientResponsesTimeline responses={mockResponses} />
+                  {loading ? (
+                    <div className="flex items-center justify-center p-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      <span className="ml-2 text-gray-500">Carregando respostas...</span>
+                    </div>
+                  ) : (
+                    <PatientResponsesTimeline responses={responses} />
+                  )}
                 </ScrollArea>
               </CardContent>
             </Card>
