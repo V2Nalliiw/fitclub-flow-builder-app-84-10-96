@@ -81,7 +81,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
 
   return (
     <div 
-      className="relative bg-gray-50 dark:bg-[#0E0E0E]"
+      className="relative bg-gray-50 dark:bg-gray-950"
       style={{ 
         height: canvasHeight,
         width: canvasWidth
@@ -102,11 +102,11 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         }
         
         .react-flow__handle.connecting {
-          box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3) !important;
+          box-shadow: 0 0 0 4px hsl(var(--primary) / 0.3) !important;
         }
         
         .react-flow__handle.connectionindicator {
-          box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.3) !important;
+          box-shadow: 0 0 0 4px hsl(var(--primary) / 0.3) !important;
         }
         
         /* Melhorar visibilidade dos handles múltiplos */
@@ -131,12 +131,12 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         
         /* Feedback visual para conexões */
         .react-flow__edge.selected {
-          stroke: #3b82f6 !important;
+          stroke: hsl(var(--primary)) !important;
           stroke-width: 3px !important;
         }
         
         .react-flow__edge:hover {
-          stroke: #6b7280 !important;
+          stroke: hsl(var(--muted-foreground)) !important;
           stroke-width: 3px !important;
         }
         
@@ -169,7 +169,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        className="bg-gray-50 dark:bg-[#0E0E0E]"
+        className="bg-gray-50 dark:bg-gray-950"
         defaultEdgeOptions={{
           animated: true,
           type: 'deleteButton',
@@ -188,7 +188,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         zoomOnPinch={true}
         zoomOnDoubleClick={false}
         connectionLineStyle={{
-          stroke: '#3b82f6',
+          stroke: 'hsl(var(--primary))',
           strokeWidth: 2,
           strokeDasharray: '5,5',
         }}
@@ -222,7 +222,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
           gap={16} 
           size={1.5} 
           color="hsl(var(--muted-foreground) / 0.6)" 
-          className="bg-gray-50 dark:bg-[#0E0E0E]"
+          className="bg-gray-50 dark:bg-gray-950"
         />
       </ReactFlow>
     </div>

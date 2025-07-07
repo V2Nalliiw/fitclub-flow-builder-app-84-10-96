@@ -51,7 +51,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           onClick={() => onAddNode('start')}
           title="Início"
         >
-          <Play className="h-4 w-4 text-green-600" />
+          <Play className="h-4 w-4 text-primary" />
         </Button>
         
         <Button
@@ -60,7 +60,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           onClick={() => onAddNode('end')}
           title="Fim"
         >
-          <Square className="h-4 w-4 text-red-600" />
+          <Square className="h-4 w-4 text-muted-foreground" />
         </Button>
         
         <Button
@@ -69,7 +69,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           onClick={() => onAddNode('delay')}
           title="Aguardar"
         >
-          <Clock className="h-4 w-4 text-orange-600" />
+          <Clock className="h-4 w-4 text-muted-foreground" />
         </Button>
 
         {/* Separador */}
@@ -82,7 +82,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           onClick={() => onAddNode('formStart')}
           title="Início Form"
         >
-          <FileText className="h-4 w-4 text-blue-600" />
+          <FileText className="h-4 w-4 text-muted-foreground" />
         </Button>
         
         <Button
@@ -91,7 +91,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           onClick={() => onAddNode('formEnd')}
           title="Fim Form"
         >
-          <CheckCircle className="h-4 w-4 text-green-600" />
+          <CheckCircle className="h-4 w-4 text-primary" />
         </Button>
         
         <Button
@@ -100,7 +100,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           onClick={() => onAddNode('question')}
           title="Pergunta"
         >
-          <MessageCircle className="h-4 w-4 text-purple-600" />
+          <MessageCircle className="h-4 w-4 text-muted-foreground" />
         </Button>
 
         {/* Separador */}
@@ -113,7 +113,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           onClick={() => onAddNode('calculator')}
           title="Calculadora"
         >
-          <Calculator className="h-4 w-4 text-orange-600" />
+          <Calculator className="h-4 w-4 text-muted-foreground" />
         </Button>
         
         <Button
@@ -122,7 +122,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           onClick={() => onAddNode('conditions')}
           title="Condições"
         >
-          <GitBranch className="h-4 w-4 text-purple-600" />
+          <GitBranch className="h-4 w-4 text-muted-foreground" />
         </Button>
 
         {/* Separador */}
@@ -135,7 +135,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           onClick={onAutoArrange}
           title="Organizar"
         >
-          <ArrowUpDown className="h-4 w-4 text-blue-600" />
+          <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
         </Button>
         
         <Button
@@ -144,7 +144,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           onClick={onClearAll}
           title="Apagar todos os nós"
         >
-          <Eraser className="h-4 w-4 text-red-600" />
+          <Eraser className="h-4 w-4 text-muted-foreground" />
         </Button>
         
         <Button
@@ -153,7 +153,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           onClick={onPreview}
           title="Visualizar"
         >
-          <Eye className="h-4 w-4 text-green-600" />
+          <Eye className="h-4 w-4 text-primary" />
         </Button>
         
         <Button
@@ -163,7 +163,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           disabled={!canSave || isSaving}
           title={isEditing ? 'Atualizar Fluxo' : 'Salvar Fluxo'}
         >
-          <Save className="h-4 w-4 text-purple-600" />
+          <Save className="h-4 w-4 text-primary" />
         </Button>
       </div>
     </div>
