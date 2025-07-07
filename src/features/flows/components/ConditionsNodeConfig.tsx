@@ -84,7 +84,7 @@ const ConditionsNodeConfig: React.FC<ConditionsNodeConfigProps> = ({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <GitBranch className="h-5 w-5 text-purple-600" />
+            <GitBranch className="h-5 w-5 text-primary" />
             Configurar Nó Condições
           </DialogTitle>
         </DialogHeader>

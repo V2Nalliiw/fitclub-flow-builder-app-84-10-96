@@ -19,28 +19,28 @@ export const QuickActions = () => {
             description: 'Visualizar e administrar todas as clínicas',
             icon: Users,
             action: () => navigate('/clinics'),
-            color: 'text-blue-600 hover:text-blue-700'
+            color: 'text-muted-foreground hover:text-primary'
           },
           {
             title: 'Ver Relatórios',
             description: 'Análises e métricas do sistema',
             icon: BarChart3,
             action: () => navigate('/analytics'),
-            color: 'text-green-600 hover:text-green-700'
+            color: 'text-primary hover:text-primary/80'
           },
           {
             title: 'Configurações',
             description: 'Configurações globais do sistema',
             icon: Settings,
             action: () => navigate('/settings'),
-            color: 'text-purple-600 hover:text-purple-700'
+            color: 'text-muted-foreground hover:text-primary'
           },
           {
             title: 'Gerenciar Permissões',
             description: 'Controlar acessos e roles',
             icon: Settings,
             action: () => navigate('/permissions'),
-            color: 'text-orange-600 hover:text-orange-700'
+            color: 'text-muted-foreground hover:text-primary'
           }
         ];
 
@@ -51,28 +51,28 @@ export const QuickActions = () => {
             description: 'Desenvolver um novo fluxo de tratamento',
             icon: Plus,
             action: () => navigate('/flows'),
-            color: 'text-green-600 hover:text-green-700'
+            color: 'text-primary hover:text-primary/80'
           },
           {
             title: 'Gerenciar Pacientes',
             description: 'Ver e administrar pacientes',
             icon: Users,
             action: () => navigate('/patients'),
-            color: 'text-blue-600 hover:text-blue-700'
+            color: 'text-muted-foreground hover:text-primary'
           },
           {
             title: 'Meus Fluxos',
             description: 'Visualizar fluxos criados',
             icon: GitBranch,
             action: () => navigate('/my-flows'),
-            color: 'text-purple-600 hover:text-purple-700'
+            color: 'text-muted-foreground hover:text-primary'
           },
           {
             title: 'Relatórios',
             description: 'Análises dos tratamentos',
             icon: BarChart3,
             action: () => navigate('/analytics'),
-            color: 'text-orange-600 hover:text-orange-700'
+            color: 'text-muted-foreground hover:text-primary'
           }
         ];
 
@@ -83,21 +83,21 @@ export const QuickActions = () => {
             description: 'Acompanhar progresso dos tratamentos',
             icon: GitBranch,
             action: () => navigate('/my-flows'),
-            color: 'text-blue-600 hover:text-blue-700'
+            color: 'text-muted-foreground hover:text-primary'
           },
           {
             title: 'Formulários',
             description: 'Preencher formulários pendentes',
             icon: FileText,
             action: () => navigate('/forms'),
-            color: 'text-green-600 hover:text-green-700'
+            color: 'text-primary hover:text-primary/80'
           },
           {
             title: 'Meu Perfil',
             description: 'Atualizar informações pessoais',
             icon: Users,
             action: () => navigate('/profile'),
-            color: 'text-purple-600 hover:text-purple-700'
+            color: 'text-muted-foreground hover:text-primary'
           }
         ];
 

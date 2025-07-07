@@ -26,15 +26,15 @@ const getActivityIcon = (type: string) => {
 const getActivityColor = (type: string) => {
   switch (type) {
     case 'flow_created':
-      return 'text-blue-600';
+      return 'text-primary';
     case 'execution_started':
-      return 'text-orange-600';
+      return 'text-muted-foreground';
     case 'execution_completed':
-      return 'text-green-600';
+      return 'text-primary';
     case 'form_submitted':
-      return 'text-purple-600';
+      return 'text-muted-foreground';
     default:
-      return 'text-gray-600';
+      return 'text-muted-foreground';
   }
 };
 

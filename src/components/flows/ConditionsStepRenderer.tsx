@@ -71,7 +71,7 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
     <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <GitBranch className="h-6 w-6 text-purple-500" />
+          <GitBranch className="h-6 w-6 text-primary" />
           {step.title || 'Avaliação de Condições'}
         </CardTitle>
       </CardHeader>
@@ -97,7 +97,7 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
                 key={condition.id}
                 className={`p-4 rounded-lg border-2 transition-colors ${
                   isMatched 
-                    ? 'border-green-500 bg-green-50 dark:bg-green-950/20' 
+                    ? 'border-primary bg-primary/10 dark:bg-primary/20' 
                     : 'border-gray-200 bg-gray-50 dark:bg-gray-800'
                 }`}
               >
@@ -116,7 +116,7 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
                   
                   <div className={`px-3 py-1 rounded-full text-sm font-medium ${
                     isMatched
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                      ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary'
                       : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
                   }`}>
                     {isMatched ? '✓ Atendida' : 'Não atendida'}
@@ -128,11 +128,11 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
         </div>
 
         {matchedCondition && (
-          <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
-            <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">
+          <div className="bg-primary/10 dark:bg-primary/20 rounded-lg p-4 border border-primary/20 dark:border-primary/30">
+            <h4 className="font-semibold text-primary dark:text-primary mb-2">
               Resultado da Avaliação:
             </h4>
-            <p className="text-green-700 dark:text-green-300">
+            <p className="text-primary dark:text-primary">
               {matchedCondition.label}
             </p>
           </div>
@@ -142,7 +142,7 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
           <Button
             onClick={handleComplete}
             disabled={isLoading}
-            className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-8 py-3 font-medium"
+            className="bg-primary-gradient hover:opacity-90 text-white px-8 py-3 font-medium"
             size="lg"
           >
             {isLoading ? 'Processando...' : 'Continuar'}

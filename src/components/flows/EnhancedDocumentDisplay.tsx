@@ -178,7 +178,7 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
   };
 
   return (
-    <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-purple-200 dark:border-purple-800">
+    <Card className="bg-muted/50 dark:bg-muted/20 border-border">
       <CardContent className="p-6 space-y-6">
         {title && (
           <div className="text-center">
@@ -199,7 +199,7 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
           <Button
             onClick={handleDownload}
             disabled={downloading}
-            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+            className="bg-primary-gradient hover:opacity-90 text-white"
           >
             <Download className="h-4 w-4 mr-2" />
             {downloading ? 'Baixando...' : 'Baixar'}

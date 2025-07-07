@@ -73,7 +73,7 @@ export const FlowDocumentUpload: React.FC<FlowDocumentUploadProps> = ({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <File className="h-5 w-5 text-blue-500" />
+                <File className="h-5 w-5 text-primary" />
                 <div>
                   <p className="font-medium">{currentFile.name}</p>
                   <p className="text-sm text-gray-500">{currentFile.type}</p>
@@ -101,7 +101,7 @@ export const FlowDocumentUpload: React.FC<FlowDocumentUploadProps> = ({
       ) : (
         <Card
           className={`border-2 border-dashed transition-colors ${
-            dragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+            dragOver ? 'border-primary bg-primary/10' : 'border-gray-300'
           }`}
           onDragOver={(e) => {
             e.preventDefault();

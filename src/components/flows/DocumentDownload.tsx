@@ -27,13 +27,13 @@ export const DocumentDownload: React.FC<DocumentDownloadProps> = ({
   const getFileIcon = () => {
     switch (fileType) {
       case 'pdf':
-        return <FileText className="h-6 w-6 text-red-500" />;
+        return <FileText className="h-6 w-6 text-white" />;
       case 'image':
-        return <Eye className="h-6 w-6 text-blue-500" />;
+        return <Eye className="h-6 w-6 text-white" />;
       case 'video':
-        return <ExternalLink className="h-6 w-6 text-purple-500" />;
+        return <ExternalLink className="h-6 w-6 text-white" />;
       default:
-        return <FileText className="h-6 w-6 text-gray-500" />;
+        return <FileText className="h-6 w-6 text-white" />;
     }
   };
 
@@ -127,10 +127,10 @@ export const DocumentDownload: React.FC<DocumentDownloadProps> = ({
   };
 
   return (
-    <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
+    <Card className="bg-muted/50 dark:bg-muted/20 border-border">
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 bg-primary-gradient rounded-full flex items-center justify-center flex-shrink-0">
             {getFileIcon()}
           </div>
           
@@ -153,7 +153,7 @@ export const DocumentDownload: React.FC<DocumentDownloadProps> = ({
               <Button
                 onClick={handleDownload}
                 disabled={downloading || !fileName}
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+                className="bg-primary-gradient hover:opacity-90 text-white"
                 size="sm"
               >
                 {downloading ? (

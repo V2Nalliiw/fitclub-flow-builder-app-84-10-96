@@ -97,17 +97,17 @@ export const PatientViewModal: React.FC<PatientViewModalProps> = ({
                 Estatísticas
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">0</div>
-                  <div className="text-xs text-blue-800 dark:text-blue-300">Formulários Ativos</div>
+                <div className="text-center p-3 bg-muted/50 dark:bg-muted/20 rounded-lg">
+                  <div className="text-2xl font-bold text-primary dark:text-primary">0</div>
+                  <div className="text-xs text-muted-foreground dark:text-muted-foreground">Formulários Ativos</div>
                 </div>
-                <div className="text-center p-3 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">0</div>
-                  <div className="text-xs text-green-800 dark:text-green-300">Concluídos</div>
+                <div className="text-center p-3 bg-muted/50 dark:bg-muted/20 rounded-lg">
+                  <div className="text-2xl font-bold text-primary dark:text-primary">0</div>
+                  <div className="text-xs text-muted-foreground dark:text-muted-foreground">Concluídos</div>
                 </div>
-                <div className="text-center p-3 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/20 dark:to-gray-700/20 rounded-lg">
-                  <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">0%</div>
-                  <div className="text-xs text-gray-800 dark:text-gray-300">Progresso</div>
+                <div className="text-center p-3 bg-muted/50 dark:bg-muted/20 rounded-lg">
+                  <div className="text-2xl font-bold text-muted-foreground dark:text-muted-foreground">0%</div>
+                  <div className="text-xs text-muted-foreground dark:text-muted-foreground">Progresso</div>
                 </div>
               </div>
             </CardContent>

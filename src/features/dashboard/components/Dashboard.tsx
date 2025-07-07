@@ -58,28 +58,28 @@ export const Dashboard = () => {
               title="Total de Pacientes"
               value={metrics?.totalUsers || 0}
               icon={Users}
-              color="text-blue-600"
+              color="text-muted-foreground"
               change={{ value: 12, label: "este mês" }}
             />
             <MetricCard
               title="Fluxos Ativos"
               value={metrics?.activeFlows || 0}
               icon={Workflow}
-              color="text-green-600"
+              color="text-primary"
               change={{ value: 5, label: "este mês" }}
             />
             <MetricCard
               title="Formulários Respondidos"
               value={metrics?.completedExecutions || 0}
               icon={FileText}
-              color="text-purple-600"
+              color="text-muted-foreground"
               change={{ value: 8, label: "este mês" }}
             />
             <MetricCard
               title="Taxa de Engajamento"
               value={`${Math.round(((metrics?.completedExecutions || 0) / Math.max(metrics?.totalExecutions || 1, 1)) * 100)}%`}
               icon={Activity}
-              color="text-orange-600"
+              color="text-muted-foreground"
               change={{ value: -3, label: "este mês" }}
             />
           </div>

@@ -106,7 +106,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-gradient-to-r from-primary to-primary/80 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MessageCircle className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
@@ -167,7 +167,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-gradient-to-r from-primary to-primary/80 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
@@ -192,15 +192,15 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
             )}
 
             {step.mensagemFinal && (
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-lg p-6 border border-purple-200 dark:border-purple-800">
-                <p className="text-purple-800 dark:text-purple-200 text-center font-medium">
+              <div className="bg-primary/10 dark:bg-primary/20 rounded-lg p-6 border border-primary/20 dark:border-primary/30">
+                <p className="text-primary dark:text-primary text-center font-medium">
                   {step.mensagemFinal}
                 </p>
               </div>
             )}
 
-            <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-4">
-              <p className="text-green-800 dark:text-green-200 text-center font-medium">
+            <div className="bg-primary/10 dark:bg-primary/20 rounded-lg p-4">
+              <p className="text-primary dark:text-primary text-center font-medium">
                 🎉 Clique em "Finalizar" para concluir esta etapa
                 {step.delayAmount && step.delayType && (
                   <span className="block mt-2 text-sm">
@@ -264,7 +264,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
     <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <span className="text-primary">
             Etapa {step.order || 1}
           </span>
           {canGoBack && onGoBack && (
@@ -287,7 +287,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
           <Button
             onClick={handleSubmit}
             disabled={!canSubmit() || isLoading}
-            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-8 py-3 font-medium"
+            className="bg-primary-gradient hover:opacity-90 text-white px-8 py-3 font-medium"
             size="lg"
           >
             {isLoading ? (
