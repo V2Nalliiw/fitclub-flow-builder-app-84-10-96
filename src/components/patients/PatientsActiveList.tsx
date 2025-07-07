@@ -25,8 +25,8 @@ const PatientCard = ({ patient, onView, onEdit, onFeedback, onDelete }: {
   const { responseCount } = usePatientResponses(patient.user_id);
 
   return (
-    <Card className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm">
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-primary/80"></div>
+    <Card className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 card-standard">
+      <div className="absolute top-0 left-0 w-full h-1 bg-primary-gradient"></div>
       
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
@@ -46,9 +46,9 @@ const PatientCard = ({ patient, onView, onEdit, onFeedback, onDelete }: {
               </p>
             </div>
           </div>
-          <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200 flex-shrink-0">
-            Ativo
-          </Badge>
+            <Badge variant="secondary" className="bg-primary/10 text-primary flex-shrink-0">
+              Ativo
+            </Badge>
         </div>
       </CardHeader>
       
@@ -58,7 +58,7 @@ const PatientCard = ({ patient, onView, onEdit, onFeedback, onDelete }: {
             <Phone className="h-4 w-4 text-gray-500" />
             <span className="text-gray-700 dark:text-gray-300">{patient.phone}</span>
             {patient.whatsapp_verified && (
-              <Badge variant="secondary" className="text-xs bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200">
+              <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">
                 WhatsApp
               </Badge>
             )}
@@ -90,7 +90,7 @@ const PatientCard = ({ patient, onView, onEdit, onFeedback, onDelete }: {
             size="sm" 
             variant="outline"
             onClick={onEdit}
-            className="border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white dark:text-blue-400 dark:border-blue-400 p-2"
+            className="border-muted-foreground/30 text-muted-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary p-2"
             title="Editar paciente"
           >
             <Edit className="h-4 w-4" />
@@ -99,12 +99,12 @@ const PatientCard = ({ patient, onView, onEdit, onFeedback, onDelete }: {
             size="sm" 
             variant="outline"
             onClick={onFeedback}
-            className="border-purple-500 text-purple-600 hover:bg-purple-500 hover:text-white dark:text-purple-400 dark:border-purple-400 p-2 relative"
+            className="border-muted-foreground/30 text-muted-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary p-2 relative"
             title={`Ver ${responseCount} respostas do paciente`}
           >
             <MessageSquare className="h-4 w-4" />
             {responseCount > 0 && (
-              <Badge variant="secondary" className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200">
+              <Badge variant="secondary" className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-primary text-primary-foreground">
                 {responseCount}
               </Badge>
             )}
@@ -113,7 +113,7 @@ const PatientCard = ({ patient, onView, onEdit, onFeedback, onDelete }: {
             size="sm"
             variant="outline"
             onClick={onDelete}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20 border-red-300 dark:border-red-800 p-2"
+            className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground hover:border-destructive p-2"
             title="Remover paciente"
           >
             <Trash2 className="h-4 w-4" />

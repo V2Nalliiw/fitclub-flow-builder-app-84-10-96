@@ -26,7 +26,7 @@ export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] bg-white dark:bg-gray-950">
+      <DialogContent className="max-w-4xl max-h-[80vh] card-standard">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-gray-900 dark:text-gray-100">
             <MessageSquare className="h-5 w-5 text-[#5D8701]" />
@@ -37,7 +37,7 @@ export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[60vh]">
           {/* Resumo */}
           <div className="lg:col-span-1 space-y-4">
-            <Card className="bg-gradient-to-r from-[#5D8701]/5 to-[#4a6e01]/5 dark:from-[#5D8701]/10 dark:to-[#4a6e01]/10 border-[#5D8701]/20">
+            <Card className="bg-primary/5 border-primary/20 card-subtle">
               <CardHeader className="pb-3">
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100">Resumo</h4>
               </CardHeader>
@@ -61,19 +61,19 @@ export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
                 )}
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Status</span>
-                  <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200">
+                  <Badge variant="secondary" className="bg-primary/10 text-primary">
                     {responses.length > 0 ? 'Ativo' : 'Aguardando'}
                   </Badge>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-white/90 dark:bg-gray-950/90">
+            <Card className="card-standard">
               <CardHeader className="pb-3">
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100">Filtros</h4>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Badge variant="outline" className="w-full justify-center border-[#5D8701] text-[#5D8701]">
+                <Badge variant="outline" className="w-full justify-center border-primary text-primary">
                   <FileText className="h-3 w-3 mr-1" />
                   Todas as Respostas
                 </Badge>
@@ -91,10 +91,10 @@ export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
 
           {/* Timeline de Respostas */}
           <div className="lg:col-span-2">
-            <Card className="h-full bg-white/90 dark:bg-gray-950/90">
+            <Card className="h-full card-standard">
               <CardHeader className="pb-3">
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-[#5D8701]" />
+                  <Calendar className="h-4 w-4 text-primary" />
                   Timeline de Respostas
                 </h4>
               </CardHeader>
