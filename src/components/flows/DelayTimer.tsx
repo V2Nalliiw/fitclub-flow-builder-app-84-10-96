@@ -64,75 +64,48 @@ export const DelayTimer: React.FC<DelayTimerProps> = ({ availableAt, onDelayExpi
   };
 
   return (
-    <Card className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 border-orange-200 dark:border-orange-800">
-      <CardContent className="p-6">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full flex items-center justify-center">
-            {isExpired ? (
-              <CheckCircle className="h-6 w-6 text-white" />
-            ) : (
-              <Clock className="h-6 w-6 text-white animate-pulse" />
-            )}
-          </div>
-          
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {isExpired ? 'Próximo formulário disponível!' : 'Formulário completado! ✅'}
-              </h3>
-              <Badge variant={isExpired ? 'default' : 'secondary'} className={
-                isExpired 
-                  ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-950 dark:text-green-200'
-                  : 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-950 dark:text-orange-200'
-              }>
-                {isExpired ? 'Disponível' : 'Aguardando'}
-              </Badge>
-            </div>
-            
-            <p className="text-gray-600 dark:text-gray-400 mb-3">
-              {isExpired 
-                ? 'Você pode continuar com o próximo formulário agora!'
-                : 'Você completou esta etapa com sucesso! O próximo formulário será liberado automaticamente.'
-              }
-            </p>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
-                  <Calendar className="h-4 w-4" />
-                  <span>
-                    {formatDistanceToNow(new Date(availableAt), { 
-                      addSuffix: true, 
-                      locale: ptBR 
-                    })}
-                  </span>
-                </div>
-                
-                {!isExpired && (
-                  <div className="flex items-center gap-1 font-semibold text-orange-600 dark:text-orange-400">
-                    <Timer className="h-4 w-4" />
-                    <span>{timeRemaining}</span>
-                  </div>
-                )}
-              </div>
-
-              {isExpired && (
-                <Button
-                  onClick={handleRefresh}
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
-                  size="sm"
-                >
-                  Continuar Formulário
-                </Button>
-              )}
-            </div>
-          </div>
+    <Card className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-950/90 dark:to-gray-900/90 border-gray-200 dark:border-gray-800">
+      <CardContent className="p-8 text-center">
+        <div className="w-20 h-20 bg-gradient-to-r from-[#5D8701] to-[#4a6e01] rounded-full flex items-center justify-center mx-auto mb-6">
+          {isExpired ? (
+            <CheckCircle className="h-10 w-10 text-white" />
+          ) : (
+            <CheckCircle className="h-10 w-10 text-white" />
+          )}
         </div>
+        
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+          {isExpired ? 'Novo formulário disponível!' : 'Formulário completado! ✅'}
+        </h3>
+        
+        <p className="text-lg text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+          {isExpired 
+            ? 'Você pode continuar com o próximo formulário agora!'
+            : 'Parabéns! Você completou esta etapa com sucesso. Em breve receberá um novo formulário.'
+          }
+        </p>
 
-        {!isExpired && (
-          <div className="mt-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3">
-            <p className="text-sm text-blue-800 dark:text-blue-200 text-center">
-              💡 Você pode fechar esta página. O formulário continuará disponível quando o tempo chegar.
+        {isExpired ? (
+          <Button
+            onClick={handleRefresh}
+            className="bg-gradient-to-r from-[#5D8701] to-[#4a6e01] hover:from-[#4a6e01] hover:to-[#5D8701] text-white px-8 py-3"
+            size="lg"
+          >
+            Continuar Formulário
+          </Button>
+        ) : (
+          <div className="space-y-4">
+            <div className="bg-[#5D8701]/10 dark:bg-[#5D8701]/20 rounded-lg p-4 border border-[#5D8701]/20">
+              <p className="text-[#5D8701] font-medium mb-2">
+                📅 Próximo formulário em breve
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Você receberá uma notificação quando o próximo formulário estiver disponível.
+              </p>
+            </div>
+            
+            <p className="text-sm text-gray-500 dark:text-gray-500">
+              Pode fechar esta página com segurança. Entre em contato com a clínica se tiver dúvidas.
             </p>
           </div>
         )}

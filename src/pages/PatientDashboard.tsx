@@ -13,36 +13,17 @@ const PatientDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { hasAccess } = useRoleBasedAccess(['patient']);
-  const { flows: patientFlows, loading: flowsLoading } = usePatientFlows();
-  const { assignments, loading: assignmentsLoading } = useFlowAssignments();
+  const { executions, loading: flowsLoading } = usePatientFlows();
+  const { assignments, isLoading: assignmentsLoading } = useFlowAssignments();
 
   if (!hasAccess) {
     return null;
   }
 
-  // Calcular métricas reais
-  const totalFlows = patientFlows?.length || 0;
-  const completedFlows = assignments?.filter(a => a.status === 'completed').length || 0;
-  const progressPercentage = totalFlows > 0 ? Math.round((completedFlows / totalFlows) * 100) : 0;
-
-  const quickActions = [
-    {
-      title: 'Meus Formulários',
-      description: 'Acesse seus formulários diários e dicas personalizadas',
-      icon: FileText,
-      action: () => navigate('/my-flows'),
-      color: 'bg-[#5D8701]',
-      hoverColor: 'hover:bg-[#4a6e01]',
-    },
-    {
-      title: 'Meu Perfil',
-      description: 'Visualize e edite suas informações pessoais',
-      icon: User,
-      action: () => navigate('/profile'),
-      color: 'bg-[#5D8701]',
-      hoverColor: 'hover:bg-[#4a6e01]',
-    },
-  ];
+  // Encontrar o formulário mais recente
+  const mostRecentExecution = executions?.find(e => e.status === 'em-andamento' || e.status === 'pausado') || executions?.[0];
+  const hasActiveForm = mostRecentExecution && (mostRecentExecution.status === 'em-andamento' || mostRecentExecution.status === 'pausado');
+  const hasNoForms = !executions || executions.length === 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-4 md:p-6">
@@ -60,93 +41,119 @@ const PatientDashboard = () => {
           </p>
         </div>
 
-        {/* Ações Rápidas */}
-        <div className="grid gap-4 md:gap-6 md:grid-cols-2">
-          {quickActions.map((action, index) => (
-            <Card 
-              key={index} 
-              className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm overflow-hidden cursor-pointer" 
-              onClick={action.action}
-            >
-              <div className={`absolute top-0 left-0 w-full h-1 ${action.color}`}></div>
-              
-              <CardHeader className="pb-3 md:pb-4">
-                <div className="flex items-center gap-3 md:gap-4">
-                  <div className={`w-10 h-10 md:w-12 md:h-12 ${action.color} rounded-lg flex items-center justify-center`}>
-                    <action.icon className="h-5 w-5 md:h-6 md:w-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <CardTitle className="text-lg md:text-xl text-gray-900 dark:text-gray-100 group-hover:text-[#5D8701] transition-colors">
-                      {action.title}
-                    </CardTitle>
-                  </div>
-                  <ArrowRight className="h-4 w-4 md:h-5 md:w-5 text-gray-400 group-hover:text-[#5D8701] group-hover:translate-x-1 transition-all" />
+        {/* Formulário Mais Recente ou Estado Vazio */}
+        {hasNoForms ? (
+          <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
+            <CardContent className="text-center py-12">
+              <div className="w-20 h-20 bg-gradient-to-r from-[#5D8701] to-[#4a6e01] rounded-full flex items-center justify-center mx-auto mb-6">
+                <FileText className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                Todos os formulários foram visualizados
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                Você já viu todos os formulários atribuídos a você. Em breve poderá receber novos formulários.
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
+                Aguarde mais um pouco ou entre em contato com a clínica para mais informações.
+              </p>
+              <Button 
+                onClick={() => navigate('/my-flows')} 
+                variant="outline"
+                className="border-[#5D8701] text-[#5D8701] hover:bg-[#5D8701] hover:text-white"
+              >
+                Ver Todos os Formulários
+              </Button>
+            </CardContent>
+          </Card>
+        ) : hasActiveForm ? (
+          <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#5D8701] to-[#4a6e01]"></div>
+            <CardHeader className="pb-4">
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="text-xl text-gray-900 dark:text-gray-100 mb-2">
+                    📋 Formulário Mais Recente
+                  </CardTitle>
+                  <h3 className="text-lg font-medium text-[#5D8701] mb-1">
+                    {mostRecentExecution?.flow_name}
+                  </h3>
                 </div>
-              </CardHeader>
+                <div className="text-right">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Progresso</div>
+                  <div className="text-2xl font-bold text-[#5D8701]">
+                    {mostRecentExecution?.progresso || 0}%
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium text-orange-600 dark:text-orange-400">
+                    {mostRecentExecution?.status === 'em-andamento' ? 'Em Andamento' : 'Pausado'}
+                  </span>
+                </div>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {mostRecentExecution?.completed_steps || 0} de {mostRecentExecution?.total_steps || 0} etapas
+                </span>
+              </div>
               
-              <CardContent className="pt-0">
-                <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mb-3 md:mb-4">
-                  {action.description}
-                </p>
-                <Button 
-                  className={`w-full ${action.color} ${action.hoverColor} text-white`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    action.action();
-                  }}
-                >
-                  Acessar
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-6">
+                <div 
+                  className="bg-gradient-to-r from-[#5D8701] to-[#4a6e01] h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${mostRecentExecution?.progresso || 0}%` }}
+                ></div>
+              </div>
 
-        {/* Resumo de Progresso */}
+              <Button 
+                onClick={() => navigate(`/flow-execution/${mostRecentExecution?.id}`)}
+                className="w-full bg-gradient-to-r from-[#5D8701] to-[#4a6e01] hover:from-[#4a6e01] hover:to-[#5D8701] text-white"
+                size="lg"
+              >
+                Continuar Formulário
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
+            <CardContent className="text-center py-12">
+              <div className="w-20 h-20 bg-gradient-to-r from-[#5D8701] to-[#4a6e01] rounded-full flex items-center justify-center mx-auto mb-6">
+                <Calendar className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                Formulários Concluídos
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                Você concluiu todos os formulários ativos. Novos formulários podem estar disponíveis em breve.
+              </p>
+              <Button 
+                onClick={() => navigate('/my-flows')} 
+                variant="outline"
+                className="border-[#5D8701] text-[#5D8701] hover:bg-[#5D8701] hover:text-white"
+              >
+                Ver Histórico
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Link para Meus Formulários */}
         <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
-              <Activity className="h-5 w-5 text-[#5D8701]" />
-              Seu Progresso
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-3">
-              <div className="text-center p-4 bg-gradient-to-br from-[#5D8701]/10 to-[#4a6e01]/5 dark:from-[#5D8701]/20 dark:to-[#4a6e01]/10 rounded-lg border border-[#5D8701]/20">
-                <div className="text-2xl md:text-3xl font-bold text-[#5D8701] mb-2">
-                  {flowsLoading ? '...' : totalFlows}
-                </div>
-                <div className="text-xs md:text-sm text-[#5D8701] font-medium">Formulários Disponíveis</div>
-              </div>
-              <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                <div className="text-2xl md:text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
-                  {assignmentsLoading ? '...' : completedFlows}
-                </div>
-                <div className="text-xs md:text-sm text-green-800 dark:text-green-300 font-medium">Formulários Concluídos</div>
-              </div>
-              <div className="text-center p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/20 dark:to-gray-700/20 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div className="text-2xl md:text-3xl font-bold text-gray-600 dark:text-gray-400 mb-2">
-                  {assignmentsLoading ? '...' : `${progressPercentage}%`}
-                </div>
-                <div className="text-xs md:text-sm text-gray-800 dark:text-gray-300 font-medium">Progresso Geral</div>
-              </div>
-            </div>
-            
-            {/* Barra de Progresso */}
-            {!assignmentsLoading && (
-              <div className="mt-6">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Progresso dos Tratamentos</span>
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{progressPercentage}%</span>
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div 
-                    className="bg-gradient-to-r from-[#5D8701] to-[#4a6e01] h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${progressPercentage}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
+          <CardContent className="p-4">
+            <Button 
+              onClick={() => navigate('/my-flows')}
+              variant="ghost" 
+              className="w-full justify-between text-gray-700 dark:text-gray-300 hover:text-[#5D8701] hover:bg-[#5D8701]/5"
+            >
+              <span className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Ver Todos os Meus Formulários
+              </span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
           </CardContent>
         </Card>
       </div>
