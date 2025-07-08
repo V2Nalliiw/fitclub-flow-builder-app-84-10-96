@@ -3,6 +3,7 @@ import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { FileText, Send, ExternalLink } from 'lucide-react';
 import { SimpleNodeActions } from '../SimpleNodeActions';
+import { NodeHelpButton } from '@/components/ui/node-help-button';
 
 interface FormStartNodeProps {
   data: any;
@@ -23,9 +24,12 @@ export const FormStartNode: React.FC<FormStartNodeProps> = ({ data, selected, id
           : 'border-gray-200 dark:border-gray-700'
       }`}>
         {/* Header Section */}
-        <div className="flex items-center gap-2 px-3 py-2">
-          <FileText className="h-4 w-4 text-blue-500" />
-          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Formulário</span>
+        <div className="flex items-center justify-between px-3 py-2">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-blue-500" />
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Formulário</span>
+          </div>
+          <NodeHelpButton nodeType="formStart" />
         </div>
         
         {/* Divider */}

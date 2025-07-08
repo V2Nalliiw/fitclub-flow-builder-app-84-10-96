@@ -68,11 +68,22 @@ export interface FileUploadConfig {
 
 export interface SpecialConditionRule {
   id: string;
-  tipo: 'numerico' | 'pergunta' | 'calculo' | 'combinacao';
-  campo: string; // nomenclatura ou id da pergunta
+  tipos: ('numerico' | 'pergunta' | 'calculo')[];
+  tipoCondicao: 'simples' | 'combinacao';
+  // Para condições simples
+  campo?: string; // nomenclatura ou id da pergunta
   operador: 'igual' | 'maior' | 'menor' | 'maior_igual' | 'menor_igual' | 'diferente' | 'entre' | 'contem';
   valor: number | string;
   valorFinal?: number; // Para o operador "entre"
+  // Para condições de combinação
+  campos?: {
+    tipo: 'numerico' | 'pergunta' | 'calculo';
+    campo: string;
+    operador: string;
+    valor: number | string;
+    valorFinal?: number;
+  }[];
+  operadorCombinacao?: 'AND' | 'OR';
   label: string;
 }
 

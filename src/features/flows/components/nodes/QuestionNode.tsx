@@ -3,6 +3,7 @@ import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { HelpCircle, CheckSquare, Circle, Type, List } from 'lucide-react';
 import { SimpleNodeActions } from '../SimpleNodeActions';
+import { NodeHelpButton } from '@/components/ui/node-help-button';
 
 interface QuestionNodeProps {
   data: {
@@ -56,9 +57,12 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
           : 'border-gray-200 dark:border-[#1A1A1A]'
       }`}>
         {/* Header Section */}
-        <div className="flex items-center gap-2 px-3 py-2">
-          <HelpCircle className="h-4 w-4 text-amber-500" />
-          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Pergunta</span>
+        <div className="flex items-center justify-between px-3 py-2">
+          <div className="flex items-center gap-2">
+            <HelpCircle className="h-4 w-4 text-amber-500" />
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Pergunta</span>
+          </div>
+          <NodeHelpButton nodeType="question" />
         </div>
         
         {/* Divider */}

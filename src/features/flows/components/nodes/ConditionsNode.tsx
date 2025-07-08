@@ -2,6 +2,7 @@ import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { GitBranch, Trash2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { NodeHelpButton } from '@/components/ui/node-help-button';
 
 interface ConditionsNodeProps {
   data: {
@@ -47,6 +48,7 @@ const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
         </div>
         
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <NodeHelpButton nodeType="conditions" />
           <Button
             variant="ghost"
             size="sm"

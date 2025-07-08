@@ -2,6 +2,7 @@ import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Plus } from 'lucide-react';
 import { SimpleNodeActions } from '../SimpleNodeActions';
+import { NodeHelpButton } from '@/components/ui/node-help-button';
 
 interface SimpleCalculatorNodeProps {
   data: {
@@ -32,9 +33,12 @@ const SimpleCalculatorNode: React.FC<SimpleCalculatorNodeProps> = ({ data, id, s
           : 'border-gray-200 dark:border-[#1A1A1A]'
       }`}>
         {/* Header Section */}
-        <div className="flex items-center gap-2 px-3 py-2">
-          <Plus className="h-4 w-4 text-green-500" />
-          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Cálculo Simples</span>
+        <div className="flex items-center justify-between px-3 py-2">
+          <div className="flex items-center gap-2">
+            <Plus className="h-4 w-4 text-green-500" />
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Cálculo Simples</span>
+          </div>
+          <NodeHelpButton nodeType="simpleCalculator" />
         </div>
         
         {/* Divider */}

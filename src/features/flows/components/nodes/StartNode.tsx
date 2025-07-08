@@ -3,6 +3,7 @@ import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Play } from 'lucide-react';
 import { SimpleNodeActions } from '../SimpleNodeActions';
+import { NodeHelpButton } from '@/components/ui/node-help-button';
 
 interface StartNodeProps {
   data: any;
@@ -21,9 +22,12 @@ export const StartNode: React.FC<StartNodeProps> = ({ data, selected, id }) => {
           : 'border-gray-200 dark:border-gray-700'
       }`}>
         {/* Header Section */}
-        <div className="flex items-center gap-2 px-3 py-2">
-          <Play className="h-4 w-4 text-green-600" fill="currentColor" />
-          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Início</span>
+        <div className="flex items-center justify-between px-3 py-2">
+          <div className="flex items-center gap-2">
+            <Play className="h-4 w-4 text-green-600" fill="currentColor" />
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Início</span>
+          </div>
+          <NodeHelpButton nodeType="start" />
         </div>
         
         {/* Divider */}

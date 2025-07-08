@@ -3,6 +3,7 @@ import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Flag, MessageCircle } from 'lucide-react';
 import { SimpleNodeActions } from '../SimpleNodeActions';
+import { NodeHelpButton } from '@/components/ui/node-help-button';
 
 interface EndNodeProps {
   data: any;
@@ -21,9 +22,12 @@ export const EndNode: React.FC<EndNodeProps> = ({ data, selected, id }) => {
           : 'border-gray-200 dark:border-gray-700'
       }`}>
         {/* Header Section */}
-        <div className="flex items-center gap-2 px-3 py-2">
-          <Flag className="h-4 w-4 text-red-500" />
-          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Fim do Fluxo</span>
+        <div className="flex items-center justify-between px-3 py-2">
+          <div className="flex items-center gap-2">
+            <Flag className="h-4 w-4 text-red-500" />
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Fim do Fluxo</span>
+          </div>
+          <NodeHelpButton nodeType="end" />
         </div>
         
         {/* Divider */}

@@ -3,6 +3,7 @@ import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { FileCheck, Download } from 'lucide-react';
 import { SimpleNodeActions } from '../SimpleNodeActions';
+import { NodeHelpButton } from '@/components/ui/node-help-button';
 
 interface FormEndNodeProps {
   data: any;
@@ -23,9 +24,12 @@ export const FormEndNode: React.FC<FormEndNodeProps> = ({ data, selected, id, on
           : 'border-gray-200 dark:border-gray-700'
       }`}>
         {/* Header Section */}
-        <div className="flex items-center gap-2 px-3 py-2">
-          <FileCheck className="h-4 w-4 text-purple-500" />
-          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Fim Formulário</span>
+        <div className="flex items-center justify-between px-3 py-2">
+          <div className="flex items-center gap-2">
+            <FileCheck className="h-4 w-4 text-purple-500" />
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Fim Formulário</span>
+          </div>
+          <NodeHelpButton nodeType="formEnd" />
         </div>
         
         {/* Divider */}

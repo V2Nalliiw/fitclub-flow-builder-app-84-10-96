@@ -156,6 +156,9 @@ export const useFlowBuilder = () => {
     setIsLoading(true);
     
     setTimeout(() => {
+      // Deep clone dos dados para garantir independência total
+      const clonedData = JSON.parse(JSON.stringify(nodeToDuplicate.data));
+      
       const newNode: Node = {
         ...nodeToDuplicate,
         id: `${Date.now()}`,
@@ -164,11 +167,17 @@ export const useFlowBuilder = () => {
           y: nodeToDuplicate.position.y + 50
         },
         data: {
-          ...nodeToDuplicate.data,
-          // Remove funções específicas da instância
+          ...clonedData,
+          // Remove funções específicas da instância para garantir independência
           onDelete: undefined,
           onEdit: undefined,
-        }
+          onDuplicate: undefined,
+        },
+        // Garantir que não há referências compartilhadas
+        style: nodeToDuplicate.style ? { ...nodeToDuplicate.style } : undefined,
+        className: nodeToDuplicate.className,
+        draggable: true,
+        selectable: true,
       };
       
       setNodes((nds) => [...nds, newNode]);
