@@ -329,12 +329,152 @@ export const useWhatsApp = () => {
     }
   }, [getWhatsAppConfig, toast, isUsingGlobalSettings]);
 
+  const sendVerificationCode = useCallback(async (
+    to: string,
+    code: string
+  ): Promise<SendMessageResponse> => {
+    console.log('useWhatsApp: sendVerificationCode chamado:', { to, code });
+    
+    const config = getWhatsAppConfig();
+    const usingGlobal = isUsingGlobalSettings();
+    
+    if (!config || !config.is_active) {
+      const configType = usingGlobal ? "global" : "da clínica";
+      const errorMsg = !config ? 
+        `Configure o WhatsApp ${usingGlobal ? 'global (nas configurações do admin)' : 'da clínica'} antes de enviar códigos.` : 
+        `Ative o WhatsApp ${configType} nas configurações antes de enviar códigos.`;
+      
+      toast({
+        title: "WhatsApp não configurado",
+        description: errorMsg,
+        variant: "destructive",
+      });
+      return { success: false, error: "WhatsApp não configurado" };
+    }
+
+    if (config.provider !== 'meta') {
+      toast({
+        title: "Provider incompatível",
+        description: "Código de verificação só funciona com Meta WhatsApp Business API",
+        variant: "destructive",
+      });
+      return { success: false, error: "Provider não suportado para códigos de verificação" };
+    }
+
+    if (!config.access_token) {
+      toast({
+        title: "Access Token necessário",
+        description: "Configure o Access Token do Meta WhatsApp para enviar códigos",
+        variant: "destructive",
+      });
+      return { success: false, error: "Access Token não configurado" };
+    }
+
+    setIsLoading(true);
+    
+    try {
+      // Usar phone number ID fixo conforme especificado
+      const fixedPhoneNumberId = "685174371347679";
+      
+      // Criar configuração temporária com phone number ID fixo
+      const configWithFixedPhone = {
+        ...config,
+        phone_number: fixedPhoneNumberId
+      };
+      
+      whatsappService.setConfig(configWithFixedPhone);
+      
+      console.log('useWhatsApp: Enviando código via template oficial Meta:', {
+        to,
+        code,
+        template: 'codigo_verificacao',
+        language: 'pt_BR',
+        phoneNumberId: fixedPhoneNumberId
+      });
+
+      const result = await whatsappService.sendMessage(to, ''); // Usaremos o método sendTemplate
+      
+      // Como não temos acesso direto ao MetaWhatsAppService aqui, vamos implementar via fetch
+      const response = await fetch(
+        `https://graph.facebook.com/v19.0/${fixedPhoneNumberId}/messages`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${config.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: to.replace(/\D/g, ''),
+            type: 'template',
+            template: {
+              name: 'codigo_verificacao',
+              language: {
+                code: 'pt_BR'
+              },
+              components: [
+                {
+                  type: 'body',
+                  parameters: [
+                    {
+                      type: 'text',
+                      text: code
+                    }
+                  ]
+                }
+              ]
+            }
+          }),
+        }
+      );
+
+      const data = await response.json();
+      console.log('useWhatsApp: Resposta do código de verificação:', data);
+
+      if (!response.ok) {
+        const errorMessage = data.error?.message || data.error?.error_user_msg || 'Erro ao enviar código';
+        toast({
+          title: "Erro ao enviar código",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return { success: false, error: errorMessage };
+      }
+
+      const configSource = usingGlobal ? " (usando API global)" : "";
+      toast({
+        title: "Código enviado",
+        description: `Código de verificação enviado para ${to}${configSource}`,
+      });
+      
+      trackWhatsAppSent(to, 'verification_code');
+      
+      return {
+        success: true,
+        messageId: data.messages?.[0]?.id,
+        response: data,
+      };
+      
+    } catch (error: any) {
+      console.error('useWhatsApp: Erro ao enviar código de verificação:', error);
+      toast({
+        title: "Erro ao enviar código",
+        description: error.message || 'Erro de conexão com a API do WhatsApp',
+        variant: "destructive",
+      });
+      return { success: false, error: error.message || 'Erro de conexão' };
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getWhatsAppConfig, toast, trackWhatsAppSent, isUsingGlobalSettings]);
+
   return {
     isLoading,
     isConnected,
     sendFormLink,
     sendMedia,
     sendMessage,
+    sendVerificationCode,
     testConnection,
     isUsingGlobalSettings,
   };
