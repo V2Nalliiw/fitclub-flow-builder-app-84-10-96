@@ -22,7 +22,7 @@ export const PatientViewModal: React.FC<PatientViewModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white dark:bg-gray-950">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white dark:bg-none dark:bg-[#0E0E0E]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-gray-900 dark:text-gray-100">
             <User className="h-5 w-5 text-[#5D8701]" />
@@ -68,7 +68,7 @@ export const PatientViewModal: React.FC<PatientViewModalProps> = ({
           </Card>
 
           {/* Informações de Contato */}
-          <Card className="bg-white/90 dark:bg-gray-950/90">
+          <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90">
             <CardContent className="p-6">
               <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                 <Phone className="h-4 w-4 text-[#5D8701]" />
@@ -90,7 +90,7 @@ export const PatientViewModal: React.FC<PatientViewModalProps> = ({
           </Card>
 
           {/* Estatísticas */}
-          <Card className="bg-white/90 dark:bg-gray-950/90">
+          <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90">
             <CardContent className="p-6">
               <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-[#5D8701]" />

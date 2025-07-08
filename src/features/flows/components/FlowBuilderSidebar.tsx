@@ -50,7 +50,7 @@ const FlowBuilderSidebar: React.FC<FlowBuilderSidebarProps> = ({
   ];
 
   return (
-    <Card className="w-64 flex-shrink-0 border-r bg-gray-100 dark:bg-gray-950">
+    <Card className="w-64 flex-shrink-0 border-r bg-gray-100 dark:bg-none dark:bg-[#0E0E0E]">
       <CardHeader>
         <CardTitle>Construtor de Fluxos</CardTitle>
         <CardDescription>Arraste e configure os nós</CardDescription>

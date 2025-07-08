@@ -105,7 +105,7 @@ export const FlowBuilder = () => {
   }));
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen bg-gray-50 dark:bg-none dark:bg-[#0E0E0E]">
       {/* Top Menu - apenas no desktop */}
       {isDesktop && (
         <FlowBuilderTopMenu

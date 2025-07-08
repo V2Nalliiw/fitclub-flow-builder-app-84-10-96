@@ -30,7 +30,7 @@ export const PatientResponsesTimeline: React.FC<PatientResponsesTimelineProps> =
             <div className="absolute left-6 top-12 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
           )}
           
-          <Card className="bg-white/50 dark:bg-gray-900/50 border-l-4 border-l-[#5D8701] ml-0">
+          <Card className="bg-white/50 dark:bg-none dark:bg-[#0E0E0E]/50 border-l-4 border-l-[#5D8701] ml-0">
             <CardContent className="p-4">
               <div className="flex items-start gap-4">
                 {/* Timeline dot */}
@@ -55,7 +55,7 @@ export const PatientResponsesTimeline: React.FC<PatientResponsesTimelineProps> =
                   </div>
                   
                   {/* Response content */}
-                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 mb-3">
+                  <div className="bg-gray-50 dark:bg-none dark:bg-[#0E0E0E]/50 rounded-lg p-3 mb-3">
                     <div className="flex items-start gap-2">
                       <MessageSquare className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
                       <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">

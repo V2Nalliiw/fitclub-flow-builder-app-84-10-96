@@ -32,7 +32,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
   isEditing,
 }) => {
   return (
-    <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-3 flex items-center justify-between">
+    <div className="bg-white dark:bg-none dark:bg-[#0E0E0E] border-b border-gray-200 dark:border-gray-700 p-3 flex items-center justify-between">
       <div className="flex items-center space-x-4">
         <Input
           placeholder="Nome do fluxo"

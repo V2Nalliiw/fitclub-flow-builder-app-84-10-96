@@ -34,7 +34,7 @@ const CalculatorNode: React.FC<CalculatorNodeProps> = ({ data, id }) => {
   };
 
   return (
-    <div className="px-4 py-3 shadow-md rounded-lg bg-white dark:bg-gray-800 border-2 border-orange-200 dark:border-orange-700 min-w-[200px] relative group">
+    <div className="px-4 py-3 shadow-md rounded-lg bg-white dark:bg-none dark:bg-[#0E0E0E] border-2 border-orange-200 dark:border-orange-700 min-w-[200px] relative group">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-orange-400" />
       
       <div className="flex items-center justify-between mb-2">

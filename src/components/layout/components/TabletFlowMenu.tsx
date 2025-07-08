@@ -92,7 +92,7 @@ export const TabletFlowMenu = ({
                 variant="outline"
                 size="sm"
                 onClick={() => handleAddNode(nodeType.type)}
-                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
+                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
                 title={nodeType.label}
               >
                 <IconComponent className={`h-4 w-4 ${nodeType.color}`} />
@@ -108,7 +108,7 @@ export const TabletFlowMenu = ({
             size="sm"
             onClick={onPreviewFlow}
             title="Visualizar fluxo"
-            className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
+            className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
           >
             <Play className="h-4 w-4" />
           </Button>
@@ -136,7 +136,7 @@ export const TabletFlowMenu = ({
             size="sm"
             onClick={onClearAllNodes}
             title="Limpar todos os nós"
-            className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-9 w-9 p-0 rounded-full"
+            className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-9 w-9 p-0 rounded-full"
           >
             <Eraser className="h-4 w-4" />
           </Button>

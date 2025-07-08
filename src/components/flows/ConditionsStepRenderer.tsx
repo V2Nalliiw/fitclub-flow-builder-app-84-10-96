@@ -68,7 +68,7 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
   const matchedCondition = evaluateConditions(calculatorResult, conditions);
 
   return (
-    <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
+    <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <GitBranch className="h-6 w-6 text-primary" />
@@ -98,7 +98,7 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
                 className={`p-4 rounded-lg border-2 transition-colors ${
                   isMatched 
                     ? 'border-primary bg-primary/10 dark:bg-primary/20' 
-                    : 'border-gray-200 bg-gray-50 dark:bg-gray-800'
+                    : 'border-gray-200 bg-gray-50 dark:bg-none dark:bg-[#0E0E0E]'
                 }`}
               >
                 <div className="flex items-center justify-between">

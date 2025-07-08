@@ -53,7 +53,7 @@ export const PatientEditModal: React.FC<PatientEditModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg bg-white dark:bg-gray-950">
+      <DialogContent className="max-w-lg bg-white dark:bg-none dark:bg-[#0E0E0E]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-gray-900 dark:text-gray-100">
             <Edit className="h-5 w-5 text-[#5D8701]" />

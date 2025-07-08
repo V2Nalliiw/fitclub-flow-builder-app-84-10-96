@@ -32,7 +32,7 @@ const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
   };
 
   return (
-    <div className="px-4 py-3 shadow-md rounded-lg bg-white dark:bg-gray-950 border-2 border-border min-w-[220px] relative group">
+    <div className="px-4 py-3 shadow-md rounded-lg bg-white dark:bg-none dark:bg-[#0E0E0E] border-2 border-border min-w-[220px] relative group">
       {/* Handle de entrada centralizado na borda esquerda */}
       <Handle 
         type="target" 

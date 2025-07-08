@@ -92,7 +92,7 @@ export const TopToolbar = ({
         {/* Header vazio para desktop - apenas badge do nó selecionado se houver */}
         {selectedNode && (
           <div className={`absolute ${getTopPosition()} left-4 z-40`}>
-            <Badge variant="secondary" className="truncate dark:bg-gray-900/50 dark:text-gray-200 dark:border-gray-800 text-xs py-0.5">
+            <Badge variant="secondary" className="truncate dark:bg-[#0E0E0E]/50 dark:text-gray-200 dark:border-gray-800 text-xs py-0.5">
               {selectedNode.data?.label || 'Nó selecionado'}
             </Badge>
           </div>
@@ -120,7 +120,7 @@ export const TopToolbar = ({
                   variant="outline"
                   size="sm"
                   onClick={() => handleAddNode(nodeType.type)}
-                  className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
+                  className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
                   title={nodeType.label}
                 >
                   <IconComponent className={`h-4 w-4 ${nodeType.color}`} />
@@ -136,7 +136,7 @@ export const TopToolbar = ({
               size="sm"
               onClick={onPreviewFlow}
               title="Visualizar fluxo"
-              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
+              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
             >
               <Play className="h-4 w-4" />
             </Button>
@@ -164,7 +164,7 @@ export const TopToolbar = ({
               size="sm"
               onClick={onAutoArrangeNodes}
               title="Organizar nós automaticamente"
-              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
+              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
             >
               <AlignJustify className="h-4 w-4" />
             </Button>
@@ -174,7 +174,7 @@ export const TopToolbar = ({
               size="sm"
               onClick={onClearAllNodes}
               title="Limpar todos os nós"
-              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-9 w-9 p-0 rounded-full"
+              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-9 w-9 p-0 rounded-full"
             >
               <Eraser className="h-4 w-4" />
             </Button>
@@ -185,7 +185,7 @@ export const TopToolbar = ({
                 size="sm"
                 onClick={() => onDeleteNode(selectedNode.id)}
                 title="Deletar nó selecionado"
-                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-9 w-9 p-0 rounded-full"
+                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-9 w-9 p-0 rounded-full"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -211,7 +211,7 @@ export const TopToolbar = ({
             />
             
             {selectedNode && (
-              <Badge variant="secondary" className="truncate dark:bg-gray-900/50 dark:text-gray-200 dark:border-gray-800 text-xs py-0.5 max-w-[80px]">
+              <Badge variant="secondary" className="truncate dark:bg-[#0E0E0E]/50 dark:text-gray-200 dark:border-gray-800 text-xs py-0.5 max-w-[80px]">
                 {selectedNode.data?.label || 'Nó'}
               </Badge>
             )}
@@ -223,7 +223,7 @@ export const TopToolbar = ({
                 size="sm"
                 onClick={onPreviewFlow}
                 title="Visualizar fluxo"
-                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 px-2 h-7"
+                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 px-2 h-7"
               >
                 <Play className="h-3 w-3" />
               </Button>
@@ -247,7 +247,7 @@ export const TopToolbar = ({
                 size="sm"
                 onClick={onAutoArrangeNodes}
                 title="Organizar nós automaticamente"
-                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 p-0 h-6 w-6"
+                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 p-0 h-6 w-6"
               >
                 <AlignJustify className="h-3 w-3" />
               </Button>
@@ -257,7 +257,7 @@ export const TopToolbar = ({
                 size="sm"
                 onClick={onClearAllNodes}
                 title="Limpar todos os nós"
-                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-0 h-6 w-6"
+                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-0 h-6 w-6"
               >
                 <Eraser className="h-3 w-3" />
               </Button>
@@ -268,7 +268,7 @@ export const TopToolbar = ({
                   size="sm"
                   onClick={() => onDeleteNode(selectedNode.id)}
                   title="Deletar nó selecionado"
-                  className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-0 h-6 w-6"
+                  className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-0 h-6 w-6"
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>
@@ -288,7 +288,7 @@ export const TopToolbar = ({
                   variant="outline"
                   size="sm"
                   onClick={() => handleAddNode(nodeType.type)}
-                  className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 border-gray-200 hover:bg-gray-50 p-0 h-8 w-8"
+                  className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 border-gray-200 hover:bg-gray-50 p-0 h-8 w-8"
                   title={nodeType.label}
                 >
                   <IconComponent className={`h-4 w-4 ${nodeType.color}`} />
@@ -316,7 +316,7 @@ export const TopToolbar = ({
             />
             
             {selectedNode && (
-              <Badge variant="secondary" className="truncate dark:bg-gray-900/50 dark:text-gray-200 dark:border-gray-800 text-xs py-0.5">
+              <Badge variant="secondary" className="truncate dark:bg-[#0E0E0E]/50 dark:text-gray-200 dark:border-gray-800 text-xs py-0.5">
                 {selectedNode.data?.label || 'Nó selecionado'}
               </Badge>
             )}
@@ -329,7 +329,7 @@ export const TopToolbar = ({
               size="sm"
               onClick={onPreviewFlow}
               title="Visualizar fluxo"
-              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 px-2 h-7"
+              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 px-2 h-7"
             >
               <Play className="h-3 w-3" />
             </Button>
@@ -353,7 +353,7 @@ export const TopToolbar = ({
               size="sm"
               onClick={onClearAllNodes}
               title="Limpar todos os nós"
-              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 px-2 h-7"
+              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 px-2 h-7"
             >
               <Eraser className="h-3 w-3" />
             </Button>
@@ -371,7 +371,7 @@ export const TopToolbar = ({
                 variant="outline"
                 size="sm"
                 onClick={() => handleAddNode(nodeType.type)}
-                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 border-gray-200 hover:bg-gray-50 p-0 h-6 w-6"
+                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 border-gray-200 hover:bg-gray-50 p-0 h-6 w-6"
                 title={nodeType.label}
               >
                 <IconComponent className={`h-3 w-3 ${nodeType.color}`} />
@@ -385,7 +385,7 @@ export const TopToolbar = ({
               size="sm"
               onClick={() => onDeleteNode(selectedNode.id)}
               title="Deletar nó selecionado"
-              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-gray-900/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-0 h-6 w-6"
+              className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 p-0 h-6 w-6"
             >
               <Trash2 className="h-3 w-3" />
             </Button>
