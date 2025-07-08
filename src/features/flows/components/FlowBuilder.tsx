@@ -71,6 +71,7 @@ export const FlowBuilder = () => {
     isPreviewModalOpen,
     addNode,
     deleteNode,
+    duplicateNode,
     clearAllNodes,
     autoArrangeNodes,
     onNodeDoubleClick,
@@ -141,12 +142,36 @@ export const FlowBuilder = () => {
     setIsSpecialConditionsConfigOpen(false);
   };
 
+  // Função para obter campos numéricos conectados a um nó
+  const getConnectedNumberFields = (nodeId: string) => {
+    if (!nodeId) return [];
+    
+    // Encontrar todas as edges que chegam ao nó atual
+    const incomingEdges = edges.filter(edge => edge.target === nodeId);
+    const sourceNodeIds = incomingEdges.map(edge => edge.source);
+    
+    // Filtrar nós de origem que são do tipo 'number'
+    const numberNodes = nodes.filter(node => 
+      sourceNodeIds.includes(node.id) && 
+      node.type === 'number' &&
+      node.data.nomenclatura &&
+      node.data.pergunta
+    );
+    
+    return numberNodes.map(node => ({
+      nomenclatura: node.data.nomenclatura as string,
+      pergunta: node.data.pergunta as string,
+      nodeId: node.id
+    }));
+  };
+
   // Preparar os nós com as funções de edição e exclusão
   const enhancedNodes = nodes.map(node => ({
     ...node,
     data: {
       ...node.data,
       onDelete: deleteNode,
+      onDuplicate: duplicateNode,
       onEdit: () => {
         onNodeClick({} as any, node);
         handleNodeConfigModal();
@@ -201,7 +226,7 @@ export const FlowBuilder = () => {
           onNodeDoubleClick={handleNodeDoubleClick}
           onNodeClick={onNodeClick}
           onDeleteNode={deleteNode}
-          onDuplicateNode={() => {}}
+          onDuplicateNode={duplicateNode}
         />
       </div>
 
@@ -239,6 +264,7 @@ export const FlowBuilder = () => {
         onClose={() => setIsSimpleCalculatorConfigOpen(false)}
         onSave={handleSimpleCalculatorConfigSave}
         initialData={selectedNode?.data}
+        availableFields={getConnectedNumberFields(selectedNode?.id || '')}
       />
 
       <SpecialConditionsNodeConfig

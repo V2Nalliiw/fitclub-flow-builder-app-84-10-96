@@ -25,6 +25,7 @@ export const NumberNodeConfig: React.FC<NumberNodeConfigProps> = ({
   initialData
 }) => {
   const [config, setConfig] = useState({
+    pergunta: '',
     nomenclatura: '',
     prefixo: '',
     sufixo: '',
@@ -34,6 +35,7 @@ export const NumberNodeConfig: React.FC<NumberNodeConfigProps> = ({
   useEffect(() => {
     if (initialData) {
       setConfig({
+        pergunta: initialData.pergunta || '',
         nomenclatura: initialData.nomenclatura || '',
         prefixo: initialData.prefixo || '',
         sufixo: initialData.sufixo || '',
@@ -54,6 +56,20 @@ export const NumberNodeConfig: React.FC<NumberNodeConfigProps> = ({
         </DialogHeader>
         
         <div className="space-y-4">
+          <div>
+            <Label htmlFor="pergunta">Pergunta para o Paciente *</Label>
+            <Input
+              id="pergunta"
+              value={config.pergunta}
+              onChange={(e) => setConfig({ ...config, pergunta: e.target.value })}
+              placeholder="Ex: Qual é a sua idade?"
+              className="mt-1"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Esta pergunta será exibida para o paciente
+            </p>
+          </div>
+
           <div>
             <Label htmlFor="nomenclatura">Nomenclatura *</Label>
             <Input
@@ -112,7 +128,7 @@ export const NumberNodeConfig: React.FC<NumberNodeConfigProps> = ({
             </Button>
             <Button 
               onClick={handleSave}
-              disabled={!config.nomenclatura.trim()}
+              disabled={!config.pergunta.trim() || !config.nomenclatura.trim()}
               className="bg-[#5D8701] hover:bg-[#4a6e01]"
             >
               <Save className="h-4 w-4 mr-2" />

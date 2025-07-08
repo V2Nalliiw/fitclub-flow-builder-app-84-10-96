@@ -143,6 +143,41 @@ export const useFlowBuilder = () => {
     }, 200);
   }, [nodes, selectedNode, setNodes, setEdges]);
 
+  const duplicateNode = useCallback((nodeId: string) => {
+    const nodeToDuplicate = nodes.find(n => n.id === nodeId);
+    if (!nodeToDuplicate) return;
+
+    // Não permitir duplicar o nó inicial
+    if (nodeId === '1' || nodeToDuplicate.type === 'start') {
+      toast.error('Não é possível duplicar o nó inicial');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      const newNode: Node = {
+        ...nodeToDuplicate,
+        id: `${Date.now()}`,
+        position: {
+          x: nodeToDuplicate.position.x + 50,
+          y: nodeToDuplicate.position.y + 50
+        },
+        data: {
+          ...nodeToDuplicate.data,
+          // Remove funções específicas da instância
+          onDelete: undefined,
+          onEdit: undefined,
+        }
+      };
+      
+      setNodes((nds) => [...nds, newNode]);
+      setIsLoading(false);
+      
+      toast.success('Nó duplicado com sucesso');
+    }, 200);
+  }, [nodes, setNodes]);
+
   const clearAllNodes = () => {
     const confirmClear = window.confirm(
       "Tem certeza que deseja limpar todo o fluxo?\n\nTodos os nós (exceto o inicial) e conexões serão removidos. Esta ação não pode ser desfeita."
@@ -308,6 +343,7 @@ export const useFlowBuilder = () => {
     isLoading,
     addNode,
     deleteNode,
+    duplicateNode,
     clearAllNodes,
     autoArrangeNodes,
     onNodeDoubleClick,

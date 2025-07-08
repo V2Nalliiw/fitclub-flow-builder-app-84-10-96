@@ -1,13 +1,14 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2, Edit } from 'lucide-react';
+import { Trash2, Edit, Copy } from 'lucide-react';
 
 interface SimpleNodeActionsProps {
   nodeId: string;
   nodeType?: string;
   onDelete?: (nodeId: string) => void;
   onEdit?: () => void;
+  onDuplicate?: (nodeId: string) => void;
   show?: boolean;
 }
 
@@ -16,6 +17,7 @@ export const SimpleNodeActions: React.FC<SimpleNodeActionsProps> = ({
   nodeType,
   onDelete,
   onEdit,
+  onDuplicate,
   show = false,
 }) => {
   console.log('SimpleNodeActions render:', {
@@ -65,6 +67,20 @@ export const SimpleNodeActions: React.FC<SimpleNodeActionsProps> = ({
     onEdit();
   };
 
+  const handleDuplicate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    console.log('Duplicate button clicked for node:', nodeId);
+    
+    if (!onDuplicate) {
+      console.error('onDuplicate function not available');
+      return;
+    }
+
+    onDuplicate(nodeId);
+  };
+
   return (
     <div 
       className="absolute -top-3 -right-3 z-50 flex gap-1"
@@ -80,6 +96,18 @@ export const SimpleNodeActions: React.FC<SimpleNodeActionsProps> = ({
         type="button"
       >
         <Edit className="h-3 w-3" />
+      </Button>
+      
+      {/* Botão de Duplicar */}
+      <Button
+        size="sm"
+        variant="outline"
+        className="w-6 h-6 p-0 rounded-full shadow-lg hover:scale-110 transition-transform"
+        onClick={handleDuplicate}
+        title="Duplicar nó"
+        type="button"
+      >
+        <Copy className="h-3 w-3" />
       </Button>
       
       {/* Botão de Deletar */}

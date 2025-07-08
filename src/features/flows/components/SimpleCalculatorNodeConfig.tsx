@@ -10,27 +10,31 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Save, Plus, X } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Save, Plus, X, HelpCircle } from 'lucide-react';
+import { FormulaHelpModal } from './FormulaHelpModal';
 
 interface SimpleCalculatorNodeConfigProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: any) => void;
   initialData?: any;
+  availableFields?: Array<{ nomenclatura: string; pergunta: string; nodeId: string }>;
 }
 
 export const SimpleCalculatorNodeConfig: React.FC<SimpleCalculatorNodeConfigProps> = ({
   isOpen,
   onClose,
   onSave,
-  initialData
+  initialData,
+  availableFields = []
 }) => {
   const [config, setConfig] = useState({
     operacao: '',
     camposReferenciados: [] as string[],
     resultLabel: ''
   });
-  const [newCampo, setNewCampo] = useState('');
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -42,20 +46,27 @@ export const SimpleCalculatorNodeConfig: React.FC<SimpleCalculatorNodeConfigProp
     }
   }, [initialData]);
 
-  const addCampo = () => {
-    if (newCampo.trim() && !config.camposReferenciados.includes(newCampo.trim())) {
+  const toggleCampo = (nomenclatura: string) => {
+    const isSelected = config.camposReferenciados.includes(nomenclatura);
+    if (isSelected) {
       setConfig({
         ...config,
-        camposReferenciados: [...config.camposReferenciados, newCampo.trim()]
+        camposReferenciados: config.camposReferenciados.filter(c => c !== nomenclatura)
       });
-      setNewCampo('');
+    } else {
+      setConfig({
+        ...config,
+        camposReferenciados: [...config.camposReferenciados, nomenclatura]
+      });
     }
   };
 
-  const removeCampo = (campo: string) => {
+  const insertFieldInFormula = (nomenclatura: string) => {
+    const currentFormula = config.operacao;
+    const newFormula = currentFormula ? `${currentFormula} ${nomenclatura}` : nomenclatura;
     setConfig({
       ...config,
-      camposReferenciados: config.camposReferenciados.filter(c => c !== campo)
+      operacao: newFormula
     });
   };
 
@@ -72,52 +83,82 @@ export const SimpleCalculatorNodeConfig: React.FC<SimpleCalculatorNodeConfigProp
         
         <div className="space-y-4">
           <div>
-            <Label htmlFor="operacao">Operação Matemática *</Label>
+            <div className="flex items-center gap-2 mb-2">
+              <Label htmlFor="operacao">Operação Matemática *</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsHelpOpen(true)}
+                className="h-6 w-6 p-0"
+              >
+                <HelpCircle className="h-4 w-4" />
+              </Button>
+            </div>
             <Textarea
               id="operacao"
               value={config.operacao}
               onChange={(e) => setConfig({ ...config, operacao: e.target.value })}
-              placeholder="Ex: peso / (altura * altura)"
+              placeholder="Ex: peso / (altura ^ 2) para calcular IMC"
               className="mt-1 font-mono"
               rows={3}
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Use as nomenclaturas dos campos numéricos e operadores: +, -, *, /, ( )
+              Use as nomenclaturas selecionadas abaixo e operadores: +, -, *, /, ^, ( )
             </p>
           </div>
 
-          <div>
-            <Label>Campos Referenciados</Label>
-            <div className="flex gap-2 mt-1">
-              <Input
-                value={newCampo}
-                onChange={(e) => setNewCampo(e.target.value)}
-                placeholder="Nomenclatura do campo"
-                onKeyPress={(e) => e.key === 'Enter' && addCampo()}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addCampo}
-                disabled={!newCampo.trim()}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+          {availableFields.length > 0 ? (
+            <div>
+              <Label>Campos Conectados Disponíveis</Label>
+              <p className="text-xs text-muted-foreground mb-3">
+                Selecione os campos que deseja usar na fórmula
+              </p>
+              <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
+                {availableFields.map((field) => (
+                  <div key={field.nodeId} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded">
+                    <div className="flex items-center space-x-3">
+                      <Checkbox
+                        id={field.nodeId}
+                        checked={config.camposReferenciados.includes(field.nomenclatura)}
+                        onCheckedChange={() => toggleCampo(field.nomenclatura)}
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{field.nomenclatura}</span>
+                        <span className="text-xs text-muted-foreground">"{field.pergunta}"</span>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertFieldInFormula(field.nomenclatura)}
+                      className="text-xs"
+                    >
+                      Inserir
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex flex-wrap gap-2 mt-3">
+                {config.camposReferenciados.map((campo, index) => (
+                  <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                    {campo}
+                    <X 
+                      className="h-3 w-3 cursor-pointer hover:text-red-500" 
+                      onClick={() => toggleCampo(campo)}
+                    />
+                  </Badge>
+                ))}
+              </div>
             </div>
-            
-            <div className="flex flex-wrap gap-2 mt-2">
-              {config.camposReferenciados.map((campo, index) => (
-                <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                  {campo}
-                  <X 
-                    className="h-3 w-3 cursor-pointer hover:text-red-500" 
-                    onClick={() => removeCampo(campo)}
-                  />
-                </Badge>
-              ))}
+          ) : (
+            <div className="text-center py-4 text-muted-foreground border-2 border-dashed rounded-lg">
+              <p className="text-sm">Nenhum campo numérico conectado</p>
+              <p className="text-xs">Conecte nós de número a este nó para ver os campos disponíveis</p>
             </div>
-          </div>
+          )}
 
           <div>
             <Label htmlFor="resultLabel">Rótulo do Resultado</Label>
@@ -145,6 +186,11 @@ export const SimpleCalculatorNodeConfig: React.FC<SimpleCalculatorNodeConfigProp
           </div>
         </div>
       </DialogContent>
+      
+      <FormulaHelpModal
+        isOpen={isHelpOpen}
+        onClose={() => setIsHelpOpen(false)}
+      />
     </Dialog>
   );
 };

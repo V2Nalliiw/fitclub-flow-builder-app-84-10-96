@@ -47,6 +47,7 @@ export const EndNode: React.FC<EndNodeProps> = ({ data, selected, id }) => {
         nodeType="end"
         onDelete={data?.onDelete}
         onEdit={data?.onEdit}
+        onDuplicate={data?.onDuplicate}
         show={selected}
       />
       

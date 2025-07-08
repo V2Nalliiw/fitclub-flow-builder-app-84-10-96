@@ -135,6 +135,8 @@ export const SpecialConditionsNodeConfig: React.FC<SpecialConditionsNodeConfigPr
                       <SelectContent>
                         <SelectItem value="numerico">Campo Numérico</SelectItem>
                         <SelectItem value="pergunta">Resposta de Pergunta</SelectItem>
+                        <SelectItem value="calculo">Resultado de Cálculo</SelectItem>
+                        <SelectItem value="combinacao">Combinação</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -144,7 +146,12 @@ export const SpecialConditionsNodeConfig: React.FC<SpecialConditionsNodeConfigPr
                     <Input
                       value={condition.campo}
                       onChange={(e) => updateCondition(condition.id, { campo: e.target.value })}
-                      placeholder={condition.tipo === 'numerico' ? 'nomenclatura' : 'ID da pergunta'}
+                      placeholder={
+                        condition.tipo === 'numerico' ? 'nomenclatura' : 
+                        condition.tipo === 'pergunta' ? 'ID da pergunta' :
+                        condition.tipo === 'calculo' ? 'nome do resultado' :
+                        'campo/pergunta'
+                      }
                       className="mt-1"
                     />
                   </div>
@@ -162,10 +169,12 @@ export const SpecialConditionsNodeConfig: React.FC<SpecialConditionsNodeConfigPr
                       </SelectTrigger>
                       <SelectContent>
                         {operadores
-                          .filter(op => condition.tipo === 'pergunta' ? 
-                            ['igual', 'diferente', 'contem'].includes(op.value) : 
-                            true
-                          )
+                          .filter(op => {
+                            if (condition.tipo === 'pergunta') {
+                              return ['igual', 'diferente', 'contem'].includes(op.value);
+                            }
+                            return true; // todos os operadores para numérico, cálculo e combinação
+                          })
                           .map((op) => (
                           <SelectItem key={op.value} value={op.value}>
                             {op.label}
@@ -180,12 +189,14 @@ export const SpecialConditionsNodeConfig: React.FC<SpecialConditionsNodeConfigPr
                     <Input
                       value={condition.valor}
                       onChange={(e) => updateCondition(condition.id, { 
-                        valor: condition.tipo === 'numerico' ? 
+                        valor: ['numerico', 'calculo'].includes(condition.tipo) ? 
                           (parseFloat(e.target.value) || 0) : 
                           e.target.value 
                       })}
-                      type={condition.tipo === 'numerico' ? 'number' : 'text'}
-                      placeholder={condition.tipo === 'numerico' ? '0' : 'texto'}
+                      type={['numerico', 'calculo'].includes(condition.tipo) ? 'number' : 'text'}
+                      placeholder={
+                        ['numerico', 'calculo'].includes(condition.tipo) ? '0' : 'texto'
+                      }
                       className="mt-1"
                     />
                   </div>

@@ -11,6 +11,7 @@ interface SimpleCalculatorNodeProps {
     resultLabel?: string;
     onDelete?: (nodeId: string) => void;
     onEdit?: () => void;
+    onDuplicate?: (nodeId: string) => void;
   };
   id: string;
   selected?: boolean;
@@ -79,6 +80,7 @@ const SimpleCalculatorNode: React.FC<SimpleCalculatorNodeProps> = ({ data, id, s
         nodeType="simpleCalculator"
         onDelete={data?.onDelete}
         onEdit={data?.onEdit}
+        onDuplicate={data?.onDuplicate}
         show={selected}
       />
       

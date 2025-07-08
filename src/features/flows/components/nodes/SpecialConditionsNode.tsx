@@ -9,6 +9,7 @@ interface SpecialConditionsNodeProps {
     condicoesEspeciais?: any[];
     onDelete?: (nodeId: string) => void;
     onEdit?: () => void;
+    onDuplicate?: (nodeId: string) => void;
   };
   id: string;
   selected?: boolean;
@@ -80,6 +81,7 @@ const SpecialConditionsNode: React.FC<SpecialConditionsNodeProps> = ({ data, id,
         nodeType="specialConditions"
         onDelete={data?.onDelete}
         onEdit={data?.onEdit}
+        onDuplicate={data?.onDuplicate}
         show={selected}
       />
 

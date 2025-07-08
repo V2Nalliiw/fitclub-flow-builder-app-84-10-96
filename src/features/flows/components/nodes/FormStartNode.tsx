@@ -49,6 +49,7 @@ export const FormStartNode: React.FC<FormStartNodeProps> = ({ data, selected, id
         nodeType="formStart"
         onDelete={data?.onDelete}
         onEdit={data?.onEdit}
+        onDuplicate={data?.onDuplicate}
         show={selected}
       />
       

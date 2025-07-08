@@ -6,12 +6,14 @@ import { SimpleNodeActions } from '../SimpleNodeActions';
 interface NumberNodeProps {
   data: {
     label: string;
+    pergunta?: string;
     nomenclatura?: string;
     prefixo?: string;
     sufixo?: string;
     tipoNumero?: 'inteiro' | 'decimal';
     onDelete?: (nodeId: string) => void;
     onEdit?: () => void;
+    onDuplicate?: (nodeId: string) => void;
   };
   id: string;
   selected?: boolean;
@@ -39,9 +41,15 @@ const NumberNode: React.FC<NumberNodeProps> = ({ data, id, selected }) => {
         
         {/* Content Section */}
         <div className="px-3 py-2 space-y-2">
+          {data.pergunta && (
+            <div className="text-xs text-gray-900 dark:text-gray-100 font-medium">
+              "{data.pergunta}"
+            </div>
+          )}
+          
           {data.nomenclatura && (
             <div className="text-xs text-gray-600 dark:text-gray-400">
-              <span className="font-medium">Nomenclatura:</span> {data.nomenclatura}
+              <span className="font-medium">Var:</span> {data.nomenclatura}
             </div>
           )}
           
@@ -65,6 +73,7 @@ const NumberNode: React.FC<NumberNodeProps> = ({ data, id, selected }) => {
         nodeType="number"
         onDelete={data?.onDelete}
         onEdit={data?.onEdit}
+        onDuplicate={data?.onDuplicate}
         show={selected}
       />
       

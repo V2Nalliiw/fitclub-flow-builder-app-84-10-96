@@ -12,7 +12,6 @@ export interface FlowNode {
     tipoConteudo?: 'pdf' | 'imagem' | 'video' | 'ebook';
     arquivo?: string;
     arquivos?: FileUploadConfig[]; // Para múltiplos uploads
-    pergunta?: string;
     tipoResposta?: 'escolha-unica' | 'multipla-escolha'; // Removido 'texto-livre'
     tipoExibicao?: 'aberto' | 'select'; // Como exibir as opções
     opcoes?: string[];
@@ -28,6 +27,7 @@ export interface FlowNode {
     // Campos específicos para o nó condições
     conditions?: ConditionRule[];
     // Campos específicos para o nó número
+    pergunta?: string; // Nova: pergunta para o paciente responder
     nomenclatura?: string;
     prefixo?: string;
     sufixo?: string;
@@ -68,7 +68,7 @@ export interface FileUploadConfig {
 
 export interface SpecialConditionRule {
   id: string;
-  tipo: 'numerico' | 'pergunta';
+  tipo: 'numerico' | 'pergunta' | 'calculo' | 'combinacao';
   campo: string; // nomenclatura ou id da pergunta
   operador: 'igual' | 'maior' | 'menor' | 'maior_igual' | 'menor_igual' | 'diferente' | 'entre' | 'contem';
   valor: number | string;
