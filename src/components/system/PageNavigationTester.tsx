@@ -231,7 +231,7 @@ export const PageNavigationTester = () => {
         {(successCount > 0 || errorCount > 0) && (
           <div className="flex gap-2 mt-2">
             {successCount > 0 && (
-              <Badge variant="default" className="bg-green-100 text-green-700">
+              <Badge variant="default" className="bg-green-100 text-green-700 dark:bg-green-950/20 dark:text-green-400">
                 {successCount} Sucessos
               </Badge>
             )}
@@ -250,7 +250,7 @@ export const PageNavigationTester = () => {
             <div 
               key={index} 
               className={`flex items-center gap-3 p-3 border rounded-lg ${
-                !test.accessible ? 'opacity-50 bg-gray-50' : ''
+                !test.accessible ? 'opacity-50 bg-gray-50 dark:bg-gray-800' : ''
               }`}
             >
               <div className="p-2 rounded-full bg-primary/10 text-primary">
@@ -268,7 +268,7 @@ export const PageNavigationTester = () => {
                 </div>
                 <p className="text-sm text-muted-foreground">{test.description}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  <code className="bg-gray-100 px-1 rounded">{test.path}</code>
+                  <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{test.path}</code>
                 </p>
               </div>
               {test.accessible && (

@@ -84,8 +84,7 @@ const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
               className="flex items-center gap-2 text-xs p-1 bg-muted/50 rounded border"
             >
               <div 
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: `hsl(var(--primary))` }}
+                className="w-2 h-2 rounded-full bg-primary"
               />
               <span className="truncate flex-1" title={condition.label}>
                 {condition.label}

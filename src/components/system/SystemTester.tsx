@@ -121,10 +121,10 @@ export const SystemTester = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'success': return 'bg-green-500';
-      case 'error': return 'bg-red-500';
-      case 'warning': return 'bg-yellow-500';
-      default: return 'bg-gray-500';
+      case 'success': return 'bg-green-500 dark:bg-green-600';
+      case 'error': return 'bg-red-500 dark:bg-red-600';
+      case 'warning': return 'bg-yellow-500 dark:bg-yellow-600';
+      default: return 'bg-gray-500 dark:bg-gray-600';
     }
   };
 

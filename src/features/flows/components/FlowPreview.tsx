@@ -230,7 +230,7 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-center py-4">
-            <div className="text-2xl font-bold text-gray-800 mb-4">
+            <div className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
               Resultado: {calculatorResult.toFixed(2)}
             </div>
           </div>
@@ -398,9 +398,9 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
         return (
           <Card className="w-full max-w-md mx-auto">
             <CardHeader className="text-center">
-              <div className="mx-auto w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
-                <Clock className="h-6 w-6 text-orange-600" />
-              </div>
+          <div className="mx-auto w-12 h-12 bg-orange-100 dark:bg-orange-950/20 rounded-full flex items-center justify-center mb-4">
+            <Clock className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+          </div>
               <CardTitle className="text-lg">Aguardando...</CardTitle>
               <p className="text-muted-foreground">
                 Aguarde {String(data?.quantidade || '1')} {String(data?.tipoIntervalo || 'minutos')} para continuar
@@ -419,9 +419,9 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
         return (
           <Card className="w-full max-w-md mx-auto">
             <CardHeader className="text-center">
-              <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <Check className="h-6 w-6 text-green-600" />
-              </div>
+          <div className="mx-auto w-12 h-12 bg-green-100 dark:bg-green-950/20 rounded-full flex items-center justify-center mb-4">
+            <Check className="h-6 w-6 text-green-600 dark:text-green-400" />
+          </div>
               <CardTitle className="text-xl">Conteúdo Disponível</CardTitle>
               {data?.mensagemFinal && (
                 <p className="text-muted-foreground">{String(data.mensagemFinal)}</p>
@@ -468,8 +468,8 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
       <div className="space-y-6">
         <Card className="w-full max-w-md mx-auto">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <Check className="h-6 w-6 text-green-600" />
+            <div className="mx-auto w-12 h-12 bg-green-100 dark:bg-green-950/20 rounded-full flex items-center justify-center mb-4">
+              <Check className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
             <CardTitle className="text-xl">Formulário Concluído!</CardTitle>
             <p className="text-muted-foreground">
