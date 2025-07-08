@@ -29,7 +29,7 @@ export const ClinicFlowsList = () => {
 
   if (!hasLoadedOnce || isEmpty) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-950 dark:to-slate-900 p-4 md:p-6">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:bg-[#0E0E0E] p-4 md:p-6">
         <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
           <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6 md:p-8 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-0 mb-6 md:mb-8">
@@ -109,7 +109,7 @@ export const ClinicFlowsList = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-950 dark:to-slate-900 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:bg-[#0E0E0E] p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
         <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6 md:p-8 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-0 mb-6 md:mb-8">
