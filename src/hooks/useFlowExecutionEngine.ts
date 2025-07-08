@@ -5,6 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useWhatsApp } from '@/hooks/useWhatsApp';
+import { useContentUrlGenerator } from '@/hooks/useContentUrlGenerator';
+import { useWhatsAppValidations } from '@/hooks/useWhatsAppValidations';
 
 interface ExecutionStep {
   nodeId: string;
@@ -19,6 +21,8 @@ export const useFlowExecutionEngine = () => {
   const { toast } = useToast();
   const { createNotification } = useNotifications();
   const { sendWhatsAppTemplateMessage } = useWhatsApp();
+  const { generateContentUrl } = useContentUrlGenerator();
+  const { validateWhatsAppSending, recordOptInActivity } = useWhatsAppValidations();
   const [processing, setProcessing] = useState(false);
 
   const executeFlowStep = useCallback(async (
@@ -117,19 +121,38 @@ export const useFlowExecutionEngine = () => {
         .single();
 
       if (patient && (patient as any).phone) {
-        try {
-          await sendWhatsAppTemplateMessage(
-            (patient as any).phone,
-            'novo_formulario',
-            {
-              patient_name: (patient as any).name || 'Paciente',
-              form_name: nodeData.titulo || 'Formulário',
-              form_url: formUrl
-            }
-          );
-          console.log('Template novo_formulario enviado com sucesso');
-        } catch (error) {
-          console.error('Erro ao enviar template novo_formulario:', error);
+        // Validar antes de enviar
+        const validation = await validateWhatsAppSending(
+          (patient as any).phone,
+          'novo_formulario',
+          (execution as any).patient_id
+        );
+
+        if (validation.canSend) {
+          try {
+            await sendWhatsAppTemplateMessage(
+              (patient as any).phone,
+              'novo_formulario',
+              {
+                patient_name: (patient as any).name || 'Paciente',
+                form_name: nodeData.titulo || 'Formulário',
+                form_url: formUrl
+              }
+            );
+            
+            // Registrar atividade de envio
+            await recordOptInActivity(
+              (execution as any).patient_id,
+              (patient as any).phone,
+              'whatsapp_sent'
+            );
+            
+            console.log('Template novo_formulario enviado com sucesso');
+          } catch (error) {
+            console.error('Erro ao enviar template novo_formulario:', error);
+          }
+        } else {
+          console.warn('Envio WhatsApp bloqueado:', validation.reason);
         }
       }
     }
@@ -155,30 +178,53 @@ export const useFlowExecutionEngine = () => {
       if (patient && (patient as any).phone) {
         // Gerar URL de conteúdo se houver arquivos configurados
         let contentUrl = '';
+        
         if (nodeData.arquivos && nodeData.arquivos.length > 0) {
+          console.log('Gerando URL para arquivos:', nodeData.arquivos.length);
+          contentUrl = await generateContentUrl({
+            executionId,
+            files: nodeData.arquivos
+          }) || '';
+        }
+
+        // Se não houver URL de conteúdo, usar URL padrão
+        if (!contentUrl) {
           contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}`;
         }
 
-        try {
-          await sendWhatsAppTemplateMessage(
-            (patient as any).phone,
-            'formulario_concluido',
-            {
-              patient_name: (patient as any).name || 'Paciente',
-              content_url: contentUrl || 'Conteúdo disponível em breve'
-            }
-          );
-          console.log('Template formulario_concluido enviado com sucesso');
-        } catch (error) {
-          console.error('Erro ao enviar template formulario_concluido:', error);
+        // Validar antes de enviar
+        const validation = await validateWhatsAppSending(
+          (patient as any).phone,
+          'formulario_concluido',
+          (execution as any).patient_id
+        );
+
+        if (validation.canSend) {
+          try {
+            await sendWhatsAppTemplateMessage(
+              (patient as any).phone,
+              'formulario_concluido',
+              {
+                patient_name: (patient as any).name || 'Paciente',
+                content_url: contentUrl
+              }
+            );
+            
+            // Registrar atividade de envio
+            await recordOptInActivity(
+              (execution as any).patient_id,
+              (patient as any).phone,
+              'whatsapp_sent'
+            );
+            
+            console.log('Template formulario_concluido enviado com sucesso');
+          } catch (error) {
+            console.error('Erro ao enviar template formulario_concluido:', error);
+          }
+        } else {
+          console.warn('Envio WhatsApp bloqueado:', validation.reason);
         }
       }
-    }
-
-    // Verificar se há conteúdo para enviar
-    if (nodeData.conteudo && nodeData.conteudo.length > 0) {
-      // Processar envio de conteúdo via WhatsApp ou email
-      console.log('Enviando conteúdo final:', nodeData.conteudo);
     }
 
     console.log('Fim de formulário processado');

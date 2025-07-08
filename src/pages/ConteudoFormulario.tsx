@@ -36,25 +36,39 @@ export default function ConteudoFormulario() {
 
         if (error) throw error;
 
-        // Buscar o flow para obter os nós
-        const { data: flow } = await supabase
-          .from('flows')
-          .select('nodes')
-          .eq('id', (execution as any).flow_id)
-          .single();
+        // Primeiro, tentar obter dados do current_step se houver content_access
+        let contentData: FormContent | null = null;
+        
+        if ((execution as any)?.current_step?.content_access) {
+          const contentAccess = (execution as any).current_step.content_access;
+          contentData = {
+            titulo: 'Conteúdo do Formulário',
+            descricao: 'Arquivos disponíveis para download',
+            arquivos: contentAccess.files || []
+          };
+        } else {
+          // Buscar o flow para obter os nós como fallback
+          const { data: flow } = await supabase
+            .from('flows')
+            .select('nodes')
+            .eq('id', (execution as any).flow_id)
+            .single();
 
-        if (flow) {
-          const nodes = (flow as any).nodes || [];
-          const formEndNode = nodes.find((node: any) => node.type === 'formEnd');
-          
-          if (formEndNode && formEndNode.data) {
-            setContent({
-              titulo: formEndNode.data.titulo || 'Conteúdo do Formulário',
-              descricao: formEndNode.data.descricao || '',
-              arquivos: formEndNode.data.arquivos || []
-            });
+          if (flow) {
+            const nodes = (flow as any).nodes || [];
+            const formEndNode = nodes.find((node: any) => node.type === 'formEnd');
+            
+            if (formEndNode && formEndNode.data) {
+              contentData = {
+                titulo: formEndNode.data.titulo || 'Conteúdo do Formulário',
+                descricao: formEndNode.data.descricao || '',
+                arquivos: formEndNode.data.arquivos || []
+              };
+            }
           }
         }
+
+        setContent(contentData);
       } catch (error) {
         console.error('Erro ao carregar conteúdo:', error);
         toast({

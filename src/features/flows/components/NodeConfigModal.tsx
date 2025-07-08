@@ -19,6 +19,7 @@ import { useFormManager } from '@/features/forms/hooks/useFormManager';
 import { useFormIntegration } from '../hooks/useFormIntegration';
 import { toast } from '@/hooks/use-toast';
 import { WhatsAppNodeConfig } from './WhatsAppNodeConfig';
+import { FormEndNodeConfig } from './FormEndNodeConfig';
 
 interface NodeConfigModalProps {
   isOpen: boolean;
@@ -197,56 +198,7 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
         );
 
       case 'formEnd':
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="mensagemFinal">Mensagem de Conclusão</Label>
-              <Textarea
-                id="mensagemFinal"
-                value={String(config.mensagemFinal || '')}
-                onChange={(e) => setConfig({ ...config, mensagemFinal: e.target.value })}
-                placeholder="Obrigado por responder o formulário!"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="tipoConteudo">Tipo de Conteúdo</Label>
-              <Select
-                value={String(config.tipoConteudo || '')}
-                onValueChange={(value) => setConfig({ ...config, tipoConteudo: value })}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Selecione o tipo de conteúdo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pdf">PDF</SelectItem>
-                  <SelectItem value="imagem">Imagem</SelectItem>
-                  <SelectItem value="video">Vídeo</SelectItem>
-                  <SelectItem value="ebook">E-book</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="arquivo">Upload de Arquivo</Label>
-              <Input
-                id="arquivo"
-                type="file"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setConfig({ ...config, arquivo: file.name });
-                  }
-                }}
-                className="mt-1"
-              />
-              {config.arquivo && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Arquivo atual: {String(config.arquivo)}
-                </p>
-              )}
-            </div>
-          </div>
-        );
+        return <FormEndNodeConfig config={config} setConfig={setConfig} />;
 
       case 'delay':
         return (

@@ -42,10 +42,15 @@ export const FormEndNode: React.FC<FormEndNodeProps> = ({ data, selected, id, on
             <span>
               {data.arquivos?.length > 0 
                 ? `${data.arquivos.length} arquivo(s)`
-                : (data.tipoConteudo || 'conteúdo')
+                : 'Sem arquivos'
               }
             </span>
           </div>
+          {data.titulo && (
+            <div className="text-xs text-gray-500 dark:text-gray-500 truncate mt-1">
+              {data.titulo}
+            </div>
+          )}
         </div>
       </div>
       
