@@ -86,7 +86,7 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
 
   if (checkingFile) {
     return (
-      <Card className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-950/20 dark:to-gray-900/20">
+      <Card className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-950/20 dark:to-slate-900/20">
         <CardContent className="p-6 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Verificando arquivo...</p>
