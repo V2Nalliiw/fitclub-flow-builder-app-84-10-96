@@ -1,3 +1,3 @@
-// Este arquivo foi substituído pelo SpecialConditionsNodeConfigNew.tsx
-// Mantido apenas para compatibilidade temporária
-export { SpecialConditionsNodeConfigNew as SpecialConditionsNodeConfig } from './SpecialConditionsNodeConfigNew';
+// Este arquivo mantém compatibilidade enquanto migramos para o sistema avançado
+import { SpecialConditionsNodeConfigAdvanced } from './SpecialConditionsNodeConfigAdvanced';
+export { SpecialConditionsNodeConfigAdvanced as SpecialConditionsNodeConfig };

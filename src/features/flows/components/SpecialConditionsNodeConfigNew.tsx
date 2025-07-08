@@ -14,7 +14,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Save, Plus, Trash2, Info, GitBranch } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-interface SpecialCondition {
+import { SpecialConditionRule } from '@/types/flow';
+
+// Interface legada para compatibilidade
+interface LegacySpecialCondition {
   id: string;
   tipos: ('numerico' | 'pergunta' | 'calculo')[];
   tipoCondicao: 'simples' | 'combinacao';
@@ -46,7 +49,7 @@ export const SpecialConditionsNodeConfigNew: React.FC<SpecialConditionsNodeConfi
   onSave,
   initialData
 }) => {
-  const [conditions, setConditions] = useState<SpecialCondition[]>([]);
+  const [conditions, setConditions] = useState<LegacySpecialCondition[]>([]);
 
   useEffect(() => {
     if (initialData?.condicoesEspeciais) {
@@ -90,7 +93,7 @@ export const SpecialConditionsNodeConfigNew: React.FC<SpecialConditionsNodeConfi
   };
 
   const addCondition = () => {
-    const newCondition: SpecialCondition = {
+    const newCondition: LegacySpecialCondition = {
       id: Date.now().toString(),
       tipos: ['numerico'],
       tipoCondicao: 'simples',
@@ -102,7 +105,7 @@ export const SpecialConditionsNodeConfigNew: React.FC<SpecialConditionsNodeConfi
     setConditions([...conditions, newCondition]);
   };
 
-  const updateCondition = (id: string, updates: Partial<SpecialCondition>) => {
+  const updateCondition = (id: string, updates: Partial<LegacySpecialCondition>) => {
     setConditions(conditions.map(cond => 
       cond.id === id ? { ...cond, ...updates } : cond
     ));
@@ -137,7 +140,7 @@ export const SpecialConditionsNodeConfigNew: React.FC<SpecialConditionsNodeConfi
     }));
   };
 
-  const getPreviewText = (condition: SpecialCondition) => {
+  const getPreviewText = (condition: LegacySpecialCondition) => {
     if (condition.tipoCondicao === 'combinacao') {
       const tiposText = condition.tipos.map(t => {
         switch(t) {

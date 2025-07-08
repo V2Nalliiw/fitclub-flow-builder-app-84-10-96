@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2, GitBranch } from 'lucide-react';
-import { ConditionRule } from '@/types/flow';
+import { LegacyConditionRule } from '@/types/flow';
 
 interface ConditionsNodeConfigProps {
   isOpen: boolean;
@@ -24,7 +24,7 @@ const ConditionsNodeConfig: React.FC<ConditionsNodeConfigProps> = ({
 }) => {
   const [titulo, setTitulo] = useState(initialData?.titulo || '');
   const [descricao, setDescricao] = useState(initialData?.descricao || '');
-  const [conditions, setConditions] = useState<ConditionRule[]>(initialData?.conditions || []);
+  const [conditions, setConditions] = useState<LegacyConditionRule[]>(initialData?.conditions || []);
 
   const operadores = [
     { value: 'igual', label: 'Igual a (=)' },
@@ -37,7 +37,7 @@ const ConditionsNodeConfig: React.FC<ConditionsNodeConfigProps> = ({
   ];
 
   const addCondition = () => {
-    const newCondition: ConditionRule = {
+    const newCondition: LegacyConditionRule = {
       id: `condition_${Date.now()}`,
       campo: 'resultado',
       operador: 'maior',
@@ -47,7 +47,7 @@ const ConditionsNodeConfig: React.FC<ConditionsNodeConfigProps> = ({
     setConditions([...conditions, newCondition]);
   };
 
-  const updateCondition = (index: number, updates: Partial<ConditionRule>) => {
+  const updateCondition = (index: number, updates: Partial<LegacyConditionRule>) => {
     const updatedConditions = conditions.map((condition, i) => 
       i === index ? { ...condition, ...updates } : condition
     );
@@ -58,7 +58,7 @@ const ConditionsNodeConfig: React.FC<ConditionsNodeConfigProps> = ({
     setConditions(conditions.filter((_, i) => i !== index));
   };
 
-  const getOperatorPreview = (condition: ConditionRule) => {
+  const getOperatorPreview = (condition: LegacyConditionRule) => {
     const operatorLabel = operadores.find(op => op.value === condition.operador)?.label || '';
     
     if (condition.operador === 'entre') {

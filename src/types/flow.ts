@@ -25,7 +25,7 @@ export interface FlowNode {
     formula?: string;
     resultLabel?: string;
     // Campos específicos para o nó condições
-    conditions?: ConditionRule[];
+    conditions?: LegacyConditionRule[];
     // Campos específicos para o nó número
     pergunta?: string; // Nova: pergunta para o paciente responder
     nomenclatura?: string;
@@ -49,7 +49,8 @@ export interface CalculatorField {
   tipo: 'numero' | 'decimal';
 }
 
-export interface ConditionRule {
+// Interface legada para compatibilidade
+export interface LegacyConditionRule {
   id: string;
   campo: string;
   operador: 'igual' | 'maior' | 'menor' | 'maior_igual' | 'menor_igual' | 'diferente' | 'entre';
@@ -68,23 +69,42 @@ export interface FileUploadConfig {
 
 export interface SpecialConditionRule {
   id: string;
-  tipos: ('numerico' | 'pergunta' | 'calculo')[];
-  tipoCondicao: 'simples' | 'combinacao';
-  // Para condições simples
-  campo?: string; // nomenclatura ou id da pergunta
-  operador: 'igual' | 'maior' | 'menor' | 'maior_igual' | 'menor_igual' | 'diferente' | 'entre' | 'contem';
-  valor: number | string;
-  valorFinal?: number; // Para o operador "entre"
-  // Para condições de combinação
-  campos?: {
-    tipo: 'numerico' | 'pergunta' | 'calculo';
-    campo: string;
-    operador: string;
-    valor: number | string;
-    valorFinal?: number;
-  }[];
-  operadorCombinacao?: 'AND' | 'OR';
+  name: string;
+  description?: string;
+  
+  // Fontes de dados disponíveis no fluxo
+  dataSources: {
+    numericFields: string[];     // ['peso', 'altura', 'idade']
+    questionResponses: string[]; // ['pergunta_1', 'pergunta_2']
+    calculationResults: string[]; // ['imc', 'calculo_dose']
+  };
+  
+  // Estrutura da expressão lógica
+  expression: {
+    type: 'simple' | 'complex';
+    rules: ConditionRule[];
+    logic: 'AND' | 'OR';
+  };
+  
+  // Ações baseadas no resultado
+  outcomes: {
+    true: { nextNode?: string; message?: string };
+    false: { nextNode?: string; message?: string };
+  };
+  
   label: string;
+}
+
+export interface ConditionRule {
+  id: string;
+  source: {
+    type: 'numeric' | 'question' | 'calculation' | 'combined';
+    field: string;
+    aggregation?: 'sum' | 'average' | 'max' | 'min' | 'count'; // Para combinar múltiplos valores
+  };
+  operator: 'eq' | 'ne' | 'gt' | 'lt' | 'gte' | 'lte' | 'between' | 'contains' | 'in';
+  value: any;
+  valueEnd?: any; // Para operador 'between'
 }
 
 export interface FlowEdge {

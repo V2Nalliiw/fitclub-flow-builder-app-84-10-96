@@ -156,28 +156,40 @@ export const useFlowBuilder = () => {
     setIsLoading(true);
     
     setTimeout(() => {
-      // Deep clone dos dados para garantir independência total
+      // Criar ID único para o novo nó
+      const newNodeId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Deep clone completo dos dados para garantir independência total
       const clonedData = JSON.parse(JSON.stringify(nodeToDuplicate.data));
       
+      // Criar um nó completamente novo e independente
       const newNode: Node = {
-        ...nodeToDuplicate,
-        id: `${Date.now()}`,
+        id: newNodeId,
+        type: nodeToDuplicate.type,
         position: {
           x: nodeToDuplicate.position.x + 50,
           y: nodeToDuplicate.position.y + 50
         },
         data: {
           ...clonedData,
-          // Remove funções específicas da instância para garantir independência
+          // Garantir que não há callbacks compartilhadas
           onDelete: undefined,
           onEdit: undefined,
           onDuplicate: undefined,
         },
-        // Garantir que não há referências compartilhadas
-        style: nodeToDuplicate.style ? { ...nodeToDuplicate.style } : undefined,
-        className: nodeToDuplicate.className,
+        // Propriedades padrão para garantir independência
         draggable: true,
         selectable: true,
+        deletable: true,
+        connectable: true,
+        // Clone do estilo se existir
+        style: nodeToDuplicate.style ? JSON.parse(JSON.stringify(nodeToDuplicate.style)) : undefined,
+        className: nodeToDuplicate.className,
+        // Forçar atualização do React Flow
+        measured: undefined,
+        extent: nodeToDuplicate.extent,
+        expandParent: nodeToDuplicate.expandParent,
+        parentId: nodeToDuplicate.parentId,
       };
       
       setNodes((nds) => [...nds, newNode]);
