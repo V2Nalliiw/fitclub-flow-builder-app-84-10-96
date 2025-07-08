@@ -68,7 +68,7 @@ export const PatientFlowsList = () => {
             </p>
           </div>
 
-        <Card className="max-w-2xl mx-auto shadow-lg border-0 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm">
+        <Card className="max-w-2xl mx-auto shadow-lg border-0 bg-white/80 dark:bg-none dark:bg-[#0E0E0E]/80 backdrop-blur-sm">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="w-24 h-24 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center mb-6">
               <Workflow className="h-12 w-12 text-white" />
@@ -179,7 +179,7 @@ export const PatientFlowsList = () => {
             const { actualStatus, actualProgress, isCompleted, execution } = assignmentWithExecution;
             
             return (
-              <Card key={assignment.id} className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm overflow-hidden">
+              <Card key={assignment.id} className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-primary-gradient"></div>
                 
                 <CardHeader className="pb-4">
@@ -226,7 +226,7 @@ export const PatientFlowsList = () => {
                         {actualProgress}%
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-2">
+                    <div className="w-full bg-gray-200 dark:bg-[#1A1A1A] rounded-full h-2">
                       <div 
                         className="bg-primary-gradient h-2 rounded-full transition-all duration-300" 
                         style={{ width: `${actualProgress}%` }}
@@ -234,7 +234,7 @@ export const PatientFlowsList = () => {
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                  <div className="pt-4 border-t border-gray-100 dark:border-[#1A1A1A]">
                     <p className="text-xs text-gray-500 dark:text-gray-500 mb-4 flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       Atribuído {formatDistanceToNow(new Date(assignment.assigned_at), { 

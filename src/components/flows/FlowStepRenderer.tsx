@@ -118,7 +118,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
               <RadioGroup value={response} onValueChange={setResponse}>
                 <div className="space-y-3">
                   {step.opcoes.map((opcao: string, index: number) => (
-                    <div key={index} className="flex items-center space-x-2 p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                     <div key={index} className="flex items-center space-x-2 p-3 border border-gray-200 dark:border-[#1A1A1A] rounded-lg hover:bg-gray-50 dark:hover:bg-[#0E0E0E]/50 transition-colors">
                       <RadioGroupItem value={opcao} id={`option-${index}`} />
                       <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
                         {opcao}
@@ -132,7 +132,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
             {step.tipoResposta === 'multipla-escolha' && step.opcoes && Array.isArray(step.opcoes) && (
               <div className="space-y-3">
                 {step.opcoes.map((opcao: string, index: number) => (
-                  <div key={index} className="flex items-center space-x-2 p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <div key={index} className="flex items-center space-x-2 p-3 border border-gray-200 dark:border-[#1A1A1A] rounded-lg hover:bg-gray-50 dark:hover:bg-[#0E0E0E]/50 transition-colors">
                     <Checkbox
                       id={`checkbox-${index}`}
                       checked={multipleChoiceResponse.includes(opcao)}

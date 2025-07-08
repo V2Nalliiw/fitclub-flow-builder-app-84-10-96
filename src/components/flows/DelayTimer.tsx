@@ -64,7 +64,7 @@ export const DelayTimer: React.FC<DelayTimerProps> = ({ availableAt, onDelayExpi
   };
 
   return (
-    <Card className="bg-gradient-to-r from-gray-50 to-gray-100 dark:bg-none dark:bg-[#0E0E0E]/90 border-gray-200 dark:border-gray-800">
+    <Card className="bg-gradient-to-r from-gray-50 to-gray-100 dark:bg-none dark:bg-[#0E0E0E]/90 border-gray-200 dark:border-[#1A1A1A]">
       <CardContent className="p-8 text-center">
         <div className="w-20 h-20 bg-gradient-to-r from-[#5D8701] to-[#4a6e01] rounded-full flex items-center justify-center mx-auto mb-6">
           {isExpired ? (

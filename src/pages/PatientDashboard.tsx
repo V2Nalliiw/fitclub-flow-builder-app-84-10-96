@@ -43,7 +43,7 @@ const PatientDashboard = () => {
 
         {/* Formulário Mais Recente ou Estado Vazio */}
         {hasNoForms ? (
-          <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
             <CardContent className="text-center py-12">
               <div className="w-20 h-20 bg-gradient-to-r from-[#5D8701] to-[#4a6e01] rounded-full flex items-center justify-center mx-auto mb-6">
                 <FileText className="h-10 w-10 text-white" />
@@ -67,7 +67,7 @@ const PatientDashboard = () => {
             </CardContent>
           </Card>
         ) : hasActiveForm ? (
-          <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg overflow-hidden">
+          <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#5D8701] to-[#4a6e01]"></div>
             <CardHeader className="pb-4">
               <div className="flex items-start justify-between">
@@ -100,7 +100,7 @@ const PatientDashboard = () => {
                 </span>
               </div>
               
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-6">
+              <div className="w-full bg-gray-200 dark:bg-[#1A1A1A] rounded-full h-2 mb-6">
                 <div 
                   className="bg-gradient-to-r from-[#5D8701] to-[#4a6e01] h-2 rounded-full transition-all duration-300"
                   style={{ width: `${mostRecentExecution?.progresso || 0}%` }}
@@ -118,7 +118,7 @@ const PatientDashboard = () => {
             </CardContent>
           </Card>
         ) : (
-          <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
             <CardContent className="text-center py-12">
               <div className="w-20 h-20 bg-gradient-to-r from-[#5D8701] to-[#4a6e01] rounded-full flex items-center justify-center mx-auto mb-6">
                 <Calendar className="h-10 w-10 text-white" />
@@ -141,7 +141,7 @@ const PatientDashboard = () => {
         )}
 
         {/* Link para Meus Formulários */}
-        <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
+        <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
           <CardContent className="p-4">
             <Button 
               onClick={() => navigate('/my-flows')}

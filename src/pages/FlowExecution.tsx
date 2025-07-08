@@ -297,7 +297,7 @@ const FlowExecution = () => {
 
         {/* Step Navigation */}
         {showStepNavigation && (
-          <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader>
               <CardTitle>Navegação por Etapas</CardTitle>
             </CardHeader>
@@ -323,7 +323,7 @@ const FlowExecution = () => {
         )}
 
         {/* Progress */}
-        <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
+        <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
           <CardContent className="p-6">
             <div className="space-y-4">
               <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
@@ -344,7 +344,7 @@ const FlowExecution = () => {
         )}
 
         {/* Current Step */}
-        <Card className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm border-0 shadow-lg">
+        <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {isCompleted ? (
@@ -362,7 +362,7 @@ const FlowExecution = () => {
           <CardContent className="space-y-6">
             {isCompleted ? (
               <div className="text-center py-8">
-                <div className="w-20 h-20 bg-green-100 dark:bg-green-950/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="w-20 h-20 bg-green-100 dark:bg-none dark:bg-[#0E0E0E]/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <CheckCircle className="h-12 w-12 text-green-500" />
                 </div>
                 <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
@@ -387,7 +387,7 @@ const FlowExecution = () => {
               />
             ) : (
               <div className="text-center py-8">
-                <div className="w-20 h-20 bg-orange-100 dark:bg-orange-950/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="w-20 h-20 bg-orange-100 dark:bg-none dark:bg-[#0E0E0E]/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Clock className="h-12 w-12 text-orange-500" />
                 </div>
                 <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">

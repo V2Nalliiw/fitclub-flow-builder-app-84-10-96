@@ -38,10 +38,10 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-48 min-h-32 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200 relative overflow-visible ${
+      <div className={`w-48 min-h-32 rounded-xl bg-white dark:bg-none dark:bg-[#0E0E0E]/90 border border-gray-200 dark:border-[#1A1A1A] shadow-sm transition-all duration-200 relative overflow-visible ${
         selected 
           ? 'border-[#5D8701] shadow-[0_0_0_2px_rgba(93,135,1,0.2)]' 
-          : 'border-gray-200 dark:border-gray-700'
+          : 'border-gray-200 dark:border-[#1A1A1A]'
       }`}>
         {/* Header Section */}
         <div className="flex items-center gap-2 px-3 py-2">
@@ -50,7 +50,7 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
         </div>
         
         {/* Divider */}
-        <div className="border-t border-gray-200 dark:border-gray-600"></div>
+        <div className="border-t border-gray-200 dark:border-[#1A1A1A]"></div>
         
         {/* Content Section */}
         <div className="px-3 py-2 space-y-2">
@@ -139,8 +139,8 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
                 />
                 
                 {/* Label ao lado do handle */}
-                <div 
-                  className="absolute pointer-events-none z-20 text-xs bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity"
+                 <div 
+                  className="absolute pointer-events-none z-20 text-xs bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm px-2 py-1 rounded-md border border-gray-200 dark:border-[#1A1A1A] shadow-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity"
                   style={{
                     right: '-140px',
                     top: '50%',

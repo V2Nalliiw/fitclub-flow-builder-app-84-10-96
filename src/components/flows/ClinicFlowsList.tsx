@@ -31,7 +31,7 @@ export const ClinicFlowsList = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:bg-none dark:bg-[#0E0E0E] p-4 md:p-6">
         <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
-          <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6 md:p-8 shadow-sm">
+          <div className="bg-white dark:bg-none dark:bg-[#0E0E0E] rounded-xl border border-gray-200 dark:border-[#1A1A1A] p-6 md:p-8 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-0 mb-6 md:mb-8">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Meus Fluxos</h1>
@@ -111,7 +111,7 @@ export const ClinicFlowsList = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:bg-none dark:bg-[#0E0E0E] p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
-        <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6 md:p-8 shadow-sm">
+        <div className="bg-white dark:bg-none dark:bg-[#0E0E0E] rounded-xl border border-gray-200 dark:border-[#1A1A1A] p-6 md:p-8 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-0 mb-6 md:mb-8">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Meus Fluxos</h1>
@@ -152,7 +152,7 @@ export const ClinicFlowsList = () => {
 
           <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {flows.map((flow) => (
-              <Card key={flow.id} className="group hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
+              <Card key={flow.id} className="group hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-[#1A1A1A] bg-white dark:bg-none dark:bg-[#0E0E0E]">
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1 flex-1">
@@ -188,7 +188,7 @@ export const ClinicFlowsList = () => {
                     </div>
                   </div>
                   
-                  <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                  <div className="pt-4 border-t border-gray-100 dark:border-[#1A1A1A]">
                     <p className="text-xs text-gray-500 dark:text-gray-500 mb-4">
                       Criado {formatDistanceToNow(new Date(flow.created_at), { 
                         addSuffix: true, 

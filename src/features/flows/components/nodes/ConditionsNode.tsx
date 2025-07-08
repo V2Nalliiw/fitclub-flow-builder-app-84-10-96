@@ -118,7 +118,7 @@ const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
             
             {/* Tooltip para identificar a condição */}
             <div
-              className="absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 bg-black dark:bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap"
+              className="absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 bg-black dark:bg-none dark:bg-[#0E0E0E] text-white text-xs px-2 py-1 rounded whitespace-nowrap"
               style={{
                 right: '-10px',
                 top: `calc(50% + ${offsetY}px)`,
