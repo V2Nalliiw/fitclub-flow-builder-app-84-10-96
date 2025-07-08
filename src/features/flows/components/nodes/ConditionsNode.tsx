@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { GitBranch, Trash2, Settings } from 'lucide-react';
@@ -33,18 +32,18 @@ const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
   };
 
   return (
-    <div className="px-4 py-3 shadow-md rounded-lg bg-white dark:bg-gray-800 border-2 border-purple-200 dark:border-purple-700 min-w-[220px] relative group">
+    <div className="px-4 py-3 shadow-md rounded-lg bg-white dark:bg-gray-950 border-2 border-border min-w-[220px] relative group">
       {/* Handle de entrada centralizado na borda esquerda */}
       <Handle 
         type="target" 
         position={Position.Left} 
-        className="w-3 h-3 !bg-purple-400 !left-0 !transform !-translate-x-1/2 !top-1/2 !-translate-y-1/2" 
+        className="w-3 h-3 !bg-primary !left-0 !transform !-translate-x-1/2 !top-1/2 !-translate-y-1/2" 
       />
       
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <GitBranch className="h-4 w-4 text-purple-600" />
-          <div className="text-purple-800 dark:text-purple-200 font-bold text-sm">Condições</div>
+          <GitBranch className="h-4 w-4 text-primary" />
+          <div className="text-primary font-bold text-sm">Condições</div>
         </div>
         
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -52,9 +51,9 @@ const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
             variant="ghost"
             size="sm"
             onClick={handleEdit}
-            className="h-6 w-6 p-0 hover:bg-purple-100 dark:hover:bg-purple-800"
+            className="h-6 w-6 p-0 hover:bg-primary/20"
           >
-            <Settings className="h-3 w-3 text-purple-600 dark:text-purple-300" />
+            <Settings className="h-3 w-3 text-primary" />
           </Button>
           <Button
             variant="ghost"
@@ -82,11 +81,11 @@ const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
           {conditions.map((condition, index) => (
             <div
               key={condition.id || index}
-              className="flex items-center gap-2 text-xs p-1 bg-purple-50 dark:bg-purple-900/30 rounded border"
+              className="flex items-center gap-2 text-xs p-1 bg-muted/50 rounded border"
             >
               <div 
                 className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: `hsl(${(index * 360) / conditions.length}, 70%, 60%)` }}
+                style={{ backgroundColor: `hsl(var(--primary))` }}
               />
               <span className="truncate flex-1" title={condition.label}>
                 {condition.label}
@@ -113,7 +112,7 @@ const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
               className="!w-3 !h-3 !border-2 !border-white !shadow-md !right-0 !transform !translate-x-1/2"
               style={{
                 top: `calc(50% + ${offsetY}px)`,
-                backgroundColor: `hsl(${(index * 360) / conditions.length}, 70%, 60%)`,
+                backgroundColor: `hsl(var(--primary))`,
                 zIndex: 10,
               }}
             />
@@ -138,7 +137,7 @@ const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
         <Handle 
           type="source" 
           position={Position.Right} 
-          className="w-3 h-3 !bg-purple-400 !right-0 !transform !translate-x-1/2 !top-1/2 !-translate-y-1/2" 
+          className="w-3 h-3 !bg-primary !right-0 !transform !translate-x-1/2 !top-1/2 !-translate-y-1/2" 
         />
       )}
     </div>

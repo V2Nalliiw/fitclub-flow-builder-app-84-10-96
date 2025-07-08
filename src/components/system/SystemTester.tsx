@@ -184,7 +184,7 @@ export const SystemTester = () => {
           ))}
         </div>
 
-        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+        <div className="mt-6 p-4 bg-muted/50 rounded-lg">
           <h4 className="font-medium mb-2">Testes Manuais Recomendados:</h4>
           <ul className="text-sm space-y-1 text-muted-foreground">
             <li>• Criar um novo fluxo no Flow Builder</li>

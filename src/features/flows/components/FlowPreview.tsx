@@ -138,8 +138,8 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-            <Calculator className="h-6 w-6 text-blue-600" />
+          <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <Calculator className="h-6 w-6 text-primary" />
           </div>
           <CardTitle className="text-xl">{String(data?.label || 'Calculadora')}</CardTitle>
           {data?.resultLabel && (
@@ -223,8 +223,8 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-            <GitBranch className="h-6 w-6 text-purple-600" />
+          <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <GitBranch className="h-6 w-6 text-primary" />
           </div>
           <CardTitle className="text-xl">{String(data?.label || 'Avaliação de Condições')}</CardTitle>
         </CardHeader>
@@ -244,8 +244,8 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
                   key={condition.id || index}
                   className={`p-4 rounded-lg border-2 transition-colors ${
                     isMatched 
-                      ? 'border-green-500 bg-green-50' 
-                      : 'border-gray-200 bg-gray-50'
+                      ? 'border-primary bg-primary/10 dark:bg-primary/5' 
+                      : 'border-border bg-muted/50'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -263,8 +263,8 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
                     
                     <div className={`px-3 py-1 rounded-full text-sm font-medium ${
                       isMatched
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-600'
+                        ? 'bg-primary/20 text-primary'
+                        : 'bg-muted text-muted-foreground'
                     }`}>
                       {isMatched ? '✓ Atendida' : 'Não atendida'}
                     </div>
@@ -275,11 +275,11 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
           </div>
 
           {matchedCondition && (
-            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-              <h4 className="font-semibold text-green-800 mb-2">
+            <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
+              <h4 className="font-semibold text-primary mb-2">
                 Resultado da Avaliação:
               </h4>
-              <p className="text-green-700">
+              <p className="text-primary">
                 {matchedCondition.label}
               </p>
             </div>
@@ -308,8 +308,8 @@ export const FlowPreview: React.FC<FlowPreviewProps> = ({ nodes, edges }) => {
         return (
           <Card className="w-full max-w-md mx-auto">
             <CardHeader className="text-center">
-              <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                <FileText className="h-6 w-6 text-blue-600" />
+              <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                <FileText className="h-6 w-6 text-primary" />
               </div>
               <CardTitle className="text-xl">{String(data?.titulo || 'Formulário')}</CardTitle>
               {data?.descricao && (

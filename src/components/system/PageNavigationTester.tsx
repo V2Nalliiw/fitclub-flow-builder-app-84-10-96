@@ -253,7 +253,7 @@ export const PageNavigationTester = () => {
                 !test.accessible ? 'opacity-50 bg-gray-50' : ''
               }`}
             >
-              <div className="p-2 rounded-full bg-blue-100 text-blue-600">
+              <div className="p-2 rounded-full bg-primary/10 text-primary">
                 {test.icon}
               </div>
               <div className="flex-1">
@@ -286,7 +286,7 @@ export const PageNavigationTester = () => {
           ))}
         </div>
         
-        <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+        <div className="mt-4 p-4 bg-muted/50 rounded-lg">
           <h4 className="font-medium mb-2">Informações do Teste:</h4>
           <ul className="text-sm space-y-1 text-muted-foreground">
             <li>• Páginas acessíveis baseadas no seu perfil: <strong>{user?.role}</strong></li>

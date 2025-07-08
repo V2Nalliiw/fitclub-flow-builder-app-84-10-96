@@ -21,7 +21,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 const getStatusIcon = (status: string) => {
   switch (status) {
     case 'em-andamento':
-      return <BookOpen className="h-4 w-4 text-blue-500" />;
+      return <BookOpen className="h-4 w-4 text-primary" />;
     case 'aguardando':
       return <Clock className="h-4 w-4 text-orange-500" />;
     case 'concluido':
@@ -36,7 +36,7 @@ const getStatusIcon = (status: string) => {
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'em-andamento':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      return 'bg-primary/10 text-primary';
     case 'aguardando':
       return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
     case 'concluido':
@@ -203,7 +203,7 @@ export const PatientFlowDashboard: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Formulários Hoje</CardTitle>
-            <BookOpen className="h-4 w-4 text-blue-500" />
+            <BookOpen className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{todayForms.length}</div>
