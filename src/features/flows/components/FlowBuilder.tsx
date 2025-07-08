@@ -46,6 +46,14 @@ const nodeTypes = {
   specialConditions: SpecialConditionsNode,
 };
 
+// Debug: Log dos tipos de nós registrados
+console.log('=== Tipos de nós registrados no FlowBuilder ===', {
+  nodeTypes: Object.keys(nodeTypes),
+  NumberNode: !!NumberNode,
+  SimpleCalculatorNode: !!SimpleCalculatorNode,
+  SpecialConditionsNode: !!SpecialConditionsNode
+});
+
 export const FlowBuilder = () => {
   const { isDesktop } = useBreakpoints();
   const {

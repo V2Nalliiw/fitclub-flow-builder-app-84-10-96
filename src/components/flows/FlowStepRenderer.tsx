@@ -95,6 +95,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
             step={step}
             onComplete={onComplete}
             isLoading={isLoading}
+            calculatorResults={{}}
           />
         );
 
@@ -254,7 +255,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
   };
 
   const canSubmit = () => {
-    if (step.nodeType === 'formStart' || step.nodeType === 'formEnd' || step.nodeType === 'calculator' || step.nodeType === 'conditions') {
+    if (step.nodeType === 'formStart' || step.nodeType === 'formEnd' || step.nodeType === 'calculator' || step.nodeType === 'conditions' || step.nodeType === 'number' || step.nodeType === 'simpleCalculator' || step.nodeType === 'specialConditions') {
       return true;
     }
     
@@ -285,8 +286,8 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
     }
   };
 
-  // Para calculadora e condições, o conteúdo já tem seus próprios botões
-  if (step.nodeType === 'calculator' || step.nodeType === 'conditions') {
+  // Para calculadora, condições e novos nós que têm seus próprios botões
+  if (step.nodeType === 'calculator' || step.nodeType === 'conditions' || step.nodeType === 'number' || step.nodeType === 'simpleCalculator' || step.nodeType === 'specialConditions') {
     return renderStepContent();
   }
 

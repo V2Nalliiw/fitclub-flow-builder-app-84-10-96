@@ -19,6 +19,9 @@ import { DelayNode } from './nodes/DelayNode';
 import { QuestionNode } from './nodes/QuestionNode';
 import CalculatorNode from './nodes/CalculatorNode';
 import ConditionsNode from './nodes/ConditionsNode';
+import NumberNode from './nodes/NumberNode';
+import SimpleCalculatorNode from './nodes/SimpleCalculatorNode';
+import SpecialConditionsNode from './nodes/SpecialConditionsNode';
 import { SimpleDeleteEdge } from './SimpleDeleteEdge';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
 
@@ -32,7 +35,11 @@ const nodeTypes = {
   question: QuestionNode,
   calculator: CalculatorNode,
   conditions: ConditionsNode,
+  number: NumberNode,
+  simpleCalculator: SimpleCalculatorNode,
+  specialConditions: SpecialConditionsNode,
 };
+
 
 const edgeTypes = {
   deleteButton: SimpleDeleteEdge,
