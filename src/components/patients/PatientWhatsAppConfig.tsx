@@ -295,8 +295,8 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-700">
+            <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+              <p className="text-sm text-primary">
                 Enviamos um código de verificação para seu WhatsApp. 
                 Digite o código de 6 dígitos abaixo para confirmar.
               </p>

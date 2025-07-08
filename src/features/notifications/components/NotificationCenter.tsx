@@ -118,7 +118,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
       case 'success': return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'warning': return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
       case 'error': return <XCircle className="h-4 w-4 text-red-500" />;
-      default: return <Info className="h-4 w-4 text-blue-500" />;
+      default: return <Info className="h-4 w-4 text-primary" />;
     }
   };
 
@@ -286,7 +286,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
                 <div className={cn(
                   "p-4 hover:bg-accent/50 cursor-pointer transition-colors",
                   !notification.read && "bg-accent/20",
-                  notification.category === 'patient_invite' && !notification.read && "bg-blue-50 border-l-4 border-blue-500"
+                  notification.category === 'patient_invite' && !notification.read && "bg-primary/10 border-l-4 border-primary"
                 )}>
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 mt-0.5">

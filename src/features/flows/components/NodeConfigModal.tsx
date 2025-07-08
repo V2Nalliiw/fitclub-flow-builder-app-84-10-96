@@ -129,11 +129,11 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
       case 'start':
         return (
           <div className="space-y-4">
-            <div className="flex items-center gap-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <CheckCircle className="h-5 w-5 text-blue-600" />
+            <div className="flex items-center gap-2 p-4 bg-muted/50 rounded-lg border border-muted">
+              <CheckCircle className="h-5 w-5 text-primary" />
               <div>
-                <p className="text-sm font-medium text-blue-800">Nó Inicial</p>
-                <p className="text-xs text-blue-600">
+                <p className="text-sm font-medium text-foreground">Nó Inicial</p>
+                <p className="text-xs text-muted-foreground">
                   Este nó inicia automaticamente a execução do fluxo. Não possui configurações adicionais.
                 </p>
               </div>
@@ -180,15 +180,15 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
                 className="mt-1"
               />
             </div>
-            <Card className="bg-blue-50 border-blue-200">
+            <Card className="bg-muted/50 border-muted">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-blue-800 flex items-center gap-2">
+                <CardTitle className="text-sm text-foreground flex items-center gap-2">
                   <MessageSquare className="h-4 w-4" />
                   Ação Automática
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <p className="text-xs text-blue-700">
+                <p className="text-xs text-muted-foreground">
                   Ao atingir este nó, será enviada automaticamente uma mensagem no WhatsApp com o link do formulário.
                 </p>
               </CardContent>

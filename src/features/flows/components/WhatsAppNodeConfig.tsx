@@ -138,15 +138,15 @@ export const WhatsAppNodeConfig: React.FC<WhatsAppNodeConfigProps> = ({
 
       {/* Ação Automática Info */}
       {config.sendToWhatsApp && (
-        <Card className="bg-blue-50 border-blue-200">
+        <Card className="bg-muted/50 border-muted">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-blue-800 flex items-center gap-2">
+            <CardTitle className="text-sm text-foreground flex items-center gap-2">
               <MessageSquare className="h-4 w-4" />
               Ação Automática Configurada
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <p className="text-xs text-blue-700">
+            <p className="text-xs text-muted-foreground">
               Quando o fluxo atingir este nó, será enviada automaticamente uma mensagem 
               no WhatsApp com o link do formulário para o paciente.
             </p>

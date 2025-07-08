@@ -217,7 +217,7 @@ export const ClinicDocumentGallerySimplified: React.FC<ClinicDocumentGalleryProp
               disabled={uploading}
             />
             {uploading && (
-              <p className="text-sm text-blue-600">Enviando arquivo...</p>
+              <p className="text-sm text-primary">Enviando arquivo...</p>
             )}
           </div>
         </CardContent>
@@ -242,15 +242,15 @@ export const ClinicDocumentGallerySimplified: React.FC<ClinicDocumentGalleryProp
               key={doc.id} 
               className={`cursor-pointer transition-colors ${
                 selectedDocument?.id === doc.id 
-                  ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950/20' 
-                  : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                  ? 'ring-2 ring-primary bg-primary/10 dark:bg-primary/5' 
+                  : 'hover:bg-muted/50 dark:hover:bg-muted'
               }`}
               onClick={() => onDocumentSelect?.(doc)}
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <File className="h-8 w-8 text-blue-500" />
+                    <File className="h-8 w-8 text-primary" />
                     <div>
                       <h4 className="font-medium">{doc.original_name}</h4>
                       <p className="text-sm text-gray-500">
