@@ -188,7 +188,7 @@ export const useFlowBuilder = () => {
 
   const onNodeDoubleClick = (event: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
-    // Não abrir modal aqui - deixar para o FlowBuilder decidir qual modal abrir
+    setIsConfigModalOpen(true);
   };
 
   const onNodeClick = (event: React.MouseEvent, node: Node) => {
