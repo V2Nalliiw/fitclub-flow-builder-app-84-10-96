@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWhatsApp } from '@/hooks/useWhatsApp';
+import { useWhatsAppTemplates } from '@/hooks/useWhatsAppTemplates';
+import { useClinics } from '@/hooks/useClinics';
 
 interface PatientWhatsAppConfigProps {
   initialPhone?: string;
@@ -20,6 +22,8 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
   const { user } = useAuth();
   const { toast } = useToast();
   const { sendMessage } = useWhatsApp();
+  const { renderTemplate } = useWhatsAppTemplates();
+  const { clinics } = useClinics();
   const [phone, setPhone] = useState(initialPhone || '');
   const [isVerified, setIsVerified] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -85,11 +89,19 @@ export const PatientWhatsAppConfig = ({ initialPhone, onPhoneUpdate }: PatientWh
       console.log('PatientWhatsAppConfig: Número limpo:', cleanPhone);
       console.log('PatientWhatsAppConfig: Código gerado:', code);
       
-      // Enviar código via WhatsApp usando o serviço diretamente
-      const verificationMessage = `🔐 *Código de Verificação FitClub*\n\nSeu código de verificação é: *${code}*\n\nEste código expira em 5 minutos.\n\n_Não compartilhe este código com ninguém._`;
+      // Buscar nome da clínica
+      const clinic = clinics.find(c => c.id === user?.clinic_id);
+      const clinicName = clinic?.name || 'FitClub';
+      
+      // Renderizar template de verificação
+      const verificationMessage = await renderTemplate('codigo_verificacao', {
+        code: code,
+        clinic_name: clinicName,
+        expiry_time: '5 minutos'
+      });
       
       console.log('PatientWhatsAppConfig: Enviando mensagem para:', cleanPhone);
-      console.log('PatientWhatsAppConfig: Mensagem:', verificationMessage);
+      console.log('PatientWhatsAppConfig: Mensagem renderizada:', verificationMessage);
       
       const result = await sendMessage(cleanPhone, verificationMessage);
       

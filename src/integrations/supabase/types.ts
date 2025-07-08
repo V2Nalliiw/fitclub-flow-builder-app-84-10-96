@@ -451,6 +451,50 @@ export type Database = {
           },
         ]
       }
+      whatsapp_templates: {
+        Row: {
+          clinic_id: string | null
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          is_official: boolean
+          name: string
+          placeholders: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          clinic_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_official?: boolean
+          name: string
+          placeholders?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          clinic_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_official?: boolean
+          name?: string
+          placeholders?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_templates_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

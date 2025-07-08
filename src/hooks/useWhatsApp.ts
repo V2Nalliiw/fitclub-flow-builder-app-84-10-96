@@ -5,6 +5,8 @@ import { WhatsAppConfig, SendMessageResponse } from '@/services/whatsapp/types';
 import { useToast } from '@/hooks/use-toast';
 import { useWhatsAppSettings } from './useWhatsAppSettings';
 import { useAnalytics } from './useAnalytics';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWhatsAppTemplates } from './useWhatsAppTemplates';
 
 export const useWhatsApp = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -12,6 +14,8 @@ export const useWhatsApp = () => {
   const { toast } = useToast();
   const { settings, getWhatsAppConfig, isUsingGlobalSettings } = useWhatsAppSettings();
   const { trackWhatsAppSent } = useAnalytics();
+  const { user } = useAuth();
+  const { renderTemplate } = useWhatsAppTemplates();
 
   const checkConnection = useCallback(async () => {
     console.log('useWhatsApp: Verificando conexão...');
@@ -125,8 +129,22 @@ export const useWhatsApp = () => {
     setIsLoading(true);
     whatsappService.setConfig(config);
     
-    const message = customMessage || 
-      `📋 *${formName}*\n\nOlá! Você tem um formulário para preencher.\n\n🔗 Acesse o link: ${formUrl}\n\n_Responda assim que possível._`;
+    // Usar template ou mensagem customizada
+    let message: string;
+    if (customMessage) {
+      message = customMessage;
+    } else {
+      try {
+        message = await renderTemplate('envio_formulario', {
+          form_name: formName,
+          patient_name: '', // Pode ser passado como parâmetro no futuro
+          form_url: formUrl
+        });
+      } catch (error) {
+        console.warn('useWhatsApp: Erro ao renderizar template, usando fallback:', error);
+        message = `📋 *${formName}*\n\nOlá! Você tem um formulário para preencher.\n\n🔗 Acesse o link: ${formUrl}\n\n_Responda assim que possível._`;
+      }
+    }
     
     try {
       const result = await whatsappService.sendMessage(phoneNumber, message);
