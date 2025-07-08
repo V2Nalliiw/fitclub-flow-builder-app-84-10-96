@@ -35,7 +35,12 @@ export const FormEndNode: React.FC<FormEndNodeProps> = ({ data, selected, id, on
         <div className="px-3 py-2">
           <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
             <Download className="h-3 w-3" />
-            <span>Entrega {data.tipoConteudo || 'conteúdo'}</span>
+            <span>
+              {data.arquivos?.length > 0 
+                ? `${data.arquivos.length} arquivo(s)`
+                : (data.tipoConteudo || 'conteúdo')
+              }
+            </span>
           </div>
         </div>
       </div>

@@ -90,6 +90,9 @@ export const useFlowBuilder = () => {
       case 'question': return 'Pergunta';
       case 'calculator': return 'Calculadora';
       case 'conditions': return 'Condições';
+      case 'number': return 'Campo Número';
+      case 'simpleCalculator': return 'Cálculo Simples';
+      case 'specialConditions': return 'Condições Especiais';
       default: return 'Novo Nó';
     }
   };
@@ -314,9 +317,96 @@ export const useFlowBuilder = () => {
     closePreview,
     saveFlow,
     resetFlow,
+    exportTemplate,
+    importTemplate,
     isSaving,
     canSave,
     editingFlowId,
     isEditing: !!editingFlowId,
   };
+
+  async function exportTemplate() {
+    try {
+      const templateData = {
+        name: flowName || 'Modelo de Fluxo',
+        description: flowDescription || '',
+        version: '1.0',
+        nodes: nodes.map(node => ({
+          ...node,
+          data: {
+            ...node.data,
+            // Remove funções e dados específicos da instância
+            onDelete: undefined,
+            onEdit: undefined,
+          }
+        })),
+        edges,
+        metadata: {
+          exportedAt: new Date().toISOString(),
+          nodeCount: nodes.length,
+          edgeCount: edges.length,
+        }
+      };
+
+      const blob = new Blob([JSON.stringify(templateData, null, 2)], {
+        type: 'application/json',
+      });
+      
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${templateData.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_template.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success('Modelo exportado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao exportar modelo:', error);
+      toast.error('Erro ao exportar modelo');
+    }
+  }
+
+  async function importTemplate() {
+    try {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      
+      input.onchange = async (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (!file) return;
+        
+        const text = await file.text();
+        const templateData = JSON.parse(text);
+        
+        // Validar estrutura do template
+        if (!templateData.nodes || !templateData.edges) {
+          toast.error('Arquivo de modelo inválido');
+          return;
+        }
+        
+        // Confirmar importação
+        const confirmImport = window.confirm(
+          `Importar modelo "${templateData.name}"?\n\nIsso substituirá o fluxo atual.`
+        );
+        
+        if (!confirmImport) return;
+        
+        // Importar dados
+        setFlowName(templateData.name || 'Modelo Importado');
+        setFlowDescription(templateData.description || '');
+        setNodes(templateData.nodes || []);
+        setEdges(templateData.edges || []);
+        
+        toast.success(`Modelo "${templateData.name}" importado com sucesso!`);
+      };
+      
+      input.click();
+    } catch (error) {
+      console.error('Erro ao importar modelo:', error);
+      toast.error('Erro ao importar modelo');
+    }
+  }
 };

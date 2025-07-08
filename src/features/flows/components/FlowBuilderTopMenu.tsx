@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowUpDown, Eraser, Eye, Save, Play, Square, Clock, FileText, CheckCircle, MessageCircle, Calculator, GitBranch } from 'lucide-react';
+import { ArrowUpDown, Eraser, Eye, Save, Square, Clock, FileText, CheckCircle, MessageCircle, Calculator, GitBranch, Hash, Plus, Download, Upload } from 'lucide-react';
 
 interface FlowBuilderTopMenuProps {
   flowName: string;
@@ -13,6 +13,8 @@ interface FlowBuilderTopMenuProps {
   onPreview: () => void;
   onSave: () => void;
   onAddNode: (type: string) => void;
+  onExportTemplate: () => void;
+  onImportTemplate: () => void;
   isSaving: boolean;
   canSave: boolean;
   isEditing: boolean;
@@ -27,12 +29,14 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
   onPreview,
   onSave,
   onAddNode,
+  onExportTemplate,
+  onImportTemplate,
   isSaving,
   canSave,
   isEditing,
 }) => {
   return (
-    <div className="bg-white dark:bg-none dark:bg-[#0E0E0E] border-b border-gray-200 dark:border-gray-700 p-3 flex items-center justify-between">
+    <div className="bg-white dark:bg-none dark:bg-[#0E0E0E] border-b border-gray-200 dark:border-[#1A1A1A] p-3 flex items-center justify-between">
       <div className="flex items-center space-x-4">
         <Input
           placeholder="Nome do fluxo"
@@ -44,15 +48,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
       </div>
 
       <div className="flex items-center space-x-1">
-        {/* Nós de Controle de Fluxo */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddNode('start')}
-          title="Início"
-        >
-          <Play className="h-4 w-4 text-primary" />
-        </Button>
+        {/* Nós de Controle de Fluxo - Botão início removido */}
         
         <Button
           variant="ghost"
@@ -128,6 +124,37 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
         {/* Separador */}
         <div className="w-px h-6 bg-gray-300 mx-1" />
 
+        {/* Novos Nós Numéricos */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddNode('number')}
+          title="Número"
+        >
+          <Hash className="h-4 w-4 text-muted-foreground" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddNode('simpleCalculator')}
+          title="Cálculo Simples"
+        >
+          <Plus className="h-4 w-4 text-muted-foreground" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddNode('specialConditions')}
+          title="Condições Especiais"
+        >
+          <GitBranch className="h-4 w-4 text-primary" />
+        </Button>
+
+        {/* Separador */}
+        <div className="w-px h-6 bg-gray-300 mx-1" />
+
         {/* Ações */}
         <Button
           variant="ghost"
@@ -164,6 +191,24 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           title={isEditing ? 'Atualizar Fluxo' : 'Salvar Fluxo'}
         >
           <Save className="h-4 w-4 text-primary" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onExportTemplate}
+          title="Enviar Modelo"
+        >
+          <Upload className="h-4 w-4 text-muted-foreground" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onImportTemplate}
+          title="Baixar Modelo"
+        >
+          <Download className="h-4 w-4 text-muted-foreground" />
         </Button>
       </div>
     </div>

@@ -17,7 +17,11 @@ import {
   Loader2,
   Plus,
   X,
-  Shuffle
+  Shuffle,
+  Calculator,
+  GitBranch,
+  Hash,
+  MessageCircle
 } from 'lucide-react';
 import { FlowNode } from '@/types/flow';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
@@ -52,9 +56,13 @@ export const TabletFlowMenu = ({
     { type: 'end' as FlowNode['type'], label: 'Fim', icon: Square, color: 'text-red-500' },
     { type: 'formStart' as FlowNode['type'], label: 'Form Start', icon: FileText, color: 'text-blue-500' },
     { type: 'formEnd' as FlowNode['type'], label: 'Form End', icon: CheckSquare, color: 'text-purple-500' },
-    { type: 'formSelect' as FlowNode['type'], label: 'Form Select', icon: FormInput, color: 'text-indigo-500' },
-    { type: 'delay' as FlowNode['type'], label: 'Delay', icon: Clock, color: 'text-orange-500' },
-    { type: 'question' as FlowNode['type'], label: 'Question', icon: HelpCircle, color: 'text-yellow-500' },
+    { type: 'question' as FlowNode['type'], label: 'Pergunta', icon: MessageCircle, color: 'text-amber-500' },
+    { type: 'delay' as FlowNode['type'], label: 'Aguardar', icon: Clock, color: 'text-orange-500' },
+    { type: 'calculator' as FlowNode['type'], label: 'Calculadora', icon: Calculator, color: 'text-green-500' },
+    { type: 'conditions' as FlowNode['type'], label: 'Condições', icon: GitBranch, color: 'text-indigo-500' },
+    { type: 'number' as FlowNode['type'], label: 'Número', icon: Hash, color: 'text-blue-600' },
+    { type: 'simpleCalculator' as FlowNode['type'], label: 'Calc. Simples', icon: Plus, color: 'text-green-600' },
+    { type: 'specialConditions' as FlowNode['type'], label: 'Cond. Especiais', icon: GitBranch, color: 'text-purple-600' },
   ];
 
   const handleAddNode = (type: FlowNode['type']) => {
@@ -71,7 +79,7 @@ export const TabletFlowMenu = ({
   // Desktop: menu inline original
   if (isDesktop) {
     return (
-      <div className="fixed top-[calc(4rem+15px)] left-1/2 transform -translate-x-1/2 z-50 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-full shadow-lg px-6 py-3">
+      <div className="fixed top-[calc(4rem+15px)] left-1/2 transform -translate-x-1/2 z-50 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-[#1A1A1A] rounded-full shadow-lg px-6 py-3">
         <div className="flex items-center gap-3">
           {/* Campo Nome do Fluxo */}
           <Input
@@ -92,7 +100,7 @@ export const TabletFlowMenu = ({
                 variant="outline"
                 size="sm"
                 onClick={() => handleAddNode(nodeType.type)}
-                className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
+                className="dark:bg-transparent dark:border-[#1A1A1A] dark:hover:bg-[#0E0E0E]/50 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
                 title={nodeType.label}
               >
                 <IconComponent className={`h-4 w-4 ${nodeType.color}`} />
@@ -108,7 +116,7 @@ export const TabletFlowMenu = ({
             size="sm"
             onClick={onPreviewFlow}
             title="Visualizar fluxo"
-            className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
+            className="dark:bg-transparent dark:border-[#1A1A1A] dark:hover:bg-[#0E0E0E]/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
           >
             <Play className="h-4 w-4" />
           </Button>
@@ -136,7 +144,7 @@ export const TabletFlowMenu = ({
             size="sm"
             onClick={onClearAllNodes}
             title="Limpar todos os nós"
-            className="dark:bg-transparent dark:border-gray-800 dark:hover:bg-[#0E0E0E]/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-9 w-9 p-0 rounded-full"
+            className="dark:bg-transparent dark:border-[#1A1A1A] dark:hover:bg-[#0E0E0E]/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-9 w-9 p-0 rounded-full"
           >
             <Eraser className="h-4 w-4" />
           </Button>
@@ -178,7 +186,7 @@ export const TabletFlowMenu = ({
           <Separator />
 
           {/* Seção de Nós */}
-          <div className="space-y-3">
+            <div className="space-y-3">
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Adicionar Nós</h3>
             <div className="grid grid-cols-2 gap-2">
               {nodeTypes.map((nodeType) => {

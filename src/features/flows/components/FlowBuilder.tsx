@@ -20,6 +20,9 @@ import { DelayNode } from './nodes/DelayNode';
 import { QuestionNode } from './nodes/QuestionNode';
 import CalculatorNode from './nodes/CalculatorNode';
 import ConditionsNode from './nodes/ConditionsNode';
+import NumberNode from './nodes/NumberNode';
+import SimpleCalculatorNode from './nodes/SimpleCalculatorNode';
+import SpecialConditionsNode from './nodes/SpecialConditionsNode';
 import CalculatorNodeConfig from './CalculatorNodeConfig';
 import ConditionsNodeConfig from './ConditionsNodeConfig';
 import { TabletFlowMenu } from '@/components/layout/components/TabletFlowMenu';
@@ -35,6 +38,9 @@ const nodeTypes = {
   question: QuestionNode,
   calculator: CalculatorNode,
   conditions: ConditionsNode,
+  number: NumberNode,
+  simpleCalculator: SimpleCalculatorNode,
+  specialConditions: SpecialConditionsNode,
 };
 
 export const FlowBuilder = () => {
@@ -61,6 +67,8 @@ export const FlowBuilder = () => {
     openPreview,
     closePreview,
     saveFlow,
+    exportTemplate,
+    importTemplate,
     isSaving,
     canSave,
     isEditing,
@@ -117,6 +125,8 @@ export const FlowBuilder = () => {
           onPreview={openPreview}
           onSave={saveFlow}
           onAddNode={addNode}
+          onExportTemplate={exportTemplate}
+          onImportTemplate={importTemplate}
           isSaving={isSaving}
           canSave={canSave}
           isEditing={isEditing}

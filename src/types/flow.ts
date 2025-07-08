@@ -1,7 +1,7 @@
 
 export interface FlowNode {
   id: string;
-  type: 'start' | 'end' | 'formStart' | 'formEnd' | 'formSelect' | 'delay' | 'question' | 'calculator' | 'conditions';
+  type: 'start' | 'end' | 'formStart' | 'formEnd' | 'formSelect' | 'delay' | 'question' | 'calculator' | 'conditions' | 'number' | 'simpleCalculator' | 'specialConditions';
   position: { x: number; y: number };
   data: {
     label: string;
@@ -11,8 +11,10 @@ export interface FlowNode {
     mensagemFinal?: string;
     tipoConteudo?: 'pdf' | 'imagem' | 'video' | 'ebook';
     arquivo?: string;
+    arquivos?: FileUploadConfig[]; // Para múltiplos uploads
     pergunta?: string;
-    tipoResposta?: 'escolha-unica' | 'multipla-escolha' | 'texto-livre';
+    tipoResposta?: 'escolha-unica' | 'multipla-escolha'; // Removido 'texto-livre'
+    tipoExibicao?: 'aberto' | 'select'; // Como exibir as opções
     opcoes?: string[];
     tipoIntervalo?: 'minutos' | 'horas' | 'dias';
     quantidade?: number;
@@ -25,6 +27,16 @@ export interface FlowNode {
     resultLabel?: string;
     // Campos específicos para o nó condições
     conditions?: ConditionRule[];
+    // Campos específicos para o nó número
+    nomenclatura?: string;
+    prefixo?: string;
+    sufixo?: string;
+    tipoNumero?: 'inteiro' | 'decimal';
+    // Campos específicos para calculadora simples
+    operacao?: string; // Ex: "a+b-c*d"
+    camposReferenciados?: string[]; // Nomenclaturas dos nós número
+    // Campos específicos para condições especiais
+    condicoesEspeciais?: SpecialConditionRule[];
   };
 }
 
@@ -42,6 +54,24 @@ export interface ConditionRule {
   campo: string;
   operador: 'igual' | 'maior' | 'menor' | 'maior_igual' | 'menor_igual' | 'diferente' | 'entre';
   valor: number;
+  valorFinal?: number; // Para o operador "entre"
+  label: string;
+}
+
+export interface FileUploadConfig {
+  id: string;
+  label: string;
+  tipoArquivo: 'pdf' | 'imagem' | 'video' | 'documento' | 'qualquer';
+  obrigatorio: boolean;
+  multiplos: boolean;
+}
+
+export interface SpecialConditionRule {
+  id: string;
+  tipo: 'numerico' | 'pergunta';
+  campo: string; // nomenclatura ou id da pergunta
+  operador: 'igual' | 'maior' | 'menor' | 'maior_igual' | 'menor_igual' | 'diferente' | 'entre' | 'contem';
+  valor: number | string;
   valorFinal?: number; // Para o operador "entre"
   label: string;
 }

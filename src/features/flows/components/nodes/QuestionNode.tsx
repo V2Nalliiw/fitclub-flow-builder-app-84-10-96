@@ -5,7 +5,12 @@ import { HelpCircle, CheckSquare, Circle, Type, List } from 'lucide-react';
 import { SimpleNodeActions } from '../SimpleNodeActions';
 
 interface QuestionNodeProps {
-  data: any;
+  data: {
+    tipoResposta?: 'escolha-unica' | 'multipla-escolha';
+    tipoExibicao?: 'aberto' | 'select';
+    opcoes?: string[];
+    onDelete?: (nodeId: string) => void;
+  } & any;
   selected?: boolean;
   id: string;
   onDelete?: (nodeId: string) => void;
@@ -26,8 +31,15 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
     switch (data.tipoResposta) {
       case 'escolha-unica': return 'Escolha única';
       case 'multipla-escolha': return 'Múltipla escolha';
-      case 'texto-livre': return 'Texto livre';
       default: return 'Configurar tipo';
+    }
+  };
+
+  const getExibicaoLabel = () => {
+    switch (data.tipoExibicao) {
+      case 'select': return 'Dropdown';
+      case 'aberto': return 'Opções abertas';
+      default: return 'Aberto';
     }
   };
 
@@ -57,6 +69,13 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
           <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
             {getQuestionIcon()}
             <span>{getTypeLabel()}</span>
+          </div>
+          
+          <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-500">
+            <span>Exibição:</span>
+            <span className="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">
+              {data.tipoExibicao === 'select' ? 'Dropdown' : 'Aberto'}
+            </span>
           </div>
           
           {/* Mostrar opções para escolha única */}
