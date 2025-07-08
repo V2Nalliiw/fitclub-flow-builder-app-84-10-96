@@ -468,6 +468,58 @@ export const useWhatsApp = () => {
     }
   }, [getWhatsAppConfig, toast, trackWhatsAppSent, isUsingGlobalSettings]);
 
+  const sendWhatsAppTemplateMessage = useCallback(async (
+    phoneNumber: string,
+    templateName: string,
+    variables: Record<string, string>
+  ): Promise<SendMessageResponse> => {
+    console.log('useWhatsApp: sendWhatsAppTemplateMessage chamado:', { phoneNumber, templateName, variables });
+    
+    const config = getWhatsAppConfig();
+    const usingGlobal = isUsingGlobalSettings();
+    
+    if (!config || !config.is_active) {
+      const configType = usingGlobal ? "global" : "da clínica";
+      const errorMsg = !config ? 
+        `Configure o WhatsApp ${usingGlobal ? 'global (nas configurações do admin)' : 'da clínica'} antes de enviar mensagens.` : 
+        `Ative o WhatsApp ${configType} nas configurações antes de enviar mensagens.`;
+      
+      toast({
+        title: "WhatsApp não configurado",
+        description: errorMsg,
+        variant: "destructive",
+      });
+      return { success: false, error: "WhatsApp não configurado" };
+    }
+
+    setIsLoading(true);
+    
+    try {
+      // Renderizar template com variáveis
+      const message = await renderTemplate(templateName, variables);
+      
+      // Enviar mensagem
+      const result = await sendMessage(phoneNumber, message);
+      
+      if (result.success) {
+        console.log('Template enviado com sucesso:', templateName);
+        trackWhatsAppSent(phoneNumber, 'template');
+      }
+      
+      return result;
+    } catch (error: any) {
+      console.error('useWhatsApp: Erro ao enviar template:', error);
+      toast({
+        title: "Erro ao enviar template",
+        description: error.message || 'Erro ao processar template',
+        variant: "destructive",
+      });
+      return { success: false, error: error.message || 'Erro ao processar template' };
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getWhatsAppConfig, toast, trackWhatsAppSent, isUsingGlobalSettings, renderTemplate, sendMessage]);
+
   return {
     isLoading,
     isConnected,
@@ -475,6 +527,7 @@ export const useWhatsApp = () => {
     sendMedia,
     sendMessage,
     sendVerificationCode,
+    sendWhatsAppTemplateMessage,
     testConnection,
     isUsingGlobalSettings,
   };

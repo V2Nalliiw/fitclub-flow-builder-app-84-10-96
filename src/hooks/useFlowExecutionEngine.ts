@@ -4,6 +4,7 @@ import { FlowNode } from '@/types/flow';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useWhatsApp } from '@/hooks/useWhatsApp';
 
 interface ExecutionStep {
   nodeId: string;
@@ -17,6 +18,7 @@ interface ExecutionStep {
 export const useFlowExecutionEngine = () => {
   const { toast } = useToast();
   const { createNotification } = useNotifications();
+  const { sendWhatsAppTemplateMessage } = useWhatsApp();
   const [processing, setProcessing] = useState(false);
 
   const executeFlowStep = useCallback(async (
@@ -100,10 +102,79 @@ export const useFlowExecutionEngine = () => {
       })
       .eq('id', executionId);
 
+    // Buscar dados da execução e do paciente para enviar WhatsApp
+    const { data: execution } = await supabase
+      .from('flow_executions')
+      .select('patient_id')
+      .eq('id', executionId)
+      .single();
+
+    if (execution) {
+      const { data: patient } = await supabase
+        .from('profiles')
+        .select('name, phone')
+        .eq('user_id', (execution as any).patient_id)
+        .single();
+
+      if (patient && (patient as any).phone) {
+        try {
+          await sendWhatsAppTemplateMessage(
+            (patient as any).phone,
+            'novo_formulario',
+            {
+              patient_name: (patient as any).name || 'Paciente',
+              form_name: nodeData.titulo || 'Formulário',
+              form_url: formUrl
+            }
+          );
+          console.log('Template novo_formulario enviado com sucesso');
+        } catch (error) {
+          console.error('Erro ao enviar template novo_formulario:', error);
+        }
+      }
+    }
+
     console.log('Formulário criado:', formUrl);
   };
 
   const processFormEndNode = async (executionId: string, step: ExecutionStep, nodeData: any) => {
+    // Buscar dados da execução e do paciente
+    const { data: execution } = await supabase
+      .from('flow_executions')
+      .select('patient_id')
+      .eq('id', executionId)
+      .single();
+
+    if (execution) {
+      const { data: patient } = await supabase
+        .from('profiles')
+        .select('name, phone')
+        .eq('user_id', (execution as any).patient_id)
+        .single();
+
+      if (patient && (patient as any).phone) {
+        // Gerar URL de conteúdo se houver arquivos configurados
+        let contentUrl = '';
+        if (nodeData.arquivos && nodeData.arquivos.length > 0) {
+          contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}`;
+        }
+
+        try {
+          await sendWhatsAppTemplateMessage(
+            (patient as any).phone,
+            'formulario_concluido',
+            {
+              patient_name: (patient as any).name || 'Paciente',
+              content_url: contentUrl || 'Conteúdo disponível em breve'
+            }
+          );
+          console.log('Template formulario_concluido enviado com sucesso');
+        } catch (error) {
+          console.error('Erro ao enviar template formulario_concluido:', error);
+        }
+      }
+    }
+
     // Verificar se há conteúdo para enviar
     if (nodeData.conteudo && nodeData.conteudo.length > 0) {
       // Processar envio de conteúdo via WhatsApp ou email

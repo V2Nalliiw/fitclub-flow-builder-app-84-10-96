@@ -26,6 +26,7 @@ import { Forms } from "@/pages/Forms";
 import { WhatsAppSettings } from "@/pages/WhatsAppSettings";
 import MyFlows from "@/pages/MyFlows";
 import FlowExecution from "@/pages/FlowExecution";
+import ConteudoFormulario from "@/pages/ConteudoFormulario";
 import NotFound from "@/pages/NotFound";
 
 import { RealtimeNotificationProvider } from "@/components/notifications/RealtimeNotificationProvider";
@@ -255,6 +256,12 @@ const AppRoutes = () => {
             <FlowExecution />
           </ProtectedRoute>
         } 
+      />
+      
+      {/* Conteúdo do Formulário - Acesso público */}
+      <Route 
+        path="/conteudo-formulario/:executionId" 
+        element={<ConteudoFormulario />} 
       />
       
       <Route path="/404" element={<NotFound />} />
