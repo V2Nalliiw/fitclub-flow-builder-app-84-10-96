@@ -26,7 +26,7 @@ const PatientDashboard = () => {
   const hasNoForms = !executions || executions.length === 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-950 dark:to-slate-900 p-4 md:p-6">
       <div className="max-w-6xl mx-auto space-y-6 md:space-y-8">
         {/* Header de Boas-vindas */}
         <div className="text-center mb-8 md:mb-12">
