@@ -272,16 +272,16 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="max-w-6xl max-h-[95vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <GitBranch className="h-5 w-5" />
             Configurar Condições Especiais Avançadas
           </DialogTitle>
         </DialogHeader>
         
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="flex-1 overflow-hidden">
-          <TabsList className="grid grid-cols-3 w-full">
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="flex-1 flex flex-col overflow-hidden">
+          <TabsList className="grid grid-cols-3 w-full flex-shrink-0">
             <TabsTrigger value="data-sources" className="flex items-center gap-2">
               <Hash className="h-4 w-4" />
               Fontes de Dados
@@ -296,7 +296,7 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
             </TabsTrigger>
           </TabsList>
 
-          <div className="flex-1 overflow-y-auto mt-4">
+          <div className="flex-1 overflow-y-auto mt-4 min-h-0">
             <TabsContent value="data-sources" className="space-y-4">
               <Alert>
                 <Info className="h-4 w-4" />
@@ -812,7 +812,7 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
           </div>
         </Tabs>
         
-        <div className="flex justify-end gap-2 pt-4 border-t">
+        <div className="flex justify-end gap-2 pt-4 border-t flex-shrink-0">
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>

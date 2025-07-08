@@ -99,7 +99,7 @@ export const NodeHelpButton: React.FC<NodeHelpButtonProps> = ({ nodeType, classN
           <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-4" side="top" align="center">
+      <PopoverContent className="w-80 max-w-[90vw] max-h-[50vh] overflow-y-auto p-4" side="top" align="center">
         <div className="space-y-3">
           <div>
             <h4 className="font-semibold text-sm text-foreground">{title}</h4>
