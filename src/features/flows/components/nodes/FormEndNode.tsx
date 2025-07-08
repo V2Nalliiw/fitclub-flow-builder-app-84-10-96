@@ -49,6 +49,7 @@ export const FormEndNode: React.FC<FormEndNodeProps> = ({ data, selected, id, on
         nodeId={id}
         nodeType="formEnd"
         onDelete={data?.onDelete}
+        onEdit={data?.onEdit}
         show={selected}
       />
       

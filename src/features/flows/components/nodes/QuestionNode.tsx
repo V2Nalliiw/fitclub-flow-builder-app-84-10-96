@@ -111,6 +111,7 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
         nodeId={id}
         nodeType="question"
         onDelete={data?.onDelete}
+        onEdit={data?.onEdit}
         show={selected}
       />
       

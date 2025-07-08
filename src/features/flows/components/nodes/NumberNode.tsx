@@ -64,6 +64,7 @@ const NumberNode: React.FC<NumberNodeProps> = ({ data, id, selected }) => {
         nodeId={id}
         nodeType="number"
         onDelete={data?.onDelete}
+        onEdit={data?.onEdit}
         show={selected}
       />
       

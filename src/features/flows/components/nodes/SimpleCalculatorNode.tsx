@@ -78,6 +78,7 @@ const SimpleCalculatorNode: React.FC<SimpleCalculatorNodeProps> = ({ data, id, s
         nodeId={id}
         nodeType="simpleCalculator"
         onDelete={data?.onDelete}
+        onEdit={data?.onEdit}
         show={selected}
       />
       

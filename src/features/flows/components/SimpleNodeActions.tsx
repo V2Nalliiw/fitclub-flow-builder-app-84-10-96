@@ -1,12 +1,13 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Edit } from 'lucide-react';
 
 interface SimpleNodeActionsProps {
   nodeId: string;
   nodeType?: string;
   onDelete?: (nodeId: string) => void;
+  onEdit?: () => void;
   show?: boolean;
 }
 
@@ -14,6 +15,7 @@ export const SimpleNodeActions: React.FC<SimpleNodeActionsProps> = ({
   nodeId,
   nodeType,
   onDelete,
+  onEdit,
   show = false,
 }) => {
   console.log('SimpleNodeActions render:', {
@@ -49,11 +51,38 @@ export const SimpleNodeActions: React.FC<SimpleNodeActionsProps> = ({
     }
   };
 
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    console.log('Edit button clicked for node:', nodeId);
+    
+    if (!onEdit) {
+      console.error('onEdit function not available');
+      return;
+    }
+
+    onEdit();
+  };
+
   return (
     <div 
-      className="absolute -top-3 -right-3 z-50"
+      className="absolute -top-3 -right-3 z-50 flex gap-1"
       style={{ pointerEvents: 'all' }}
     >
+      {/* Botão de Editar */}
+      <Button
+        size="sm"
+        variant="secondary"
+        className="w-6 h-6 p-0 rounded-full shadow-lg hover:scale-110 transition-transform"
+        onClick={handleEdit}
+        title="Editar nó"
+        type="button"
+      >
+        <Edit className="h-3 w-3" />
+      </Button>
+      
+      {/* Botão de Deletar */}
       <Button
         size="sm"
         variant="destructive"

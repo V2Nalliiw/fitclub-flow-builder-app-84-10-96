@@ -15,6 +15,7 @@ interface FormSelectNodeData extends Record<string, unknown> {
   sendToWhatsApp?: boolean;
   whatsAppMessage?: string;
   onDelete?: (nodeId: string) => void;
+  onEdit?: () => void;
   onDuplicate?: (nodeId: string) => void;
 }
 
@@ -79,6 +80,7 @@ export const FormSelectNode: React.FC<NodeProps> = ({
         nodeId={id}
         nodeType="formSelect"
         onDelete={nodeData.onDelete}
+        onEdit={nodeData.onEdit}
         show={selected}
       />
     </div>

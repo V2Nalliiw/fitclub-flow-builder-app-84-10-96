@@ -46,6 +46,7 @@ export const EndNode: React.FC<EndNodeProps> = ({ data, selected, id }) => {
         nodeId={id}
         nodeType="end"
         onDelete={data?.onDelete}
+        onEdit={data?.onEdit}
         show={selected}
       />
       

@@ -50,6 +50,7 @@ export const DelayNode: React.FC<DelayNodeProps> = ({ data, selected, id, onDele
         nodeId={id}
         nodeType="delay"
         onDelete={data?.onDelete}
+        onEdit={data?.onEdit}
         show={selected}
       />
       

@@ -79,6 +79,7 @@ const SpecialConditionsNode: React.FC<SpecialConditionsNodeProps> = ({ data, id,
         nodeId={id}
         nodeType="specialConditions"
         onDelete={data?.onDelete}
+        onEdit={data?.onEdit}
         show={selected}
       />
 

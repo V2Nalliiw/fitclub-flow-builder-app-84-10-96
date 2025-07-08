@@ -4,6 +4,7 @@ import {
   addEdge,
   useNodesState,
   useEdgesState,
+  Node,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useFlowBuilder } from '@/hooks/useFlowBuilder';
@@ -84,6 +85,12 @@ export const FlowBuilder = () => {
     canSave,
     isEditing,
   } = useFlowBuilder();
+
+  // Modificar onNodeDoubleClick para abrir o modal correto
+  const handleNodeDoubleClick = (event: React.MouseEvent, node: Node) => {
+    onNodeClick(event, node);
+    handleNodeConfigModal();
+  };
 
   const [isCalculatorConfigOpen, setIsCalculatorConfigOpen] = useState(false);
   const [isConditionsConfigOpen, setIsConditionsConfigOpen] = useState(false);
@@ -191,7 +198,7 @@ export const FlowBuilder = () => {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          onNodeDoubleClick={onNodeDoubleClick}
+          onNodeDoubleClick={handleNodeDoubleClick}
           onNodeClick={onNodeClick}
           onDeleteNode={deleteNode}
           onDuplicateNode={() => {}}
