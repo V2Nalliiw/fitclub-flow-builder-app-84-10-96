@@ -24,51 +24,78 @@ export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
 
   if (!patient) return null;
 
+  const completedResponses = responses.filter(r => r.status === 'completed');
+  const inProgressResponses = responses.filter(r => r.status === 'in_progress');
+  const pendingResponses = responses.filter(r => r.status === 'pending');
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] card-standard">
-        <DialogHeader>
+      <DialogContent className="max-w-7xl max-h-[95vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-3 text-gray-900 dark:text-gray-100">
-            <MessageSquare className="h-5 w-5 text-[#5D8701]" />
-            Respostas e Feedback - {patient.name}
+            <MessageSquare className="h-5 w-5 text-primary" />
+            Histórico de Respostas - {patient.name}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[60vh]">
-          {/* Resumo */}
-          <div className="lg:col-span-1 space-y-4">
-            <Card className="bg-primary/5 border-primary/20 card-subtle">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-hidden">
+          {/* Resumo expandido */}
+          <div className="lg:col-span-1 space-y-4 overflow-y-auto">
+            <Card className="bg-primary/5 border-primary/20">
               <CardHeader className="pb-3">
-                <h4 className="font-semibold text-gray-900 dark:text-gray-100">Resumo</h4>
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100">Estatísticas</h4>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Total de Respostas</span>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary">
-                    {responseCount}
-                  </Badge>
-                </div>
-                {responses.length > 0 && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Última Resposta</span>
-                    <span className="text-xs text-gray-500 dark:text-gray-500">
-                      {formatDistanceToNow(new Date(responses[0]?.completedAt), { 
-                        addSuffix: true, 
-                        locale: ptBR 
-                      })}
-                    </span>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="bg-white dark:bg-[#0E0E0E]/50 p-3 rounded-lg">
+                    <div className="text-2xl font-bold text-primary">{responseCount}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Total de Formulários</div>
                   </div>
-                )}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Status</span>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary">
-                    {responses.length > 0 ? 'Ativo' : 'Aguardando'}
-                  </Badge>
+                  
+                  <div className="bg-green-50 dark:bg-green-950/20 p-3 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">{completedResponses.length}</div>
+                    <div className="text-sm text-green-600 dark:text-green-400">Completos</div>
+                  </div>
+                  
+                  <div className="bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">{inProgressResponses.length}</div>
+                    <div className="text-sm text-blue-600 dark:text-blue-400">Em Andamento</div>
+                  </div>
+                  
+                  <div className="bg-yellow-50 dark:bg-yellow-950/20 p-3 rounded-lg">
+                    <div className="text-2xl font-bold text-yellow-600">{pendingResponses.length}</div>
+                    <div className="text-sm text-yellow-600 dark:text-yellow-400">Pendentes</div>
+                  </div>
                 </div>
+
+                {responses.length > 0 && (
+                  <>
+                    <div className="border-t pt-3">
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Última Atividade</div>
+                      <div className="text-xs text-gray-500">
+                        {formatDistanceToNow(new Date(responses[0]?.completedAt), { 
+                          addSuffix: true, 
+                          locale: ptBR 
+                        })}
+                      </div>
+                    </div>
+                    
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Taxa de Conclusão</div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="bg-green-500 h-2 rounded-full" 
+                        style={{ width: `${(completedResponses.length / responseCount) * 100}%` }}
+                      ></div>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {Math.round((completedResponses.length / responseCount) * 100)}% dos formulários
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
-            <Card className="card-standard">
+            <Card>
               <CardHeader className="pb-3">
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100">Filtros</h4>
               </CardHeader>
@@ -79,31 +106,34 @@ export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
                 </Badge>
                 <Badge variant="outline" className="w-full justify-center">
                   <CheckCircle className="h-3 w-3 mr-1" />
-                  Completas
+                  Completas ({completedResponses.length})
                 </Badge>
                 <Badge variant="outline" className="w-full justify-center">
                   <Clock className="h-3 w-3 mr-1" />
-                  Recentes
+                  Em Andamento ({inProgressResponses.length})
                 </Badge>
               </CardContent>
             </Card>
           </div>
 
-          {/* Timeline de Respostas */}
-          <div className="lg:col-span-2">
-            <Card className="h-full card-standard">
-              <CardHeader className="pb-3">
+          {/* Timeline de Respostas expandida */}
+          <div className="lg:col-span-3 overflow-hidden">
+            <Card className="h-full flex flex-col">
+              <CardHeader className="pb-3 flex-shrink-0">
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-primary" />
-                  Timeline de Respostas
+                  Histórico Completo de Formulários
                 </h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Clique em "Ver Respostas Detalhadas" para expandir as respostas de cada formulário
+                </p>
               </CardHeader>
-              <CardContent className="h-[calc(100%-4rem)]">
+              <CardContent className="flex-1 overflow-hidden">
                 <ScrollArea className="h-full pr-4">
                   {loading ? (
-                    <div className="flex items-center justify-center p-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                      <span className="ml-2 text-gray-500">Carregando respostas...</span>
+                    <div className="flex items-center justify-center p-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                      <span className="ml-3 text-gray-500">Carregando histórico de respostas...</span>
                     </div>
                   ) : (
                     <PatientResponsesTimeline responses={responses} />

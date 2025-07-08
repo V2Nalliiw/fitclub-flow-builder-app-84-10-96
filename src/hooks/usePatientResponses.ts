@@ -9,6 +9,20 @@ export interface PatientResponse {
   response: string;
   completedAt: string;
   status: string;
+  progress: number;
+  totalSteps: number;
+  completedSteps: number;
+  allSteps?: FormStep[];
+  startedAt?: string;
+}
+
+export interface FormStep {
+  id: string;
+  title: string;
+  type: string;
+  response?: any;
+  status: string;
+  completedAt?: string;
 }
 
 export const usePatientResponses = (patientId?: string) => {
@@ -22,29 +36,63 @@ export const usePatientResponses = (patientId?: string) => {
 
     setLoading(true);
     try {
-      // Buscar execuções de fluxo do paciente que foram completadas
+      // Buscar todas as execuções de fluxo do paciente
       const { data: executions, error } = await supabase
         .from('flow_executions')
         .select('*')
         .eq('patient_id', patientId)
-        .not('completed_at', 'is', null)
-        .order('completed_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Erro ao carregar respostas:', error);
         return;
       }
 
-      // Transform executions to responses format
+      // Transform executions to detailed responses format
       const transformedResponses: PatientResponse[] = (executions || []).map((execution) => {
         const currentStep = execution.current_step as any;
+        
+        // Extrair todas as etapas e respostas se disponível no current_step
+        const allSteps: FormStep[] = [];
+        
+        if (currentStep && typeof currentStep === 'object') {
+          // Se current_step contém um array de steps
+          if (currentStep.steps && Array.isArray(currentStep.steps)) {
+            currentStep.steps.forEach((step: any, index: number) => {
+              allSteps.push({
+                id: step.id || `step-${index}`,
+                title: step.title || step.question || `Etapa ${index + 1}`,
+                type: step.type || 'response',
+                response: step.response || step.value || step.answer,
+                status: step.response ? 'completed' : 'pending',
+                completedAt: step.completedAt || execution.completed_at
+              });
+            });
+          } else if (currentStep.title || currentStep.question) {
+            // Etapa única
+            allSteps.push({
+              id: currentStep.id || execution.id,
+              title: currentStep.title || currentStep.question || 'Resposta',
+              type: currentStep.type || 'response',
+              response: currentStep.response || currentStep.value || currentStep.answer,
+              status: currentStep.response ? 'completed' : 'pending',
+              completedAt: execution.completed_at
+            });
+          }
+        }
+
         return {
           id: execution.id,
           flowName: execution.flow_name || 'Formulário',
-          stepTitle: currentStep?.title || 'Formulário Completado',
-          response: currentStep?.response || 'Formulário concluído com sucesso',
-          completedAt: execution.completed_at!,
-          status: execution.status || 'completed'
+          stepTitle: currentStep?.title || 'Formulário',
+          response: currentStep?.response || `${execution.completed_steps || 0} de ${execution.total_steps || 0} etapas concluídas`,
+          completedAt: execution.completed_at || execution.created_at!,
+          status: execution.status || 'pending',
+          progress: execution.progress || 0,
+          totalSteps: execution.total_steps || 0,
+          completedSteps: execution.completed_steps || 0,
+          allSteps: allSteps,
+          startedAt: execution.started_at
         };
       });
 

@@ -1,9 +1,20 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, MessageSquare, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { CheckCircle, MessageSquare, Calendar, ChevronDown, ChevronRight, Clock, BarChart3, FileText } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+interface FormStep {
+  id: string;
+  title: string;
+  type: string;
+  response?: any;
+  status: string;
+  completedAt?: string;
+}
 
 interface Response {
   id: string;
@@ -12,82 +23,202 @@ interface Response {
   response: string;
   completedAt: string;
   status: string;
+  progress: number;
+  totalSteps: number;
+  completedSteps: number;
+  allSteps?: FormStep[];
+  startedAt?: string;
 }
 
 interface PatientResponsesTimelineProps {
   responses: Response[];
 }
 
+const getStatusBadge = (status: string, progress: number, completedSteps: number, totalSteps: number) => {
+  if (status === 'completed') {
+    return <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200">Completo</Badge>;
+  } else if (status === 'in_progress') {
+    return <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200">Em Andamento</Badge>;
+  } else if (status === 'pending') {
+    return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-200">Pendente</Badge>;
+  }
+  return <Badge variant="outline">{status}</Badge>;
+};
+
+const getStatusIcon = (status: string) => {
+  if (status === 'completed') return CheckCircle;
+  if (status === 'in_progress') return Clock;
+  return MessageSquare;
+};
+
 export const PatientResponsesTimeline: React.FC<PatientResponsesTimelineProps> = ({
   responses
 }) => {
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  const toggleExpanded = (id: string) => {
+    setExpandedItems(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
+    );
+  };
+
+  const renderStepDetails = (steps: FormStep[]) => {
+    if (!steps || steps.length === 0) return null;
+
+    return (
+      <div className="space-y-3 mt-4">
+        <h5 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <FileText className="h-4 w-4" />
+          Respostas Detalhadas:
+        </h5>
+        {steps.map((step, index) => (
+          <div key={step.id} className="bg-gray-50 dark:bg-[#0E0E0E]/30 rounded-lg p-3 border-l-2 border-gray-300 dark:border-gray-600">
+            <div className="flex items-start justify-between mb-2">
+              <h6 className="font-medium text-sm text-gray-800 dark:text-gray-200">
+                {step.title}
+              </h6>
+              <Badge 
+                variant={step.status === 'completed' ? 'secondary' : 'outline'} 
+                className={step.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200' : ''}
+              >
+                {step.status === 'completed' ? 'Respondido' : 'Pendente'}
+              </Badge>
+            </div>
+            {step.response && (
+              <div className="text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-[#0E0E0E]/50 p-2 rounded border">
+                <strong>Resposta:</strong> {typeof step.response === 'object' ? JSON.stringify(step.response) : step.response}
+              </div>
+            )}
+            {step.completedAt && (
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Respondido em: {format(new Date(step.completedAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4">
-      {responses.map((response, index) => (
-        <div key={response.id} className="relative">
-          {/* Timeline line */}
-          {index < responses.length - 1 && (
-            <div className="absolute left-6 top-12 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
-          )}
-          
-          <Card className="bg-white/50 dark:bg-none dark:bg-[#0E0E0E]/50 border-l-4 border-l-[#5D8701] ml-0">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-4">
-                {/* Timeline dot */}
-                <div className="w-12 h-12 bg-gradient-to-r from-[#5D8701] to-[#4a6e01] rounded-full flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="h-6 w-6 text-white" />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h5 className="font-medium text-gray-900 dark:text-gray-100">
-                        {response.stepTitle}
-                      </h5>
-                      <p className="text-sm text-[#5D8701] font-medium">
-                        {response.flowName}
-                      </p>
-                    </div>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200">
-                      Completa
-                    </Badge>
+      {responses.map((response, index) => {
+        const StatusIcon = getStatusIcon(response.status);
+        const isExpanded = expandedItems.includes(response.id);
+        const hasDetailedSteps = response.allSteps && response.allSteps.length > 0;
+
+        return (
+          <div key={response.id} className="relative">
+            {/* Timeline line */}
+            {index < responses.length - 1 && (
+              <div className="absolute left-6 top-16 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+            )}
+            
+            <Card className="bg-white/50 dark:bg-[#0E0E0E]/50 border-l-4 border-l-primary ml-0">
+              <CardHeader className="pb-3">
+                <div className="flex items-start gap-4">
+                  {/* Timeline dot */}
+                  <div className={`w-12 h-12 bg-gradient-to-r rounded-full flex items-center justify-center flex-shrink-0 ${
+                    response.status === 'completed' 
+                      ? 'from-green-500 to-green-600' 
+                      : response.status === 'in_progress'
+                      ? 'from-blue-500 to-blue-600'
+                      : 'from-yellow-500 to-yellow-600'
+                  }`}>
+                    <StatusIcon className="h-6 w-6 text-white" />
                   </div>
                   
-                  {/* Response content */}
-                  <div className="bg-gray-50 dark:bg-none dark:bg-[#0E0E0E]/50 rounded-lg p-3 mb-3">
-                    <div className="flex items-start gap-2">
-                      <MessageSquare className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                        {response.response}
-                      </p>
+                  <div className="flex-1 min-w-0">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h5 className="font-semibold text-gray-900 dark:text-gray-100">
+                          {response.flowName}
+                        </h5>
+                        <p className="text-sm text-primary font-medium">
+                          {response.stepTitle}
+                        </p>
+                      </div>
+                      {getStatusBadge(response.status, response.progress, response.completedSteps, response.totalSteps)}
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    {response.totalSteps > 0 && (
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+                          <span>Progresso</span>
+                          <span>{response.completedSteps}/{response.totalSteps} etapas</span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <div 
+                            className="bg-primary h-2 rounded-full transition-all duration-300" 
+                            style={{ width: `${response.progress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Summary Response */}
+                    <div className="bg-gray-50 dark:bg-[#0E0E0E]/50 rounded-lg p-3 mb-3">
+                      <div className="flex items-start gap-2">
+                        <BarChart3 className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                          {response.response}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Timestamps */}
+                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mb-3">
+                      {response.startedAt && (
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>Iniciado: {format(new Date(response.startedAt), "dd/MM HH:mm", { locale: ptBR })}</span>
+                        </div>
+                      )}
+                      {response.completedAt && (
+                        <div className="flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          <span>Finalizado: {format(new Date(response.completedAt), "dd/MM HH:mm", { locale: ptBR })}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  
-                  {/* Timestamp */}
-                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                    <Calendar className="h-3 w-3" />
-                    <span>
-                      {format(new Date(response.completedAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                    </span>
-                    <span>•</span>
-                    <span>
-                      {formatDistanceToNow(new Date(response.completedAt), { 
-                        addSuffix: true, 
-                        locale: ptBR 
-                      })}
-                    </span>
-                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      ))}
+              </CardHeader>
+
+              {/* Expandable detailed responses */}
+              {hasDetailedSteps && (
+                <CardContent className="pt-0">
+                  <Collapsible open={isExpanded} onOpenChange={() => toggleExpanded(response.id)}>
+                    <CollapsibleTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-between p-2 h-auto font-medium text-sm"
+                      >
+                        <span className="flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          Ver Respostas Detalhadas ({response.allSteps?.length || 0} respostas)
+                        </span>
+                        {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      {renderStepDetails(response.allSteps || [])}
+                    </CollapsibleContent>
+                  </Collapsible>
+                </CardContent>
+              )}
+            </Card>
+          </div>
+        );
+      })}
       
       {responses.length === 0 && (
-        <div className="text-center py-8">
-          <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <div className="text-center py-12">
+          <MessageSquare className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h4 className="text-lg font-medium text-gray-500 dark:text-gray-400 mb-2">
             Nenhuma resposta encontrada
           </h4>
