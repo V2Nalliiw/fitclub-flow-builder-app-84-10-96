@@ -11,6 +11,9 @@ import { ArrowRight, ArrowLeft, FileText, MessageCircle, CheckCircle } from 'luc
 import { EnhancedDocumentDisplay } from './EnhancedDocumentDisplay';
 import { CalculatorStepRenderer } from './CalculatorStepRenderer';
 import { ConditionsStepRenderer } from './ConditionsStepRenderer';
+import { NumberStepRenderer } from './NumberStepRenderer';
+import { SimpleCalculatorStepRenderer } from './SimpleCalculatorStepRenderer';
+import { SpecialConditionsStepRenderer } from './SpecialConditionsStepRenderer';
 
 interface FlowStepRendererProps {
   step: any;
@@ -74,6 +77,33 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
             onComplete={onComplete}
             isLoading={isLoading}
             calculatorResult={calculatorResult || 0}
+          />
+        );
+
+      case 'number':
+        return (
+          <NumberStepRenderer
+            step={step}
+            onComplete={onComplete}
+            isLoading={isLoading}
+          />
+        );
+
+      case 'simpleCalculator':
+        return (
+          <SimpleCalculatorStepRenderer
+            step={step}
+            onComplete={onComplete}
+            isLoading={isLoading}
+          />
+        );
+
+      case 'specialConditions':
+        return (
+          <SpecialConditionsStepRenderer
+            step={step}
+            onComplete={onComplete}
+            isLoading={isLoading}
           />
         );
 

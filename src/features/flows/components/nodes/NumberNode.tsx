@@ -1,7 +1,7 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Hash, Trash2, Settings } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Hash } from 'lucide-react';
+import { SimpleNodeActions } from '../SimpleNodeActions';
 
 interface NumberNodeProps {
   data: {
@@ -18,58 +18,24 @@ interface NumberNodeProps {
 }
 
 const NumberNode: React.FC<NumberNodeProps> = ({ data, id, selected }) => {
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (data.onDelete) {
-      data.onDelete(id);
-    }
-  };
-
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (data.onEdit) {
-      data.onEdit();
-    }
-  };
 
   return (
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-48 min-h-28 rounded-xl bg-white dark:bg-none dark:bg-[#0E0E0E]/90 border border-gray-200 dark:border-[#1A1A1A] shadow-sm transition-all duration-200 relative overflow-visible ${
+      <div className={`w-48 min-h-28 rounded-xl bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200 relative overflow-hidden ${
         selected 
           ? 'border-[#5D8701] shadow-[0_0_0_2px_rgba(93,135,1,0.2)]' 
-          : 'border-gray-200 dark:border-[#1A1A1A]'
+          : 'border-gray-200 dark:border-gray-700'
       }`}>
         {/* Header Section */}
-        <div className="flex items-center justify-between px-3 py-2">
-          <div className="flex items-center gap-2">
-            <Hash className="h-4 w-4 text-blue-500" />
-            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Número</span>
-          </div>
-          
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleEdit}
-              className="h-6 w-6 p-0 hover:bg-primary/20"
-            >
-              <Settings className="h-3 w-3 text-primary" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleDelete}
-              className="h-6 w-6 p-0 hover:bg-red-100 dark:hover:bg-red-800"
-            >
-              <Trash2 className="h-3 w-3 text-red-600 dark:text-red-400" />
-            </Button>
-          </div>
+        <div className="flex items-center gap-2 px-3 py-2">
+          <Hash className="h-4 w-4 text-blue-500" />
+          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Número</span>
         </div>
         
         {/* Divider */}
-        <div className="border-t border-gray-200 dark:border-[#1A1A1A]"></div>
+        <div className="border-t border-gray-200 dark:border-gray-600"></div>
         
         {/* Content Section */}
         <div className="px-3 py-2 space-y-2">
@@ -93,6 +59,13 @@ const NumberNode: React.FC<NumberNodeProps> = ({ data, id, selected }) => {
           )}
         </div>
       </div>
+      
+      <SimpleNodeActions
+        nodeId={id}
+        nodeType="number"
+        onDelete={data?.onDelete}
+        show={selected}
+      />
       
       {/* Handle de entrada */}
       <Handle

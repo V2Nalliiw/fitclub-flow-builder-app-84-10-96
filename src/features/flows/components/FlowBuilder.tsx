@@ -25,6 +25,9 @@ import SimpleCalculatorNode from './nodes/SimpleCalculatorNode';
 import SpecialConditionsNode from './nodes/SpecialConditionsNode';
 import CalculatorNodeConfig from './CalculatorNodeConfig';
 import ConditionsNodeConfig from './ConditionsNodeConfig';
+import { NumberNodeConfig } from './NumberNodeConfig';
+import { SimpleCalculatorNodeConfig } from './SimpleCalculatorNodeConfig';
+import { SpecialConditionsNodeConfig } from './SpecialConditionsNodeConfig';
 import { TabletFlowMenu } from '@/components/layout/components/TabletFlowMenu';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
 
@@ -76,6 +79,9 @@ export const FlowBuilder = () => {
 
   const [isCalculatorConfigOpen, setIsCalculatorConfigOpen] = useState(false);
   const [isConditionsConfigOpen, setIsConditionsConfigOpen] = useState(false);
+  const [isNumberConfigOpen, setIsNumberConfigOpen] = useState(false);
+  const [isSimpleCalculatorConfigOpen, setIsSimpleCalculatorConfigOpen] = useState(false);
+  const [isSpecialConditionsConfigOpen, setIsSpecialConditionsConfigOpen] = useState(false);
 
   const handleNodeConfigModal = () => {
     if (!selectedNode) return;
@@ -84,6 +90,12 @@ export const FlowBuilder = () => {
       setIsCalculatorConfigOpen(true);
     } else if (selectedNode.type === 'conditions') {
       setIsConditionsConfigOpen(true);
+    } else if (selectedNode.type === 'number') {
+      setIsNumberConfigOpen(true);
+    } else if (selectedNode.type === 'simpleCalculator') {
+      setIsSimpleCalculatorConfigOpen(true);
+    } else if (selectedNode.type === 'specialConditions') {
+      setIsSpecialConditionsConfigOpen(true);
     } else {
       setIsConfigModalOpen(true);
     }
@@ -97,6 +109,21 @@ export const FlowBuilder = () => {
   const handleConditionsConfigSave = (data: any) => {
     handleNodeConfigSave(data);
     setIsConditionsConfigOpen(false);
+  };
+
+  const handleNumberConfigSave = (data: any) => {
+    handleNodeConfigSave(data);
+    setIsNumberConfigOpen(false);
+  };
+
+  const handleSimpleCalculatorConfigSave = (data: any) => {
+    handleNodeConfigSave(data);
+    setIsSimpleCalculatorConfigOpen(false);
+  };
+
+  const handleSpecialConditionsConfigSave = (data: any) => {
+    handleNodeConfigSave(data);
+    setIsSpecialConditionsConfigOpen(false);
   };
 
   // Preparar os nós com as funções de edição e exclusão
@@ -182,6 +209,27 @@ export const FlowBuilder = () => {
         isOpen={isConditionsConfigOpen}
         onClose={() => setIsConditionsConfigOpen(false)}
         onSave={handleConditionsConfigSave}
+        initialData={selectedNode?.data}
+      />
+
+      <NumberNodeConfig
+        isOpen={isNumberConfigOpen}
+        onClose={() => setIsNumberConfigOpen(false)}
+        onSave={handleNumberConfigSave}
+        initialData={selectedNode?.data}
+      />
+
+      <SimpleCalculatorNodeConfig
+        isOpen={isSimpleCalculatorConfigOpen}
+        onClose={() => setIsSimpleCalculatorConfigOpen(false)}
+        onSave={handleSimpleCalculatorConfigSave}
+        initialData={selectedNode?.data}
+      />
+
+      <SpecialConditionsNodeConfig
+        isOpen={isSpecialConditionsConfigOpen}
+        onClose={() => setIsSpecialConditionsConfigOpen(false)}
+        onSave={handleSpecialConditionsConfigSave}
         initialData={selectedNode?.data}
       />
 

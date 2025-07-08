@@ -307,10 +307,28 @@ export const NodeConfigModal: React.FC<NodeConfigModalProps> = ({
                 <SelectContent>
                   <SelectItem value="escolha-unica">Escolha Única</SelectItem>
                   <SelectItem value="multipla-escolha">Múltipla Escolha</SelectItem>
-                  <SelectItem value="texto-livre">Texto Livre</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* Tipo de Exibição */}
+            {(config.tipoResposta === 'escolha-unica' || config.tipoResposta === 'multipla-escolha') && (
+              <div>
+                <Label htmlFor="tipoExibicao">Tipo de Exibição</Label>
+                <Select
+                  value={String(config.tipoExibicao || 'aberto')}
+                  onValueChange={(value) => setConfig({ ...config, tipoExibicao: value })}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="aberto">Opções Abertas</SelectItem>
+                    <SelectItem value="select">Dropdown (Select)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             
             {(config.tipoResposta === 'escolha-unica' || config.tipoResposta === 'multipla-escolha') && (
               <div>
