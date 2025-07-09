@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useFlowProcessor } from './useFlowProcessor';
+import { useFlowExecutionEngine } from './useFlowExecutionEngine';
 import { FlowNode, FlowEdge } from '@/types/flow';
 
 export interface FlowAssignment {
@@ -39,6 +40,7 @@ export const useFlowAssignments = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { processFlowAssignment } = useFlowProcessor();
+  const { executeFlowStep } = useFlowExecutionEngine();
 
   const { data: assignments = [], isLoading } = useQuery({
     queryKey: ['flow-assignments', user?.id],
@@ -154,6 +156,10 @@ export const useFlowAssignments = () => {
       );
 
       console.log('Execução criada:', execution);
+
+      // Executar automaticamente o primeiro nó
+      await executeFirstNode(execution.id, nodes);
+
       return execution;
     },
     onSuccess: (execution) => {
@@ -217,6 +223,9 @@ export const useFlowAssignments = () => {
 
       console.log('Execução criada automaticamente:', execution);
 
+      // Executar automaticamente o primeiro nó
+      await executeFirstNode(execution.id, nodes);
+
       return { assignment, execution };
     },
     onSuccess: ({ assignment, execution }) => {
@@ -267,6 +276,77 @@ export const useFlowAssignments = () => {
       toast.error('Erro ao atualizar status: ' + error.message);
     },
   });
+
+  const executeFirstNode = async (executionId: string, nodes: FlowNode[]) => {
+    try {
+      // Encontrar o primeiro nó (start)
+      const startNode = nodes.find(node => node.type === 'start');
+      if (!startNode) {
+        console.log('Nenhum nó de início encontrado');
+        return;
+      }
+
+      console.log('Executando primeiro nó:', startNode);
+
+      // Executar o nó de início
+      await executeFlowStep(executionId, {
+        nodeId: startNode.id,
+        nodeType: startNode.type,
+        status: 'running'
+      }, startNode.data);
+
+      // Buscar e executar próximos nós automaticamente (formStart, etc)
+      const edges = await getFlowEdges(executionId);
+      await executeNextAutomaticNodes(executionId, startNode.id, nodes, edges);
+
+    } catch (error) {
+      console.error('Erro ao executar primeiro nó:', error);
+    }
+  };
+
+  const getFlowEdges = async (executionId: string) => {
+    const { data: execution } = await supabase
+      .from('flow_executions')
+      .select('flow_id')
+      .eq('id', executionId)
+      .single();
+
+    if (execution) {
+      const { data: flow } = await supabase
+        .from('flows')
+        .select('edges')
+        .eq('id', execution.flow_id)
+        .single();
+      
+      return Array.isArray(flow?.edges) ? (flow.edges as unknown as FlowEdge[]) : [];
+    }
+    return [];
+  };
+
+  const executeNextAutomaticNodes = async (executionId: string, currentNodeId: string, nodes: FlowNode[], edges: FlowEdge[]) => {
+    // Encontrar próximo nó
+    const nextEdge = edges.find(edge => edge.source === currentNodeId);
+    if (!nextEdge) return;
+
+    const nextNode = nodes.find(node => node.id === nextEdge.target);
+    if (!nextNode) return;
+
+    // Executar automaticamente nós que não precisam de interação do usuário
+    if (['formStart', 'delay'].includes(nextNode.type)) {
+      console.log('Executando próximo nó automático:', nextNode);
+      
+      await executeFlowStep(executionId, {
+        nodeId: nextNode.id,
+        nodeType: nextNode.type,
+        status: 'running'
+      }, nextNode.data);
+
+      // Continuar para próximos nós se não for delay
+      if (nextNode.type !== 'delay') {
+        await executeNextAutomaticNodes(executionId, nextNode.id, nodes, edges);
+      }
+    }
+  };
 
   return {
     assignments,
