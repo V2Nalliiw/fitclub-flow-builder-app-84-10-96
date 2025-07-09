@@ -21,31 +21,52 @@ export const useWhatsAppValidations = () => {
     setValidating(true);
 
     try {
-      console.log('Validando envio WhatsApp:', { phoneNumber, templateName, patientId });
+      console.log('🔍 Validando envio WhatsApp:', { phoneNumber, templateName, patientId });
 
-      // 1. Verificar se o paciente já respondeu (opt-in) nas últimas 24h
-      const optInStatus = await checkPatientOptIn(patientId, phoneNumber);
-      
-      // 2. Verificar se o template está aprovado
+      // 1. Verificar se o template está aprovado pela Meta
       const templateStatus = await checkTemplateApproval(templateName);
+      console.log('📋 Status do template:', templateStatus);
+
+      // 2. Verificar se está usando provider Meta
+      const isUsingMeta = await checkIfUsingMetaProvider();
+      console.log('🏢 Usando Meta API:', isUsingMeta);
 
       // 3. Validar número de telefone
       const phoneValidation = validatePhoneNumber(phoneNumber);
+      console.log('📱 Validação do telefone:', phoneValidation);
+
+      // 4. NOVA LÓGICA: Para templates aprovados pela Meta, não precisa de opt-in
+      let requiresOptIn = true;
+      let optInStatus = { hasOptIn: false };
+
+      if (templateStatus.isApproved && isUsingMeta) {
+        // Templates aprovados pela Meta podem ser enviados sem opt-in
+        console.log('✅ Template aprovado pela Meta - dispensando opt-in');
+        requiresOptIn = false;
+        optInStatus.hasOptIn = true; // Simular opt-in para templates aprovados
+      } else {
+        // Para mensagens livres ou templates não aprovados, verificar opt-in
+        console.log('⚠️ Template não aprovado ou não é Meta - verificando opt-in');
+        optInStatus = await checkPatientOptIn(patientId, phoneNumber);
+        requiresOptIn = !optInStatus.hasOptIn;
+      }
+
+      console.log('🔐 Status do opt-in:', { requiresOptIn, hasOptIn: optInStatus.hasOptIn });
 
       const result: WhatsAppValidationResult = {
-        canSend: optInStatus.hasOptIn && templateStatus.isApproved && phoneValidation.isValid,
-        requiresOptIn: !optInStatus.hasOptIn,
+        canSend: optInStatus.hasOptIn && phoneValidation.isValid,
+        requiresOptIn: requiresOptIn,
         templateApproved: templateStatus.isApproved,
-        reason: !optInStatus.hasOptIn 
-          ? 'Paciente não respondeu nas últimas 24h (opt-in necessário)'
-          : !templateStatus.isApproved 
-          ? `Template '${templateName}' não está aprovado pela Meta`
-          : !phoneValidation.isValid
+        reason: !phoneValidation.isValid
           ? 'Número de telefone inválido'
+          : requiresOptIn && !optInStatus.hasOptIn
+          ? 'Paciente não respondeu nas últimas 24h (opt-in necessário)'
+          : !templateStatus.isApproved && !isUsingMeta
+          ? `Template '${templateName}' não está aprovado para uso`
           : undefined
       };
 
-      console.log('Resultado da validação:', result);
+      console.log('📊 Resultado da validação:', result);
 
       if (!result.canSend) {
         toast({
@@ -53,6 +74,8 @@ export const useWhatsAppValidations = () => {
           description: result.reason,
           variant: "destructive",
         });
+      } else {
+        console.log('🎉 Validação aprovada - pode enviar WhatsApp');
       }
 
       return result;
@@ -119,6 +142,27 @@ export const useWhatsAppValidations = () => {
     } catch (error) {
       console.error('Erro ao verificar template:', error);
       return { isApproved: false };
+    }
+  };
+
+  const checkIfUsingMetaProvider = async () => {
+    try {
+      // Buscar configuração ativa de WhatsApp
+      const { data: settings } = await supabase
+        .from('whatsapp_settings')
+        .select('provider, is_active')
+        .eq('is_active', true)
+        .limit(1)
+        .single();
+
+      const isUsingMeta = settings?.provider === 'meta';
+
+      console.log('Check Meta provider:', { provider: settings?.provider, isUsingMeta });
+
+      return isUsingMeta;
+    } catch (error) {
+      console.error('Erro ao verificar provider:', error);
+      return false;
     }
   };
 
