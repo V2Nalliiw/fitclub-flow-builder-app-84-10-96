@@ -104,6 +104,42 @@ export type Database = {
         }
         Relationships: []
       }
+      content_access: {
+        Row: {
+          access_token: string
+          created_at: string
+          execution_id: string
+          expires_at: string
+          files: Json
+          id: string
+          metadata: Json | null
+          patient_id: string
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string
+          created_at?: string
+          execution_id: string
+          expires_at: string
+          files?: Json
+          id?: string
+          metadata?: Json | null
+          patient_id: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          execution_id?: string
+          expires_at?: string
+          files?: Json
+          id?: string
+          metadata?: Json | null
+          patient_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       flow_assignments: {
         Row: {
           assigned_at: string | null

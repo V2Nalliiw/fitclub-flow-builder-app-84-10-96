@@ -173,7 +173,8 @@ export const useFlowAssignments = () => {
     mutationFn: async ({ flowId, patientId, notes }: { flowId: string; patientId: string; notes?: string }) => {
       if (!user) throw new Error('User not authenticated');
 
-      const { data, error } = await supabase
+      // Criar a atribuição
+      const { data: assignment, error } = await supabase
         .from('flow_assignments')
         .insert({
           flow_id: flowId,
@@ -189,11 +190,39 @@ export const useFlowAssignments = () => {
         throw error;
       }
 
-      return data;
+      // Buscar dados do fluxo
+      const { data: flow, error: flowError } = await supabase
+        .from('flows')
+        .select('*')
+        .eq('id', flowId)
+        .single();
+
+      if (flowError || !flow) {
+        console.error('Erro ao buscar fluxo:', flowError);
+        throw new Error('Fluxo não encontrado');
+      }
+
+      // Processar fluxo automaticamente para o paciente
+      const nodes: FlowNode[] = Array.isArray(flow.nodes) ? (flow.nodes as unknown as FlowNode[]) : [];
+      const edges: FlowEdge[] = Array.isArray(flow.edges) ? (flow.edges as unknown as FlowEdge[]) : [];
+
+      console.log('Auto-iniciando execução do fluxo para o paciente:', patientId);
+      
+      const execution = await processFlowAssignment(
+        flowId,
+        patientId,
+        nodes,
+        edges
+      );
+
+      console.log('Execução criada automaticamente:', execution);
+
+      return { assignment, execution };
     },
-    onSuccess: () => {
+    onSuccess: ({ assignment, execution }) => {
       queryClient.invalidateQueries({ queryKey: ['flow-assignments'] });
-      toast.success('Fluxo atribuído com sucesso!');
+      toast.success('Fluxo atribuído e iniciado automaticamente!');
+      console.log('Fluxo atribuído e processado:', { assignment, execution });
     },
     onError: (error: any) => {
       console.error('Erro ao atribuir fluxo:', error);

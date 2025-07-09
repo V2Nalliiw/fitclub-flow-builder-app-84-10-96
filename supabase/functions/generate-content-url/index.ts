@@ -69,47 +69,56 @@ serve(async (req) => {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // Expira em 30 dias
 
-    // Criar entrada na tabela de conteúdos (vamos criar essa tabela)
-    const contentData = {
-      id: crypto.randomUUID(),
-      execution_id: executionId,
-      patient_id: execution.patient_id,
-      access_token: accessToken,
-      files: files,
-      expires_at: expiresAt.toISOString(),
-      created_at: new Date().toISOString(),
-      metadata: {
-        patient_name: patient?.name || 'Paciente',
-        flow_id: execution.flow_id
-      }
-    };
+    // Processar arquivos para gerar URLs públicas corretas
+    const processedFiles = files.map((file: any) => ({
+      ...file,
+      url: file.url.startsWith('http') ? file.url : `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${file.url}`,
+      downloadUrl: `${req.url.split('/functions/')[0]}/functions/v1/serve-content/${accessToken}/${encodeURIComponent(file.nome)}`
+    }));
 
-    // Para agora, vamos salvar no campo current_step da execução
+    // Criar entrada na tabela content_access
+    const { error: insertError } = await supabase
+      .from('content_access')
+      .insert({
+        execution_id: executionId,
+        patient_id: execution.patient_id,
+        access_token: accessToken,
+        files: processedFiles,
+        expires_at: expiresAt.toISOString(),
+        metadata: {
+          patient_name: patient?.name || 'Paciente',
+          flow_id: execution.flow_id,
+          flow_name: execution.flow_name || 'Fluxo'
+        }
+      });
+
+    if (insertError) {
+      console.error('Erro ao criar entrada de acesso:', insertError);
+      return new Response(
+        JSON.stringify({ error: 'Erro ao gerar acesso ao conteúdo' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Atualizar execução com referência ao content_access
     const { error: updateError } = await supabase
       .from('flow_executions')
       .update({
         current_step: {
-          ...execution,
-          content_access: {
-            token: accessToken,
-            files: files,
-            expires_at: expiresAt.toISOString(),
-            url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/serve-content?token=${accessToken}`
-          }
+          ...execution.current_step,
+          content_access_token: accessToken,
+          files_count: processedFiles.length
         },
         updated_at: new Date().toISOString()
       })
       .eq('id', executionId);
 
     if (updateError) {
-      console.error('Erro ao salvar dados de acesso:', updateError);
-      return new Response(
-        JSON.stringify({ error: 'Erro ao gerar URL de acesso' }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
+      console.error('Erro ao atualizar execução:', updateError);
+      // Não retornar erro aqui pois o content_access já foi criado
     }
 
     // URL pública que será enviada via WhatsApp

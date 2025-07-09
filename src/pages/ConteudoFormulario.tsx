@@ -1,190 +1,225 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, Image, Video, Music } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { FileText, Download, ExternalLink, AlertCircle, Image, Video, Music } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-interface FormContent {
-  titulo: string;
-  descricao: string;
-  arquivos: Array<{
-    nome: string;
-    url: string;
-    tipo: string;
-  }>;
+interface ContentFile {
+  id: string;
+  nome: string;
+  url: string;
+  publicUrl?: string;
+  tipo: string;
+  tamanho: number;
+  downloadUrl?: string;
+}
+
+interface ContentData {
+  execution_id: string;
+  patient_id: string;
+  files: ContentFile[];
+  metadata: {
+    patient_name?: string;
+    flow_name?: string;
+    [key: string]: any;
+  };
+  expires_at: string;
 }
 
 export default function ConteudoFormulario() {
-  const { executionId } = useParams<{ executionId: string }>();
-  const { toast } = useToast();
-  const [content, setContent] = useState<FormContent | null>(null);
+  const { executionId } = useParams();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [contentData, setContentData] = useState<ContentData | null>(null);
 
   useEffect(() => {
     const loadContent = async () => {
-      if (!executionId) return;
+      if (!executionId || !token) {
+        setError('Link inválido ou expirado');
+        setLoading(false);
+        return;
+      }
 
       try {
-        // Buscar dados da execução
-        const { data: execution, error } = await supabase
-          .from('flow_executions')
-          .select('current_step, flow_id')
-          .eq('id', executionId)
+        console.log('Carregando conteúdo para:', { executionId, token });
+
+        // Buscar dados do content_access
+        const { data, error: queryError } = await supabase
+          .from('content_access')
+          .select('*')
+          .eq('access_token', token)
+          .eq('execution_id', executionId)
           .single();
 
-        if (error) throw error;
-
-        // Primeiro, tentar obter dados do current_step se houver content_access
-        let contentData: FormContent | null = null;
-        
-        if ((execution as any)?.current_step?.content_access) {
-          const contentAccess = (execution as any).current_step.content_access;
-          contentData = {
-            titulo: 'Conteúdo do Formulário',
-            descricao: 'Arquivos disponíveis para download',
-            arquivos: contentAccess.files || []
-          };
-        } else {
-          // Buscar o flow para obter os nós como fallback
-          const { data: flow } = await supabase
-            .from('flows')
-            .select('nodes')
-            .eq('id', (execution as any).flow_id)
-            .single();
-
-          if (flow) {
-            const nodes = (flow as any).nodes || [];
-            const formEndNode = nodes.find((node: any) => node.type === 'formEnd');
-            
-            if (formEndNode && formEndNode.data) {
-              contentData = {
-                titulo: formEndNode.data.titulo || 'Conteúdo do Formulário',
-                descricao: formEndNode.data.descricao || '',
-                arquivos: formEndNode.data.arquivos || []
-              };
-            }
-          }
+        if (queryError || !data) {
+          console.error('Erro ao buscar content_access:', queryError);
+          setError('Conteúdo não encontrado ou link expirado');
+          setLoading(false);
+          return;
         }
 
-        setContent(contentData);
+        // Verificar se não expirou
+        const now = new Date();
+        const expiresAt = new Date(data.expires_at);
+        
+        if (now > expiresAt) {
+          setError('Este link expirou. Solicite um novo link.');
+          setLoading(false);
+          return;
+        }
+
+        // Garantir que os dados estejam no formato correto
+        const contentData: ContentData = {
+          execution_id: data.execution_id,
+          patient_id: data.patient_id,
+          files: Array.isArray(data.files) ? (data.files as unknown as ContentFile[]) : [],
+          metadata: (data.metadata as any) || {},
+          expires_at: data.expires_at
+        };
+
+        setContentData(contentData);
+        setLoading(false);
+
       } catch (error) {
         console.error('Erro ao carregar conteúdo:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar o conteúdo",
-          variant: "destructive",
-        });
-      } finally {
+        setError('Erro ao carregar conteúdo');
         setLoading(false);
       }
     };
 
     loadContent();
-  }, [executionId, toast]);
+  }, [executionId, token]);
 
-  const getFileIcon = (tipo: string) => {
-    if (tipo.startsWith('image/')) return <Image className="h-4 w-4" />;
-    if (tipo.startsWith('video/')) return <Video className="h-4 w-4" />;
-    if (tipo.startsWith('audio/')) return <Music className="h-4 w-4" />;
-    return <FileText className="h-4 w-4" />;
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const handleDownload = (arquivo: any) => {
-    // Criar link temporário para download
-    const link = document.createElement('a');
-    link.href = arquivo.url;
-    link.download = arquivo.nome;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const getFileIcon = (tipo: string) => {
+    if (tipo.startsWith('image/')) return <Image className="h-5 w-5" />;
+    if (tipo.startsWith('video/')) return <Video className="h-5 w-5" />;
+    if (tipo.startsWith('audio/')) return <Music className="h-5 w-5" />;
+    return <FileText className="h-5 w-5" />;
+  };
+
+  const handleDownload = async (arquivo: ContentFile) => {
+    try {
+      // Usar a serve-content function para download seguro
+      const downloadUrl = `https://oilnybhaboeqyhjrmvl.supabase.co/functions/v1/serve-content/${token}/${encodeURIComponent(arquivo.nome)}`;
+      
+      console.log('Fazendo download via:', downloadUrl);
+      
+      // Abrir em nova aba para download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = arquivo.nome;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Download iniciado');
+      
+    } catch (error) {
+      console.error('Erro no download:', error);
+      toast.error('Erro ao fazer download do arquivo');
+    }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Carregando conteúdo...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando conteúdo...</p>
         </div>
       </div>
     );
   }
 
-  if (!content) {
+  if (error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold">Conteúdo não encontrado</h3>
-              <p className="text-muted-foreground">
-                O conteúdo solicitado não está disponível ou expirou.
-              </p>
-            </div>
+          <CardContent className="pt-6 text-center">
+            <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-4" />
+            <p className="text-destructive mb-4">{error}</p>
+            <Button variant="outline" onClick={() => window.close()}>
+              Fechar
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
+  const titulo = contentData?.metadata?.flow_name || 'Conteúdo do Formulário';
+  const paciente = contentData?.metadata?.patient_name || 'Paciente';
+
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-background p-4">
+      <div className="max-w-4xl mx-auto">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              {content.titulo}
+              {titulo}
             </CardTitle>
-            {content.descricao && (
-              <p className="text-muted-foreground">{content.descricao}</p>
-            )}
+            <p className="text-muted-foreground">
+              Olá {paciente}, aqui estão os materiais e documentos disponíveis para download
+            </p>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Expira em: {new Date(contentData?.expires_at || '').toLocaleDateString('pt-BR')}</span>
+              <Badge variant="outline">
+                {contentData?.files?.length || 0} arquivo(s)
+              </Badge>
+            </div>
           </CardHeader>
-          
           <CardContent>
-            {content.arquivos && content.arquivos.length > 0 ? (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Arquivos Disponíveis</h3>
-                <div className="grid gap-3">
-                  {content.arquivos.map((arquivo, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 border rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        {getFileIcon(arquivo.tipo)}
-                        <div>
-                          <p className="font-medium">{arquivo.nome}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {arquivo.tipo}
-                          </p>
-                        </div>
+            <div className="space-y-4">
+              {contentData?.files?.map((arquivo: ContentFile) => (
+                <div
+                  key={arquivo.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    {getFileIcon(arquivo.tipo)}
+                    <div>
+                      <p className="font-medium">{arquivo.nome}</p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{formatFileSize(arquivo.tamanho)}</span>
+                        <Badge variant="secondary" className="text-xs">
+                          {arquivo.tipo.split('/')[1]?.toUpperCase() || 'DOC'}
+                        </Badge>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDownload(arquivo)}
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Baixar
-                      </Button>
                     </div>
-                  ))}
+                  </div>
+                  <Button
+                    onClick={() => handleDownload(arquivo)}
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download
+                  </Button>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold">Nenhum arquivo disponível</h3>
-                <p className="text-muted-foreground">
-                  Não há arquivos para download neste momento.
-                </p>
-              </div>
-            )}
+              ))}
+              
+              {(!contentData?.files || contentData.files.length === 0) && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>Nenhum arquivo disponível no momento</p>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -58,19 +58,25 @@ export const FormEndNodeConfig: React.FC<FormEndNodeConfigProps> = ({
       try {
         const uploadedFile = await uploadFile(file);
         if (uploadedFile) {
+          // Gerar URL público correto do Supabase Storage  
+          const filePath = uploadedFile.url || uploadedFile.name;
+          const publicUrl = `https://oilnybhaboeqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${filePath}`;
+          
           const newArquivos = [...arquivos, {
-            id: uploadedFile.id,
-            nome: uploadedFile.name,
-            url: uploadedFile.url,
-            tipo: uploadedFile.type,
-            tamanho: uploadedFile.size,
-            uploadedAt: uploadedFile.uploadedAt
+            id: uploadedFile.id || crypto.randomUUID(),
+            nome: uploadedFile.name || file.name,
+            url: filePath, // Path relativo para storage
+            publicUrl: publicUrl, // URL público completo
+            tipo: uploadedFile.type || file.type,
+            tamanho: uploadedFile.size || file.size,
+            uploadedAt: uploadedFile.uploadedAt || new Date().toISOString()
           }];
           
           setConfig({ ...config, arquivos: newArquivos });
           toast.success(`Arquivo ${file.name} enviado com sucesso!`);
         }
       } catch (error) {
+        console.error('Erro no upload:', error);
         toast.error(`Erro ao enviar ${file.name}`);
       }
     }
