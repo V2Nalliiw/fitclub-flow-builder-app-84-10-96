@@ -260,80 +260,51 @@ const FlowExecution = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:bg-none dark:bg-[#0E0E0E] p-6">
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/my-flows')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Voltar
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                {execution.flow_name}
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Progresso: {execution.progress}% concluído ({execution.completed_steps} de {steps.length} etapas)
-                {isWaiting && !delayExpired && ' • Aguardando próxima etapa'}
-                {isWaiting && delayExpired && ' • Próxima etapa disponível!'}
-              </p>
-            </div>
-          </div>
+        {/* Header Simplificado */}
+        <div className="flex items-center justify-between mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/my-flows')}
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-400"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
           
-          {completedSteps.length > 0 && (
+          {completedSteps.length > 1 && currentStepIndex > 0 && (
             <Button
               variant="outline"
-              onClick={() => setShowStepNavigation(!showStepNavigation)}
+              onClick={handleGoBack}
+              size="sm"
               className="flex items-center gap-2"
             >
-              <History className="h-4 w-4" />
-              Navegar Etapas
+              <ArrowLeft className="h-3 w-3" />
+              Voltar Etapa
             </Button>
           )}
         </div>
 
-        {/* Step Navigation */}
-        {showStepNavigation && (
-          <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle>Navegação por Etapas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-2 max-h-60 overflow-y-auto">
-                {steps.map((step: any, index: number) => (
-                  <Button
-                    key={step.nodeId}
-                    variant={index === currentStepIndex ? "default" : step.completed ? "outline" : "ghost"}
-                    disabled={!step.completed && index !== currentStepIndex}
-                    onClick={() => handleStepNavigation(index)}
-                    className="justify-start"
-                  >
-                    <span className="mr-2">
-                      {step.completed ? '✅' : index === currentStepIndex ? '📍' : '⏳'}
-                    </span>
-                    Etapa {index + 1}: {step.title}
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Título do Formulário */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            {execution.flow_name}
+          </h1>
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <span>Etapa {currentStepIndex + 1} de {steps.length}</span>
+            <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+            <span>{execution.progress}% concluído</span>
+          </div>
+        </div>
 
-        {/* Progress */}
-        <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                <span>Progresso Geral</span>
-                <span>{execution.completed_steps} de {steps.length} etapas</span>
-              </div>
-              <Progress value={execution.progress} className="h-3" />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Progress Bar Simples */}
+        <div className="mb-6">
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div 
+              className="bg-gradient-to-r from-[#5D8701] to-[#4a6e01] h-2 rounded-full transition-all duration-300"
+              style={{ width: `${execution.progress || 0}%` }}
+            ></div>
+          </div>
+        </div>
 
         {/* Delay Timer - Show when waiting and delay hasn't expired */}
         {isWaiting && execution.next_step_available_at && !delayExpired && (
@@ -343,63 +314,53 @@ const FlowExecution = () => {
           />
         )}
 
-        {/* Current Step */}
+        {/* Formulário Principal */}
         <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {isCompleted ? (
-                <CheckCircle className="h-6 w-6 text-green-500" />
-              ) : isWaiting && !delayExpired ? (
-                <Clock className="h-6 w-6 text-orange-500" />
-              ) : (
-                <Play className="h-6 w-6 text-primary" />
-              )}
-              {isCompleted ? 'Fluxo Concluído!' : 
-               isWaiting && !delayExpired ? 'Aguardando Próxima Etapa' : 
-               'Etapa Atual'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="p-6 space-y-6">
             {isCompleted ? (
-              <div className="text-center py-8">
-                <div className="w-20 h-20 bg-green-100 dark:bg-none dark:bg-[#0E0E0E]/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle className="h-12 w-12 text-green-500" />
+              <div className="text-center py-12">
+                <div className="w-24 h-24 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle className="h-16 w-16 text-green-500" />
                 </div>
-                <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                  Parabéns!
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  Você concluiu todos os formulários com sucesso.
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+                  🎉 Parabéns!
+                </h2>
+                <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
+                  Você concluiu todo o formulário com sucesso!
                 </p>
                 <Button
                   onClick={() => navigate('/my-flows')}
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+                  size="lg"
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8"
                 >
-                  Voltar aos Formulários
+                  Finalizar
                 </Button>
               </div>
             ) : currentStep && (!isWaiting || delayExpired) ? (
-              <FlowStepRenderer
-                step={currentStep}
-                onComplete={handleStepComplete}
-                isLoading={updating}
-                calculatorResult={calculatorResult}
-              />
+              <div className="space-y-6">
+                <FlowStepRenderer
+                  step={currentStep}
+                  onComplete={handleStepComplete}
+                  isLoading={updating}
+                  calculatorResult={calculatorResult}
+                />
+              </div>
             ) : (
-              <div className="text-center py-8">
-                <div className="w-20 h-20 bg-orange-100 dark:bg-none dark:bg-[#0E0E0E]/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Clock className="h-12 w-12 text-orange-500" />
+              <div className="text-center py-12">
+                <div className="w-24 h-24 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Clock className="h-16 w-16 text-orange-500" />
                 </div>
                 <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                  Etapa completada!
+                  ⏰ Aguarde um pouco...
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                <p className="text-gray-600 dark:text-gray-400 mb-8">
                   Sua próxima etapa será liberada automaticamente no tempo programado.
                   Você pode fechar esta página e voltar depois.
                 </p>
                 <Button
                   onClick={() => navigate('/my-flows')}
                   variant="outline"
+                  size="lg"
                 >
                   Voltar aos Formulários
                 </Button>

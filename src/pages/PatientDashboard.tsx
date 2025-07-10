@@ -25,6 +25,13 @@ const PatientDashboard = () => {
   const hasActiveForm = mostRecentExecution && (mostRecentExecution.status === 'em-andamento' || mostRecentExecution.status === 'pausado');
   const hasNoForms = !executions || executions.length === 0;
 
+  // Auto-redirecionar para o formulário ativo se houver um
+  React.useEffect(() => {
+    if (hasActiveForm && mostRecentExecution && !flowsLoading) {
+      navigate(`/flow-execution/${mostRecentExecution.id}`);
+    }
+  }, [hasActiveForm, mostRecentExecution, flowsLoading, navigate]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:bg-none dark:bg-[#0E0E0E] p-4 md:p-6">
       <div className="max-w-6xl mx-auto space-y-6 md:space-y-8">

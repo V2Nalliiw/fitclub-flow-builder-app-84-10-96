@@ -30,6 +30,7 @@ import ConteudoFormulario from "@/pages/ConteudoFormulario";
 import NotFound from "@/pages/NotFound";
 
 import { RealtimeNotificationProvider } from "@/components/notifications/RealtimeNotificationProvider";
+import { usePatientFlows } from "@/hooks/usePatientFlows";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -89,6 +90,30 @@ const ProtectedRoute = ({
   );
 };
 
+// Componente para redirecionamento inteligente
+const SmartRedirect = () => {
+  const { user } = useAuth();
+  const { executions, loading } = usePatientFlows();
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  // Para pacientes, verificar se há formulário ativo
+  if (user?.role === 'patient') {
+    const activeExecution = executions?.find(e => 
+      e.status === 'em-andamento' || e.status === 'pausado'
+    );
+    
+    if (activeExecution) {
+      return <Navigate to={`/flow-execution/${activeExecution.id}`} replace />;
+    }
+  }
+
+  // Redirecionamento padrão para dashboard
+  return <Navigate to="/dashboard" replace />;
+};
+
 const AppRoutes = () => {
   const { user, isLoading } = useAuth();
 
@@ -106,7 +131,7 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<SmartRedirect />} />
       
       {/* Dashboard - Todos os usuários autenticados */}
       <Route 
