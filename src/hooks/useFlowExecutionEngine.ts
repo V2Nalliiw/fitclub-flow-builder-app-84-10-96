@@ -30,7 +30,7 @@ export const useFlowExecutionEngine = () => {
     step: ExecutionStep,
     nodeData: any
   ) => {
-    console.log(`Executando etapa ${step.nodeType}:`, { executionId, step, nodeData });
+    console.log(`🔄 FlowEngine: Executando etapa ${step.nodeType}:`, { executionId, step, nodeData });
 
     try {
       switch (step.nodeType) {
@@ -66,9 +66,10 @@ export const useFlowExecutionEngine = () => {
           throw new Error(`Tipo de nó não suportado: ${step.nodeType}`);
       }
 
+      console.log(`✅ FlowEngine: Etapa ${step.nodeType} executada com sucesso`);
       return { success: true };
     } catch (error) {
-      console.error('Erro ao executar etapa:', error);
+      console.error(`❌ FlowEngine: Erro ao executar etapa ${step.nodeType}:`, error);
       await handleStepError(executionId, step, error as Error);
       return { success: false, error: (error as Error).message };
     }
@@ -88,6 +89,8 @@ export const useFlowExecutionEngine = () => {
   };
 
   const processFormStartNode = async (executionId: string, step: ExecutionStep, nodeData: any) => {
+    console.log('📝 FlowEngine: Processando FormStart node', { executionId, nodeData });
+    
     const formUrl = `${window.location.origin}/forms/${step.nodeId}?execution=${executionId}`;
     
     // Store form info in execution metadata
@@ -121,6 +124,12 @@ export const useFlowExecutionEngine = () => {
         .single();
 
       if (patient && (patient as any).phone) {
+        console.log('📞 FlowEngine: Enviando WhatsApp para paciente', { 
+          patientId: (execution as any).patient_id,
+          phone: (patient as any).phone,
+          template: 'novo_formulario'
+        });
+
         // Validar antes de enviar
         const validation = await validateWhatsAppSending(
           (patient as any).phone,
@@ -128,9 +137,13 @@ export const useFlowExecutionEngine = () => {
           (execution as any).patient_id
         );
 
+        console.log('✅ FlowEngine: Resultado da validação WhatsApp:', validation);
+
         if (validation.canSend) {
           try {
-            await sendWhatsAppTemplateMessage(
+            console.log('🚀 FlowEngine: Enviando template novo_formulario...');
+            
+            const result = await sendWhatsAppTemplateMessage(
               (patient as any).phone,
               'novo_formulario',
               {
@@ -140,27 +153,60 @@ export const useFlowExecutionEngine = () => {
               }
             );
             
-            // Registrar atividade de envio
-            await recordOptInActivity(
-              (execution as any).patient_id,
-              (patient as any).phone,
-              'whatsapp_sent'
-            );
+            console.log('📱 FlowEngine: Resultado do envio:', result);
             
-            console.log('Template novo_formulario enviado com sucesso');
+            if (result.success) {
+              // Registrar atividade de envio
+              await recordOptInActivity(
+                (execution as any).patient_id,
+                (patient as any).phone,
+                'whatsapp_sent'
+              );
+              
+              console.log('✅ FlowEngine: Template novo_formulario enviado com sucesso');
+            } else {
+              console.error('❌ FlowEngine: Falha no envio do template:', result.error);
+              
+              // Tentar novamente após delay se for erro de configuração
+              if (result.error?.includes('não configurado')) {
+                console.log('🔄 FlowEngine: Tentando reenvio após delay...');
+                setTimeout(async () => {
+                  try {
+                    const retryResult = await sendWhatsAppTemplateMessage(
+                      (patient as any).phone,
+                      'novo_formulario',
+                      {
+                        patient_name: (patient as any).name || 'Paciente',
+                        form_name: nodeData.titulo || 'Formulário',
+                        form_url: formUrl
+                      }
+                    );
+                    console.log('🔄 FlowEngine: Resultado do reenvio:', retryResult);
+                  } catch (retryError) {
+                    console.error('❌ FlowEngine: Falha no reenvio:', retryError);
+                  }
+                }, 3000);
+              }
+            }
           } catch (error) {
-            console.error('Erro ao enviar template novo_formulario:', error);
+            console.error('❌ FlowEngine: Erro ao enviar template novo_formulario:', error);
           }
         } else {
-          console.warn('Envio WhatsApp bloqueado:', validation.reason);
+          console.warn('⚠️ FlowEngine: Envio WhatsApp bloqueado:', validation.reason);
         }
+      } else {
+        console.warn('⚠️ FlowEngine: Paciente sem telefone configurado');
       }
+    } else {
+      console.error('❌ FlowEngine: Execução não encontrada');
     }
 
-    console.log('Formulário criado:', formUrl);
+    console.log('📝 FlowEngine: Formulário criado:', formUrl);
   };
 
   const processFormEndNode = async (executionId: string, step: ExecutionStep, nodeData: any) => {
+    console.log('🏁 FlowEngine: Processando FormEnd node', { executionId, nodeData });
+    
     // Buscar dados da execução e do paciente
     const { data: execution } = await supabase
       .from('flow_executions')
@@ -176,11 +222,17 @@ export const useFlowExecutionEngine = () => {
         .single();
 
       if (patient && (patient as any).phone) {
+        console.log('📞 FlowEngine: Enviando WhatsApp de conclusão para paciente', { 
+          patientId: (execution as any).patient_id,
+          phone: (patient as any).phone,
+          template: 'formulario_concluido'
+        });
+
         // Gerar URL de conteúdo se houver arquivos configurados
         let contentUrl = '';
         
         if (nodeData.arquivos && nodeData.arquivos.length > 0) {
-          console.log('Gerando URL para arquivos:', nodeData.arquivos.length);
+          console.log('📁 FlowEngine: Gerando URL para arquivos:', nodeData.arquivos.length);
           contentUrl = await generateContentUrl({
             executionId,
             files: nodeData.arquivos
@@ -192,6 +244,8 @@ export const useFlowExecutionEngine = () => {
           contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}`;
         }
 
+        console.log('🔗 FlowEngine: URL de conteúdo gerada:', contentUrl);
+
         // Validar antes de enviar
         const validation = await validateWhatsAppSending(
           (patient as any).phone,
@@ -199,9 +253,13 @@ export const useFlowExecutionEngine = () => {
           (execution as any).patient_id
         );
 
+        console.log('✅ FlowEngine: Resultado da validação WhatsApp:', validation);
+
         if (validation.canSend) {
           try {
-            await sendWhatsAppTemplateMessage(
+            console.log('🚀 FlowEngine: Enviando template formulario_concluido...');
+            
+            const result = await sendWhatsAppTemplateMessage(
               (patient as any).phone,
               'formulario_concluido',
               {
@@ -210,24 +268,54 @@ export const useFlowExecutionEngine = () => {
               }
             );
             
-            // Registrar atividade de envio
-            await recordOptInActivity(
-              (execution as any).patient_id,
-              (patient as any).phone,
-              'whatsapp_sent'
-            );
+            console.log('📱 FlowEngine: Resultado do envio:', result);
             
-            console.log('Template formulario_concluido enviado com sucesso');
+            if (result.success) {
+              // Registrar atividade de envio
+              await recordOptInActivity(
+                (execution as any).patient_id,
+                (patient as any).phone,
+                'whatsapp_sent'
+              );
+              
+              console.log('✅ FlowEngine: Template formulario_concluido enviado com sucesso');
+            } else {
+              console.error('❌ FlowEngine: Falha no envio do template:', result.error);
+              
+              // Tentar novamente após delay se for erro de configuração
+              if (result.error?.includes('não configurado')) {
+                console.log('🔄 FlowEngine: Tentando reenvio após delay...');
+                setTimeout(async () => {
+                  try {
+                    const retryResult = await sendWhatsAppTemplateMessage(
+                      (patient as any).phone,
+                      'formulario_concluido',
+                      {
+                        patient_name: (patient as any).name || 'Paciente',
+                        content_url: contentUrl
+                      }
+                    );
+                    console.log('🔄 FlowEngine: Resultado do reenvio:', retryResult);
+                  } catch (retryError) {
+                    console.error('❌ FlowEngine: Falha no reenvio:', retryError);
+                  }
+                }, 3000);
+              }
+            }
           } catch (error) {
-            console.error('Erro ao enviar template formulario_concluido:', error);
+            console.error('❌ FlowEngine: Erro ao enviar template formulario_concluido:', error);
           }
         } else {
-          console.warn('Envio WhatsApp bloqueado:', validation.reason);
+          console.warn('⚠️ FlowEngine: Envio WhatsApp bloqueado:', validation.reason);
         }
+      } else {
+        console.warn('⚠️ FlowEngine: Paciente sem telefone configurado');
       }
+    } else {
+      console.error('❌ FlowEngine: Execução não encontrada');
     }
 
-    console.log('Fim de formulário processado');
+    console.log('🏁 FlowEngine: Fim de formulário processado');
   };
 
   const processDelayNode = async (executionId: string, step: ExecutionStep, nodeData: any) => {
