@@ -343,7 +343,7 @@ export const useFlowAssignments = () => {
 
           // Tentar enviar template oficial primeiro, depois fallback
           const sendTemplateWithFallback = async () => {
-            console.log('🎯 executeFirstNode: Tentando template oficial "inicio_fluxo"');
+            console.log('🎯 executeFirstNode: Tentando template oficial "envio_formulario"');
             
             try {
               // Importar o whatsappService para usar templates oficiais Meta
@@ -361,8 +361,8 @@ export const useFlowAssignments = () => {
               // Tentar template oficial primeiro
               let result = await whatsappService.sendTemplate(
                 patient.phone,
-                'inicio_fluxo',
-                [patient.name || 'Paciente', execution.flow_name || 'Fluxo']
+                'envio_formulario',
+                [execution.flow_name || 'Fluxo', patient.name || 'Paciente', '/flow-execution/' + executionId]
               );
 
               console.log('📊 executeFirstNode: Resultado template oficial:', result);
@@ -372,10 +372,11 @@ export const useFlowAssignments = () => {
                 console.log('🔄 executeFirstNode: Template oficial falhou, tentando template básico');
                 result = await sendWhatsAppTemplateMessage(
                   patient.phone,
-                  'inicio_fluxo',
+                  'envio_formulario',
                   {
+                    form_name: execution.flow_name || 'Fluxo',
                     patient_name: patient.name || 'Paciente',
-                    flow_name: execution.flow_name || 'Fluxo'
+                    form_url: '/flow-execution/' + executionId
                   }
                 );
                 console.log('📊 executeFirstNode: Resultado template básico:', result);
