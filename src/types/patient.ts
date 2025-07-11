@@ -4,7 +4,7 @@ export interface PatientFlowExecution {
   flow_id: string;
   flow_name: string;
   paciente_id: string;
-  status: 'em-andamento' | 'pausado' | 'concluido' | 'aguardando';
+  status: 'em-andamento' | 'in-progress' | 'pausado' | 'concluido' | 'aguardando';
   no_atual: string;
   progresso: number; // 0-100
   started_at: string;

@@ -114,7 +114,7 @@ const SmartRedirect = () => {
       });
       
       // Check for active execution with proper step structure
-      return e.status === 'em-andamento' && 
+      return (e.status === 'em-andamento' || e.status === 'in-progress') && 
              e.progresso === 0 &&
              currentStepData?.steps &&
              Array.isArray(currentStepData.steps) &&
