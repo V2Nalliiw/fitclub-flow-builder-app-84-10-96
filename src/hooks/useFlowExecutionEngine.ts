@@ -8,6 +8,7 @@ import { useWhatsApp } from '@/hooks/useWhatsApp';
 import { useContentUrlGenerator } from '@/hooks/useContentUrlGenerator';
 import { useWhatsAppValidations } from '@/hooks/useWhatsAppValidations';
 import { useWhatsAppSettings } from '@/hooks/useWhatsAppSettings';
+import { usePatientWhatsApp } from '@/hooks/usePatientWhatsApp';
 
 interface ExecutionStep {
   nodeId: string;
@@ -21,9 +22,10 @@ interface ExecutionStep {
 export const useFlowExecutionEngine = () => {
   const { toast } = useToast();
   const { createNotification } = useNotifications();
-  const { sendWhatsAppTemplateMessage } = useWhatsApp();
+  const { sendWhatsAppTemplateMessage, sendMessage } = useWhatsApp();
   const { generateContentUrl } = useContentUrlGenerator();
   const { validateWhatsAppSending, recordOptInActivity } = useWhatsAppValidations();
+  const { sendFormToPatient } = usePatientWhatsApp();
   const [processing, setProcessing] = useState(false);
   
   // Aguardar configurações do WhatsApp estarem prontas
@@ -129,7 +131,7 @@ export const useFlowExecutionEngine = () => {
       })
       .eq('id', executionId);
 
-    // Buscar dados da execução e do paciente para enviar WhatsApp
+    // Buscar dados da execução para obter o patient_id
     const { data: execution } = await supabase
       .from('flow_executions')
       .select('patient_id')
@@ -137,105 +139,78 @@ export const useFlowExecutionEngine = () => {
       .single();
 
     if (execution) {
-      const { data: patient } = await supabase
-        .from('profiles')
-        .select('name, phone')
-        .eq('user_id', (execution as any).patient_id)
-        .single();
+      console.log('📞 FlowEngine: Enviando formulário via WhatsApp para paciente', { 
+        patientId: (execution as any).patient_id,
+        formName: nodeData.titulo || 'Formulário',
+        formUrl: formUrl
+      });
 
-      if (patient && (patient as any).phone) {
-        console.log('📞 FlowEngine: Enviando WhatsApp para paciente', { 
-          patientId: (execution as any).patient_id,
-          phone: (patient as any).phone,
-          template: 'novo_formulario'
-        });
+      try {
+        // Buscar dados do paciente diretamente
+        const { data: patient } = await supabase
+          .from('profiles')
+          .select('name, phone')
+          .eq('user_id', (execution as any).patient_id)
+          .single();
 
-        // Validar antes de enviar
-        const validation = await validateWhatsAppSending(
-          (patient as any).phone,
-          'novo_formulario',
-          (execution as any).patient_id
-        );
+        if (patient && (patient as any).phone) {
+          console.log('📞 FlowEngine: Enviando link do painel via WhatsApp', { 
+            patientId: (execution as any).patient_id,
+            phone: (patient as any).phone,
+            formName: nodeData.titulo || 'Formulário'
+          });
 
-        console.log('✅ FlowEngine: Resultado da validação WhatsApp:', validation);
-
-        if (validation.canSend) {
-          // Aguardar WhatsApp estar pronto antes de enviar
-          if (!isWhatsAppReady) {
-            console.log('⏳ FlowEngine: Aguardando WhatsApp ficar pronto...');
-            
-            // Esperar até 10 segundos pelo WhatsApp ficar pronto
-            let attempts = 0;
-            const maxAttempts = 20; // 10 segundos (500ms x 20)
-            
-            while (!isWhatsAppReady && attempts < maxAttempts) {
-              await new Promise(resolve => setTimeout(resolve, 500));
-              attempts++;
-              console.log(`⏳ FlowEngine: Tentativa ${attempts}/${maxAttempts} - WhatsApp ready: ${isWhatsAppReady}`);
-            }
-            
-            if (!isWhatsAppReady) {
-              console.error('❌ FlowEngine: Timeout - WhatsApp não ficou pronto a tempo');
-              throw new Error('WhatsApp não está pronto para envio');
-            }
-          }
+          // Enviar link do painel do paciente (onde a primeira pergunta aparecerá automaticamente)
+          const patientDashboardUrl = `${window.location.origin}/patient-dashboard`;
+          const customMessage = `📋 *${nodeData.titulo || 'Formulário'}*\n\nOlá ${(patient as any).name}! Você tem um novo formulário para preencher.\n\n🔗 Acesse seu painel: ${patientDashboardUrl}\n\n_O formulário aparecerá automaticamente quando você abrir o link._`;
           
-          try {
-            console.log('🚀 FlowEngine: Enviando template novo_formulario...');
-            
-            const result = await sendWhatsAppTemplateMessage(
-              (patient as any).phone,
-              'novo_formulario',
-              {
-                patient_name: (patient as any).name || 'Paciente',
-                form_name: nodeData.titulo || 'Formulário',
-                form_url: formUrl
+          // Usar sendMessage diretamente com validação
+          const validation = await validateWhatsAppSending(
+            (patient as any).phone,
+            'novo_formulario',
+            (execution as any).patient_id
+          );
+
+          if (validation.canSend) {
+            // Aguardar WhatsApp estar pronto
+            if (!isWhatsAppReady) {
+              console.log('⏳ FlowEngine: Aguardando WhatsApp ficar pronto...');
+              let attempts = 0;
+              const maxAttempts = 20;
+              
+              while (!isWhatsAppReady && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                attempts++;
               }
-            );
+              
+              if (!isWhatsAppReady) {
+                console.error('❌ FlowEngine: WhatsApp não ficou pronto a tempo');
+                return;
+              }
+            }
+
+            const result = await sendMessage((patient as any).phone, customMessage);
             
-            console.log('📱 FlowEngine: Resultado do envio:', result);
+            console.log('📱 FlowEngine: Resultado do envio do link do painel:', result);
             
             if (result.success) {
-              // Registrar atividade de envio
               await recordOptInActivity(
                 (execution as any).patient_id,
                 (patient as any).phone,
                 'whatsapp_sent'
               );
-              
-              console.log('✅ FlowEngine: Template novo_formulario enviado com sucesso');
+              console.log('✅ FlowEngine: Link do painel enviado com sucesso via WhatsApp');
             } else {
-              console.error('❌ FlowEngine: Falha no envio do template:', result.error);
-              
-              // Tentar novamente após delay se for erro de configuração
-              if (result.error?.includes('não configurado')) {
-                console.log('🔄 FlowEngine: Tentando reenvio após delay...');
-                setTimeout(async () => {
-                  try {
-                    const retryResult = await sendWhatsAppTemplateMessage(
-                      (patient as any).phone,
-                      'novo_formulario',
-                      {
-                        patient_name: (patient as any).name || 'Paciente',
-                        form_name: nodeData.titulo || 'Formulário',
-                        form_url: formUrl
-                      }
-                    );
-                    console.log('🔄 FlowEngine: Resultado do reenvio:', retryResult);
-                  } catch (retryError) {
-                    console.error('❌ FlowEngine: Falha no reenvio:', retryError);
-                  }
-                }, 3000);
-              }
+              console.error('❌ FlowEngine: Falha no envio do link do painel:', result.error);
             }
-          } catch (error) {
-            console.error('❌ FlowEngine: Erro ao enviar template novo_formulario:', error);
+          } else {
+            console.warn('⚠️ FlowEngine: Envio WhatsApp bloqueado:', validation.reason);
           }
         } else {
-          console.warn('⚠️ FlowEngine: Envio WhatsApp bloqueado:', validation.reason);
+          console.warn('⚠️ FlowEngine: Paciente sem telefone configurado');
         }
-      } else {
-        console.warn('⚠️ FlowEngine: Paciente sem telefone configurado');
+      } catch (error) {
+        console.error('❌ FlowEngine: Erro ao enviar link do painel via WhatsApp:', error);
       }
     } else {
       console.error('❌ FlowEngine: Execução não encontrada');
