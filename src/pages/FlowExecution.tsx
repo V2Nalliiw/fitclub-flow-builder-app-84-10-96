@@ -248,7 +248,7 @@ const FlowExecution = () => {
   const currentStep = steps[currentStepIndex];
   const isWaiting = execution.status === 'pending' && execution.next_step_available_at;
   const isActive = execution.status === 'in-progress' || execution.status === 'em-andamento';
-  const completedSteps = steps.filter((step: any) => step.completed);
+  const completedSteps = steps.filter((step: any) => step.completed).length;
 
   // Get calculator result for conditions step
   const calculatorResults = currentStepData?.calculatorResults || {};
@@ -286,7 +286,7 @@ const FlowExecution = () => {
               </Button>
               
               {/* Navegação por etapas */}
-              {completedSteps.length > 1 && (
+              {completedSteps > 1 && (
                 <Button
                   variant="ghost"
                   onClick={() => setShowStepNavigation(!showStepNavigation)}

@@ -33,8 +33,30 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
   const checkFileExists = async () => {
     setCheckingFile(true);
     try {
-      const response = await fetch(fileUrl, { method: 'HEAD' });
-      setFileExists(response.ok && response.status === 200);
+      // Tentar várias URLs alternativas para o arquivo
+      const urls = [
+        fileUrl,
+        fileUrl.replace('/storage/v1/object/public/flow-documents/', '/storage/v1/object/public/flow-documents/'),
+        `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${fileUrl.split('/').pop()}`,
+        `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${fileName}`
+      ];
+
+      for (const url of urls) {
+        try {
+          const response = await fetch(url, { method: 'HEAD' });
+          if (response.ok && response.status === 200) {
+            console.log('✅ Arquivo encontrado em:', url);
+            setFileExists(true);
+            setCheckingFile(false);
+            return;
+          }
+        } catch (urlError) {
+          console.warn('❌ URL falhou:', url, urlError);
+        }
+      }
+      
+      console.error('❌ Arquivo não encontrado em nenhuma URL:', urls);
+      setFileExists(false);
     } catch (error) {
       console.error('Erro ao verificar arquivo:', error);
       setFileExists(false);
@@ -44,30 +66,45 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
   };
 
   const handleDownload = async () => {
-    if (!fileExists) {
-      toast.error('Arquivo não encontrado');
-      return;
-    }
-
     setDownloading(true);
     try {
-      const response = await fetch(fileUrl);
-      const blob = await response.blob();
-      
-      if (blob.size === 0) {
-        toast.error('Arquivo está vazio ou corrompido');
-        return;
-      }
+      // Tentar múltiplas URLs para download
+      const urls = [
+        fileUrl,
+        `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${fileUrl.split('/').pop()}`,
+        `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${fileName}`
+      ];
 
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
+      let downloadSuccessful = false;
       
-      toast.success('Download iniciado!');
+      for (const url of urls) {
+        try {
+          const response = await fetch(url);
+          if (response.ok) {
+            const blob = await response.blob();
+            
+            if (blob.size > 0) {
+              const link = document.createElement('a');
+              link.href = URL.createObjectURL(blob);
+              link.download = fileName;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              URL.revokeObjectURL(link.href);
+              
+              toast.success('Download iniciado!');
+              downloadSuccessful = true;
+              break;
+            }
+          }
+        } catch (urlError) {
+          console.warn('❌ Falha no download da URL:', url, urlError);
+        }
+      }
+      
+      if (!downloadSuccessful) {
+        toast.error('Arquivo não disponível para download. Entre em contato com sua clínica.');
+      }
     } catch (error) {
       console.error('Erro ao baixar arquivo:', error);
       toast.error('Erro ao baixar arquivo');

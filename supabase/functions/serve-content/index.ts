@@ -25,124 +25,103 @@ serve(async (req) => {
     );
 
     const url = new URL(req.url);
-    const pathParts = url.pathname.split('/').filter(Boolean);
+    const pathParts = url.pathname.split('/');
     
-    // Extrair token do path: /serve-content/{token} ou /serve-content/{token}/{filename}
-    const token = pathParts[pathParts.length - 2] || pathParts[pathParts.length - 1];
-    const filename = pathParts.length > 2 ? decodeURIComponent(pathParts[pathParts.length - 1]) : null;
+    // Expected format: /functions/v1/serve-content/{token}/{filename}
+    const token = pathParts[pathParts.length - 2];
+    const filename = decodeURIComponent(pathParts[pathParts.length - 1]);
 
-    if (!token) {
-      return new Response(
-        JSON.stringify({ error: 'Token de acesso requerido' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
+    if (!token || !filename) {
+      return new Response('Token e nome do arquivo são obrigatórios', {
+        status: 400,
+        headers: corsHeaders,
+      });
     }
 
-    console.log('Serving content for token:', token, 'filename:', filename);
+    console.log('Serving content:', { token, filename });
 
     // Buscar dados do content_access
-    const { data: contentAccess, error } = await supabase
+    const { data: contentAccess, error: accessError } = await supabase
       .from('content_access')
       .select('*')
       .eq('access_token', token)
       .single();
 
-    if (error || !contentAccess) {
-      console.error('Content access not found:', error);
-      return new Response(
-        JSON.stringify({ error: 'Conteúdo não encontrado ou expirado' }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Verificar se o token não expirou
-    const now = new Date();
-    const expiresAt = new Date(contentAccess.expires_at);
-    
-    if (now > expiresAt) {
-      return new Response(
-        JSON.stringify({ error: 'Link expirado' }),
-        {
-          status: 410,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Se filename específico foi solicitado, servir apenas esse arquivo
-    if (filename) {
-      const files = contentAccess.files as any[];
-      const file = files.find((f: any) => f.nome === filename);
-      
-      if (!file) {
-        return new Response(
-          JSON.stringify({ error: 'Arquivo não encontrado' }),
-          {
-            status: 404,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
-      // Fazer download do arquivo do Supabase Storage
-      const { data: fileData, error: fileError } = await supabase.storage
-        .from('flow-documents')
-        .download(file.url.replace(/.*\/flow-documents\//, ''));
-
-      if (fileError || !fileData) {
-        console.error('Error downloading file:', fileError);
-        return new Response(
-          JSON.stringify({ error: 'Erro ao baixar arquivo' }),
-          {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
-      // Retornar o arquivo com headers apropriados
-      return new Response(fileData, {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': file.tipo || 'application/octet-stream',
-          'Content-Disposition': `attachment; filename="${file.nome}"`,
-          'Content-Length': file.tamanho?.toString() || '',
-        },
+    if (accessError || !contentAccess) {
+      console.error('Content access not found:', accessError);
+      return new Response('Acesso não autorizado ou expirado', {
+        status: 404,
+        headers: corsHeaders,
       });
     }
 
-    // Se não foi solicitado arquivo específico, retornar página de conteúdo
-    const publicUrl = `${req.url.split('/functions/')[0]}/conteudo-formulario/${contentAccess.execution_id}?token=${token}`;
-    
-    return new Response(
-      JSON.stringify({
-        success: true,
-        execution_id: contentAccess.execution_id,
-        patient_id: contentAccess.patient_id,
-        files: contentAccess.files,
-        metadata: contentAccess.metadata,
-        expires_at: contentAccess.expires_at,
-        redirect_url: publicUrl
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Verificar se não expirou
+    const now = new Date();
+    const expiresAt = new Date(contentAccess.expires_at);
+    if (now > expiresAt) {
+      return new Response('Acesso expirado', {
+        status: 403,
+        headers: corsHeaders,
+      });
+    }
+
+    // Encontrar o arquivo nos dados
+    const files = contentAccess.files as any[];
+    const requestedFile = files.find(f => f.nome === filename);
+
+    if (!requestedFile) {
+      return new Response('Arquivo não encontrado', {
+        status: 404,
+        headers: corsHeaders,
+      });
+    }
+
+    console.log('Found file:', requestedFile);
+
+    // Tentar diferentes URLs para o arquivo
+    const possibleUrls = [
+      requestedFile.url,
+      `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${requestedFile.url.split('/').pop()}`,
+      `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${filename}`
+    ];
+
+    for (const fileUrl of possibleUrls) {
+      try {
+        console.log('Trying URL:', fileUrl);
+        const fileResponse = await fetch(fileUrl);
+        
+        if (fileResponse.ok) {
+          console.log('Successfully served file from:', fileUrl);
+          
+          // Repassar o arquivo com headers apropriados
+          const contentType = requestedFile.tipo || 'application/octet-stream';
+          const fileBuffer = await fileResponse.arrayBuffer();
+          
+          return new Response(fileBuffer, {
+            headers: {
+              ...corsHeaders,
+              'Content-Type': contentType,
+              'Content-Disposition': `attachment; filename="${filename}"`,
+              'Content-Length': fileBuffer.byteLength.toString(),
+            },
+          });
+        }
+      } catch (error) {
+        console.warn('Failed to fetch from URL:', fileUrl, error);
       }
-    );
+    }
+
+    // Se não conseguiu baixar de nenhuma URL
+    return new Response('Arquivo não disponível no momento', {
+      status: 500,
+      headers: corsHeaders,
+    });
 
   } catch (error) {
-    console.error('Erro na function serve-content:', error);
-    return new Response(
-      JSON.stringify({ error: 'Erro interno do servidor' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    console.error('Error in serve-content:', error);
+    return new Response('Erro interno do servidor', {
+      status: 500,
+      headers: corsHeaders,
+    });
   }
 });

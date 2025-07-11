@@ -159,57 +159,49 @@ export const useFlowExecutionEngine = () => {
             formName: nodeData.titulo || 'Formulário'
           });
 
-          // Enviar link do painel principal (que redirecionará automaticamente para o formulário)
+          // Enviar link do painel principal diretamente
           const patientDashboardUrl = `${window.location.origin}/`;
           const customMessage = `📋 *${nodeData.titulo || 'Formulário'}*\n\nOlá ${(patient as any).name}! Você tem um novo formulário para preencher.\n\n🔗 Acesse aqui: ${patientDashboardUrl}\n\n_O formulário aparecerá automaticamente quando você abrir o link._`;
           
-          // Usar sendMessage diretamente com validação
-          const validation = await validateWhatsAppSending(
-            (patient as any).phone,
-            'novo_formulario',
-            (execution as any).patient_id
-          );
-
-          console.log('✅ FlowEngine: Resultado da validação WhatsApp:', validation);
-
-          if (validation.canSend) {
-            // Implementar retry robusto com múltiplas tentativas
-            const sendWithRetry = async (attempts = 3) => {
-              for (let i = 0; i < attempts; i++) {
-                try {
-                  console.log(`🚀 FlowEngine: Enviando link do painel via WhatsApp (tentativa ${i + 1}/${attempts})...`);
-                  const result = await sendMessage((patient as any).phone, customMessage);
-                  
-                  console.log('📱 FlowEngine: Resultado do envio do link do painel:', result);
-                  
-                  if (result.success) {
-                    await recordOptInActivity(
-                      (execution as any).patient_id,
-                      (patient as any).phone,
-                      'whatsapp_sent'
-                    );
-                    console.log('✅ FlowEngine: Link do painel enviado com sucesso via WhatsApp');
-                    return;
-                  } else {
-                    console.error(`❌ FlowEngine: Falha no envio (tentativa ${i + 1}):`, result.error);
-                    if (i < attempts - 1) {
-                      await new Promise(resolve => setTimeout(resolve, (i + 1) * 2000)); // Delay progressivo
-                    }
-                  }
-                } catch (error) {
-                  console.error(`❌ FlowEngine: Erro no envio (tentativa ${i + 1}):`, error);
+          // Simplificar validação - enviar imediatamente
+          console.log('🚀 FlowEngine: Enviando link do painel via WhatsApp imediatamente...');
+          
+          // Implementar retry robusto com múltiplas tentativas
+          const sendWithRetry = async (attempts = 5) => {
+            for (let i = 0; i < attempts; i++) {
+              try {
+                console.log(`📱 FlowEngine: Enviando via WhatsApp (tentativa ${i + 1}/${attempts})...`);
+                const result = await sendMessage((patient as any).phone, customMessage);
+                
+                console.log('📱 FlowEngine: Resultado do envio:', result);
+                
+                if (result.success) {
+                  await recordOptInActivity(
+                    (execution as any).patient_id,
+                    (patient as any).phone,
+                    'whatsapp_sent'
+                  );
+                  console.log('✅ FlowEngine: Link do painel enviado com sucesso via WhatsApp');
+                  return true;
+                } else {
+                  console.error(`❌ FlowEngine: Falha no envio (tentativa ${i + 1}):`, result.error);
                   if (i < attempts - 1) {
-                    await new Promise(resolve => setTimeout(resolve, (i + 1) * 2000)); // Delay progressivo
+                    await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000)); // Delay progressivo mais rápido
                   }
                 }
+              } catch (error) {
+                console.error(`❌ FlowEngine: Erro no envio (tentativa ${i + 1}):`, error);
+                if (i < attempts - 1) {
+                  await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000));
+                }
               }
-              console.error('❌ FlowEngine: Falha após todas as tentativas de envio');
-            };
-            
-            sendWithRetry();
-          } else {
-            console.warn('⚠️ FlowEngine: Envio WhatsApp bloqueado:', validation.reason);
-          }
+            }
+            console.error('❌ FlowEngine: Falha após todas as tentativas de envio');
+            return false;
+          };
+          
+          // Executar envio sem await para não bloquear
+          sendWithRetry();
         } else {
           console.warn('⚠️ FlowEngine: Paciente sem telefone configurado');
         }
@@ -247,23 +239,49 @@ export const useFlowExecutionEngine = () => {
           template: 'formulario_concluido'
         });
 
-        // Gerar URL de conteúdo se houver arquivos configurados
+        // Forçar geração de URL de conteúdo com fallback robusto
         let contentUrl = '';
         
         if (nodeData.arquivos && nodeData.arquivos.length > 0) {
           console.log('📁 FlowEngine: Gerando URL para arquivos:', nodeData.arquivos.length);
-          contentUrl = await generateContentUrl({
-            executionId,
-            files: nodeData.arquivos
-          }) || '';
-        }
-
-        // Se não houver URL de conteúdo, usar URL padrão
-        if (!contentUrl) {
+          
+          try {
+            contentUrl = await generateContentUrl({
+              executionId,
+              files: nodeData.arquivos
+            }) || '';
+            
+            if (!contentUrl) {
+              console.warn('⚠️ FlowEngine: generateContentUrl retornou vazio, criando URL manual');
+              // Fallback: criar entrada manual na tabela content_access
+              const accessToken = crypto.randomUUID();
+              const expiresAt = new Date();
+              expiresAt.setDate(expiresAt.getDate() + 30);
+              
+              await supabase.from('content_access').insert({
+                execution_id: executionId,
+                patient_id: (execution as any).patient_id,
+                access_token: accessToken,
+                files: nodeData.arquivos,
+                expires_at: expiresAt.toISOString(),
+                metadata: {
+                  patient_name: (patient as any).name || 'Paciente',
+                  form_name: 'Formulário'
+                }
+              });
+              
+              contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}?token=${accessToken}`;
+              console.log('🔗 FlowEngine: URL de fallback criada:', contentUrl);
+            }
+          } catch (error) {
+            console.error('❌ FlowEngine: Erro ao gerar URL de conteúdo:', error);
+            contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}`;
+          }
+        } else {
           contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}`;
         }
 
-        console.log('🔗 FlowEngine: URL de conteúdo gerada:', contentUrl);
+        console.log('🔗 FlowEngine: URL de conteúdo final:', contentUrl);
 
         // Validar antes de enviar
         const validation = await validateWhatsAppSending(
@@ -311,14 +329,15 @@ export const useFlowExecutionEngine = () => {
           return;
         }
 
-        if (validation.canSend) {
-          // Implementar retry robusto para template
-          const sendTemplateWithRetry = async (attempts = 3) => {
-            for (let i = 0; i < attempts; i++) {
-              try {
-                console.log(`🚀 FlowEngine: Enviando template formulario_concluido (tentativa ${i + 1}/${attempts})...`);
-                
-                const result = await sendWhatsAppTemplateMessage(
+        // Simplificar envio - tentar template primeiro, fallback para mensagem simples
+        const sendCompletionMessage = async (attempts = 5) => {
+          for (let i = 0; i < attempts; i++) {
+            try {
+              console.log(`🚀 FlowEngine: Enviando mensagem de conclusão (tentativa ${i + 1}/${attempts})...`);
+              
+              let result;
+              if (templateExists) {
+                result = await sendWhatsAppTemplateMessage(
                   (patient as any).phone,
                   'formulario_concluido',
                   {
@@ -326,37 +345,41 @@ export const useFlowExecutionEngine = () => {
                     content_url: contentUrl
                   }
                 );
-                
-                console.log('📱 FlowEngine: Resultado do envio:', result);
-                
-                if (result.success) {
-                  await recordOptInActivity(
-                    (execution as any).patient_id,
-                    (patient as any).phone,
-                    'whatsapp_sent'
-                  );
-                  console.log('✅ FlowEngine: Template formulario_concluido enviado com sucesso');
-                  return;
-                } else {
-                  console.error(`❌ FlowEngine: Falha no envio do template (tentativa ${i + 1}):`, result.error);
-                  if (i < attempts - 1) {
-                    await new Promise(resolve => setTimeout(resolve, (i + 1) * 3000)); // Delay maior para templates
-                  }
-                }
-              } catch (error) {
-                console.error(`❌ FlowEngine: Erro no envio do template (tentativa ${i + 1}):`, error);
+              } else {
+                // Fallback para mensagem simples
+                const fallbackMessage = `🎉 *Formulário Concluído!*\n\nOlá ${(patient as any).name}! Você concluiu o formulário com sucesso.\n\n📁 Acesse seus documentos aqui: ${contentUrl}`;
+                result = await sendMessage((patient as any).phone, fallbackMessage);
+              }
+              
+              console.log('📱 FlowEngine: Resultado do envio:', result);
+              
+              if (result.success) {
+                await recordOptInActivity(
+                  (execution as any).patient_id,
+                  (patient as any).phone,
+                  'whatsapp_sent'
+                );
+                console.log('✅ FlowEngine: Mensagem de conclusão enviada com sucesso');
+                return true;
+              } else {
+                console.error(`❌ FlowEngine: Falha no envio (tentativa ${i + 1}):`, result.error);
                 if (i < attempts - 1) {
-                  await new Promise(resolve => setTimeout(resolve, (i + 1) * 3000));
+                  await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000));
                 }
               }
+            } catch (error) {
+              console.error(`❌ FlowEngine: Erro no envio (tentativa ${i + 1}):`, error);
+              if (i < attempts - 1) {
+                await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000));
+              }
             }
-            console.error('❌ FlowEngine: Falha após todas as tentativas de envio do template');
-          };
-          
-          sendTemplateWithRetry();
-        } else {
-          console.warn('⚠️ FlowEngine: Envio WhatsApp bloqueado:', validation.reason);
-        }
+          }
+          console.error('❌ FlowEngine: Falha após todas as tentativas de envio');
+          return false;
+        };
+        
+        // Executar envio sem await para não bloquear
+        sendCompletionMessage();
       } else {
         console.warn('⚠️ FlowEngine: Paciente sem telefone configurado');
       }
