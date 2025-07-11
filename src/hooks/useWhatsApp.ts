@@ -18,12 +18,13 @@ export const useWhatsApp = () => {
   const { renderTemplate } = useWhatsAppTemplates();
 
   const checkConnection = useCallback(async () => {
-    console.log('useWhatsApp: Verificando conexão...');
-    console.log('useWhatsApp: Settings atuais:', settings);
-    console.log('useWhatsApp: Usando global?', isUsingGlobalSettings());
+    console.log('🔍 useWhatsApp: Verificando conexão...');
+    console.log('⚙️ useWhatsApp: Settings atuais:', settings);
+    console.log('🌐 useWhatsApp: Usando global?', isUsingGlobalSettings());
+    console.log('📱 useWhatsApp: Settings loading:', settings);
     
     const config = getWhatsAppConfig();
-    console.log('useWhatsApp: Config obtida do getWhatsAppConfig:', config);
+    console.log('✅ useWhatsApp: Config obtida do getWhatsAppConfig:', config);
     
     if (!config) {
       console.log('useWhatsApp: Configuração não encontrada');
@@ -96,8 +97,12 @@ export const useWhatsApp = () => {
   }, [getWhatsAppConfig, settings, isUsingGlobalSettings]);
 
   useEffect(() => {
-    console.log('useWhatsApp: Effect executado, settings mudaram:', settings);
-    checkConnection();
+    console.log('🔄 useWhatsApp: Effect executado, settings mudaram:', settings);
+    
+    // Só verificar conexão se não estiver carregando
+    if (settings !== null) {
+      checkConnection();
+    }
   }, [checkConnection, settings]);
 
   const sendFormLink = useCallback(async (

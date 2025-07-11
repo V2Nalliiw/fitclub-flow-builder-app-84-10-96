@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { FlowNode } from '@/types/flow';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -7,6 +7,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useWhatsApp } from '@/hooks/useWhatsApp';
 import { useContentUrlGenerator } from '@/hooks/useContentUrlGenerator';
 import { useWhatsAppValidations } from '@/hooks/useWhatsAppValidations';
+import { useWhatsAppSettings } from '@/hooks/useWhatsAppSettings';
 
 interface ExecutionStep {
   nodeId: string;
@@ -24,6 +25,25 @@ export const useFlowExecutionEngine = () => {
   const { generateContentUrl } = useContentUrlGenerator();
   const { validateWhatsAppSending, recordOptInActivity } = useWhatsAppValidations();
   const [processing, setProcessing] = useState(false);
+  
+  // Aguardar configurações do WhatsApp estarem prontas
+  const { loading: whatsappLoading, getWhatsAppConfig } = useWhatsAppSettings();
+  const [isWhatsAppReady, setIsWhatsAppReady] = useState(false);
+  
+  // Verificar se WhatsApp está pronto para uso
+  useEffect(() => {
+    if (!whatsappLoading) {
+      const config = getWhatsAppConfig();
+      const ready = !!config && config.is_active;
+      console.log('🔧 FlowEngine: WhatsApp ready status:', { 
+        loading: whatsappLoading, 
+        config: !!config, 
+        active: config?.is_active, 
+        ready 
+      });
+      setIsWhatsAppReady(ready);
+    }
+  }, [whatsappLoading, getWhatsAppConfig]);
 
   const executeFlowStep = useCallback(async (
     executionId: string,
@@ -140,6 +160,26 @@ export const useFlowExecutionEngine = () => {
         console.log('✅ FlowEngine: Resultado da validação WhatsApp:', validation);
 
         if (validation.canSend) {
+          // Aguardar WhatsApp estar pronto antes de enviar
+          if (!isWhatsAppReady) {
+            console.log('⏳ FlowEngine: Aguardando WhatsApp ficar pronto...');
+            
+            // Esperar até 10 segundos pelo WhatsApp ficar pronto
+            let attempts = 0;
+            const maxAttempts = 20; // 10 segundos (500ms x 20)
+            
+            while (!isWhatsAppReady && attempts < maxAttempts) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+              attempts++;
+              console.log(`⏳ FlowEngine: Tentativa ${attempts}/${maxAttempts} - WhatsApp ready: ${isWhatsAppReady}`);
+            }
+            
+            if (!isWhatsAppReady) {
+              console.error('❌ FlowEngine: Timeout - WhatsApp não ficou pronto a tempo');
+              throw new Error('WhatsApp não está pronto para envio');
+            }
+          }
+          
           try {
             console.log('🚀 FlowEngine: Enviando template novo_formulario...');
             
@@ -256,6 +296,26 @@ export const useFlowExecutionEngine = () => {
         console.log('✅ FlowEngine: Resultado da validação WhatsApp:', validation);
 
         if (validation.canSend) {
+          // Aguardar WhatsApp estar pronto antes de enviar
+          if (!isWhatsAppReady) {
+            console.log('⏳ FlowEngine: Aguardando WhatsApp ficar pronto para FormEnd...');
+            
+            // Esperar até 10 segundos pelo WhatsApp ficar pronto
+            let attempts = 0;
+            const maxAttempts = 20; // 10 segundos (500ms x 20)
+            
+            while (!isWhatsAppReady && attempts < maxAttempts) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+              attempts++;
+              console.log(`⏳ FlowEngine: Tentativa ${attempts}/${maxAttempts} - WhatsApp ready: ${isWhatsAppReady}`);
+            }
+            
+            if (!isWhatsAppReady) {
+              console.error('❌ FlowEngine: Timeout - WhatsApp não ficou pronto a tempo para FormEnd');
+              throw new Error('WhatsApp não está pronto para envio');
+            }
+          }
+          
           try {
             console.log('🚀 FlowEngine: Enviando template formulario_concluido...');
             

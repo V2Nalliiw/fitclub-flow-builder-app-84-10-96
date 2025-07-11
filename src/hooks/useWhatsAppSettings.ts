@@ -37,7 +37,7 @@ export const useWhatsAppSettings = () => {
       return;
     }
 
-    console.log('useWhatsAppSettings: Carregando configurações para usuário:', user);
+    console.log('⚙️ useWhatsAppSettings: Iniciando carregamento para usuário:', user.role, user.clinic_id);
     setLoading(true);
     try {
       // Sempre carrega as configurações globais primeiro
@@ -125,6 +125,10 @@ export const useWhatsAppSettings = () => {
         variant: "destructive",
       });
     } finally {
+      console.log('✅ useWhatsAppSettings: Carregamento finalizado', { 
+        hasSettings: !!settings, 
+        hasGlobalSettings: !!globalSettings 
+      });
       setLoading(false);
     }
   }, [user, toast]);
