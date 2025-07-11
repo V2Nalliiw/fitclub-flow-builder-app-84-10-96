@@ -247,6 +247,7 @@ const FlowExecution = () => {
   const steps = currentStepData?.steps || [];
   const currentStep = steps[currentStepIndex];
   const isWaiting = execution.status === 'pending' && execution.next_step_available_at;
+  const isActive = execution.status === 'in-progress' || execution.status === 'em-andamento';
   const completedSteps = steps.filter((step: any) => step.completed);
 
   // Get calculator result for conditions step
@@ -336,7 +337,7 @@ const FlowExecution = () => {
                   Voltar ao Dashboard
                 </Button>
               </div>
-            ) : currentStep && (!isWaiting || delayExpired) ? (
+            ) : currentStep && (isActive || (!isWaiting || delayExpired)) ? (
               <div className="space-y-6">
                 <FlowStepRenderer
                   step={currentStep}
@@ -344,6 +345,25 @@ const FlowExecution = () => {
                   isLoading={updating}
                   calculatorResult={calculatorResult}
                 />
+              </div>
+            ) : !currentStep && steps.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-24 h-24 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Play className="h-16 w-16 text-blue-500" />
+                </div>
+                <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                  📋 Preparando formulário...
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-8">
+                  Estamos configurando seu formulário. Aguarde um momento.
+                </p>
+                <Button
+                  onClick={() => window.location.reload()}
+                  variant="outline"
+                  size="lg"
+                >
+                  Recarregar Página
+                </Button>
               </div>
             ) : (
               <div className="text-center py-12">

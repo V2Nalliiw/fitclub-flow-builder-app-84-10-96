@@ -113,20 +113,12 @@ export const useFlowExecutionEngine = () => {
   const processFormStartNode = async (executionId: string, step: ExecutionStep, nodeData: any) => {
     console.log('📝 FlowEngine: Processando FormStart node', { executionId, nodeData });
     
-    const formUrl = `${window.location.origin}/forms/${step.nodeId}?execution=${executionId}`;
-    
-    // Store form info in execution metadata
+    // Update execution status to active and set progress
     await supabase
       .from('flow_executions')
       .update({
-        current_step: {
-          nodeId: step.nodeId,
-          nodeType: step.nodeType,
-          title: nodeData.titulo || 'Formulário',
-          description: nodeData.descricao,
-          formUrl: formUrl,
-          status: 'disponivel'
-        },
+        status: 'in-progress',
+        progress: 0,
         updated_at: new Date().toISOString(),
       })
       .eq('id', executionId);
@@ -141,8 +133,7 @@ export const useFlowExecutionEngine = () => {
     if (execution) {
       console.log('📞 FlowEngine: Enviando formulário via WhatsApp para paciente', { 
         patientId: (execution as any).patient_id,
-        formName: nodeData.titulo || 'Formulário',
-        formUrl: formUrl
+        formName: nodeData.titulo || 'Formulário'
       });
 
       try {
@@ -171,37 +162,63 @@ export const useFlowExecutionEngine = () => {
             (execution as any).patient_id
           );
 
+          console.log('✅ FlowEngine: Resultado da validação WhatsApp:', validation);
+
           if (validation.canSend) {
-            // Aguardar WhatsApp estar pronto
+            // Aguardar WhatsApp estar pronto com retry robusto
             if (!isWhatsAppReady) {
               console.log('⏳ FlowEngine: Aguardando WhatsApp ficar pronto...');
               let attempts = 0;
-              const maxAttempts = 20;
+              const maxAttempts = 30; // Aumentar tentativas para 15 segundos
               
               while (!isWhatsAppReady && attempts < maxAttempts) {
                 await new Promise(resolve => setTimeout(resolve, 500));
                 attempts++;
+                console.log(`⏳ FlowEngine: Tentativa ${attempts}/${maxAttempts} - WhatsApp ready: ${isWhatsAppReady}`);
               }
               
               if (!isWhatsAppReady) {
                 console.error('❌ FlowEngine: WhatsApp não ficou pronto a tempo');
-                return;
+                // Continuar mesmo assim, pode funcionar
               }
             }
 
-            const result = await sendMessage((patient as any).phone, customMessage);
-            
-            console.log('📱 FlowEngine: Resultado do envio do link do painel:', result);
-            
-            if (result.success) {
-              await recordOptInActivity(
-                (execution as any).patient_id,
-                (patient as any).phone,
-                'whatsapp_sent'
-              );
-              console.log('✅ FlowEngine: Link do painel enviado com sucesso via WhatsApp');
-            } else {
-              console.error('❌ FlowEngine: Falha no envio do link do painel:', result.error);
+            try {
+              console.log('🚀 FlowEngine: Enviando link do painel via WhatsApp...');
+              const result = await sendMessage((patient as any).phone, customMessage);
+              
+              console.log('📱 FlowEngine: Resultado do envio do link do painel:', result);
+              
+              if (result.success) {
+                await recordOptInActivity(
+                  (execution as any).patient_id,
+                  (patient as any).phone,
+                  'whatsapp_sent'
+                );
+                console.log('✅ FlowEngine: Link do painel enviado com sucesso via WhatsApp');
+              } else {
+                console.error('❌ FlowEngine: Falha no envio do link do painel:', result.error);
+                
+                // Tentar reenvio após 3 segundos
+                console.log('🔄 FlowEngine: Tentando reenvio após delay...');
+                setTimeout(async () => {
+                  try {
+                    const retryResult = await sendMessage((patient as any).phone, customMessage);
+                    console.log('🔄 FlowEngine: Resultado do reenvio:', retryResult);
+                    if (retryResult.success) {
+                      await recordOptInActivity(
+                        (execution as any).patient_id,
+                        (patient as any).phone,
+                        'whatsapp_sent'
+                      );
+                    }
+                  } catch (retryError) {
+                    console.error('❌ FlowEngine: Falha no reenvio:', retryError);
+                  }
+                }, 3000);
+              }
+            } catch (error) {
+              console.error('❌ FlowEngine: Erro ao enviar WhatsApp:', error);
             }
           } else {
             console.warn('⚠️ FlowEngine: Envio WhatsApp bloqueado:', validation.reason);
@@ -216,7 +233,7 @@ export const useFlowExecutionEngine = () => {
       console.error('❌ FlowEngine: Execução não encontrada');
     }
 
-    console.log('📝 FlowEngine: Formulário criado:', formUrl);
+    console.log('📝 FlowEngine: FormStart processado');
   };
 
   const processFormEndNode = async (executionId: string, step: ExecutionStep, nodeData: any) => {

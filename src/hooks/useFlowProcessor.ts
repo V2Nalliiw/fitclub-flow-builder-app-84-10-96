@@ -39,9 +39,17 @@ export const useFlowProcessor = () => {
     nodes: FlowNode[], 
     edges: FlowEdge[]
   ) => {
+    console.log('🔄 FlowProcessor: Processando atribuição de fluxo', { flowId, patientId, nodes: nodes.length, edges: edges.length });
     setProcessing(true);
     
     try {
+      // Find start node and create proper flow sequence
+      const startNode = nodes.find(node => node.type === 'start');
+      if (!startNode) {
+        throw new Error('Nó de início não encontrado no fluxo');
+      }
+
+      // Get flow name
       const { data: flow, error: flowError } = await supabase
         .from('flows')
         .select('name')
@@ -52,53 +60,30 @@ export const useFlowProcessor = () => {
         throw new Error('Fluxo não encontrado');
       }
 
-      const steps = await processNodesSequence(nodes, edges);
-      
+      // Build execution steps based on flow structure
+      const steps = buildFlowSteps(nodes, edges, startNode);
+      console.log('📋 FlowProcessor: Steps construídos:', steps);
+
       if (steps.length === 0) {
         throw new Error('Nenhuma etapa válida encontrada no fluxo');
       }
 
-      console.log('Processed steps:', steps);
-
+      // Create the flow execution with proper step structure
       const executionData = {
         flow_id: flowId,
         flow_name: flow.name,
         patient_id: patientId,
-        status: 'in-progress',
-        current_node: steps[0].nodeId,
+        status: 'pending', // Start as pending, will be changed to in-progress by FormStart node
+        current_node: startNode.id,
         progress: 0,
         total_steps: steps.length,
         completed_steps: 0,
         current_step: {
-          steps: steps.map(step => ({
-            nodeId: step.nodeId,
-            nodeType: step.nodeType,
-            title: step.title,
-            description: step.description,
-            order: step.order,
-            availableAt: step.availableAt,
-            completed: step.completed,
-            canGoBack: step.canGoBack,
-            pergunta: step.pergunta,
-            tipoResposta: step.tipoResposta,
-            opcoes: step.opcoes,
-            formId: step.formId,
-            tipoConteudo: step.tipoConteudo,
-            arquivo: step.arquivo,
-            mensagemFinal: step.mensagemFinal,
-            delayAmount: step.delayAmount,
-            delayType: step.delayType,
-            calculatorFields: step.calculatorFields,
-            formula: step.formula,
-            resultLabel: step.resultLabel,
-            conditions: step.conditions,
-            calculatorResult: step.calculatorResult
-          })),
+          steps: steps,
           currentStepIndex: 0,
-          totalSteps: steps.length,
           calculatorResults: {}
         },
-        next_step_available_at: steps[0].availableAt
+        next_step_available_at: null
       };
 
       const { data: execution, error: executionError } = await supabase
@@ -108,9 +93,11 @@ export const useFlowProcessor = () => {
         .single();
 
       if (executionError) {
-        console.error('Erro ao criar execução:', executionError);
+        console.error('❌ FlowProcessor: Erro ao criar execução:', executionError);
         throw executionError;
       }
+
+      console.log('✅ FlowProcessor: Execução criada com steps:', execution);
 
       toast({
         title: "Fluxo iniciado",
@@ -120,7 +107,7 @@ export const useFlowProcessor = () => {
       return execution;
 
     } catch (error) {
-      console.error('Erro ao processar atribuição de fluxo:', error);
+      console.error('❌ FlowProcessor: Erro no processamento:', error);
       toast({
         title: "Erro ao iniciar fluxo",
         description: "Não foi possível iniciar o fluxo para o paciente",
@@ -131,6 +118,68 @@ export const useFlowProcessor = () => {
       setProcessing(false);
     }
   }, [toast]);
+
+  // Helper function to build steps from flow nodes
+  const buildFlowSteps = (nodes: FlowNode[], edges: FlowEdge[], startNode: FlowNode) => {
+    const steps: any[] = [];
+    const visited = new Set<string>();
+    
+    const traverseFlow = (nodeId: string) => {
+      if (visited.has(nodeId)) return;
+      visited.add(nodeId);
+      
+      const node = nodes.find(n => n.id === nodeId);
+      if (!node) return;
+      
+      // Skip start and end nodes in steps
+      if (node.type !== 'start' && node.type !== 'end') {
+        const step = {
+          nodeId: node.id,
+          nodeType: node.type,
+          title: node.data.titulo || node.data.label || `Etapa ${steps.length + 1}`,
+          description: node.data.descricao,
+          pergunta: node.data.pergunta,
+          opcoes: node.data.opcoes,
+          tipoResposta: node.data.tipoResposta,
+          tipoExibicao: node.data.tipoExibicao,
+          arquivo: node.data.arquivo,
+          arquivos: node.data.arquivos,
+          mensagemFinal: node.data.mensagemFinal,
+          tipoConteudo: node.data.tipoConteudo,
+          quantidade: node.data.quantidade,
+          tipoIntervalo: node.data.tipoIntervalo,
+          // Fields specific to different node types
+          calculatorFields: node.data.calculatorFields,
+          formula: node.data.formula,
+          resultLabel: node.data.resultLabel,
+          conditions: node.data.conditions,
+          nomenclatura: node.data.nomenclatura,
+          prefixo: node.data.prefixo,
+          sufixo: node.data.sufixo,
+          tipoNumero: node.data.tipoNumero,
+          operacao: node.data.operacao,
+          camposReferenciados: node.data.camposReferenciados,
+          condicoesEspeciais: node.data.condicoesEspeciais,
+          completed: false,
+          response: null,
+          order: steps.length + 1,
+          availableAt: new Date().toISOString(),
+          canGoBack: steps.length > 0
+        };
+        
+        steps.push(step);
+      }
+      
+      // Find next nodes
+      const nextEdges = edges.filter(edge => edge.source === nodeId);
+      nextEdges.forEach(edge => {
+        traverseFlow(edge.target);
+      });
+    };
+    
+    traverseFlow(startNode.id);
+    return steps;
+  };
 
   const processNodesSequence = async (nodes: FlowNode[], edges: FlowEdge[]): Promise<FlowStep[]> => {
     const steps: FlowStep[] = [];

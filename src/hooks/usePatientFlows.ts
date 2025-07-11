@@ -52,9 +52,27 @@ export const usePatientFlows = () => {
             break;
           case 'pending':
           default:
-            mappedStatus = 'aguardando';
+            // If it's pending but has steps and progress is 0, it should be active
+            const currentStepData = execution.current_step as any;
+            if (currentStepData?.steps && 
+                Array.isArray(currentStepData.steps) && 
+                currentStepData.steps.length > 0 &&
+                execution.progress === 0) {
+              mappedStatus = 'em-andamento';
+            } else {
+              mappedStatus = 'aguardando';
+            }
             break;
         }
+
+        const currentStepDataForLog = execution.current_step as any;
+        console.log('usePatientFlows: Transforming execution:', {
+          id: execution.id,
+          originalStatus: execution.status,
+          mappedStatus,
+          progress: execution.progress,
+          hasSteps: currentStepDataForLog?.steps?.length > 0
+        });
 
         return {
           id: execution.id,

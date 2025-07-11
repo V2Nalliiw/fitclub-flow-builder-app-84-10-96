@@ -101,11 +101,25 @@ const SmartRedirect = () => {
 
   // Para pacientes, verificar se há formulário novo (progresso 0) para redirecionamento automático
   if (user?.role === 'patient') {
-    const newFormExecution = executions?.find(e => 
-      e.status === 'em-andamento' && 
-      e.progresso === 0 &&
-      e.current_step
-    );
+    const newFormExecution = executions?.find(e => {
+      const currentStepData = e.current_step as any;
+      
+      // Debug log to understand execution state
+      console.log('SmartRedirect: Verificando execução:', {
+        id: e.id,
+        status: e.status,
+        progresso: e.progresso,
+        current_step: e.current_step,
+        hasSteps: currentStepData?.steps?.length > 0
+      });
+      
+      // Check for active execution with proper step structure
+      return e.status === 'em-andamento' && 
+             e.progresso === 0 &&
+             currentStepData?.steps &&
+             Array.isArray(currentStepData.steps) &&
+             currentStepData.steps.length > 0;
+    });
     
     if (newFormExecution) {
       console.log('SmartRedirect: Redirecionando para formulário novo:', newFormExecution);
