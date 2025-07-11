@@ -69,12 +69,46 @@ serve(async (req) => {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // Expira em 30 dias
 
-    // Processar arquivos para gerar URLs públicas corretas
-    const processedFiles = files.map((file: any) => ({
-      ...file,
-      url: file.url.startsWith('http') ? file.url : `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${file.url}`,
-      downloadUrl: `${req.url.split('/functions/')[0]}/functions/v1/serve-content/${accessToken}/${encodeURIComponent(file.nome)}`
-    }));
+    // Processar arquivos para gerar URLs públicas corretas e verificar se existem
+    const processedFiles = [];
+    
+    for (const file of files) {
+      try {
+        // Gerar URL pública correta
+        let publicUrl = file.url;
+        
+        if (!file.url.startsWith('http')) {
+          publicUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${file.url}`;
+        }
+        
+        // Verificar se o arquivo existe no storage
+        const { data: fileData, error: fileError } = await supabase.storage
+          .from('flow-documents')
+          .download(file.url.replace(`${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/`, ''));
+        
+        if (fileError) {
+          console.warn(`Arquivo não encontrado no storage: ${file.url}`, fileError);
+          // Tentar URLs alternativas
+          publicUrl = file.url.startsWith('http') ? file.url : `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${file.url}`;
+        }
+        
+        processedFiles.push({
+          ...file,
+          url: publicUrl,
+          downloadUrl: `${req.url.split('/functions/')[0]}/functions/v1/serve-content/${accessToken}/${encodeURIComponent(file.nome)}`
+        });
+        
+        console.log(`Arquivo processado: ${file.nome} -> ${publicUrl}`);
+      } catch (error) {
+        console.error(`Erro ao processar arquivo ${file.nome}:`, error);
+        // Adicionar mesmo com erro para não perder o arquivo
+        processedFiles.push({
+          ...file,
+          url: file.url.startsWith('http') ? file.url : `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${file.url}`,
+          downloadUrl: `${req.url.split('/functions/')[0]}/functions/v1/serve-content/${accessToken}/${encodeURIComponent(file.nome)}`
+        });
+      }
+    }
 
     // Criar entrada na tabela content_access
     const { error: insertError } = await supabase

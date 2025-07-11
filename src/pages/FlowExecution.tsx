@@ -272,16 +272,32 @@ const FlowExecution = () => {
             Voltar
           </Button>
           
-          {completedSteps.length > 1 && currentStepIndex > 0 && (
-            <Button
-              variant="outline"
-              onClick={handleGoBack}
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-3 w-3" />
-              Voltar Etapa
-            </Button>
+          {/* Botão de voltar etapa sempre visível quando há etapas anteriores */}
+          {currentStepIndex > 0 && steps.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={handleGoBack}
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-3 w-3" />
+                Voltar Etapa
+              </Button>
+              
+              {/* Navegação por etapas */}
+              {completedSteps.length > 1 && (
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowStepNavigation(!showStepNavigation)}
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <History className="h-3 w-3" />
+                  Ver Etapas
+                </Button>
+              )}
+            </div>
           )}
         </div>
 
@@ -297,7 +313,7 @@ const FlowExecution = () => {
           </div>
         </div>
 
-        {/* Progress Bar Simples */}
+        {/* Progress Bar e Navegação de Etapas */}
         <div className="mb-6">
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
             <div 
@@ -305,6 +321,46 @@ const FlowExecution = () => {
               style={{ width: `${execution.progress || 0}%` }}
             ></div>
           </div>
+          
+          {/* Navegação de etapas expandida */}
+          {showStepNavigation && steps.length > 0 && (
+            <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <h4 className="text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
+                Etapas do Formulário
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                {steps.map((step: any, index: number) => (
+                  <button
+                    key={index}
+                    onClick={() => handleStepNavigation(index)}
+                    disabled={!step.completed && index !== currentStepIndex}
+                    className={`
+                      p-2 rounded text-xs text-left transition-colors
+                      ${index === currentStepIndex 
+                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-2 border-blue-300' 
+                        : step.completed 
+                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30' 
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                      }
+                    `}
+                  >
+                    <div className="flex items-center gap-1">
+                      {step.completed ? (
+                        <CheckCircle className="h-3 w-3" />
+                      ) : index === currentStepIndex ? (
+                        <Play className="h-3 w-3" />
+                      ) : (
+                        <Clock className="h-3 w-3" />
+                      )}
+                      <span className="truncate">
+                        {step.title || `Etapa ${index + 1}`}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Delay Timer - Show when waiting and delay hasn't expired */}

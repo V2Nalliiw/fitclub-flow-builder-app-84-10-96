@@ -112,21 +112,51 @@ export default function ConteudoFormulario() {
 
   const handleDownload = async (arquivo: ContentFile) => {
     try {
-      // Usar a serve-content function para download seguro
-      const downloadUrl = `https://oilnybhaboeqyhjrmvl.supabase.co/functions/v1/serve-content/${token}/${encodeURIComponent(arquivo.nome)}`;
+      console.log('Iniciando download do arquivo:', arquivo);
       
-      console.log('Fazendo download via:', downloadUrl);
+      // Tentar múltiplas URLs como fallback
+      const downloadUrls = [
+        // 1. URL via serve-content function
+        `https://oilnybhaboeqyhjrmvl.supabase.co/functions/v1/serve-content/${token}/${encodeURIComponent(arquivo.nome)}`,
+        // 2. URL direta do storage se disponível
+        arquivo.url,
+        // 3. URL pública alternativa
+        arquivo.publicUrl
+      ].filter(Boolean);
       
-      // Abrir em nova aba para download
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = arquivo.nome;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      let downloadSuccess = false;
       
-      toast.success('Download iniciado');
+      for (let i = 0; i < downloadUrls.length && !downloadSuccess; i++) {
+        try {
+          const downloadUrl = downloadUrls[i];
+          console.log(`Tentativa ${i + 1}: Fazendo download via:`, downloadUrl);
+          
+          // Verificar se a URL é válida fazendo um HEAD request
+          const response = await fetch(downloadUrl, { method: 'HEAD' });
+          
+          if (response.ok) {
+            // URL válida, iniciar download
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = arquivo.nome;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            toast.success('Download iniciado');
+            downloadSuccess = true;
+          } else {
+            console.warn(`URL ${i + 1} não funcionou:`, response.status);
+          }
+        } catch (urlError) {
+          console.warn(`Erro na URL ${i + 1}:`, urlError);
+        }
+      }
+      
+      if (!downloadSuccess) {
+        toast.error('Arquivo temporariamente indisponível. Tente novamente em alguns minutos.');
+      }
       
     } catch (error) {
       console.error('Erro no download:', error);
