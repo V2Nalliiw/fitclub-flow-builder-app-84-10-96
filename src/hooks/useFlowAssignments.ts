@@ -358,11 +358,17 @@ export const useFlowAssignments = () => {
 
               whatsappService.setConfig(config);
 
+              // Construir URL completa para o dashboard do paciente
+              const baseUrl = 'https://oilnybhaboefqyhjrmvl.supabase.co';
+              const patientDashboardUrl = `${baseUrl}/patient-dashboard`;
+              
+              console.log('🌐 executeFirstNode: URL do dashboard:', patientDashboardUrl);
+
               // Tentar template oficial primeiro
               let result = await whatsappService.sendTemplate(
                 patient.phone,
                 'envio_formulario',
-                [execution.flow_name || 'Fluxo', patient.name || 'Paciente', '/flow-execution/' + executionId]
+                [execution.flow_name || 'Fluxo', patient.name || 'Paciente', patientDashboardUrl]
               );
 
               console.log('📊 executeFirstNode: Resultado template oficial:', result);
@@ -376,7 +382,7 @@ export const useFlowAssignments = () => {
                   {
                     form_name: execution.flow_name || 'Fluxo',
                     patient_name: patient.name || 'Paciente',
-                    form_url: '/flow-execution/' + executionId
+                    form_url: patientDashboardUrl
                   }
                 );
                 console.log('📊 executeFirstNode: Resultado template básico:', result);
@@ -385,7 +391,7 @@ export const useFlowAssignments = () => {
               // Se todos os templates falharam, usar mensagem simples
               if (!result.success) {
                 console.log('📝 executeFirstNode: Templates falharam, usando mensagem simples');
-                const fallbackMessage = `🚀 *Novo Fluxo Iniciado*\n\nOlá ${patient.name || 'Paciente'}! Um novo fluxo "${execution.flow_name || 'Fluxo'}" foi iniciado para você.\n\n📱 Entre no sistema para continuar.`;
+                const fallbackMessage = `🚀 *Novo Fluxo Iniciado*\n\nOlá ${patient.name || 'Paciente'}! Um novo fluxo "${execution.flow_name || 'Fluxo'}" foi iniciado para você.\n\n📱 Acesse: ${patientDashboardUrl}`;
                 result = await sendMessage(patient.phone, fallbackMessage);
                 console.log('📊 executeFirstNode: Resultado mensagem simples:', result);
               }

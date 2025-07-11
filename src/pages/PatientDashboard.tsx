@@ -24,16 +24,30 @@ const PatientDashboard = () => {
 
   // Verificar se há um novo formulário (progresso = 0) - se sim, redirecionar automaticamente
   React.useEffect(() => {
+    console.log('🔍 PatientDashboard: Verificando redirecionamento automático');
+    console.log('🔍 flowsLoading:', flowsLoading);
+    console.log('🔍 mostRecentExecution:', mostRecentExecution);
+    
     if (!flowsLoading && mostRecentExecution) {
       const isNewForm = mostRecentExecution.status === 'em-andamento' && 
         mostRecentExecution.progresso === 0 &&
         mostRecentExecution.current_step;
       
+      console.log('🔍 Critérios para novo formulário:');
+      console.log('  - Status:', mostRecentExecution.status);
+      console.log('  - Progresso:', mostRecentExecution.progresso);
+      console.log('  - Current Step:', mostRecentExecution.current_step);
+      console.log('  - É novo formulário?', isNewForm);
+      
       if (isNewForm) {
-        console.log('Novo formulário detectado, redirecionando:', mostRecentExecution);
+        console.log('✅ Novo formulário detectado, redirecionando:', mostRecentExecution);
         navigate(`/flow-execution/${mostRecentExecution.id}`);
         return;
+      } else {
+        console.log('❌ Não é um novo formulário - não redirecionando');
       }
+    } else {
+      console.log('❌ Condições não atendidas - flowsLoading ou sem execução recente');
     }
   }, [flowsLoading, mostRecentExecution, navigate]);
 
