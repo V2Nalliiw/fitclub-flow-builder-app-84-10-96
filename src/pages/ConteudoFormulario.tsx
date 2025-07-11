@@ -112,55 +112,98 @@ export default function ConteudoFormulario() {
 
   const handleDownload = async (arquivo: ContentFile) => {
     try {
-      console.log('Iniciando download do arquivo:', arquivo);
+      console.log('🔽 ConteudoFormulario: Iniciando download do arquivo:', arquivo);
       
-      // Tentar múltiplas URLs como fallback
+      if (!token) {
+        toast.error('Token de acesso não encontrado');
+        return;
+      }
+      
+      // ✨ MELHORADO: Estratégia robusta de download com múltiplas tentativas
       const downloadUrls = [
-        // 1. URL via serve-content function
+        // 1. URL via serve-content function (mais confiável)
         `https://oilnybhaboefqyhjrmvl.supabase.co/functions/v1/serve-content/${token}/${encodeURIComponent(arquivo.nome)}`,
-        // 2. URL direta do storage se disponível
-        arquivo.url,
+        // 2. URL direta do storage (se disponível e válida)
+        arquivo.url && !arquivo.url.includes('https://') ? null : arquivo.url,
         // 3. URL pública alternativa
         arquivo.publicUrl
-      ].filter(Boolean);
+      ].filter(url => url && url.trim() && url.startsWith('http'));
+      
+      console.log('🔗 ConteudoFormulario: URLs para tentativa:', downloadUrls);
       
       let downloadSuccess = false;
+      let lastError = '';
       
       for (let i = 0; i < downloadUrls.length && !downloadSuccess; i++) {
         try {
           const downloadUrl = downloadUrls[i];
-          console.log(`Tentativa ${i + 1}: Fazendo download via:`, downloadUrl);
+          console.log(`🔄 Tentativa ${i + 1}/${downloadUrls.length}: ${downloadUrl}`);
           
-          // Verificar se a URL é válida fazendo um HEAD request
-          const response = await fetch(downloadUrl, { method: 'HEAD' });
-          
-          if (response.ok) {
-            // URL válida, iniciar download
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.download = arquivo.nome;
-            link.target = '_blank';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+          // Para a edge function, fazer download direto sem HEAD request
+          if (downloadUrl.includes('/functions/v1/serve-content/')) {
+            console.log('📥 Fazendo download via edge function...');
             
-            toast.success('Download iniciado');
-            downloadSuccess = true;
+            const response = await fetch(downloadUrl);
+            
+            if (response.ok) {
+              const blob = await response.blob();
+              const url = window.URL.createObjectURL(blob);
+              
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = arquivo.nome;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              
+              window.URL.revokeObjectURL(url);
+              
+              toast.success(`Download de "${arquivo.nome}" iniciado com sucesso`);
+              downloadSuccess = true;
+              console.log('✅ Download via edge function bem-sucedido');
+            } else {
+              const errorText = await response.text();
+              lastError = `Edge function retornou ${response.status}: ${errorText}`;
+              console.warn(`❌ Edge function falhou (${response.status}):`, errorText);
+            }
           } else {
-            console.warn(`URL ${i + 1} não funcionou:`, response.status);
+            // Para URLs diretas, fazer HEAD request primeiro
+            console.log('🔍 Testando URL direta...');
+            
+            const headResponse = await fetch(downloadUrl, { method: 'HEAD' });
+            
+            if (headResponse.ok) {
+              const link = document.createElement('a');
+              link.href = downloadUrl;
+              link.download = arquivo.nome;
+              link.target = '_blank';
+              link.rel = 'noopener noreferrer';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              
+              toast.success(`Download de "${arquivo.nome}" iniciado`);
+              downloadSuccess = true;
+              console.log('✅ Download via URL direta bem-sucedido');
+            } else {
+              lastError = `URL direta retornou ${headResponse.status}`;
+              console.warn(`❌ URL direta falhou (${headResponse.status})`);
+            }
           }
-        } catch (urlError) {
-          console.warn(`Erro na URL ${i + 1}:`, urlError);
+        } catch (urlError: any) {
+          lastError = urlError.message || 'Erro desconhecido';
+          console.warn(`❌ Erro na tentativa ${i + 1}:`, urlError);
         }
       }
       
       if (!downloadSuccess) {
-        toast.error('Arquivo temporariamente indisponível. Tente novamente em alguns minutos.');
+        console.error('❌ Todas as tentativas de download falharam. Último erro:', lastError);
+        toast.error(`Não foi possível baixar "${arquivo.nome}". ${lastError ? `Erro: ${lastError}` : 'Tente novamente mais tarde.'}`);
       }
       
-    } catch (error) {
-      console.error('Erro no download:', error);
-      toast.error('Erro ao fazer download do arquivo');
+    } catch (error: any) {
+      console.error('❌ ConteudoFormulario: Erro crítico no download:', error);
+      toast.error(`Erro inesperado ao baixar "${arquivo.nome}": ${error.message}`);
     }
   };
 

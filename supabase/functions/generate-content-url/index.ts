@@ -69,44 +69,86 @@ serve(async (req) => {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // Expira em 30 dias
 
-    // Processar arquivos para gerar URLs públicas corretas e verificar se existem
+    // ✨ CORRIGIDO: Processamento robusto de arquivos com URLs normalizadas
     const processedFiles = [];
     
     for (const file of files) {
       try {
-        // Gerar URL pública correta
+        console.log(`🔍 Processando arquivo: ${file.nome || 'sem nome'}`, file);
+        
+        // ✨ MELHORADO: Normalização robusta de URLs
         let publicUrl = file.url;
+        let storagePath = '';
         
-        if (!file.url.startsWith('http')) {
-          publicUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${file.url}`;
+        // Limpar URLs duplicadas ou malformadas
+        if (publicUrl && typeof publicUrl === 'string') {
+          // Remover duplicações de https://
+          if (publicUrl.includes('https://') && publicUrl.indexOf('https://') !== publicUrl.lastIndexOf('https://')) {
+            const parts = publicUrl.split('https://');
+            publicUrl = 'https://' + parts[parts.length - 1];
+          }
+          
+          // Extrair caminho do storage
+          if (publicUrl.includes('/storage/v1/object/public/flow-documents/')) {
+            storagePath = publicUrl.split('/storage/v1/object/public/flow-documents/')[1];
+          } else if (!publicUrl.startsWith('http')) {
+            storagePath = publicUrl;
+            publicUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${storagePath}`;
+          }
+        } else {
+          // Se não há URL, usar o nome do arquivo
+          storagePath = file.nome || 'documento.pdf';
+          publicUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${storagePath}`;
         }
         
-        // Verificar se o arquivo existe no storage
-        const { data: fileData, error: fileError } = await supabase.storage
-          .from('flow-documents')
-          .download(file.url.replace(`${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/`, ''));
+        console.log(`📁 URLs geradas - Pública: ${publicUrl}, Storage: ${storagePath}`);
         
-        if (fileError) {
-          console.warn(`Arquivo não encontrado no storage: ${file.url}`, fileError);
-          // Tentar URLs alternativas
-          publicUrl = file.url.startsWith('http') ? file.url : `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${file.url}`;
+        // Verificar se o arquivo existe no storage (com fallback)
+        let fileExists = false;
+        try {
+          const { data: fileData, error: fileError } = await supabase.storage
+            .from('flow-documents')
+            .download(storagePath);
+          
+          fileExists = !fileError && fileData;
+          if (fileError) {
+            console.warn(`⚠️ Arquivo não encontrado em: ${storagePath}`, fileError.message);
+          } else {
+            console.log(`✅ Arquivo confirmado no storage: ${storagePath}`);
+          }
+        } catch (storageError) {
+          console.warn(`⚠️ Erro ao verificar arquivo no storage:`, storageError);
         }
         
-        processedFiles.push({
-          ...file,
+        const processedFile = {
+          id: file.id || crypto.randomUUID(),
+          nome: file.nome || 'documento.pdf',
           url: publicUrl,
-          downloadUrl: `${req.url.split('/functions/')[0]}/functions/v1/serve-content/${accessToken}/${encodeURIComponent(file.nome)}`
-        });
+          tipo: file.tipo || 'application/pdf',
+          tamanho: file.tamanho || 0,
+          downloadUrl: `${req.url.split('/functions/')[0]}/functions/v1/serve-content/${accessToken}/${encodeURIComponent(file.nome || 'documento.pdf')}`,
+          exists: fileExists,
+          storagePath: storagePath
+        };
         
-        console.log(`Arquivo processado: ${file.nome} -> ${publicUrl}`);
+        processedFiles.push(processedFile);
+        console.log(`✅ Arquivo processado: ${file.nome} -> ${publicUrl} (existe: ${fileExists})`);
       } catch (error) {
-        console.error(`Erro ao processar arquivo ${file.nome}:`, error);
-        // Adicionar mesmo com erro para não perder o arquivo
-        processedFiles.push({
-          ...file,
-          url: file.url.startsWith('http') ? file.url : `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${file.url}`,
-          downloadUrl: `${req.url.split('/functions/')[0]}/functions/v1/serve-content/${accessToken}/${encodeURIComponent(file.nome)}`
-        });
+        console.error(`❌ Erro ao processar arquivo ${file.nome}:`, error);
+        
+        // ✨ FALLBACK: Adicionar arquivo mesmo com erro para não perder
+        const fallbackFile = {
+          id: file.id || crypto.randomUUID(),
+          nome: file.nome || 'documento.pdf',
+          url: file.url || `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${file.nome}`,
+          tipo: file.tipo || 'application/pdf',
+          tamanho: file.tamanho || 0,
+          downloadUrl: `${req.url.split('/functions/')[0]}/functions/v1/serve-content/${accessToken}/${encodeURIComponent(file.nome || 'documento.pdf')}`,
+          exists: false,
+          error: error.message
+        };
+        
+        processedFiles.push(fallbackFile);
       }
     }
 

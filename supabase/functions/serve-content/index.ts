@@ -78,24 +78,51 @@ serve(async (req) => {
 
     console.log('Found file:', requestedFile);
 
-    // Tentar diferentes URLs para o arquivo
-    const possibleUrls = [
-      requestedFile.url,
-      `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${requestedFile.url.split('/').pop()}`,
-      `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${filename}`
-    ];
+    // ✨ MELHORADO: Estratégia robusta de URLs com fallbacks inteligentes
+    let possibleUrls = [];
+    
+    // Construir URLs possíveis baseadas nas informações disponíveis
+    if (requestedFile.url) {
+      possibleUrls.push(requestedFile.url);
+      
+      // Se a URL tem duplicação, corrigir
+      if (requestedFile.url.includes('https://') && requestedFile.url.indexOf('https://') !== requestedFile.url.lastIndexOf('https://')) {
+        const parts = requestedFile.url.split('https://');
+        const cleanUrl = 'https://' + parts[parts.length - 1];
+        possibleUrls.push(cleanUrl);
+      }
+    }
+    
+    // URLs alternativas baseadas no nome do arquivo
+    possibleUrls.push(
+      `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${filename}`,
+      `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${requestedFile.storagePath || filename}`
+    );
+    
+    // Se há informação de storage path no arquivo
+    if (requestedFile.storagePath) {
+      possibleUrls.push(`${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${requestedFile.storagePath}`);
+    }
+    
+    // Remover URLs duplicadas
+    possibleUrls = [...new Set(possibleUrls.filter(url => url && url.trim()))];
+    
+    console.log('📋 URLs possíveis para tentativa:', possibleUrls);
 
-    for (const fileUrl of possibleUrls) {
+    for (let i = 0; i < possibleUrls.length; i++) {
+      const fileUrl = possibleUrls[i];
       try {
-        console.log('Trying URL:', fileUrl);
+        console.log(`🔍 Tentando URL ${i + 1}/${possibleUrls.length}:`, fileUrl);
         const fileResponse = await fetch(fileUrl);
         
         if (fileResponse.ok) {
-          console.log('Successfully served file from:', fileUrl);
+          console.log('✅ Arquivo servido com sucesso de:', fileUrl);
           
           // Repassar o arquivo com headers apropriados
           const contentType = requestedFile.tipo || 'application/octet-stream';
           const fileBuffer = await fileResponse.arrayBuffer();
+          
+          console.log(`📁 Arquivo baixado: ${fileBuffer.byteLength} bytes, tipo: ${contentType}`);
           
           return new Response(fileBuffer, {
             headers: {
@@ -103,11 +130,14 @@ serve(async (req) => {
               'Content-Type': contentType,
               'Content-Disposition': `attachment; filename="${filename}"`,
               'Content-Length': fileBuffer.byteLength.toString(),
+              'Cache-Control': 'public, max-age=3600',
             },
           });
+        } else {
+          console.warn(`⚠️ URL ${i + 1} falhou com status ${fileResponse.status}:`, fileUrl);
         }
       } catch (error) {
-        console.warn('Failed to fetch from URL:', fileUrl, error);
+        console.error(`❌ Erro na URL ${i + 1}:`, fileUrl, error.message);
       }
     }
 

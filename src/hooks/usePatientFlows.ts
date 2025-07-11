@@ -222,9 +222,51 @@ export const usePatientFlows = () => {
               const formEndNodeData = (formEndNode as any).data;
               console.log('📋 usePatientFlows: Processando FormEnd com dados:', formEndNodeData);
               
-              // Implementar processamento direto do FormEnd aqui
+              // ✨ CORRIGIDO: Suporte para `arquivo` e `arquivos`, normalização de URLs
+              let processedFiles = [];
+              
+              // Tratar tanto formato antigo (arquivo) quanto novo (arquivos)
               if (formEndNodeData?.arquivos && Array.isArray(formEndNodeData.arquivos) && formEndNodeData.arquivos.length > 0) {
-                console.log('📁 usePatientFlows: Arquivos encontrados para processamento:', formEndNodeData.arquivos.length);
+                processedFiles = formEndNodeData.arquivos;
+              } else if (formEndNodeData?.arquivo) {
+                // Converter formato antigo para novo
+                processedFiles = [{
+                  id: crypto.randomUUID(),
+                  nome: formEndNodeData.arquivo,
+                  url: formEndNodeData.arquivo,
+                  tipo: formEndNodeData.tipoConteudo || 'application/pdf',
+                  tamanho: 0
+                }];
+              }
+              
+              if (processedFiles.length > 0) {
+                console.log('📁 usePatientFlows: Arquivos encontrados para processamento:', processedFiles.length);
+                
+                // ✨ NOVO: Normalizar URLs dos arquivos antes de enviar
+                const normalizedFiles = processedFiles.map((file: any) => {
+                  let fileUrl = file.url || file.nome;
+                  
+                  // Se for apenas um nome de arquivo, construir URL completa
+                  if (!fileUrl.startsWith('http')) {
+                    fileUrl = `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${fileUrl}`;
+                  }
+                  
+                  // Remover URLs duplicadas (https://...https://...)
+                  if (fileUrl.includes('https://') && fileUrl.indexOf('https://') !== fileUrl.lastIndexOf('https://')) {
+                    const parts = fileUrl.split('https://');
+                    fileUrl = 'https://' + parts[parts.length - 1];
+                  }
+                  
+                  return {
+                    id: file.id || crypto.randomUUID(),
+                    nome: file.nome || file.arquivo || 'documento.pdf',
+                    url: fileUrl,
+                    tipo: file.tipo || file.tipoConteudo || 'application/pdf',
+                    tamanho: file.tamanho || 0
+                  };
+                });
+                
+                console.log('🔧 usePatientFlows: Arquivos normalizados:', normalizedFiles);
                 
                 // Gerar URL de conteúdo diretamente
                 try {
@@ -233,13 +275,7 @@ export const usePatientFlows = () => {
                   const { data: urlData, error: urlError } = await supabase.functions.invoke('generate-content-url', {
                     body: {
                       executionId,
-                      files: formEndNodeData.arquivos.map((file: any) => ({
-                        id: file.id,
-                        nome: file.nome,
-                        url: file.url,
-                        tipo: file.tipo,
-                        tamanho: file.tamanho
-                      }))
+                      files: normalizedFiles
                     }
                   });
                   
