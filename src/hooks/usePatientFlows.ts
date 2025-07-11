@@ -215,8 +215,8 @@ export const usePatientFlows = () => {
             const nodes = Array.isArray(flow.nodes) ? flow.nodes : [];
             const formEndNode = nodes.find((node: any) => node.type === 'formEnd');
             
-            if (formEndNode) {
-              console.log('🎉 usePatientFlows: Nó FormEnd encontrado, importando engine...', formEndNode.data);
+            if (formEndNode && typeof formEndNode === 'object' && formEndNode !== null) {
+              console.log('🎉 usePatientFlows: Nó FormEnd encontrado, importando engine...', (formEndNode as any).data);
               
               // Importar e usar o FlowExecutionEngine
               const { useFlowExecutionEngine } = await import('@/hooks/useFlowExecutionEngine');
@@ -224,10 +224,10 @@ export const usePatientFlows = () => {
               
               // Executar o nó FormEnd
               await engine.executeFlowStep(executionId, {
-                nodeId: formEndNode.id,
+                nodeId: (formEndNode as any).id,
                 nodeType: 'formEnd',
                 status: 'pending'
-              }, formEndNode.data);
+              }, (formEndNode as any).data);
               
               console.log('✅ usePatientFlows: Processamento FormEnd concluído');
             } else {
