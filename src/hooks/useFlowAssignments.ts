@@ -359,7 +359,7 @@ export const useFlowAssignments = () => {
               whatsappService.setConfig(config);
 
               // Construir URL completa para o dashboard do paciente
-              const baseUrl = 'https://oilnybhaboefqyhjrmvl.supabase.co';
+              const baseUrl = window.location.origin;
               const patientDashboardUrl = `${baseUrl}/patient-dashboard`;
               
               console.log('🌐 executeFirstNode: URL do dashboard:', patientDashboardUrl);
