@@ -216,18 +216,145 @@ export const usePatientFlows = () => {
             const formEndNode = nodes.find((node: any) => node.type === 'formEnd');
             
             if (formEndNode && typeof formEndNode === 'object' && formEndNode !== null) {
-              console.log('🎉 usePatientFlows: Nó FormEnd encontrado, importando engine...', (formEndNode as any).data);
+              console.log('🎉 usePatientFlows: Nó FormEnd encontrado, dados do nó:', (formEndNode as any).data);
               
-              // Importar e usar o FlowExecutionEngine
-              const { useFlowExecutionEngine } = await import('@/hooks/useFlowExecutionEngine');
-              const engine = useFlowExecutionEngine();
+              // Chamar diretamente a função processFormEndNode do engine
+              const formEndNodeData = (formEndNode as any).data;
+              console.log('📋 usePatientFlows: Processando FormEnd com dados:', formEndNodeData);
               
-              // Executar o nó FormEnd
-              await engine.executeFlowStep(executionId, {
-                nodeId: (formEndNode as any).id,
-                nodeType: 'formEnd',
-                status: 'pending'
-              }, (formEndNode as any).data);
+              // Implementar processamento direto do FormEnd aqui
+              if (formEndNodeData?.arquivos && Array.isArray(formEndNodeData.arquivos) && formEndNodeData.arquivos.length > 0) {
+                console.log('📁 usePatientFlows: Arquivos encontrados para processamento:', formEndNodeData.arquivos.length);
+                
+                // Gerar URL de conteúdo diretamente
+                try {
+                  console.log('🔗 usePatientFlows: Chamando edge function generate-content-url...');
+                  
+                  const { data: urlData, error: urlError } = await supabase.functions.invoke('generate-content-url', {
+                    body: {
+                      executionId,
+                      files: formEndNodeData.arquivos.map((file: any) => ({
+                        id: file.id,
+                        nome: file.nome,
+                        url: file.url,
+                        tipo: file.tipo,
+                        tamanho: file.tamanho
+                      }))
+                    }
+                  });
+                  
+                  if (urlError) {
+                    console.error('❌ usePatientFlows: Erro na edge function:', urlError);
+                    throw urlError;
+                  }
+                  
+                  const contentUrl = urlData?.url;
+                  
+                  if (contentUrl) {
+                    console.log('🔗 usePatientFlows: URL de conteúdo gerada:', contentUrl);
+                    
+                    // Buscar dados do paciente
+                    const { data: patient } = await supabase
+                      .from('profiles')
+                      .select('name, phone')
+                      .eq('user_id', execution.patient_id)
+                      .single();
+                    
+                    if (patient?.phone) {
+                      console.log('📱 usePatientFlows: Enviando WhatsApp para:', patient.phone);
+                      
+                      // Buscar configurações do WhatsApp
+                      const { data: whatsappConfig } = await supabase
+                        .from('whatsapp_settings')
+                        .select('*')
+                        .eq('is_active', true)
+                        .single();
+                      
+                      if (whatsappConfig) {
+                        // Buscar template
+                        const { data: template } = await supabase
+                          .from('whatsapp_templates')
+                          .select('*')
+                          .eq('name', 'formulario_concluido')
+                          .eq('is_active', true)
+                          .single();
+                        
+                        if (template) {
+                          console.log('📋 usePatientFlows: Template encontrado, enviando mensagem...');
+                          
+                          // Preparar conteúdo da mensagem
+                          let messageContent = template.content;
+                          messageContent = messageContent.replace('{patient_name}', patient.name || 'Paciente');
+                          messageContent = messageContent.replace('{content_url}', contentUrl);
+                          
+                          // Enviar mensagem através da API direta
+                          try {
+                            const phoneNumber = patient.phone.replace(/\D/g, ''); // Remove caracteres não numéricos
+                            const whatsappPayload = {
+                              phone: phoneNumber,
+                              message: messageContent
+                            };
+                            
+                            console.log('📤 usePatientFlows: Enviando payload:', whatsappPayload);
+                            
+                            // Importar e usar o serviço WhatsApp existente
+                            const { whatsappService } = await import('@/services/whatsapp/WhatsAppService');
+                            whatsappService.setConfig({
+                              provider: whatsappConfig.provider as any,
+                              access_token: whatsappConfig.access_token,
+                              phone_number: whatsappConfig.phone_number,
+                              business_account_id: whatsappConfig.business_account_id,
+                              base_url: whatsappConfig.base_url,
+                              api_key: whatsappConfig.api_key,
+                              session_name: whatsappConfig.session_name,
+                              account_sid: whatsappConfig.account_sid,
+                              auth_token: whatsappConfig.auth_token,
+                              webhook_url: whatsappConfig.webhook_url,
+                              is_active: whatsappConfig.is_active
+                            });
+                            
+                            const mockResult = await whatsappService.sendMessage(phoneNumber, messageContent);
+                            
+                            console.log('📊 usePatientFlows: Resultado envio WhatsApp:', mockResult);
+                            
+                            if (mockResult.success) {
+                              console.log('✅ usePatientFlows: Mensagem WhatsApp enviada com sucesso');
+                              
+                              // Registrar atividade
+                              await supabase.from('notifications').insert({
+                                user_id: execution.patient_id,
+                                title: 'Formulário Concluído',
+                                message: `Material disponível para download`,
+                                type: 'success',
+                                category: 'form_completion',
+                                metadata: {
+                                  execution_id: executionId,
+                                  content_url: contentUrl,
+                                  whatsapp_sent: true
+                                }
+                              });
+                            }
+                          } catch (sendError) {
+                            console.error('❌ usePatientFlows: Erro ao enviar WhatsApp:', sendError);
+                          }
+                        } else {
+                          console.warn('⚠️ usePatientFlows: Template formulario_concluido não encontrado');
+                        }
+                      } else {
+                        console.warn('⚠️ usePatientFlows: Configurações WhatsApp não encontradas');
+                      }
+                    } else {
+                      console.warn('⚠️ usePatientFlows: Paciente sem telefone configurado');
+                    }
+                  } else {
+                    console.error('❌ usePatientFlows: Falha ao gerar URL de conteúdo');
+                  }
+                } catch (urlError) {
+                  console.error('❌ usePatientFlows: Erro ao gerar URL:', urlError);
+                }
+              } else {
+                console.warn('⚠️ usePatientFlows: Nenhum arquivo encontrado no nó FormEnd');
+              }
               
               console.log('✅ usePatientFlows: Processamento FormEnd concluído');
             } else {
@@ -236,6 +363,7 @@ export const usePatientFlows = () => {
           }
         } catch (endError) {
           console.error('❌ usePatientFlows: Erro ao processar FormEnd:', endError);
+          console.error('❌ usePatientFlows: Stack trace:', endError.stack);
           // Não falhar toda a operação por causa do FormEnd
         }
       }
