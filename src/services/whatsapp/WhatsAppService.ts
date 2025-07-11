@@ -52,6 +52,36 @@ class WhatsAppService {
     }
   }
 
+  async sendTemplate(
+    phoneNumber: string,
+    templateName: string,
+    parameters: string[] = [],
+    languageCode: string = 'pt_BR'
+  ): Promise<SendMessageResponse> {
+    if (!this.config) {
+      return {
+        success: false,
+        error: 'Configuração do WhatsApp não encontrada',
+      };
+    }
+
+    switch (this.config.provider) {
+      case 'meta':
+        return this.metaService.sendTemplate(phoneNumber, templateName, languageCode, parameters);
+      case 'evolution':
+        // Evolution API doesn't support templates, fallback to regular message
+        return this.sendMessage(phoneNumber, `Template: ${templateName} não disponível para Evolution API`);
+      case 'twilio':
+        // Twilio doesn't support templates, fallback to regular message
+        return this.sendMessage(phoneNumber, `Template: ${templateName} não disponível para Twilio`);
+      default:
+        return {
+          success: false,
+          error: 'Provedor de WhatsApp não suportado',
+        };
+    }
+  }
+
   async sendMediaMessage(
     phoneNumber: string,
     message: string,

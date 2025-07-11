@@ -239,26 +239,53 @@ export const useFlowExecutionEngine = () => {
           template: 'formulario_concluido'
         });
 
-        // Forçar geração de URL de conteúdo com fallback robusto
+        // Gerar URL de conteúdo com retry automático e fallback robusto
         let contentUrl = '';
         
         if (nodeData.arquivos && nodeData.arquivos.length > 0) {
           console.log('📁 FlowEngine: Gerando URL para arquivos:', nodeData.arquivos.length);
           
-          try {
-            contentUrl = await generateContentUrl({
-              executionId,
-              files: nodeData.arquivos
-            }) || '';
-            
-            if (!contentUrl) {
-              console.warn('⚠️ FlowEngine: generateContentUrl retornou vazio, criando URL manual');
-              // Fallback: criar entrada manual na tabela content_access
+          // Implementar retry para geração de URL
+          const generateUrlWithRetry = async (retries = 3) => {
+            for (let attempt = 0; attempt < retries; attempt++) {
+              try {
+                console.log(`🔄 FlowEngine: Tentativa ${attempt + 1}/${retries} de geração de URL`);
+                
+                const url = await generateContentUrl({
+                  executionId,
+                  files: nodeData.arquivos
+                });
+                
+                if (url) {
+                  console.log('✅ FlowEngine: URL gerada com sucesso:', url);
+                  return url;
+                }
+                
+                if (attempt < retries - 1) {
+                  console.warn(`⚠️ FlowEngine: Tentativa ${attempt + 1} falhou, tentando novamente...`);
+                  await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 1000));
+                }
+              } catch (error) {
+                console.error(`❌ FlowEngine: Erro na tentativa ${attempt + 1}:`, error);
+                if (attempt < retries - 1) {
+                  await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 1000));
+                }
+              }
+            }
+            return null;
+          };
+          
+          contentUrl = await generateUrlWithRetry() || '';
+          
+          // Fallback manual se todas as tentativas falharam
+          if (!contentUrl) {
+            console.warn('⚠️ FlowEngine: Todas as tentativas de geração de URL falharam, criando fallback manual');
+            try {
               const accessToken = crypto.randomUUID();
               const expiresAt = new Date();
               expiresAt.setDate(expiresAt.getDate() + 30);
               
-              await supabase.from('content_access').insert({
+              const { error: insertError } = await supabase.from('content_access').insert({
                 execution_id: executionId,
                 patient_id: (execution as any).patient_id,
                 access_token: accessToken,
@@ -266,16 +293,22 @@ export const useFlowExecutionEngine = () => {
                 expires_at: expiresAt.toISOString(),
                 metadata: {
                   patient_name: (patient as any).name || 'Paciente',
-                  form_name: 'Formulário'
+                  form_name: 'Formulário',
+                  fallback_created: true
                 }
               });
               
-              contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}?token=${accessToken}`;
-              console.log('🔗 FlowEngine: URL de fallback criada:', contentUrl);
+              if (!insertError) {
+                contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}?token=${accessToken}`;
+                console.log('🔗 FlowEngine: URL de fallback criada com sucesso:', contentUrl);
+              } else {
+                console.error('❌ FlowEngine: Erro ao criar fallback manual:', insertError);
+                contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}`;
+              }
+            } catch (error) {
+              console.error('❌ FlowEngine: Erro crítico no fallback:', error);
+              contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}`;
             }
-          } catch (error) {
-            console.error('❌ FlowEngine: Erro ao gerar URL de conteúdo:', error);
-            contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}`;
           }
         } else {
           contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}`;
@@ -329,14 +362,32 @@ export const useFlowExecutionEngine = () => {
           return;
         }
 
-        // Simplificar envio - tentar template primeiro, fallback para mensagem simples
-        const sendCompletionMessage = async (attempts = 5) => {
+        // Sistema de fallback inteligente: Template oficial → Mensagem simples
+        const sendCompletionMessage = async (attempts = 3) => {
+          console.log('🚀 FlowEngine: Iniciando envio de mensagem de conclusão com sistema de fallback');
+          
           for (let i = 0; i < attempts; i++) {
             try {
-              console.log(`🚀 FlowEngine: Enviando mensagem de conclusão (tentativa ${i + 1}/${attempts})...`);
+              console.log(`📱 FlowEngine: Tentativa ${i + 1}/${attempts} de envio`);
               
               let result;
-              if (templateExists) {
+              
+              // Tentar template oficial primeiro (se existir e estiver ativo)
+              if (templateExists && templateExists.is_official) {
+                console.log('🎯 FlowEngine: Tentando envio via template oficial da Meta');
+                // Importar e usar o WhatsAppService
+                const { whatsappService } = await import('@/services/whatsapp/WhatsAppService');
+                result = await whatsappService.sendTemplate(
+                  (patient as any).phone,
+                  'formulario_concluido',
+                  [(patient as any).name || 'Paciente', contentUrl]
+                );
+                console.log('📊 FlowEngine: Resultado do template oficial:', result);
+              }
+              
+              // Se template falhou ou não existe, usar template básico
+              if (!result?.success && templateExists && !templateExists.is_official) {
+                console.log('🔄 FlowEngine: Template oficial falhou, tentando template básico');
                 result = await sendWhatsAppTemplateMessage(
                   (patient as any).phone,
                   'formulario_concluido',
@@ -345,15 +396,18 @@ export const useFlowExecutionEngine = () => {
                     content_url: contentUrl
                   }
                 );
-              } else {
-                // Fallback para mensagem simples
-                const fallbackMessage = `🎉 *Formulário Concluído!*\n\nOlá ${(patient as any).name}! Você concluiu o formulário com sucesso.\n\n📁 Acesse seus documentos aqui: ${contentUrl}`;
-                result = await sendMessage((patient as any).phone, fallbackMessage);
+                console.log('📊 FlowEngine: Resultado do template básico:', result);
               }
               
-              console.log('📱 FlowEngine: Resultado do envio:', result);
+              // Se todos os templates falharam, usar mensagem simples
+              if (!result?.success) {
+                console.log('📝 FlowEngine: Templates falharam, usando mensagem simples como fallback');
+                const fallbackMessage = `🎉 *Formulário Concluído!*\n\nOlá ${(patient as any).name}! Você concluiu o formulário com sucesso.\n\n📁 Acesse seus materiais aqui: ${contentUrl}\n\n_Este link expira em 30 dias._`;
+                result = await sendMessage((patient as any).phone, fallbackMessage);
+                console.log('📊 FlowEngine: Resultado da mensagem simples:', result);
+              }
               
-              if (result.success) {
+              if (result?.success) {
                 await recordOptInActivity(
                   (execution as any).patient_id,
                   (patient as any).phone,
@@ -362,15 +416,15 @@ export const useFlowExecutionEngine = () => {
                 console.log('✅ FlowEngine: Mensagem de conclusão enviada com sucesso');
                 return true;
               } else {
-                console.error(`❌ FlowEngine: Falha no envio (tentativa ${i + 1}):`, result.error);
+                console.error(`❌ FlowEngine: Falha no envio (tentativa ${i + 1}):`, result?.error);
                 if (i < attempts - 1) {
-                  await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000));
+                  await new Promise(resolve => setTimeout(resolve, (i + 1) * 2000));
                 }
               }
             } catch (error) {
               console.error(`❌ FlowEngine: Erro no envio (tentativa ${i + 1}):`, error);
               if (i < attempts - 1) {
-                await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000));
+                await new Promise(resolve => setTimeout(resolve, (i + 1) * 2000));
               }
             }
           }
