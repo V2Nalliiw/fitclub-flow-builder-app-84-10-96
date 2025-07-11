@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,67 +6,36 @@ import { useNavigate } from 'react-router-dom';
 import { FileText, User, Calendar, Activity, ArrowRight, Workflow } from 'lucide-react';
 import { useRoleBasedAccess } from '@/hooks/useRoleBasedAccess';
 import { usePatientFlows } from '@/hooks/usePatientFlows';
-import { useFlowAssignments } from '@/hooks/useFlowAssignments';
-import { useFlowExecutionEngine } from '@/hooks/useFlowExecutionEngine';
-import { FlowStepRenderer } from '@/components/flows/FlowStepRenderer';
 
 const PatientDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { hasAccess } = useRoleBasedAccess(['patient']);
   const { executions, loading: flowsLoading } = usePatientFlows();
-  const { assignments, isLoading: assignmentsLoading } = useFlowAssignments();
-  const { executeFlowStep } = useFlowExecutionEngine();
 
   if (!hasAccess) {
     return null;
   }
-
-  // Estados para controlar a exibição da primeira pergunta
-  const [showingFirstQuestion, setShowingFirstQuestion] = React.useState(false);
-  const [currentStep, setCurrentStep] = React.useState<any>(null);
-  const [currentExecution, setCurrentExecution] = React.useState<any>(null);
 
   // Encontrar formulário disponível
   const mostRecentExecution = executions?.find(e => e.status === 'em-andamento' || e.status === 'pausado') || executions?.[0];
   const hasActiveForm = mostRecentExecution && (mostRecentExecution.status === 'em-andamento' || mostRecentExecution.status === 'pausado');
   const hasNoForms = !executions || executions.length === 0;
 
-  // Verificar se há um novo formulário atribuído (progresso = 0 e status em-andamento)
-  const newFormAvailable = mostRecentExecution && 
-    mostRecentExecution.status === 'em-andamento' && 
-    (mostRecentExecution.progresso === 0 || mostRecentExecution.progresso === null) &&
-    mostRecentExecution.current_step;
-
-  // Automaticamente mostrar a primeira pergunta se há um novo formulário
+  // Verificar se há um novo formulário (progresso = 0) - se sim, redirecionar automaticamente
   React.useEffect(() => {
-    if (newFormAvailable && !showingFirstQuestion && !flowsLoading) {
-      console.log('Novo formulário detectado, exibindo primeira pergunta:', mostRecentExecution);
-      setCurrentExecution(mostRecentExecution);
-      setCurrentStep(mostRecentExecution.current_step);
-      setShowingFirstQuestion(true);
-    }
-  }, [newFormAvailable, showingFirstQuestion, flowsLoading, mostRecentExecution]);
-
-  // Função para responder a primeira pergunta
-  const handleFirstQuestionResponse = async (response: any) => {
-    try {
-      console.log('Respondendo primeira pergunta:', response);
+    if (!flowsLoading && mostRecentExecution) {
+      const isNewForm = mostRecentExecution.status === 'em-andamento' && 
+        (mostRecentExecution.progresso === 0 || mostRecentExecution.progresso === null) &&
+        mostRecentExecution.current_step;
       
-      if (currentExecution?.id) {
-        await executeFlowStep(currentExecution.id, {
-          nodeId: response.nodeId,
-          nodeType: response.nodeType,
-          status: 'completed'
-        }, response);
-
-        // Redirecionar para o formulário completo após responder
-        navigate(`/flow-execution/${currentExecution.id}`);
+      if (isNewForm) {
+        console.log('Novo formulário detectado, redirecionando:', mostRecentExecution);
+        navigate(`/flow-execution/${mostRecentExecution.id}`);
+        return;
       }
-    } catch (error) {
-      console.error('Erro ao responder primeira pergunta:', error);
     }
-  };
+  }, [flowsLoading, mostRecentExecution, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:bg-none dark:bg-[#0E0E0E] p-4 md:p-6">
@@ -85,68 +53,22 @@ const PatientDashboard = () => {
           </p>
         </div>
 
-        {/* Primeira Pergunta Automática */}
-        {showingFirstQuestion && currentStep ? (
-          <div className="space-y-6">
-            <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
-              <CardHeader className="text-center pb-4">
-                <CardTitle className="text-xl text-gray-900 dark:text-gray-100">
-                  🆕 Novo Formulário Disponível
-                </CardTitle>
-                <p className="text-[#5D8701] font-medium">
-                  {currentExecution?.flow_name}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Responda abaixo para começar
-                </p>
-              </CardHeader>
-            </Card>
-            
-            <FlowStepRenderer
-              step={currentStep}
-              onComplete={handleFirstQuestionResponse}
-              isLoading={false}
-              canGoBack={false}
-            />
-            
-            <Card className="bg-gray-50/90 dark:bg-[#1A1A1A]/90 backdrop-blur-sm border-0">
-              <CardContent className="p-4 text-center">
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setShowingFirstQuestion(false);
-                    setCurrentStep(null);
-                    setCurrentExecution(null);
-                  }}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  Responder mais tarde
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        ) : hasNoForms ? (
+        {/* Status dos Formulários */}
+        {hasNoForms ? (
           <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
             <CardContent className="text-center py-12">
               <div className="w-20 h-20 bg-gradient-to-r from-[#5D8701] to-[#4a6e01] rounded-full flex items-center justify-center mx-auto mb-6">
                 <FileText className="h-10 w-10 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                Todos os formulários foram visualizados
+                Nenhum formulário disponível
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                Você já viu todos os formulários atribuídos a você. Em breve poderá receber novos formulários.
+                Você ainda não possui formulários atribuídos. Em breve poderá receber novos formulários.
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
-                Aguarde mais um pouco ou entre em contato com a clínica para mais informações.
+                Aguarde ou entre em contato com a clínica para mais informações.
               </p>
-              <Button 
-                onClick={() => navigate('/my-flows')} 
-                variant="outline"
-                className="border-[#5D8701] text-[#5D8701] hover:bg-[#5D8701] hover:text-white"
-              >
-                Ver Todos os Formulários
-              </Button>
             </CardContent>
           </Card>
         ) : hasActiveForm ? (
@@ -156,7 +78,7 @@ const PatientDashboard = () => {
               <div className="flex items-start justify-between">
                 <div>
                   <CardTitle className="text-xl text-gray-900 dark:text-gray-100 mb-2">
-                    📋 Formulário Mais Recente
+                    📋 Formulário em Andamento
                   </CardTitle>
                   <h3 className="text-lg font-medium text-[#5D8701] mb-1">
                     {mostRecentExecution?.flow_name}

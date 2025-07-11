@@ -160,9 +160,9 @@ export const useFlowExecutionEngine = () => {
             formName: nodeData.titulo || 'Formulário'
           });
 
-          // Enviar link do painel do paciente (onde a primeira pergunta aparecerá automaticamente)
-          const patientDashboardUrl = `${window.location.origin}/patient-dashboard`;
-          const customMessage = `📋 *${nodeData.titulo || 'Formulário'}*\n\nOlá ${(patient as any).name}! Você tem um novo formulário para preencher.\n\n🔗 Acesse seu painel: ${patientDashboardUrl}\n\n_O formulário aparecerá automaticamente quando você abrir o link._`;
+          // Enviar link do painel principal (que redirecionará automaticamente para o formulário)
+          const patientDashboardUrl = `${window.location.origin}/`;
+          const customMessage = `📋 *${nodeData.titulo || 'Formulário'}*\n\nOlá ${(patient as any).name}! Você tem um novo formulário para preencher.\n\n🔗 Acesse aqui: ${patientDashboardUrl}\n\n_O formulário aparecerá automaticamente quando você abrir o link._`;
           
           // Usar sendMessage diretamente com validação
           const validation = await validateWhatsAppSending(

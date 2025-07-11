@@ -121,7 +121,7 @@ const FlowExecution = () => {
         }
 
         if (updatedExecution.status === 'completed') {
-          setTimeout(() => navigate('/my-flows'), 2000);
+          setTimeout(() => navigate('/'), 2000);
         }
       }
     } catch (error) {
@@ -329,11 +329,11 @@ const FlowExecution = () => {
                   Você concluiu todo o formulário com sucesso!
                 </p>
                 <Button
-                  onClick={() => navigate('/my-flows')}
+                  onClick={() => navigate('/')}
                   size="lg"
                   className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8"
                 >
-                  Finalizar
+                  Voltar ao Dashboard
                 </Button>
               </div>
             ) : currentStep && (!isWaiting || delayExpired) ? (
@@ -358,11 +358,11 @@ const FlowExecution = () => {
                   Você pode fechar esta página e voltar depois.
                 </p>
                 <Button
-                  onClick={() => navigate('/my-flows')}
+                  onClick={() => navigate('/')}
                   variant="outline"
                   size="lg"
                 >
-                  Voltar aos Formulários
+                  Voltar ao Dashboard
                 </Button>
               </div>
             )}

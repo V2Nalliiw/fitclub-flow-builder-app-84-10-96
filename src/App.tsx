@@ -99,14 +99,16 @@ const SmartRedirect = () => {
     return <LoadingSpinner />;
   }
 
-  // Para pacientes, verificar se há formulário ativo
+  // Para pacientes, verificar se há formulário novo (progresso 0) para redirecionamento automático
   if (user?.role === 'patient') {
-    const activeExecution = executions?.find(e => 
-      e.status === 'em-andamento' || e.status === 'pausado'
+    const newFormExecution = executions?.find(e => 
+      e.status === 'em-andamento' && 
+      (e.progresso === 0 || e.progresso === null) &&
+      e.current_step
     );
     
-    if (activeExecution) {
-      return <Navigate to={`/flow-execution/${activeExecution.id}`} replace />;
+    if (newFormExecution) {
+      return <Navigate to={`/flow-execution/${newFormExecution.id}`} replace />;
     }
   }
 
