@@ -60,7 +60,7 @@ export const FormEndNodeConfig: React.FC<FormEndNodeConfigProps> = ({
         if (uploadedFile) {
           // Gerar URL público correto do Supabase Storage  
           const filePath = uploadedFile.url || uploadedFile.name;
-          const publicUrl = `https://oilnybhaboeqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${filePath}`;
+          const publicUrl = `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${filePath}`;
           
           const newArquivos = [...arquivos, {
             id: uploadedFile.id || crypto.randomUUID(),

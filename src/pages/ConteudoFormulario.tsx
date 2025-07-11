@@ -117,7 +117,7 @@ export default function ConteudoFormulario() {
       // Tentar múltiplas URLs como fallback
       const downloadUrls = [
         // 1. URL via serve-content function
-        `https://oilnybhaboeqyhjrmvl.supabase.co/functions/v1/serve-content/${token}/${encodeURIComponent(arquivo.nome)}`,
+        `https://oilnybhaboefqyhjrmvl.supabase.co/functions/v1/serve-content/${token}/${encodeURIComponent(arquivo.nome)}`,
         // 2. URL direta do storage se disponível
         arquivo.url,
         // 3. URL pública alternativa

@@ -134,6 +134,8 @@ export const usePatientFlows = () => {
     if (!user?.id) return;
 
     try {
+      console.log('🔄 usePatientFlows: Iniciando completeStep', { executionId, stepId, response });
+
       const { data: execution, error: fetchError } = await supabase
         .from('flow_executions')
         .select('*')
@@ -144,9 +146,24 @@ export const usePatientFlows = () => {
         throw new Error('Execução não encontrada');
       }
 
+      console.log('📊 usePatientFlows: Execução encontrada', { 
+        currentStatus: execution.status,
+        currentProgress: execution.progress,
+        totalSteps: execution.total_steps,
+        completedSteps: execution.completed_steps
+      });
+
       const newCompletedSteps = execution.completed_steps + 1;
       const newProgress = Math.round((newCompletedSteps / execution.total_steps) * 100);
-      const newStatus = newProgress >= 100 ? 'concluido' : execution.status;
+      const isFormCompleted = newProgress >= 100;
+      const newStatus = isFormCompleted ? 'completed' : execution.status;
+
+      console.log('📈 usePatientFlows: Calculando novo progresso', {
+        newCompletedSteps,
+        newProgress,
+        isFormCompleted,
+        newStatus
+      });
 
       const { error: updateError } = await supabase
         .from('flow_executions')
@@ -154,7 +171,7 @@ export const usePatientFlows = () => {
           completed_steps: newCompletedSteps,
           progress: newProgress,
           status: newStatus,
-          completed_at: newProgress >= 100 ? new Date().toISOString() : null,
+          completed_at: isFormCompleted ? new Date().toISOString() : null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', executionId);
@@ -180,6 +197,47 @@ export const usePatientFlows = () => {
             updated_at: new Date().toISOString(),
           })
           .eq('id', executionId);
+      }
+
+      // ✨ NOVO: Trigger FormEnd processing se o formulário foi completado
+      if (isFormCompleted) {
+        console.log('🎯 usePatientFlows: Formulário completado, processando FormEnd...');
+        
+        try {
+          // Buscar o flow para encontrar o nó FormEnd
+          const { data: flow } = await supabase
+            .from('flows')
+            .select('nodes')
+            .eq('id', execution.flow_id)
+            .single();
+
+          if (flow?.nodes) {
+            const nodes = Array.isArray(flow.nodes) ? flow.nodes : [];
+            const formEndNode = nodes.find((node: any) => node.type === 'formEnd');
+            
+            if (formEndNode) {
+              console.log('🎉 usePatientFlows: Nó FormEnd encontrado, importando engine...', formEndNode.data);
+              
+              // Importar e usar o FlowExecutionEngine
+              const { useFlowExecutionEngine } = await import('@/hooks/useFlowExecutionEngine');
+              const engine = useFlowExecutionEngine();
+              
+              // Executar o nó FormEnd
+              await engine.executeFlowStep(executionId, {
+                nodeId: formEndNode.id,
+                nodeType: 'formEnd',
+                status: 'pending'
+              }, formEndNode.data);
+              
+              console.log('✅ usePatientFlows: Processamento FormEnd concluído');
+            } else {
+              console.warn('⚠️ usePatientFlows: Nó FormEnd não encontrado no flow');
+            }
+          }
+        } catch (endError) {
+          console.error('❌ usePatientFlows: Erro ao processar FormEnd:', endError);
+          // Não falhar toda a operação por causa do FormEnd
+        }
       }
 
       await loadPatientFlows();
