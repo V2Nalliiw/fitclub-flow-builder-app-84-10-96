@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useFlowProcessor } from './useFlowProcessor';
-import { useFlowExecutionEngine } from './useFlowExecutionEngine';
 import { FlowNode, FlowEdge } from '@/types/flow';
 
 export interface FlowAssignment {
@@ -40,7 +39,6 @@ export const useFlowAssignments = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { processFlowAssignment } = useFlowProcessor();
-  const { executeFlowStep } = useFlowExecutionEngine();
 
   const { data: assignments = [], isLoading } = useQuery({
     queryKey: ['flow-assignments', user?.id],
@@ -288,65 +286,27 @@ export const useFlowAssignments = () => {
 
       console.log('Executando primeiro nó:', startNode);
 
-      // Executar o nó de início
-      await executeFlowStep(executionId, {
-        nodeId: startNode.id,
-        nodeType: startNode.type,
-        status: 'running'
-      }, startNode.data);
+      // Apenas atualizar o status para iniciado, sem executar passos que podem trigger WhatsApp
+      const { error: updateError } = await supabase
+        .from('flow_executions')
+        .update({
+          status: 'in-progress',
+          started_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', executionId);
 
-      // Buscar e executar próximos nós automaticamente (formStart, etc)
-      const edges = await getFlowEdges(executionId);
-      await executeNextAutomaticNodes(executionId, startNode.id, nodes, edges);
+      if (updateError) {
+        console.error('Erro ao atualizar execução:', updateError);
+      } else {
+        console.log('✅ Execução iniciada sem trigger WhatsApp automático');
+      }
 
     } catch (error) {
       console.error('Erro ao executar primeiro nó:', error);
     }
   };
 
-  const getFlowEdges = async (executionId: string) => {
-    const { data: execution } = await supabase
-      .from('flow_executions')
-      .select('flow_id')
-      .eq('id', executionId)
-      .single();
-
-    if (execution) {
-      const { data: flow } = await supabase
-        .from('flows')
-        .select('edges')
-        .eq('id', execution.flow_id)
-        .single();
-      
-      return Array.isArray(flow?.edges) ? (flow.edges as unknown as FlowEdge[]) : [];
-    }
-    return [];
-  };
-
-  const executeNextAutomaticNodes = async (executionId: string, currentNodeId: string, nodes: FlowNode[], edges: FlowEdge[]) => {
-    // Encontrar próximo nó
-    const nextEdge = edges.find(edge => edge.source === currentNodeId);
-    if (!nextEdge) return;
-
-    const nextNode = nodes.find(node => node.id === nextEdge.target);
-    if (!nextNode) return;
-
-    // Executar automaticamente nós que não precisam de interação do usuário
-    if (['formStart', 'delay'].includes(nextNode.type)) {
-      console.log('Executando próximo nó automático:', nextNode);
-      
-      await executeFlowStep(executionId, {
-        nodeId: nextNode.id,
-        nodeType: nextNode.type,
-        status: 'running'
-      }, nextNode.data);
-
-      // Continuar para próximos nós se não for delay
-      if (nextNode.type !== 'delay') {
-        await executeNextAutomaticNodes(executionId, nextNode.id, nodes, edges);
-      }
-    }
-  };
 
   return {
     assignments,
