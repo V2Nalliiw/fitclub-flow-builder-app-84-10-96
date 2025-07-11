@@ -36,21 +36,42 @@ export const usePatientFlows = () => {
         return;
       }
 
-      const transformedExecutions: PatientFlowExecution[] = (flowExecutions || []).map(execution => ({
-        id: execution.id,
-        flow_id: execution.flow_id,
-        flow_name: execution.flow_name,
-        paciente_id: execution.patient_id,
-        status: execution.status as 'em-andamento' | 'pausado' | 'concluido' | 'aguardando',
-        no_atual: execution.current_node,
-        progresso: execution.progress,
-        started_at: execution.started_at,
-        completed_at: execution.completed_at || undefined,
-        next_step_available_at: execution.next_step_available_at || undefined,
-        current_step: execution.current_step as any,
-        total_steps: execution.total_steps,
-        completed_steps: execution.completed_steps,
-      }));
+      const transformedExecutions: PatientFlowExecution[] = (flowExecutions || []).map(execution => {
+        // Map database status to frontend status
+        let mappedStatus: 'em-andamento' | 'pausado' | 'concluido' | 'aguardando' = 'aguardando';
+        switch (execution.status) {
+          case 'in-progress':
+            mappedStatus = 'em-andamento';
+            break;
+          case 'failed':
+          case 'paused':
+            mappedStatus = 'pausado';
+            break;
+          case 'completed':
+            mappedStatus = 'concluido';
+            break;
+          case 'pending':
+          default:
+            mappedStatus = 'aguardando';
+            break;
+        }
+
+        return {
+          id: execution.id,
+          flow_id: execution.flow_id,
+          flow_name: execution.flow_name,
+          paciente_id: execution.patient_id,
+          status: mappedStatus,
+          no_atual: execution.current_node,
+          progresso: execution.progress,
+          started_at: execution.started_at,
+          completed_at: execution.completed_at || undefined,
+          next_step_available_at: execution.next_step_available_at || undefined,
+          current_step: execution.current_step as any,
+          total_steps: execution.total_steps,
+          completed_steps: execution.completed_steps,
+        };
+      });
 
       setExecutions(transformedExecutions);
 

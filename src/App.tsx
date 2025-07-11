@@ -103,11 +103,12 @@ const SmartRedirect = () => {
   if (user?.role === 'patient') {
     const newFormExecution = executions?.find(e => 
       e.status === 'em-andamento' && 
-      (e.progresso === 0 || e.progresso === null) &&
+      e.progresso === 0 &&
       e.current_step
     );
     
     if (newFormExecution) {
+      console.log('SmartRedirect: Redirecionando para formulário novo:', newFormExecution);
       return <Navigate to={`/flow-execution/${newFormExecution.id}`} replace />;
     }
   }

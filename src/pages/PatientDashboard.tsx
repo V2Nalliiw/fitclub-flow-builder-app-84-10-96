@@ -26,7 +26,7 @@ const PatientDashboard = () => {
   React.useEffect(() => {
     if (!flowsLoading && mostRecentExecution) {
       const isNewForm = mostRecentExecution.status === 'em-andamento' && 
-        (mostRecentExecution.progresso === 0 || mostRecentExecution.progresso === null) &&
+        mostRecentExecution.progresso === 0 &&
         mostRecentExecution.current_step;
       
       if (isNewForm) {
