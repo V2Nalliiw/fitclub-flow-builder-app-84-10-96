@@ -277,33 +277,73 @@ export const useFlowAssignments = () => {
 
   const executeFirstNode = async (executionId: string, nodes: FlowNode[]) => {
     try {
+      console.log('🚀 Executando primeiro nó para execução:', executionId);
+      
       // Encontrar o primeiro nó (start)
       const startNode = nodes.find(node => node.type === 'start');
       if (!startNode) {
-        console.log('Nenhum nó de início encontrado');
+        console.log('❌ Nenhum nó de início encontrado');
         return;
       }
 
-      console.log('Executando primeiro nó:', startNode);
+      console.log('✅ Nó de início encontrado:', startNode);
 
-      // Apenas atualizar o status para iniciado, sem executar passos que podem trigger WhatsApp
+      // Atualizar status da execução
       const { error: updateError } = await supabase
         .from('flow_executions')
         .update({
           status: 'in-progress',
           started_at: new Date().toISOString(),
+          current_node: startNode.id,
           updated_at: new Date().toISOString()
         })
         .eq('id', executionId);
 
       if (updateError) {
-        console.error('Erro ao atualizar execução:', updateError);
-      } else {
-        console.log('✅ Execução iniciada sem trigger WhatsApp automático');
+        console.error('❌ Erro ao atualizar execução:', updateError);
+        return;
+      }
+
+      // Buscar dados da execução para processamento
+      const { data: execution, error: execError } = await supabase
+        .from('flow_executions')
+        .select('*')
+        .eq('id', executionId)
+        .single();
+
+      if (execError || !execution) {
+        console.error('❌ Erro ao buscar execução:', execError);
+        return;
+      }
+
+      console.log('📋 Dados da execução:', execution);
+
+      // Verificar se é uma execução de paciente e disparar processo de envio
+      if (execution.patient_id) {
+        console.log('📱 Disparando processo de WhatsApp para paciente:', execution.patient_id);
+        
+        // Chamar edge function para iniciar o processo
+        try {
+          const { data: whatsappResult, error: whatsappError } = await supabase.functions.invoke('send-patient-invitation', {
+            body: {
+              executionId: executionId,
+              type: 'flow_start',
+              flowName: execution.flow_name
+            }
+          });
+
+          if (whatsappError) {
+            console.error('❌ Erro ao disparar WhatsApp:', whatsappError);
+          } else {
+            console.log('✅ WhatsApp disparado com sucesso:', whatsappResult);
+          }
+        } catch (error) {
+          console.error('❌ Erro na chamada da edge function:', error);
+        }
       }
 
     } catch (error) {
-      console.error('Erro ao executar primeiro nó:', error);
+      console.error('❌ Erro ao executar primeiro nó:', error);
     }
   };
 
