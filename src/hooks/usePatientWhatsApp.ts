@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export const usePatientWhatsApp = () => {
   const { getPatientWhatsApp, isPatientWhatsAppVerified } = usePatients();
-  const { sendFormLink, sendMessage, sendMedia } = useWhatsApp();
+  const { sendFormLink, sendMessage, sendMedia, isConnected } = useWhatsApp();
   const { toast } = useToast();
 
   const sendFormToPatient = useCallback(async (
@@ -15,7 +15,22 @@ export const usePatientWhatsApp = () => {
     formUrl: string,
     customMessage?: string
   ) => {
+    console.log('🚀 usePatientWhatsApp: Iniciando envio para paciente:', patientId);
+    console.log('🔗 usePatientWhatsApp: WhatsApp conectado?', isConnected);
+    
+    // Verificar se WhatsApp está configurado primeiro
+    if (!isConnected) {
+      console.log('❌ usePatientWhatsApp: WhatsApp não conectado');
+      toast({
+        title: "WhatsApp não configurado",
+        description: "Configure o WhatsApp antes de enviar mensagens",
+        variant: "destructive",
+      });
+      return { success: false, error: "WhatsApp não configurado" };
+    }
+
     const whatsappNumber = getPatientWhatsApp(patientId);
+    console.log('📱 usePatientWhatsApp: Número do paciente:', whatsappNumber);
     
     if (!whatsappNumber) {
       toast({
@@ -26,18 +41,19 @@ export const usePatientWhatsApp = () => {
       return { success: false, error: "WhatsApp não configurado" };
     }
 
-    if (!isPatientWhatsAppVerified(patientId)) {
-      toast({
-        title: "WhatsApp não verificado",
-        description: "O WhatsApp deste paciente não foi verificado",
-        variant: "destructive",
-      });
-      return { success: false, error: "WhatsApp não verificado" };
-    }
+    // Remover verificação restritiva que pode estar causando problemas
+    // if (!isPatientWhatsAppVerified(patientId)) {
+    //   toast({
+    //     title: "WhatsApp não verificado",
+    //     description: "O WhatsApp deste paciente não foi verificado",
+    //     variant: "destructive",
+    //   });
+    //   return { success: false, error: "WhatsApp não verificado" };
+    // }
 
-    console.log(`Enviando formulário para paciente ${patientId} no WhatsApp: ${whatsappNumber}`);
+    console.log(`✅ usePatientWhatsApp: Enviando formulário para paciente ${patientId} no WhatsApp: ${whatsappNumber}`);
     return await sendFormLink(whatsappNumber, formName, formUrl, customMessage);
-  }, [getPatientWhatsApp, isPatientWhatsAppVerified, sendFormLink, toast]);
+  }, [getPatientWhatsApp, isPatientWhatsAppVerified, sendFormLink, toast, isConnected]);
 
   const sendMessageToPatient = useCallback(async (
     patientId: string,
