@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useFlowProcessor } from './useFlowProcessor';
+import { useWhatsApp } from './useWhatsApp';
+import { useWhatsAppSettings } from './useWhatsAppSettings';
 import { FlowNode, FlowEdge } from '@/types/flow';
 
 export interface FlowAssignment {
@@ -39,6 +41,8 @@ export const useFlowAssignments = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { processFlowAssignment } = useFlowProcessor();
+  const { sendWhatsAppTemplateMessage, sendMessage } = useWhatsApp();
+  const { getWhatsAppConfig } = useWhatsAppSettings();
 
   const { data: assignments = [], isLoading } = useQuery({
     queryKey: ['flow-assignments', user?.id],
@@ -277,16 +281,16 @@ export const useFlowAssignments = () => {
 
   const executeFirstNode = async (executionId: string, nodes: FlowNode[]) => {
     try {
-      console.log('🚀 Executando primeiro nó para execução:', executionId);
+      console.log('🚀 executeFirstNode: Iniciando execução para:', executionId);
       
       // Encontrar o primeiro nó (start)
       const startNode = nodes.find(node => node.type === 'start');
       if (!startNode) {
-        console.log('❌ Nenhum nó de início encontrado');
+        console.log('❌ executeFirstNode: Nenhum nó de início encontrado');
         return;
       }
 
-      console.log('✅ Nó de início encontrado:', startNode);
+      console.log('✅ executeFirstNode: Nó de início encontrado:', startNode);
 
       // Atualizar status da execução
       const { error: updateError } = await supabase
@@ -300,7 +304,7 @@ export const useFlowAssignments = () => {
         .eq('id', executionId);
 
       if (updateError) {
-        console.error('❌ Erro ao atualizar execução:', updateError);
+        console.error('❌ executeFirstNode: Erro ao atualizar execução:', updateError);
         return;
       }
 
@@ -312,38 +316,100 @@ export const useFlowAssignments = () => {
         .single();
 
       if (execError || !execution) {
-        console.error('❌ Erro ao buscar execução:', execError);
+        console.error('❌ executeFirstNode: Erro ao buscar execução:', execError);
         return;
       }
 
-      console.log('📋 Dados da execução:', execution);
+      console.log('📋 executeFirstNode: Dados da execução:', execution);
 
-      // Verificar se é uma execução de paciente e disparar processo de envio
+      // Verificar se é uma execução de paciente e enviar WhatsApp
       if (execution.patient_id) {
-        console.log('📱 Disparando processo de WhatsApp para paciente:', execution.patient_id);
+        console.log('📱 executeFirstNode: Enviando template inicial para paciente:', execution.patient_id);
         
-        // Chamar edge function para iniciar o processo
         try {
-          const { data: whatsappResult, error: whatsappError } = await supabase.functions.invoke('send-patient-invitation', {
-            body: {
-              executionId: executionId,
-              type: 'flow_start',
-              flowName: execution.flow_name
-            }
-          });
+          // Buscar dados do paciente
+          const { data: patient, error: patientError } = await supabase
+            .from('profiles')
+            .select('name, phone')
+            .eq('user_id', execution.patient_id)
+            .single();
 
-          if (whatsappError) {
-            console.error('❌ Erro ao disparar WhatsApp:', whatsappError);
-          } else {
-            console.log('✅ WhatsApp disparado com sucesso:', whatsappResult);
+          if (patientError || !patient || !patient.phone) {
+            console.error('❌ executeFirstNode: Paciente sem telefone:', patientError);
+            return;
           }
+
+          console.log('👤 executeFirstNode: Dados do paciente:', { name: patient.name, phone: patient.phone });
+
+          // Tentar enviar template oficial primeiro, depois fallback
+          const sendTemplateWithFallback = async () => {
+            console.log('🎯 executeFirstNode: Tentando template oficial "inicio_fluxo"');
+            
+            try {
+              // Importar o whatsappService para usar templates oficiais Meta
+              const { whatsappService } = await import('@/services/whatsapp/WhatsAppService');
+              
+              // Verificar se temos configuração ativa
+              const config = getWhatsAppConfig();
+              if (!config || !config.is_active) {
+                console.log('⚠️ executeFirstNode: WhatsApp não configurado');
+                return;
+              }
+
+              whatsappService.setConfig(config);
+
+              // Tentar template oficial primeiro
+              let result = await whatsappService.sendTemplate(
+                patient.phone,
+                'inicio_fluxo',
+                [patient.name || 'Paciente', execution.flow_name || 'Fluxo']
+              );
+
+              console.log('📊 executeFirstNode: Resultado template oficial:', result);
+
+              // Se template oficial falhou, tentar template básico
+              if (!result.success) {
+                console.log('🔄 executeFirstNode: Template oficial falhou, tentando template básico');
+                result = await sendWhatsAppTemplateMessage(
+                  patient.phone,
+                  'inicio_fluxo',
+                  {
+                    patient_name: patient.name || 'Paciente',
+                    flow_name: execution.flow_name || 'Fluxo'
+                  }
+                );
+                console.log('📊 executeFirstNode: Resultado template básico:', result);
+              }
+
+              // Se todos os templates falharam, usar mensagem simples
+              if (!result.success) {
+                console.log('📝 executeFirstNode: Templates falharam, usando mensagem simples');
+                const fallbackMessage = `🚀 *Novo Fluxo Iniciado*\n\nOlá ${patient.name || 'Paciente'}! Um novo fluxo "${execution.flow_name || 'Fluxo'}" foi iniciado para você.\n\n📱 Acesse: ${window.location.origin}/\n\n_Entre no sistema para continuar._`;
+                result = await sendMessage(patient.phone, fallbackMessage);
+                console.log('📊 executeFirstNode: Resultado mensagem simples:', result);
+              }
+
+              if (result.success) {
+                console.log('✅ executeFirstNode: Template de início enviado com sucesso');
+              } else {
+                console.error('❌ executeFirstNode: Falha em todos os métodos de envio:', result.error);
+              }
+
+            } catch (error) {
+              console.error('❌ executeFirstNode: Erro no envio de template:', error);
+            }
+          };
+
+          // Executar envio sem await para não bloquear
+          sendTemplateWithFallback();
+
         } catch (error) {
-          console.error('❌ Erro na chamada da edge function:', error);
+          console.error('❌ executeFirstNode: Erro geral:', error);
         }
       }
 
     } catch (error) {
-      console.error('❌ Erro ao executar primeiro nó:', error);
+      console.error('❌ executeFirstNode: Erro crítico:', error);
     }
   };
 
