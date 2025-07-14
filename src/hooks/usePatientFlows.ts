@@ -279,42 +279,43 @@ export const usePatientFlows = () => {
                   expiresAt.setDate(expiresAt.getDate() + 30);
                   
                   // Buscar dados do paciente
-                  const { data: patient } = await supabase
-                    .from('profiles')
-                    .select('name, phone')
-                    .eq('user_id', execution.patient_id)
-                    .single();
-                  
-                  const { data: contentAccessData, error: insertError } = await supabase
-                    .from('content_access')
-                    .insert({
-                      execution_id: executionId,
-                      patient_id: execution.patient_id,
-                      access_token: accessToken,
-                      files: arquivosNormalizados,
-                      expires_at: expiresAt.toISOString(),
-                      metadata: {
-                        patient_name: patient?.name || 'Paciente',
-                        flow_name: formEndNodeData.titulo || 'Formulário',
-                        form_name: formEndNodeData.titulo || 'Formulário',
-                        created_at: new Date().toISOString()
-                      }
-                    })
-                    .select()
-                    .single();
-                  
-                  if (insertError) {
-                    console.error('❌ usePatientFlows: Erro ao criar content_access:', insertError);
-                  } else {
-                    console.log('✅ usePatientFlows: content_access criado:', contentAccessData);
+                  try {
+                    const { data: patient } = await supabase
+                      .from('profiles')
+                      .select('name, phone')
+                      .eq('user_id', execution.patient_id)
+                      .single();
                     
-                    // Criar URL de conteúdo
-                    const contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}?token=${accessToken}`;
-                    console.log('🔗 usePatientFlows: URL gerada:', contentUrl);
+                    const { data: contentAccessData, error: insertError } = await supabase
+                      .from('content_access')
+                      .insert({
+                        execution_id: executionId,
+                        patient_id: execution.patient_id,
+                        access_token: accessToken,
+                        files: arquivosNormalizados,
+                        expires_at: expiresAt.toISOString(),
+                        metadata: {
+                          patient_name: patient?.name || 'Paciente',
+                          flow_name: formEndNodeData.titulo || 'Formulário',
+                          form_name: formEndNodeData.titulo || 'Formulário',
+                          created_at: new Date().toISOString()
+                        }
+                      })
+                      .select()
+                      .single();
                     
-                    // Enviar WhatsApp se o paciente tem telefone
-                    if (patient?.phone) {
-                      const message = `🎉 *Formulário Concluído!*
+                    if (insertError) {
+                      console.error('❌ usePatientFlows: Erro ao criar content_access:', insertError);
+                    } else {
+                      console.log('✅ usePatientFlows: content_access criado:', contentAccessData);
+                      
+                      // Criar URL de conteúdo
+                      const contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}?token=${accessToken}`;
+                      console.log('🔗 usePatientFlows: URL gerada:', contentUrl);
+                      
+                      // Enviar WhatsApp se o paciente tem telefone
+                      if (patient?.phone) {
+                        const message = `🎉 *Formulário Concluído!*
 
 Olá ${patient.name}! Você concluiu o formulário com sucesso.
 
@@ -323,49 +324,51 @@ ${contentUrl}
 
 _Este link expira em 30 dias._`;
 
-                      // Importar sendMessage do hook WhatsApp
-                      const { useWhatsApp } = await import('./useWhatsApp');
-                      
-                      console.log('📱 usePatientFlows: Tentando enviar WhatsApp...', { phone: patient.phone, message });
-                      
-                      // Como é um hook, vamos usar fetch direto para o edge function send-whatsapp
-                      try {
-                        const response = await fetch(`https://oilnybhaboefqyhjrmvl.supabase.co/functions/v1/send-whatsapp`, {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${supabase.supabaseKey}`
-                          },
-                          body: JSON.stringify({
-                            phone: patient.phone,
-                            message: message
-                          })
-                        });
+                        console.log('📱 usePatientFlows: Tentando enviar WhatsApp...', { phone: patient.phone, message });
                         
-                        if (response.ok) {
-                          console.log('✅ usePatientFlows: WhatsApp enviado com sucesso');
-                        } else {
-                          console.error('❌ usePatientFlows: Erro no envio WhatsApp:', await response.text());
+                        // Como é um hook, vamos usar fetch direto para o edge function send-whatsapp
+                        try {
+                          const { data: { session } } = await supabase.auth.getSession();
+                          const response = await fetch(`https://oilnybhaboefqyhjrmvl.supabase.co/functions/v1/send-whatsapp`, {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Authorization': `Bearer ${session?.access_token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pbG55YmhhYm9lZnF5aGpybXZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA4NzQ2NzksImV4cCI6MjA2NjQ1MDY3OX0.QzSb4EzbVXh3UmWhHiMNP9fsctIJv2Uqg2Bia6ntZAY'}`
+                            },
+                            body: JSON.stringify({
+                              phone: patient.phone,
+                              message: message
+                            })
+                          });
+                          
+                          if (response.ok) {
+                            console.log('✅ usePatientFlows: WhatsApp enviado com sucesso');
+                          } else {
+                            console.error('❌ usePatientFlows: Erro no envio WhatsApp:', await response.text());
+                          }
+                        } catch (whatsappError) {
+                          console.error('❌ usePatientFlows: Erro no WhatsApp:', whatsappError);
                         }
-                      } catch (whatsappError) {
-                        console.error('❌ usePatientFlows: Erro no WhatsApp:', whatsappError);
                       }
                     }
+                  } catch (formEndError) {
+                    console.error('❌ usePatientFlows: Erro no processamento FormEnd:', formEndError);
                   }
-                } catch (formEndError) {
-                  console.error('❌ usePatientFlows: Erro no processamento FormEnd:', formEndError);
+                } else {
+                  console.log('📝 usePatientFlows: Nenhum arquivo no FormEnd, só enviando notificação');
                 }
-              } else {
-                console.log('📝 usePatientFlows: Nenhum arquivo no FormEnd, só enviando notificação');
+                
+                console.log('✅ usePatientFlows: Processamento FormEnd concluído');
+              } catch (endError) {
+                console.error('❌ usePatientFlows: Erro ao processar FormEnd:', endError);
+                // Não falhar toda a operação por causa do FormEnd
               }
-              
-              console.log('✅ usePatientFlows: Processamento FormEnd concluído');
             } else {
               console.warn('⚠️ usePatientFlows: Nó FormEnd não encontrado no flow');
             }
           }
         } catch (endError) {
-          console.error('❌ usePatientFlows: Erro ao processar FormEnd:', endError);
+          console.error('❌ usePatientFlows: Erro ao processar FormEnd geral:', endError);
           // Não falhar toda a operação por causa do FormEnd
         }
       }
