@@ -31,7 +31,7 @@ export const ClinicDocumentGallery: React.FC<ClinicDocumentGalleryProps> = ({
   selectedDocument
 }) => {
   const { user } = useAuth();
-  const { uploadFile, uploading } = useFileUpload('clinic-gallery');
+  const { uploadFile, uploading } = useFileUpload('clinic-materials');
   const [documents, setDocuments] = useState<ClinicDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [description, setDescription] = useState('');

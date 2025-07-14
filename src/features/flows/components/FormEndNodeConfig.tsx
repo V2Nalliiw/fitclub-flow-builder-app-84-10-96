@@ -165,35 +165,12 @@ export const FormEndNodeConfig: React.FC<FormEndNodeConfigProps> = ({ config, se
 
       <div>
         <Label>Galeria de Documentos da Clínica</Label>
-        <div className="mt-2 border rounded-lg overflow-hidden">
-          <Tabs defaultValue="gallery" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="gallery" className="flex items-center gap-2">
-                <Files className="h-4 w-4" />
-                Galeria
-              </TabsTrigger>
-              <TabsTrigger value="upload" className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Upload Novo
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="gallery" className="p-4 max-h-96 overflow-y-auto">
-              <ClinicDocumentGallerySimplified 
-                onDocumentSelect={handleDocumentSelect}
-                selectedDocuments={selectedDocuments}
-                multiSelect={true}
-              />
-            </TabsContent>
-            
-            <TabsContent value="upload" className="p-4">
-              <div className="text-center py-6 text-muted-foreground">
-                <Upload className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p className="font-medium">Upload direto disponível na galeria</p>
-                <p className="text-sm">Vá para a aba "Galeria" e clique em "Upload" para adicionar novos documentos</p>
-              </div>
-            </TabsContent>
-          </Tabs>
+        <div className="mt-2 border rounded-lg p-2 max-h-80 overflow-y-auto">
+          <ClinicDocumentGallerySimplified 
+            onDocumentSelect={handleDocumentSelect}
+            selectedDocuments={selectedDocuments}
+            multiSelect={true}
+          />
         </div>
       </div>
 
