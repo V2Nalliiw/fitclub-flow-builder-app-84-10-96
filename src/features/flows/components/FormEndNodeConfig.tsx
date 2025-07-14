@@ -150,6 +150,17 @@ export const FormEndNodeConfig: React.FC<FormEndNodeConfigProps> = ({ config, se
                       </div>
                     </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const updatedDocuments = selectedDocuments.filter(doc => doc.id !== document.id);
+                      handleDocumentSelect(updatedDocuments);
+                    }}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
               ))}
             </div>

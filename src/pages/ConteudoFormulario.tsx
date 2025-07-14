@@ -15,6 +15,12 @@ interface ContentFile {
   tipo: string;
   tamanho: number;
   downloadUrl?: string;
+  // Legacy properties from different formats
+  original_filename?: string;
+  filename?: string;
+  file_url?: string;
+  file_type?: string;
+  file_size?: number;
 }
 
 interface ContentData {
@@ -77,10 +83,18 @@ export default function ConteudoFormulario() {
         const contentData: ContentData = {
           execution_id: data.execution_id,
           patient_id: data.patient_id,
-          files: Array.isArray(data.files) ? (data.files as unknown as ContentFile[]) : [],
+          files: Array.isArray(data.files) ? (data.files as unknown as ContentFile[]).map(file => ({
+            ...file,
+            nome: file.nome || file.original_filename || file.filename || 'Arquivo sem nome',
+            url: file.url || file.file_url || file.publicUrl || '',
+            tipo: file.tipo || file.file_type || 'application/octet-stream',
+            tamanho: file.tamanho || file.file_size || 0
+          })) : [],
           metadata: (data.metadata as any) || {},
           expires_at: data.expires_at
         };
+
+        console.log('📁 ConteudoFormulario: Dados carregados:', contentData);
 
         setContentData(contentData);
         setLoading(false);

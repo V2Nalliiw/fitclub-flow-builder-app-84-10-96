@@ -279,124 +279,54 @@ export const useFlowExecutionEngine = () => {
 
         console.log('🔗 FlowEngine: URL de conteúdo final:', contentUrl);
 
-        // Validar antes de enviar
-        const validation = await validateWhatsAppSending(
-          (patient as any).phone,
-          'formulario_concluido',
-          (execution as any).patient_id
-        );
+        console.log('🚀 FlowEngine: Preparando para enviar WhatsApp de conclusão...');
 
-        console.log('✅ FlowEngine: Resultado da validação WhatsApp:', validation);
+        // Enviar mensagem diretamente com fallback simples
+        const message = `🎉 *Formulário Concluído!* 
 
-        // Verificar se template existe antes de enviar
-        const { data: templateExists } = await supabase
-          .from('whatsapp_templates')
-          .select('id, is_active, is_official')
-          .eq('name', 'formulario_concluido')
-          .eq('is_active', true)
-          .single();
+Olá ${(patient as any).name}! Você concluiu o formulário com sucesso.
 
-        if (!templateExists) {
-          console.warn('⚠️ FlowEngine: Template formulario_concluido não encontrado ou inativo');
-          // Enviar mensagem simples como fallback
-          const fallbackMessage = `🎉 *Formulário Concluído!*\n\nOlá ${(patient as any).name}! Você concluiu o formulário com sucesso.\n\n📁 Acesse seus documentos aqui: ${contentUrl}`;
-          
-          const sendWithRetryFallback = async (attempts = 3) => {
-            for (let i = 0; i < attempts; i++) {
-              try {
-                const result = await sendMessage((patient as any).phone, fallbackMessage);
-                if (result.success) {
-                  await recordOptInActivity(
-                    (execution as any).patient_id,
-                    (patient as any).phone,
-                    'whatsapp_sent'
-                  );
-                  console.log('✅ FlowEngine: Mensagem de conclusão enviada via fallback');
-                  return;
-                }
-                if (i < attempts - 1) await new Promise(resolve => setTimeout(resolve, (i + 1) * 2000));
-              } catch (error) {
-                if (i < attempts - 1) await new Promise(resolve => setTimeout(resolve, (i + 1) * 2000));
-              }
-            }
-          };
-          
-          sendWithRetryFallback();
-          return;
-        }
+📁 *Seus materiais estão prontos:*
+${contentUrl}
 
-        // Sistema de fallback inteligente: Template oficial → Mensagem simples
-        const sendCompletionMessage = async (attempts = 3) => {
-          console.log('🚀 FlowEngine: Iniciando envio de mensagem de conclusão com sistema de fallback');
-          
+_Este link expira em 30 dias._`;
+
+        console.log('📱 FlowEngine: Enviando mensagem direta para WhatsApp...');
+
+        // Enviar mensagem diretamente sem complicações
+        const sendWithRetry = async (attempts = 3) => {
           for (let i = 0; i < attempts; i++) {
             try {
-              console.log(`📱 FlowEngine: Tentativa ${i + 1}/${attempts} de envio`);
+              console.log(`📱 Tentativa ${i + 1}/${attempts} de envio WhatsApp...`);
+              const result = await sendMessage((patient as any).phone, message);
               
-              let result;
-              
-              // Tentar template oficial primeiro (se existir e estiver ativo)
-              if (templateExists && templateExists.is_official) {
-                console.log('🎯 FlowEngine: Tentando envio via template oficial da Meta');
-                // Importar e usar o WhatsAppService
-                const { whatsappService } = await import('@/services/whatsapp/WhatsAppService');
-                result = await whatsappService.sendTemplate(
-                  (patient as any).phone,
-                  'formulario_concluido',
-                  [(patient as any).name || 'Paciente', contentUrl]
-                );
-                console.log('📊 FlowEngine: Resultado do template oficial:', result);
-              }
-              
-              // Se template falhou ou não existe, usar template básico
-              if (!result?.success && templateExists && !templateExists.is_official) {
-                console.log('🔄 FlowEngine: Template oficial falhou, tentando template básico');
-                result = await sendWhatsAppTemplateMessage(
-                  (patient as any).phone,
-                  'formulario_concluido',
-                  {
-                    patient_name: (patient as any).name || 'Paciente',
-                    content_url: contentUrl
-                  }
-                );
-                console.log('📊 FlowEngine: Resultado do template básico:', result);
-              }
-              
-              // Se todos os templates falharam, usar mensagem simples
-              if (!result?.success) {
-                console.log('📝 FlowEngine: Templates falharam, usando mensagem simples como fallback');
-                const fallbackMessage = `🎉 *Formulário Concluído!*\n\nOlá ${(patient as any).name}! Você concluiu o formulário com sucesso.\n\n📁 Acesse seus materiais aqui: ${contentUrl}\n\n_Este link expira em 30 dias._`;
-                result = await sendMessage((patient as any).phone, fallbackMessage);
-                console.log('📊 FlowEngine: Resultado da mensagem simples:', result);
-              }
-              
-              if (result?.success) {
+              if (result.success) {
                 await recordOptInActivity(
                   (execution as any).patient_id,
                   (patient as any).phone,
                   'whatsapp_sent'
                 );
-                console.log('✅ FlowEngine: Mensagem de conclusão enviada com sucesso');
+                console.log('✅ FlowEngine: WhatsApp enviado com sucesso!');
                 return true;
               } else {
-                console.error(`❌ FlowEngine: Falha no envio (tentativa ${i + 1}):`, result?.error);
+                console.error(`❌ Falha no envio (tentativa ${i + 1}):`, result.error);
                 if (i < attempts - 1) {
-                  await new Promise(resolve => setTimeout(resolve, (i + 1) * 2000));
+                  await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000));
                 }
               }
             } catch (error) {
-              console.error(`❌ FlowEngine: Erro no envio (tentativa ${i + 1}):`, error);
+              console.error(`❌ Erro no envio (tentativa ${i + 1}):`, error);
               if (i < attempts - 1) {
-                await new Promise(resolve => setTimeout(resolve, (i + 1) * 2000));
+                await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000));
               }
             }
           }
-          console.error('❌ FlowEngine: Falha após todas as tentativas de envio');
+          console.error('❌ FlowEngine: Falha após todas as tentativas');
           return false;
         };
         
-        // Executar envio sem await para não bloquear
-        sendCompletionMessage();
+        // Executar envio
+        sendWithRetry();
       } else {
         console.warn('⚠️ FlowEngine: Paciente sem telefone configurado');
       }
