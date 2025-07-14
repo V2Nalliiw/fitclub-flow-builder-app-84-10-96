@@ -15,7 +15,7 @@ export interface UploadedFile {
 
 export type UploadBucket = 'user-uploads' | 'clinic-logos' | 'media-files' | 'flow-documents' | 'clinic-materials';
 
-export const useFileUpload = (bucket: UploadBucket = 'user-uploads') => {
+export const useFileUpload = (bucket: UploadBucket = 'clinic-materials') => {
   const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);

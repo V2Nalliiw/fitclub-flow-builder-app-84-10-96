@@ -100,7 +100,10 @@ serve(async (req) => {
       `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/clinic-materials/${requestedFile.storagePath || filename}`,
       // Fallback para flow-documents (compatibilidade)
       `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${filename}`,
-      `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${requestedFile.storagePath || filename}`
+      `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${requestedFile.storagePath || filename}`,
+      // Tentar com o filename original do arquivo também
+      `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/clinic-materials/${requestedFile.original_filename || filename}`,
+      `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${requestedFile.original_filename || filename}`
     );
     
     // Se há informação de storage path no arquivo, adicionar para ambos buckets

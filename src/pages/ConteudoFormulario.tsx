@@ -133,15 +133,18 @@ export default function ConteudoFormulario() {
         return;
       }
       
-      // ✨ MELHORADO: Estratégia robusta de download com múltiplas tentativas
-      const downloadUrls = [
-        // 1. URL via serve-content function (mais confiável)
-        `https://oilnybhaboefqyhjrmvl.supabase.co/functions/v1/serve-content/${token}/${encodeURIComponent(arquivo.nome)}`,
-        // 2. URL direta do storage (se disponível e válida)
-        arquivo.url && !arquivo.url.includes('https://') ? null : arquivo.url,
-        // 3. URL pública alternativa
-        arquivo.publicUrl
-      ].filter(url => url && url.trim() && url.startsWith('http'));
+        // ✨ MELHORADO: Estratégia robusta de download com múltiplas tentativas
+        const downloadUrls = [
+          // 1. URL via serve-content function (mais confiável)
+          `https://oilnybhaboefqyhjrmvl.supabase.co/functions/v1/serve-content/${token}/${encodeURIComponent(arquivo.nome)}`,
+          // 2. URL direta do storage (se disponível e válida)
+          arquivo.url && arquivo.url.startsWith('http') ? arquivo.url : null,
+          // 3. URL pública alternativa
+          arquivo.publicUrl && arquivo.publicUrl.startsWith('http') ? arquivo.publicUrl : null,
+          // 4. URLs diretas alternativas para ambos os buckets
+          `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/clinic-materials/${arquivo.nome}`,
+          `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${arquivo.nome}`
+        ].filter(url => url && url.trim() && url.startsWith('http'));
       
       console.log('🔗 ConteudoFormulario: URLs para tentativa:', downloadUrls);
       
