@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { X, Upload, FileText, Files, Plus, MessageSquare } from 'lucide-react';
-import { ClinicDocumentGalleryNew } from '@/components/flows/ClinicDocumentGalleryNew';
+import { ClinicDocumentGallerySimplified } from '@/components/flows/ClinicDocumentGallerySimplified';
 import { ClinicDocument } from '@/hooks/useClinicDocuments';
 
 interface FormEndNodeConfigProps {
@@ -179,7 +179,7 @@ export const FormEndNodeConfig: React.FC<FormEndNodeConfigProps> = ({ config, se
             </TabsList>
             
             <TabsContent value="gallery" className="p-4 max-h-96 overflow-y-auto">
-              <ClinicDocumentGalleryNew 
+              <ClinicDocumentGallerySimplified 
                 onDocumentSelect={handleDocumentSelect}
                 selectedDocuments={selectedDocuments}
                 multiSelect={true}

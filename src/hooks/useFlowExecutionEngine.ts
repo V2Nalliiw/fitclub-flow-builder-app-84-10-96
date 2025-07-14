@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useWhatsApp } from '@/hooks/useWhatsApp';
-import { useContentUrlGenerator } from '@/hooks/useContentUrlGenerator';
+// Content URL generation removed - using direct public URLs
 import { useWhatsAppValidations } from '@/hooks/useWhatsAppValidations';
 import { useWhatsAppSettings } from '@/hooks/useWhatsAppSettings';
 import { usePatientWhatsApp } from '@/hooks/usePatientWhatsApp';
