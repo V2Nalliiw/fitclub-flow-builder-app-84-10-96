@@ -62,6 +62,60 @@ export type Database = {
         }
         Relationships: []
       }
+      clinic_documents: {
+        Row: {
+          category: string
+          clinic_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          file_size: number
+          file_type: string
+          file_url: string
+          filename: string
+          id: string
+          is_active: boolean
+          original_filename: string
+          tags: string[] | null
+          theme: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          clinic_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          file_size: number
+          file_type: string
+          file_url: string
+          filename: string
+          id?: string
+          is_active?: boolean
+          original_filename: string
+          tags?: string[] | null
+          theme?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          clinic_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          file_size?: number
+          file_type?: string
+          file_url?: string
+          filename?: string
+          id?: string
+          is_active?: boolean
+          original_filename?: string
+          tags?: string[] | null
+          theme?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       clinics: {
         Row: {
           address: string | null
