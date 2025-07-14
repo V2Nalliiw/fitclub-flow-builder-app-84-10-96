@@ -93,15 +93,22 @@ serve(async (req) => {
       }
     }
     
-    // URLs alternativas baseadas no nome do arquivo
+    // ✨ MELHORADO: URLs alternativas para ambos os buckets
+    // Priorizar clinic-materials (bucket principal)
     possibleUrls.push(
+      `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/clinic-materials/${filename}`,
+      `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/clinic-materials/${requestedFile.storagePath || filename}`,
+      // Fallback para flow-documents (compatibilidade)
       `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${filename}`,
       `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${requestedFile.storagePath || filename}`
     );
     
-    // Se há informação de storage path no arquivo
+    // Se há informação de storage path no arquivo, adicionar para ambos buckets
     if (requestedFile.storagePath) {
-      possibleUrls.push(`${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${requestedFile.storagePath}`);
+      possibleUrls.push(
+        `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/clinic-materials/${requestedFile.storagePath}`,
+        `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${requestedFile.storagePath}`
+      );
     }
     
     // Remover URLs duplicadas

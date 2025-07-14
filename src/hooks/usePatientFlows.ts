@@ -246,9 +246,9 @@ export const usePatientFlows = () => {
                 const normalizedFiles = processedFiles.map((file: any) => {
                   let fileUrl = file.url || file.nome;
                   
-                  // Se for apenas um nome de arquivo, construir URL completa
+                  // ✨ CORRIGIDO: Se for apenas um nome de arquivo, usar clinic-materials
                   if (!fileUrl.startsWith('http')) {
-                    fileUrl = `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${fileUrl}`;
+                    fileUrl = `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/clinic-materials/${fileUrl}`;
                   }
                   
                   // Remover URLs duplicadas (https://...https://...)

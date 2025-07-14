@@ -88,36 +88,60 @@ serve(async (req) => {
             publicUrl = 'https://' + parts[parts.length - 1];
           }
           
-          // Extrair caminho do storage
-          if (publicUrl.includes('/storage/v1/object/public/flow-documents/')) {
+          // ✨ CORRIGIDO: Suporte para ambos os buckets (clinic-materials é o novo padrão)
+          if (publicUrl.includes('/storage/v1/object/public/clinic-materials/')) {
+            storagePath = publicUrl.split('/storage/v1/object/public/clinic-materials/')[1];
+          } else if (publicUrl.includes('/storage/v1/object/public/flow-documents/')) {
             storagePath = publicUrl.split('/storage/v1/object/public/flow-documents/')[1];
           } else if (!publicUrl.startsWith('http')) {
             storagePath = publicUrl;
-            publicUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${storagePath}`;
+            // Priorizar clinic-materials para novos arquivos
+            publicUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/clinic-materials/${storagePath}`;
           }
         } else {
-          // Se não há URL, usar o nome do arquivo
+          // Se não há URL, usar o nome do arquivo (priorizar clinic-materials)
           storagePath = file.nome || 'documento.pdf';
-          publicUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${storagePath}`;
+          publicUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/clinic-materials/${storagePath}`;
         }
         
         console.log(`📁 URLs geradas - Pública: ${publicUrl}, Storage: ${storagePath}`);
         
-        // Verificar se o arquivo existe no storage (com fallback)
+        // ✨ MELHORADO: Verificar nos dois buckets com fallback inteligente
         let fileExists = false;
+        let bucketUsed = '';
+        
+        // Tentar primeiro clinic-materials (bucket principal)
         try {
           const { data: fileData, error: fileError } = await supabase.storage
-            .from('flow-documents')
+            .from('clinic-materials')
             .download(storagePath);
           
-          fileExists = !fileError && fileData;
-          if (fileError) {
-            console.warn(`⚠️ Arquivo não encontrado em: ${storagePath}`, fileError.message);
-          } else {
-            console.log(`✅ Arquivo confirmado no storage: ${storagePath}`);
+          if (!fileError && fileData) {
+            fileExists = true;
+            bucketUsed = 'clinic-materials';
+            console.log(`✅ Arquivo encontrado em clinic-materials: ${storagePath}`);
           }
-        } catch (storageError) {
-          console.warn(`⚠️ Erro ao verificar arquivo no storage:`, storageError);
+        } catch (error) {
+          console.log(`🔍 Arquivo não encontrado em clinic-materials, tentando flow-documents...`);
+        }
+        
+        // Se não encontrou, tentar flow-documents (compatibilidade)
+        if (!fileExists) {
+          try {
+            const { data: fileData, error: fileError } = await supabase.storage
+              .from('flow-documents')
+              .download(storagePath);
+            
+            if (!fileError && fileData) {
+              fileExists = true;
+              bucketUsed = 'flow-documents';
+              console.log(`✅ Arquivo encontrado em flow-documents: ${storagePath}`);
+              // Atualizar URL para usar o bucket correto
+              publicUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${storagePath}`;
+            }
+          } catch (error) {
+            console.warn(`⚠️ Arquivo não encontrado em nenhum bucket: ${storagePath}`);
+          }
         }
         
         const processedFile = {
@@ -140,7 +164,7 @@ serve(async (req) => {
         const fallbackFile = {
           id: file.id || crypto.randomUUID(),
           nome: file.nome || 'documento.pdf',
-          url: file.url || `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/flow-documents/${file.nome}`,
+          url: file.url || `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/clinic-materials/${file.nome}`,
           tipo: file.tipo || 'application/pdf',
           tamanho: file.tamanho || 0,
           downloadUrl: `${req.url.split('/functions/')[0]}/functions/v1/serve-content/${accessToken}/${encodeURIComponent(file.nome || 'documento.pdf')}`,
