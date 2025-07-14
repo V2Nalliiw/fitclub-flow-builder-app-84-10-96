@@ -33,13 +33,18 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
   const checkFileExists = async () => {
     setCheckingFile(true);
     try {
-      // Tentar várias URLs alternativas para o arquivo
+      // ✨ MELHORADO: Verificar ambos os buckets com prioridade para clinic-materials
       const urls = [
         fileUrl,
-        fileUrl.replace('/storage/v1/object/public/flow-documents/', '/storage/v1/object/public/flow-documents/'),
-        `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${fileUrl.split('/').pop()}`,
-        `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${fileName}`
-      ];
+        // Clinic-materials (bucket principal)
+        `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/clinic-materials/${fileName}`,
+        `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/clinic-materials/${fileUrl.split('/').pop()}`,
+        // Flow-documents (fallback para compatibilidade)
+        `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${fileName}`,
+        `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${fileUrl.split('/').pop()}`
+      ].filter(url => url && url.trim());
+
+      console.log('🔍 EnhancedDocumentDisplay: Verificando URLs:', urls);
 
       for (const url of urls) {
         try {
@@ -51,7 +56,7 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
             return;
           }
         } catch (urlError) {
-          console.warn('❌ URL falhou:', url, urlError);
+          console.warn('❌ URL falhou:', url, urlError.message);
         }
       }
       
@@ -68,17 +73,23 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
   const handleDownload = async () => {
     setDownloading(true);
     try {
-      // Tentar múltiplas URLs para download
+      // ✨ MELHORADO: Priorizar clinic-materials sobre flow-documents
       const urls = [
         fileUrl,
-        `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${fileUrl.split('/').pop()}`,
-        `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${fileName}`
-      ];
+        // Clinic-materials (bucket principal)
+        `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/clinic-materials/${fileName}`,
+        `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/clinic-materials/${fileUrl.split('/').pop()}`,
+        // Flow-documents (fallback)
+        `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${fileName}`,
+        `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${fileUrl.split('/').pop()}`
+      ].filter(url => url && url.trim());
 
+      console.log('📥 EnhancedDocumentDisplay: Tentando download das URLs:', urls);
       let downloadSuccessful = false;
       
       for (const url of urls) {
         try {
+          console.log(`🔄 Tentativa de download: ${url}`);
           const response = await fetch(url);
           if (response.ok) {
             const blob = await response.blob();
@@ -92,17 +103,23 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
               document.body.removeChild(link);
               URL.revokeObjectURL(link.href);
               
+              console.log(`✅ Download bem-sucedido de: ${url}`);
               toast.success('Download iniciado!');
               downloadSuccessful = true;
               break;
+            } else {
+              console.warn(`⚠️ Arquivo vazio: ${url}`);
             }
+          } else {
+            console.warn(`❌ HTTP ${response.status}: ${url}`);
           }
         } catch (urlError) {
-          console.warn('❌ Falha no download da URL:', url, urlError);
+          console.warn('❌ Falha no download da URL:', url, urlError.message);
         }
       }
       
       if (!downloadSuccessful) {
+        console.error('❌ Todas as tentativas de download falharam');
         toast.error('Arquivo não disponível para download. Entre em contato com sua clínica.');
       }
     } catch (error) {

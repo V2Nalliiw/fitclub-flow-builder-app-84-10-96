@@ -242,29 +242,38 @@ export const usePatientFlows = () => {
               if (processedFiles.length > 0) {
                 console.log('📁 usePatientFlows: Arquivos encontrados para processamento:', processedFiles.length);
                 
-                // ✨ NOVO: Normalizar URLs dos arquivos antes de enviar
-                const normalizedFiles = processedFiles.map((file: any) => {
-                  let fileUrl = file.url || file.nome;
-                  
-                  // ✨ CORRIGIDO: Se for apenas um nome de arquivo, usar clinic-materials
-                  if (!fileUrl.startsWith('http')) {
-                    fileUrl = `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/clinic-materials/${fileUrl}`;
-                  }
-                  
-                  // Remover URLs duplicadas (https://...https://...)
-                  if (fileUrl.includes('https://') && fileUrl.indexOf('https://') !== fileUrl.lastIndexOf('https://')) {
-                    const parts = fileUrl.split('https://');
-                    fileUrl = 'https://' + parts[parts.length - 1];
-                  }
-                  
-                  return {
-                    id: file.id || crypto.randomUUID(),
-                    nome: file.nome || file.arquivo || 'documento.pdf',
-                    url: fileUrl,
-                    tipo: file.tipo || file.tipoConteudo || 'application/pdf',
-                    tamanho: file.tamanho || 0
-                  };
-                });
+              // ✨ NOVO: Normalizar URLs dos arquivos antes de enviar
+              const normalizedFiles = processedFiles.map((file: any) => {
+                let fileUrl = file.url || file.nome;
+                
+                // ✨ CORRIGIDO: Se for apenas um nome de arquivo, usar clinic-materials como principal
+                if (!fileUrl.startsWith('http')) {
+                  fileUrl = `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/clinic-materials/${fileUrl}`;
+                }
+                
+                // Remover URLs duplicadas (https://...https://...)
+                if (fileUrl.includes('https://') && fileUrl.indexOf('https://') !== fileUrl.lastIndexOf('https://')) {
+                  const parts = fileUrl.split('https://');
+                  fileUrl = 'https://' + parts[parts.length - 1];
+                }
+                
+                // ✨ NOVO: Adicionar storagePath para compatibilidade com serve-content
+                let storagePath = file.nome || file.arquivo;
+                if (fileUrl.includes('/clinic-materials/')) {
+                  storagePath = fileUrl.split('/clinic-materials/')[1];
+                } else if (fileUrl.includes('/flow-documents/')) {
+                  storagePath = fileUrl.split('/flow-documents/')[1];
+                }
+                
+                return {
+                  id: file.id || crypto.randomUUID(),
+                  nome: file.nome || file.arquivo || 'documento.pdf',
+                  url: fileUrl,
+                  tipo: file.tipo || file.tipoConteudo || 'application/pdf',
+                  tamanho: file.tamanho || 0,
+                  storagePath: storagePath
+                };
+              });
                 
                 console.log('🔧 usePatientFlows: Arquivos normalizados:', normalizedFiles);
                 

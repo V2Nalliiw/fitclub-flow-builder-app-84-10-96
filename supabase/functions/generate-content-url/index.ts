@@ -26,18 +26,18 @@ serve(async (req) => {
 
     const { executionId, files } = await req.json();
 
-    if (!executionId || !files || !Array.isArray(files)) {
-      return new Response(
-        JSON.stringify({ error: 'executionId e files são obrigatórios' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    console.log('🔍 Generating content URL for:', { executionId, filesCount: files?.length, files });
 
-    console.log('Gerando URL de conteúdo para execução:', executionId);
-    console.log('Arquivos:', files.length);
+    if (!executionId || !files || !Array.isArray(files) || files.length === 0) {
+      console.error('❌ Missing required data:', { executionId, files });
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'ID de execução e arquivos são obrigatórios'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     // Buscar dados da execução
     const { data: execution, error: executionError } = await supabase
@@ -46,16 +46,18 @@ serve(async (req) => {
       .eq('id', executionId)
       .single();
 
-    if (executionError || !execution) {
-      console.error('Erro ao buscar execução:', executionError);
-      return new Response(
-        JSON.stringify({ error: 'Execução não encontrada' }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
+    if (executionError || !execution?.patient_id) {
+      console.error('❌ Execution not found or missing patient_id:', executionError);
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Execução não encontrada ou sem paciente associado'
+      }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
+    
+    console.log('✅ Found execution for patient:', { executionId, patientId: execution.patient_id });
 
     // Buscar dados do paciente para personalização
     const { data: patient } = await supabase
@@ -69,7 +71,7 @@ serve(async (req) => {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // Expira em 30 dias
 
-    // ✨ CORRIGIDO: Processamento robusto de arquivos com URLs normalizadas
+    // ✨ NOVO: Verificar arquivos antes de processar
     const processedFiles = [];
     
     for (const file of files) {
@@ -221,23 +223,21 @@ serve(async (req) => {
       // Não retornar erro aqui pois o content_access já foi criado
     }
 
-    // URL pública que será enviada via WhatsApp
-    const publicUrl = `${req.url.split('/functions/')[0]}/conteudo-formulario/${executionId}?token=${accessToken}`;
+    // ✨ CORRIGIDO: URL apontando para index.html
+    const publicUrl = `https://oilnybhaboefqyhjrmvl.supabase.co/index.html#/conteudo-formulario/${executionId}?token=${accessToken}`;
     
-    console.log('URL pública gerada:', publicUrl);
+    console.log('🔗 Generated content URL:', publicUrl);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        url: publicUrl,
-        token: accessToken,
-        expires_at: expiresAt.toISOString(),
-        files_count: files.length
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    return new Response(JSON.stringify({
+      success: true,
+      url: publicUrl,
+      token: accessToken,
+      expires_at: expiresAt.toISOString(),
+      files_count: processedFiles.length
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
 
   } catch (error) {
     console.error('Erro na function generate-content-url:', error);

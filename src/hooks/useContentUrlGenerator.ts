@@ -10,6 +10,7 @@ interface GenerateContentUrlParams {
     url: string;
     tipo: string;
     tamanho: number;
+    storagePath?: string;
   }>;
 }
 
@@ -41,7 +42,7 @@ export const useContentUrlGenerator = () => {
     setGenerating(true);
 
     try {
-      console.log('Gerando URL de conteúdo para:', { executionId, filesCount: files.length });
+      console.log('🔗 useContentUrlGenerator: Gerando URL de conteúdo para:', { executionId, filesCount: files.length });
 
       const { data, error } = await supabase.functions.invoke('generate-content-url', {
         body: {
@@ -51,13 +52,14 @@ export const useContentUrlGenerator = () => {
             nome: file.nome,
             url: file.url,
             tipo: file.tipo,
-            tamanho: file.tamanho
+            tamanho: file.tamanho,
+            storagePath: file.storagePath
           }))
         }
       });
 
       if (error) {
-        console.error('Erro ao gerar URL:', error);
+        console.error('❌ useContentUrlGenerator: Erro ao gerar URL:', error);
         throw error;
       }
 
@@ -67,7 +69,7 @@ export const useContentUrlGenerator = () => {
         throw new Error('Falha ao gerar URL de conteúdo');
       }
 
-      console.log('URL de conteúdo gerada:', response.url);
+      console.log('✅ useContentUrlGenerator: URL de conteúdo gerada:', response.url);
 
       toast({
         title: "URL gerada",
@@ -77,7 +79,7 @@ export const useContentUrlGenerator = () => {
       return response.url;
 
     } catch (error: any) {
-      console.error('Erro ao gerar URL de conteúdo:', error);
+      console.error('❌ useContentUrlGenerator: Erro ao gerar URL de conteúdo:', error);
       toast({
         title: "Erro ao gerar URL",
         description: error.message || 'Erro interno do servidor',
