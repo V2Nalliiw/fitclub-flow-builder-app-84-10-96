@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useWhatsApp } from '@/hooks/useWhatsApp';
-// Content URL generation removed - using direct public URLs
 import { useWhatsAppValidations } from '@/hooks/useWhatsAppValidations';
 import { useWhatsAppSettings } from '@/hooks/useWhatsAppSettings';
 import { usePatientWhatsApp } from '@/hooks/usePatientWhatsApp';
@@ -22,7 +21,6 @@ export const useFlowExecutionEngine = () => {
   const { toast } = useToast();
   const { createNotification } = useNotifications();
   const { sendWhatsAppTemplateMessage, sendMessage } = useWhatsApp();
-  const { generateContentUrl } = useContentUrlGenerator();
   const { validateWhatsAppSending, recordOptInActivity } = useWhatsAppValidations();
   const { sendFormToPatient } = usePatientWhatsApp();
   const [processing, setProcessing] = useState(false);
@@ -239,76 +237,41 @@ export const useFlowExecutionEngine = () => {
           template: 'formulario_concluido'
         });
 
-        // Gerar URL de conteúdo com retry automático e fallback robusto
+        // Create simplified content URL using direct public file links
         let contentUrl = '';
         
         if (nodeData.arquivos && nodeData.arquivos.length > 0) {
-          console.log('📁 FlowEngine: Gerando URL para arquivos:', nodeData.arquivos.length);
+          console.log('📁 FlowEngine: Criando URL para arquivos:', nodeData.arquivos.length);
           
-          // Implementar retry para geração de URL
-          const generateUrlWithRetry = async (retries = 3) => {
-            for (let attempt = 0; attempt < retries; attempt++) {
-              try {
-                console.log(`🔄 FlowEngine: Tentativa ${attempt + 1}/${retries} de geração de URL`);
-                
-                const url = await generateContentUrl({
-                  executionId,
-                  files: nodeData.arquivos
-                });
-                
-                if (url) {
-                  console.log('✅ FlowEngine: URL gerada com sucesso:', url);
-                  return url;
-                }
-                
-                if (attempt < retries - 1) {
-                  console.warn(`⚠️ FlowEngine: Tentativa ${attempt + 1} falhou, tentando novamente...`);
-                  await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 1000));
-                }
-              } catch (error) {
-                console.error(`❌ FlowEngine: Erro na tentativa ${attempt + 1}:`, error);
-                if (attempt < retries - 1) {
-                  await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 1000));
-                }
+          try {
+            // Create content access record for secure file access
+            const accessToken = crypto.randomUUID();
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 30); // 30 days expiration
+            
+            const { error: insertError } = await supabase.from('content_access').insert({
+              execution_id: executionId,
+              patient_id: (execution as any).patient_id,
+              access_token: accessToken,
+              files: nodeData.arquivos,
+              expires_at: expiresAt.toISOString(),
+              metadata: {
+                patient_name: (patient as any).name || 'Paciente',
+                form_name: nodeData.titulo || 'Formulário',
+                created_at: new Date().toISOString()
               }
-            }
-            return null;
-          };
-          
-          contentUrl = await generateUrlWithRetry() || '';
-          
-          // Fallback manual se todas as tentativas falharam
-          if (!contentUrl) {
-            console.warn('⚠️ FlowEngine: Todas as tentativas de geração de URL falharam, criando fallback manual');
-            try {
-              const accessToken = crypto.randomUUID();
-              const expiresAt = new Date();
-              expiresAt.setDate(expiresAt.getDate() + 30);
-              
-              const { error: insertError } = await supabase.from('content_access').insert({
-                execution_id: executionId,
-                patient_id: (execution as any).patient_id,
-                access_token: accessToken,
-                files: nodeData.arquivos,
-                expires_at: expiresAt.toISOString(),
-                metadata: {
-                  patient_name: (patient as any).name || 'Paciente',
-                  form_name: 'Formulário',
-                  fallback_created: true
-                }
-              });
-              
-              if (!insertError) {
-                contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}?token=${accessToken}`;
-                console.log('🔗 FlowEngine: URL de fallback criada com sucesso:', contentUrl);
-              } else {
-                console.error('❌ FlowEngine: Erro ao criar fallback manual:', insertError);
-                contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}`;
-              }
-            } catch (error) {
-              console.error('❌ FlowEngine: Erro crítico no fallback:', error);
+            });
+            
+            if (!insertError) {
+              contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}?token=${accessToken}`;
+              console.log('🔗 FlowEngine: URL de conteúdo criada com sucesso:', contentUrl);
+            } else {
+              console.error('❌ FlowEngine: Erro ao criar URL de conteúdo:', insertError);
               contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}`;
             }
+          } catch (error) {
+            console.error('❌ FlowEngine: Erro crítico ao criar URL:', error);
+            contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}`;
           }
         } else {
           contentUrl = `${window.location.origin}/conteudo-formulario/${executionId}`;

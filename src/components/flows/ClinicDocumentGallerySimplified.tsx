@@ -9,26 +9,18 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-
-interface ClinicDocument {
-  id: string;
-  filename: string;
-  original_name: string;
-  file_url: string;
-  file_type: string;
-  file_size: number;
-  description?: string;
-  created_at: string;
-}
+import { ClinicDocument } from '@/hooks/useClinicDocuments';
 
 interface ClinicDocumentGalleryProps {
-  onDocumentSelect?: (document: ClinicDocument) => void;
-  selectedDocument?: ClinicDocument | null;
+  onDocumentSelect?: (documents: ClinicDocument[]) => void;
+  selectedDocuments?: ClinicDocument[];
+  multiSelect?: boolean;
 }
 
 export const ClinicDocumentGallerySimplified: React.FC<ClinicDocumentGalleryProps> = ({
   onDocumentSelect,
-  selectedDocument
+  selectedDocuments = [],
+  multiSelect = false
 }) => {
   const { user } = useAuth();
   const { uploadFile, uploading } = useFileUpload('clinic-gallery');
@@ -80,7 +72,7 @@ export const ClinicDocumentGallerySimplified: React.FC<ClinicDocumentGalleryProp
 
     // Check for duplicates by file size and name
     const existingDoc = documents.find(doc => 
-      doc.original_name === file.name && doc.file_size === file.size
+      doc.original_filename === file.name && doc.file_size === file.size
     );
 
     if (existingDoc) {
@@ -109,11 +101,11 @@ export const ClinicDocumentGallerySimplified: React.FC<ClinicDocumentGalleryProp
         const documentData = {
           clinic_id: profile.clinic_id,
           filename: uploadedFile.id,
-          original_name: file.name,
+          original_filename: file.name,
           file_url: uploadedFile.url,
           file_type: file.type,
           file_size: file.size,
-          file_hash: fileHash,
+          category: 'geral',
           description: description || null,
           created_by: user.id
         };
@@ -241,18 +233,29 @@ export const ClinicDocumentGallerySimplified: React.FC<ClinicDocumentGalleryProp
             <Card 
               key={doc.id} 
               className={`cursor-pointer transition-colors ${
-                selectedDocument?.id === doc.id 
+                selectedDocuments.some(selected => selected.id === doc.id)
                   ? 'ring-2 ring-primary bg-primary/10 dark:bg-primary/5' 
                   : 'hover:bg-muted/50 dark:hover:bg-muted'
               }`}
-              onClick={() => onDocumentSelect?.(doc)}
+              onClick={() => {
+                if (multiSelect) {
+                  const isSelected = selectedDocuments.some(selected => selected.id === doc.id);
+                  if (isSelected) {
+                    onDocumentSelect?.(selectedDocuments.filter(selected => selected.id !== doc.id));
+                  } else {
+                    onDocumentSelect?.([...selectedDocuments, doc]);
+                  }
+                } else {
+                  onDocumentSelect?.([doc]);
+                }
+              }}
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <File className="h-8 w-8 text-primary" />
                     <div>
-                      <h4 className="font-medium">{doc.original_name}</h4>
+                      <h4 className="font-medium">{doc.original_filename}</h4>
                       <p className="text-sm text-gray-500">
                         {doc.file_type} • {(doc.file_size / 1024 / 1024).toFixed(2)} MB
                       </p>
