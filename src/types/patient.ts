@@ -33,6 +33,7 @@ export interface PatientFlowStep {
   available_at?: string;
   form_url?: string;
   response?: any;
+  arquivos?: any[]; // Para arquivos do FormEnd
 }
 
 // Tipos para integração com Supabase

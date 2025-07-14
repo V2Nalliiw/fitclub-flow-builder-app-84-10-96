@@ -202,7 +202,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
                 <CheckCircle className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                {step.title}
+                {step.title || 'Formulário Concluído'}
               </h3>
               {step.description && (
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
@@ -210,6 +210,46 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
                 </p>
               )}
             </div>
+
+            {/* ✨ EXIBIR ARQUIVOS PARA DOWNLOAD */}
+            {step.arquivos && Array.isArray(step.arquivos) && step.arquivos.length > 0 && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-lg p-6 border border-green-200 dark:border-green-800/50">
+                <h4 className="text-lg font-semibold text-green-800 dark:text-green-200 mb-4 flex items-center">
+                  <FileText className="h-5 w-5 mr-2" />
+                  Seus materiais estão prontos para download
+                </h4>
+                <div className="space-y-3">
+                  {step.arquivos.map((arquivo: any, index: number) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800/50">
+                      <div className="flex items-center">
+                        <FileText className="h-4 w-4 text-green-600 dark:text-green-400 mr-3" />
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-gray-100">
+                            {arquivo.original_filename || arquivo.nome || 'Arquivo'}
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {arquivo.file_type || arquivo.tipo || 'Documento'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const url = arquivo.file_url || arquivo.url;
+                          if (url) {
+                            window.open(url, '_blank');
+                          }
+                        }}
+                        className="text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-950/50"
+                      >
+                        Baixar
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {step.arquivo && (
               <EnhancedDocumentDisplay
