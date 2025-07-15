@@ -256,16 +256,25 @@ export const useFlowBuilder = () => {
   const handleNodeConfigSave = (nodeData: Partial<Node['data']>) => {
     if (!selectedNode) return;
 
+    console.log('🔧 handleNodeConfigSave called for node:', selectedNode.id);
+    console.log('📥 Node data received:', nodeData);
+    console.log('🎯 Selected node before update:', selectedNode);
+
     setIsLoading(true);
     
     setTimeout(() => {
-      setNodes((nds) =>
-        nds.map((node) =>
+      setNodes((nds) => {
+        const updatedNodes = nds.map((node) =>
           node.id === selectedNode.id
             ? { ...node, data: { ...node.data, ...nodeData } }
             : node
-        )
-      );
+        );
+        
+        console.log('✅ Nodes updated. New node data for', selectedNode.id, ':', 
+          updatedNodes.find(n => n.id === selectedNode.id)?.data);
+        
+        return updatedNodes;
+      });
       setIsLoading(false);
       
       toast.success('Configuração do nó salva');

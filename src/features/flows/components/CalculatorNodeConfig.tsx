@@ -146,6 +146,12 @@ const CalculatorNodeConfig: React.FC<CalculatorNodeConfigProps> = ({
     const calculatorFields = allFields.filter(f => f.fieldType === 'calculo') as CalculatorField[];
     const calculatorQuestionFields = allFields.filter(f => f.fieldType === 'pergunta') as CalculatorQuestionField[];
     
+    console.log('🧮 Calculator handleSave called with:');
+    console.log('📊 All fields:', allFields);
+    console.log('🔢 Calculator fields:', calculatorFields);
+    console.log('❓ Question fields:', calculatorQuestionFields);
+    console.log('📐 Formula:', formula);
+    
     const data = {
       titulo,
       descricao,
@@ -155,6 +161,8 @@ const CalculatorNodeConfig: React.FC<CalculatorNodeConfigProps> = ({
       calculatorQuestionFields,
       label: titulo || 'Calculadora',
     };
+    
+    console.log('💾 Final data to save:', data);
     onSave(data);
     onClose();
   };
