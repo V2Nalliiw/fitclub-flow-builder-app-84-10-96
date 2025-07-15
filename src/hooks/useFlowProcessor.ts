@@ -196,9 +196,9 @@ export const useFlowProcessor = () => {
           .single();
 
         if (flowData) {
-          // Type cast the Json data to proper types
-          const flowNodes = flowData.nodes as FlowNode[];
-          const flowEdges = flowData.edges as FlowEdge[];
+          // Type cast the Json data to proper types using unknown first
+          const flowNodes = (flowData.nodes as unknown) as FlowNode[];
+          const flowEdges = (flowData.edges as unknown) as FlowEdge[];
           
           const startNode = flowNodes.find((node: FlowNode) => node.type === 'start');
           if (startNode) {
