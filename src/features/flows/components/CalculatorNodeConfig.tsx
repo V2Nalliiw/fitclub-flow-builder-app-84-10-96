@@ -60,14 +60,21 @@ const CalculatorNodeConfig: React.FC<CalculatorNodeConfigProps> = ({
 
   // Sincronizar estado com initialData quando modal abre ou dados mudam
   useEffect(() => {
+    console.log('🔍 Calculator useEffect triggered:', { isOpen, hasInitialData: !!initialData });
+    
     if (isOpen && initialData) {
       console.log('🚀 Calculator modal opened with initial data:', initialData);
+      console.log('📋 Calculator fields in data:', initialData.calculatorFields);
+      console.log('❓ Question fields in data:', initialData.calculatorQuestionFields);
       
       setTitulo(initialData.titulo || '');
       setDescricao(initialData.descricao || '');
       setResultLabel(initialData.resultLabel || 'Resultado');
       setFormula(initialData.formula || '');
-      setAllFields(initializeFields(initialData));
+      
+      const initialized = initializeFields(initialData);
+      console.log('✅ Fields after initialization:', initialized);
+      setAllFields(initialized);
     } else if (isOpen && !initialData) {
       console.log('🆕 Calculator modal opened with no initial data - resetting');
       
@@ -76,6 +83,8 @@ const CalculatorNodeConfig: React.FC<CalculatorNodeConfigProps> = ({
       setResultLabel('Resultado');
       setFormula('');
       setAllFields([]);
+    } else if (!isOpen) {
+      console.log('🚪 Calculator modal closed');
     }
   }, [isOpen, initialData, initializeFields]);
 
