@@ -27,7 +27,7 @@ export const ClinicFlowsList = () => {
     );
   }
 
-  if (!hasLoadedOnce || isEmpty) {
+  if (hasLoadedOnce && isEmpty) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:bg-none dark:bg-[#0E0E0E] p-4 md:p-6">
         <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
@@ -41,6 +41,15 @@ export const ClinicFlowsList = () => {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-3">
+                <Button 
+                  onClick={refreshFlows}
+                  variant="outline" 
+                  size="lg"
+                  className="w-full sm:w-auto"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Atualizar
+                </Button>
                 <Button 
                   onClick={() => navigate('/flows')} 
                   variant="outline" 
