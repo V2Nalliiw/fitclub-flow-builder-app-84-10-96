@@ -105,6 +105,7 @@ const CalculatorNodeConfig: React.FC<CalculatorNodeConfigProps> = ({
     }));
     
     setAllFields(reorderedFields);
+    console.log('🔄 Fields reordered:', reorderedFields.map(f => `${f.nomenclatura} (${f.fieldType})`));
   };
 
   const updateQuestionOptions = (fieldIndex: number, options: string[]) => {

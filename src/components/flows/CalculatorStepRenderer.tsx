@@ -107,6 +107,11 @@ export const CalculatorStepRenderer: React.FC<CalculatorStepRendererProps> = ({
   };
 
   const handleComplete = () => {
+    console.log('🧮 CalculatorStepRenderer - handleComplete called');
+    console.log('📊 calculationResponses:', calculationResponses);
+    console.log('❓ questionResponses:', questionResponses);
+    console.log('🎯 calculatedResult:', calculatedResult);
+    
     // Create fieldResponses mapping nomenclatura to field data for conditions evaluation
     const fieldResponses: Record<string, { value: any, fieldType: string }> = {};
     
@@ -120,15 +125,21 @@ export const CalculatorStepRenderer: React.FC<CalculatorStepRendererProps> = ({
       fieldResponses[nomenclatura] = { value, fieldType: 'pergunta' };
     });
 
-    onComplete({
+    const responseData = {
       nodeId: step.nodeId,
       nodeType: 'calculator',
       calculationResponses,
       questionResponses,
       fieldResponses,
       result: calculatedResult,
+      // Pass nomenclatura-mapped data for conditions
+      calculatorResults: calculationResponses, // Direct mapping by nomenclatura
+      questionResults: questionResponses, // Direct mapping by nomenclatura
       timestamp: new Date().toISOString()
-    });
+    };
+
+    console.log('📤 Sending response data:', responseData);
+    onComplete(responseData);
   };
 
   if (showResult) {

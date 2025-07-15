@@ -122,10 +122,17 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
 
   // Auto-detect available fields from previous nodes
   useEffect(() => {
+    console.log('🔍 SpecialConditionsNodeConfigAdvanced - availableFields:', availableFields);
     if (availableFields) {
+      const detectedCalcs = availableFields.calculations.map(f => f.nomenclatura);
+      const detectedQuests = availableFields.questions.map(f => f.nomenclatura);
+      
+      console.log('✅ Detected calculations:', detectedCalcs);
+      console.log('✅ Detected questions:', detectedQuests);
+      
       setDetectedFields({
-        calculations: availableFields.calculations.map(f => f.nomenclatura),
-        questions: availableFields.questions.map(f => f.nomenclatura)
+        calculations: detectedCalcs,
+        questions: detectedQuests
       });
     }
   }, [availableFields]);
