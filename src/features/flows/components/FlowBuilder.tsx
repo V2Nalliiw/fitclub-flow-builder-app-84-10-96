@@ -171,16 +171,32 @@ export const FlowBuilder = () => {
     
     console.log('🔍 Getting connected calculator fields for node:', nodeId);
     
-    // Encontrar todas as edges que chegam ao nó atual
-    const incomingEdges = edges.filter(edge => edge.target === nodeId);
-    const sourceNodeIds = incomingEdges.map(edge => edge.source);
+    // Função recursiva para encontrar todos os nós anteriores ao nó atual
+    const getAllPreviousNodes = (currentNodeId: string, visited: Set<string> = new Set()): string[] => {
+      if (visited.has(currentNodeId)) return [];
+      visited.add(currentNodeId);
+      
+      const incomingEdges = edges.filter(edge => edge.target === currentNodeId);
+      const sourceNodeIds = incomingEdges.map(edge => edge.source);
+      
+      let allPreviousIds = [...sourceNodeIds];
+      
+      // Recursivamente buscar nós anteriores aos nós de origem
+      sourceNodeIds.forEach(sourceId => {
+        allPreviousIds.push(...getAllPreviousNodes(sourceId, visited));
+      });
+      
+      return allPreviousIds;
+    };
     
-    console.log('📥 Incoming edges to node:', incomingEdges);
-    console.log('🎯 Source node IDs:', sourceNodeIds);
+    // Obter todos os nós anteriores ao nó atual
+    const allPreviousNodeIds = getAllPreviousNodes(nodeId);
     
-    // Filtrar nós de origem que são do tipo 'calculator'
+    console.log('🎯 All previous node IDs:', allPreviousNodeIds);
+    
+    // Filtrar nós que são do tipo 'calculator'
     const calculatorNodes = nodes.filter(node => 
-      sourceNodeIds.includes(node.id) && 
+      allPreviousNodeIds.includes(node.id) && 
       node.type === 'calculator'
     );
     
