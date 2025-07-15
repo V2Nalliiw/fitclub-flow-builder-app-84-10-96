@@ -261,7 +261,7 @@ export const usePatientFlows = () => {
       });
       throw error;
     }
-  }, [user?.id, loadPatientFlows, toast]);
+  }, [user?.id, loadPatientFlows, toast, executeFlowStep]);
 
   const getTimeUntilAvailable = useCallback((availableAt: string) => {
     const now = new Date();
