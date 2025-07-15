@@ -382,13 +382,33 @@ export const useFlowExecutionEngine = () => {
               console.log(`📱 FlowEngine: ===== TENTATIVA ${i + 1}/${attempts} =====`);
               console.log(`📱 FlowEngine: Tentando enviar template "formulario_concluido"...`);
               
-              // ✨ CORRIGIDO: Usar placeholders {{1}} e {{2}} para template oficial
+              // ✨ CORRIGIDO: Usar placeholders {{1}} e {{2}} para template oficial  
               const templateParams = [
                 (patient as any).name || 'Paciente',  // {{1}} - Nome do paciente
                 contentUrl                             // {{2}} - URL do conteúdo
               ];
               
               console.log(`📧 FlowEngine: Enviando template com parâmetros:`, templateParams);
+              console.log(`📧 FlowEngine: WhatsApp service config verificado`);
+              
+              // ✅ GARANTIR QUE O WHATSAPP SERVICE ESTÁ CONFIGURADO
+              const config = getWhatsAppConfig();
+              if (config && config.is_active) {
+                whatsappService.setConfig({
+                  provider: config.provider,
+                  access_token: config.access_token,
+                  business_account_id: config.business_account_id,
+                  phone_number: config.phone_number,
+                  webhook_url: config.webhook_url,
+                  base_url: config.base_url,
+                  api_key: config.api_key,
+                  session_name: config.session_name,
+                  account_sid: config.account_sid,
+                  auth_token: config.auth_token,
+                  is_active: config.is_active
+                });
+                console.log('🔧 FlowEngine: WhatsApp service reconfigurado antes do envio');
+              }
               
               // Tentar template oficial primeiro via Meta API
               const result = await whatsappService.sendTemplate(
@@ -412,30 +432,58 @@ export const useFlowExecutionEngine = () => {
               } else {
                 console.error(`❌ FlowEngine: Falha no template (tentativa ${i + 1}):`, result.error);
                 
-                // FALLBACK: Tentar com mensagem renderizada
-                console.log('🔄 FlowEngine: Tentando fallback com mensagem renderizada...');
+                // FALLBACK 1: Tentar com mensagem renderizada
+                console.log('🔄 FlowEngine: Tentando fallback 1 - mensagem renderizada...');
                 
-                const renderedMessage = await whatsappTemplateService.renderTemplate(
-                  'formulario_concluido',
-                  {
-                    patient_name: (patient as any).name || 'Paciente',
-                    content_url: contentUrl
+                try {
+                  const renderedMessage = await whatsappTemplateService.renderTemplate(
+                    'formulario_concluido',
+                    {
+                      patient_name: (patient as any).name || 'Paciente',
+                      content_url: contentUrl
+                    }
+                  );
+                  
+                  const fallbackResult = await whatsappService.sendMessage(
+                    (patient as any).phone,
+                    renderedMessage
+                  );
+                  
+                  if (fallbackResult.success) {
+                    console.log('✅ FlowEngine: Fallback 1 enviado com sucesso!');
+                    await recordOptInActivity(
+                      (execution as any).patient_id,
+                      (patient as any).phone,
+                      'whatsapp_sent'
+                    );
+                    return true;
+                  } else {
+                    console.error('❌ FlowEngine: Fallback 1 falhou:', fallbackResult.error);
                   }
-                );
+                } catch (renderError) {
+                  console.error('❌ FlowEngine: Erro no render do template:', renderError);
+                }
                 
-                const fallbackResult = await whatsappService.sendMessage(
+                // FALLBACK 2: Mensagem simples padrão
+                console.log('🔄 FlowEngine: Tentando fallback 2 - mensagem simples...');
+                
+                const simpleMessage = `🎉 *Formulário Concluído!*\n\nOlá ${(patient as any).name || 'Paciente'}! Seu formulário foi finalizado com sucesso.\n\n📁 Seus materiais estão prontos:\n${contentUrl}\n\n_Clique no link para acessar seus documentos._`;
+                
+                const simpleFallbackResult = await whatsappService.sendMessage(
                   (patient as any).phone,
-                  renderedMessage
+                  simpleMessage
                 );
                 
-                if (fallbackResult.success) {
-                  console.log('✅ FlowEngine: Fallback enviado com sucesso!');
+                if (simpleFallbackResult.success) {
+                  console.log('✅ FlowEngine: Fallback 2 enviado com sucesso!');
                   await recordOptInActivity(
                     (execution as any).patient_id,
                     (patient as any).phone,
                     'whatsapp_sent'
                   );
                   return true;
+                } else {
+                  console.error('❌ FlowEngine: Fallback 2 falhou:', simpleFallbackResult.error);
                 }
                 
                 if (i < attempts - 1) {

@@ -77,41 +77,86 @@ serve(async (req) => {
       console.log('📁 Arquivo encontrado:', file);
 
       try {
-        // Fazer download do arquivo do storage
+        console.log('📁 Tentando download do storage - arquivo:', file);
+        
+        // Extrair o caminho real do arquivo do URL
+        let filePath = file.url;
+        
+        // Se for uma URL completa, extrair apenas o caminho do arquivo
+        if (filePath.includes('/storage/v1/object/public/')) {
+          const parts = filePath.split('/storage/v1/object/public/');
+          if (parts.length > 1) {
+            const pathPart = parts[1];
+            // Remover o nome do bucket do início
+            const bucketlessPath = pathPart.split('/').slice(1).join('/');
+            filePath = bucketlessPath || pathPart;
+          }
+        } else if (filePath.includes('clinic-materials/') || filePath.includes('flow-documents/')) {
+          // Já é um caminho relativo
+          filePath = filePath.split('/').pop() || filename;
+        } else {
+          // Usar o nome do arquivo como fallback
+          filePath = filename;
+        }
+        
+        console.log('📁 Caminho do arquivo extraído:', filePath);
+
+        // Tentar primeiro no bucket clinic-materials
         const { data: fileData, error: downloadError } = await supabase.storage
           .from('clinic-materials')
-          .download(file.url.split('/').pop() || filename);
+          .download(filePath);
 
         if (downloadError) {
+          console.log('❌ Erro no clinic-materials:', downloadError);
+          console.log('🔄 Tentando no bucket flow-documents...');
+          
           // Tentar no outro bucket
           const { data: fileData2, error: downloadError2 } = await supabase.storage
             .from('flow-documents')
-            .download(file.url.split('/').pop() || filename);
+            .download(filePath);
 
           if (downloadError2) {
-            console.error('❌ Erro ao baixar arquivo:', downloadError2);
+            console.error('❌ Erro ao baixar arquivo de ambos buckets:', { 
+              clinic: downloadError, 
+              flow: downloadError2 
+            });
+            
+            // ÚLTIMO FALLBACK: Redirect para URL original
+            if (file.url && file.url.startsWith('http')) {
+              console.log('🔄 Fazendo redirect para URL original...');
+              return new Response(null, {
+                status: 302,
+                headers: {
+                  ...corsHeaders,
+                  'Location': file.url,
+                },
+              });
+            }
+            
             return new Response('Arquivo não encontrado no storage', { 
               status: 404,
               headers: corsHeaders
             });
           }
 
+          console.log('✅ Arquivo encontrado no flow-documents');
           // Retornar arquivo do segundo bucket
           return new Response(fileData2, {
             headers: {
               ...corsHeaders,
-              'Content-Type': file.tipo || 'application/octet-stream',
+              'Content-Type': file.tipo || file.file_type || 'application/octet-stream',
               'Content-Disposition': `attachment; filename="${filename}"`,
               'Content-Length': fileData2.size.toString(),
             },
           });
         }
 
+        console.log('✅ Arquivo encontrado no clinic-materials');
         // Retornar arquivo do primeiro bucket
         return new Response(fileData, {
           headers: {
             ...corsHeaders,
-            'Content-Type': file.tipo || 'application/octet-stream',
+            'Content-Type': file.tipo || file.file_type || 'application/octet-stream',
             'Content-Disposition': `attachment; filename="${filename}"`,
             'Content-Length': fileData.size.toString(),
           },
@@ -119,6 +164,19 @@ serve(async (req) => {
 
       } catch (storageError) {
         console.error('❌ Erro crítico no storage:', storageError);
+        
+        // FALLBACK FINAL: Redirect para URL original se disponível
+        if (file.url && file.url.startsWith('http')) {
+          console.log('🔄 Fallback: Redirect para URL original...');
+          return new Response(null, {
+            status: 302,
+            headers: {
+              ...corsHeaders,
+              'Location': file.url,
+            },
+          });
+        }
+        
         return new Response('Erro interno do servidor', {
           status: 500,
           headers: corsHeaders,

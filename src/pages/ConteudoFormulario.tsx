@@ -137,14 +137,27 @@ export default function ConteudoFormulario() {
       const downloadUrl = `https://oilnybhaboefqyhjrmvl.supabase.co/functions/v1/serve-content/download/${token}/${encodeURIComponent(arquivo.nome)}`;
       
       console.log('🔗 ConteudoFormulario: URL de download:', downloadUrl);
+      console.log('🔗 ConteudoFormulario: Arquivo para download:', arquivo);
       
       try {
         console.log('📥 Fazendo download via edge function...');
         
-        const response = await fetch(downloadUrl);
+        const response = await fetch(downloadUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': '*/*',
+          }
+        });
+        
+        console.log('📥 Resposta do servidor:', { 
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries())
+        });
         
         if (response.ok) {
           const blob = await response.blob();
+          console.log('📥 Blob recebido:', { size: blob.size, type: blob.type });
           
           // Verificar se o blob tem conteúdo válido
           if (blob.size === 0) {
@@ -171,7 +184,7 @@ export default function ConteudoFormulario() {
           
           // FALLBACK: Tentar download direto via URL original
           if (arquivo.url && arquivo.url.startsWith('http')) {
-            console.log('🔄 Tentando download direto via URL original...');
+            console.log('🔄 Tentando download direto via URL original...', arquivo.url);
             
             const link = document.createElement('a');
             link.href = arquivo.url;
@@ -183,7 +196,7 @@ export default function ConteudoFormulario() {
             link.click();
             document.body.removeChild(link);
             
-            toast.success(`Download de "${arquivo.nome}" iniciado`);
+            toast.success(`Download de "${arquivo.nome}" iniciado via URL direta`);
             console.log('✅ Download via URL direta bem-sucedido');
           } else {
             throw new Error(`Servidor retornou ${response.status}: ${errorText}`);
@@ -191,7 +204,15 @@ export default function ConteudoFormulario() {
         }
       } catch (downloadError: any) {
         console.error('❌ Erro no download:', downloadError);
-        toast.error(`Não foi possível baixar "${arquivo.nome}". ${downloadError.message}`);
+        
+        // FALLBACK FINAL: Tentar abrir em nova aba
+        if (arquivo.url && arquivo.url.startsWith('http')) {
+          console.log('🔄 Tentando abrir arquivo em nova aba como fallback final...');
+          window.open(arquivo.url, '_blank');
+          toast.info(`Arquivo "${arquivo.nome}" aberto em nova aba`);
+        } else {
+          toast.error(`Não foi possível baixar "${arquivo.nome}". ${downloadError.message}`);
+        }
       }
       
     } catch (error: any) {
