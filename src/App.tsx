@@ -13,6 +13,7 @@ import { Dashboard } from "@/features/dashboard/components/Dashboard";
 import { FlowBuilder } from "@/features/flows/components/FlowBuilder";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { MobileErrorBoundary } from "@/components/ui/mobile-error-boundary";
 import { Profile } from "@/pages/Profile";
 import { Patients } from "@/pages/Patients";
 import { Settings } from "@/pages/Settings";
@@ -99,36 +100,29 @@ const SmartRedirect = () => {
     return <LoadingSpinner />;
   }
 
-  // Para pacientes, verificar se há formulário novo (progresso 0) para redirecionamento automático
+  // Para pacientes, sempre redirecionar para o dashboard
+  // onde ele pode ver os formulários disponíveis
   if (user?.role === 'patient') {
-    const newFormExecution = executions?.find(e => {
-      const currentStepData = e.current_step as any;
-      
-      // Debug log to understand execution state
-      console.log('SmartRedirect: Verificando execução:', {
-        id: e.id,
-        status: e.status,
-        progresso: e.progresso,
-        current_step: e.current_step,
-        hasSteps: currentStepData?.steps?.length > 0
-      });
-      
-      // Check for active execution with proper step structure
-      return (e.status === 'em-andamento' || e.status === 'in-progress') && 
-             e.progresso === 0 &&
-             currentStepData?.steps &&
-             Array.isArray(currentStepData.steps) &&
-             currentStepData.steps.length > 0;
-    });
-    
-    if (newFormExecution) {
-      console.log('SmartRedirect: Redirecionando para formulário novo:', newFormExecution);
-      return <Navigate to={`/flow-execution/${newFormExecution.id}`} replace />;
-    }
+    console.log('SmartRedirect: Paciente logado - redirecionando para dashboard');
+    return <Navigate to="/dashboard" replace />;
   }
 
-  // Redirecionamento padrão para dashboard
+  // Para outros usuários, redirecionamento padrão
   return <Navigate to="/dashboard" replace />;
+};
+
+// Componente para tratar rotas não encontradas
+const SmartNotFound = () => {
+  const { user } = useAuth();
+  
+  // Se for paciente logado, redirecionar para dashboard ao invés de 404
+  if (user?.role === 'patient') {
+    console.log('SmartNotFound: Paciente tentou acessar URL inválida - redirecionando para dashboard');
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  // Para outros usuários, mostrar página 404
+  return <NotFound />;
 };
 
 const AppRoutes = () => {
@@ -307,7 +301,7 @@ const AppRoutes = () => {
       />
       
       <Route path="/404" element={<NotFound />} />
-      <Route path="*" element={<Navigate to="/404" replace />} />
+      <Route path="*" element={<SmartNotFound />} />
     </Routes>
   );
 };
@@ -316,17 +310,19 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AuthProvider>
-        <ErrorBoundary>
-          <TooltipProvider>
-            <RealtimeNotificationProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <AppRoutes />
-              </BrowserRouter>
-            </RealtimeNotificationProvider>
-          </TooltipProvider>
-        </ErrorBoundary>
+        <MobileErrorBoundary>
+          <ErrorBoundary>
+            <TooltipProvider>
+              <RealtimeNotificationProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <AppRoutes />
+                </BrowserRouter>
+              </RealtimeNotificationProvider>
+            </TooltipProvider>
+          </ErrorBoundary>
+        </MobileErrorBoundary>
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
