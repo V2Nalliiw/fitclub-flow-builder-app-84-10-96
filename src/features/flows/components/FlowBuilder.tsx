@@ -202,8 +202,8 @@ export const FlowBuilder = () => {
     
     console.log('🧮 Found calculator nodes:', calculatorNodes);
     
-    const calculations: Array<{ nomenclatura: string; label: string; type: 'number' | 'decimal' }> = [];
-    const questions: Array<{ nomenclatura: string; label: string; type: 'single' | 'multiple' }> = [];
+    const calculations: Array<{ nomenclatura: string; label: string; type: 'number' | 'decimal'; isFormulaResult?: boolean }> = [];
+    const questions: Array<{ nomenclatura: string; label: string; type: 'single' | 'multiple'; opcoes?: string[] }> = [];
     
     calculatorNodes.forEach(calcNode => {
       console.log('🔎 Processing calculator node:', calcNode.id, calcNode.data);
@@ -222,7 +222,18 @@ export const FlowBuilder = () => {
         });
       }
       
-      // Extrair campos de pergunta
+      // Extrair o resultado da fórmula se existir
+      if (calcNode.data.formula && calcNode.data.resultLabel) {
+        calculations.push({
+          nomenclatura: 'formula_result',
+          label: `Resultado: ${calcNode.data.resultLabel}`,
+          type: 'decimal',
+          isFormulaResult: true
+        });
+        console.log('🧮 Added formula result field:', calcNode.data.resultLabel);
+      }
+      
+      // Extrair campos de pergunta com suas opções
       if (calcNode.data.calculatorQuestionFields) {
         const questionFields = calcNode.data.calculatorQuestionFields as any[];
         questionFields.forEach(field => {
@@ -230,7 +241,8 @@ export const FlowBuilder = () => {
             questions.push({
               nomenclatura: field.nomenclatura,
               label: field.pergunta,
-              type: field.questionType === 'multipla-escolha' ? 'multiple' : 'single'
+              type: field.questionType === 'multipla-escolha' ? 'multiple' : 'single',
+              opcoes: field.opcoes || []
             });
           }
         });

@@ -62,8 +62,8 @@ interface SpecialConditionsNodeConfigAdvancedProps {
   onSave: (data: any) => void;
   initialData?: any;
   availableFields?: {
-    calculations: Array<{ nomenclatura: string; label: string; type: 'number' | 'decimal' }>;
-    questions: Array<{ nomenclatura: string; label: string; type: 'single' | 'multiple' }>;
+    calculations: Array<{ nomenclatura: string; label: string; type: 'number' | 'decimal'; isFormulaResult?: boolean }>;
+    questions: Array<{ nomenclatura: string; label: string; type: 'single' | 'multiple'; opcoes?: string[] }>;
   };
 }
 
@@ -444,7 +444,7 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
                 </CardContent>
               </Card>
 
-              {/* Auto-detected fields */}
+              {/* Auto-detected fields with enhanced display */}
               {(detectedFields.calculations.length > 0 || detectedFields.questions.length > 0) ? (
                 <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
                   <CardHeader className="pb-3">
@@ -453,33 +453,73 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
                       Campos Detectados Automaticamente
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-4">
+                    {/* Cálculos e Resultados de Fórmulas */}
                     {detectedFields.calculations.length > 0 && (
                       <div>
                         <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">
-                          Cálculos Disponíveis ({detectedFields.calculations.length}):
+                          Cálculos e Fórmulas Disponíveis ({detectedFields.calculations.length}):
                         </Label>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {detectedFields.calculations.map((field, index) => (
-                            <span key={index} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-md text-xs">
-                              <Hash className="h-3 w-3" />
-                              {field}
-                            </span>
+                        <div className="space-y-2 mt-2">
+                          {availableFields?.calculations?.map((calc, index) => (
+                            <div key={index} className="flex items-center gap-2 p-2 bg-blue-100/50 dark:bg-blue-800/30 rounded-lg">
+                              {calc.isFormulaResult ? (
+                                <Calculator className="h-4 w-4 text-amber-600" />
+                              ) : (
+                                <Hash className="h-4 w-4 text-blue-600" />
+                              )}
+                              <div className="flex-1">
+                                <div className="text-sm font-medium">
+                                  {calc.nomenclatura}
+                                  {calc.isFormulaResult && (
+                                    <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs">
+                                      Resultado da Fórmula
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-xs text-muted-foreground">{calc.label}</div>
+                              </div>
+                              <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
+                                {calc.type}
+                              </span>
+                            </div>
                           ))}
                         </div>
                       </div>
                     )}
+                    
+                    {/* Perguntas com Opções */}
                     {detectedFields.questions.length > 0 && (
                       <div>
                         <Label className="text-xs font-medium text-green-700 dark:text-green-300">
                           Perguntas Disponíveis ({detectedFields.questions.length}):
                         </Label>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {detectedFields.questions.map((field, index) => (
-                            <span key={index} className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 rounded-md text-xs">
-                              <HelpCircle className="h-3 w-3" />
-                              {field}
-                            </span>
+                        <div className="space-y-2 mt-2">
+                          {availableFields?.questions?.map((question, index) => (
+                            <div key={index} className="p-2 bg-green-100/50 dark:bg-green-800/30 rounded-lg">
+                              <div className="flex items-center gap-2 mb-1">
+                                <HelpCircle className="h-4 w-4 text-green-600" />
+                                <div className="flex-1">
+                                  <div className="text-sm font-medium">{question.nomenclatura}</div>
+                                  <div className="text-xs text-muted-foreground">{question.label}</div>
+                                </div>
+                                <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
+                                  {question.type}
+                                </span>
+                              </div>
+                              {question.opcoes && question.opcoes.length > 0 && (
+                                <div className="ml-6 mt-2">
+                                  <div className="text-xs text-muted-foreground mb-1">Opções disponíveis:</div>
+                                  <div className="flex flex-wrap gap-1">
+                                    {question.opcoes.map((opcao, optIndex) => (
+                                      <span key={optIndex} className="px-2 py-0.5 bg-green-200 dark:bg-green-700 text-green-800 dark:text-green-200 rounded-md text-xs">
+                                        {opcao}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           ))}
                         </div>
                       </div>
