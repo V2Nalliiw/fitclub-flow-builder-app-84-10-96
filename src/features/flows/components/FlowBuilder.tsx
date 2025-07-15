@@ -165,6 +165,68 @@ export const FlowBuilder = () => {
     }));
   };
 
+  // Função para obter campos de calculadora conectados a um nó
+  const getConnectedCalculatorFields = (nodeId: string) => {
+    if (!nodeId) return { calculations: [], questions: [] };
+    
+    console.log('🔍 Getting connected calculator fields for node:', nodeId);
+    
+    // Encontrar todas as edges que chegam ao nó atual
+    const incomingEdges = edges.filter(edge => edge.target === nodeId);
+    const sourceNodeIds = incomingEdges.map(edge => edge.source);
+    
+    console.log('📥 Incoming edges to node:', incomingEdges);
+    console.log('🎯 Source node IDs:', sourceNodeIds);
+    
+    // Filtrar nós de origem que são do tipo 'calculator'
+    const calculatorNodes = nodes.filter(node => 
+      sourceNodeIds.includes(node.id) && 
+      node.type === 'calculator'
+    );
+    
+    console.log('🧮 Found calculator nodes:', calculatorNodes);
+    
+    const calculations: Array<{ nomenclatura: string; label: string; type: 'number' | 'decimal' }> = [];
+    const questions: Array<{ nomenclatura: string; label: string; type: 'single' | 'multiple' }> = [];
+    
+    calculatorNodes.forEach(calcNode => {
+      console.log('🔎 Processing calculator node:', calcNode.id, calcNode.data);
+      
+      // Extrair campos de cálculo
+      if (calcNode.data.calculatorFields) {
+        const calcFields = calcNode.data.calculatorFields as any[];
+        calcFields.forEach(field => {
+          if (field.nomenclatura && field.pergunta) {
+            calculations.push({
+              nomenclatura: field.nomenclatura,
+              label: field.pergunta,
+              type: field.tipo === 'decimal' ? 'decimal' : 'number'
+            });
+          }
+        });
+      }
+      
+      // Extrair campos de pergunta
+      if (calcNode.data.calculatorQuestionFields) {
+        const questionFields = calcNode.data.calculatorQuestionFields as any[];
+        questionFields.forEach(field => {
+          if (field.nomenclatura && field.pergunta) {
+            questions.push({
+              nomenclatura: field.nomenclatura,
+              label: field.pergunta,
+              type: field.questionType === 'multipla-escolha' ? 'multiple' : 'single'
+            });
+          }
+        });
+      }
+    });
+    
+    console.log('📊 Final calculations:', calculations);
+    console.log('❓ Final questions:', questions);
+    
+    return { calculations, questions };
+  };
+
   // Preparar os nós com as funções de edição e exclusão
   const enhancedNodes = nodes.map(node => ({
     ...node,
@@ -272,6 +334,7 @@ export const FlowBuilder = () => {
         onClose={() => setIsSpecialConditionsConfigOpen(false)}
         onSave={handleSpecialConditionsConfigSave}
         initialData={selectedNode?.data}
+        availableFields={getConnectedCalculatorFields(selectedNode?.id || '')}
       />
 
       <FlowPreviewModal
