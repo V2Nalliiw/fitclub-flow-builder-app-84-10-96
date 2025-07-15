@@ -8,9 +8,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowRight, ArrowLeft, FileText, MessageCircle, CheckCircle, Clock } from 'lucide-react';
-import { DelayTimer } from './DelayTimer';
+import { ImprovedDelayTimer } from './ImprovedDelayTimer';
 import { EnhancedDocumentDisplay } from './EnhancedDocumentDisplay';
-import { MedicalQuestionnaireStepRenderer } from './MedicalQuestionnaireStepRenderer';
+import { MedicalQuestionnaireRenderer } from './MedicalQuestionnaireRenderer';
 import { ConditionsStepRenderer } from './ConditionsStepRenderer';
 import { NumberStepRenderer } from './NumberStepRenderer';
 import { SimpleCalculatorStepRenderer } from './SimpleCalculatorStepRenderer';
@@ -68,7 +68,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
     switch (step.nodeType) {
       case 'calculator':
         return (
-          <MedicalQuestionnaireStepRenderer
+          <MedicalQuestionnaireRenderer
             step={step}
             onComplete={onComplete}
             isLoading={isLoading}
@@ -232,7 +232,6 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
                   </p>
                 )}
 
-                {/* ✨ EXIBIR ARQUIVOS PARA DOWNLOAD */}
                 {step.arquivos && Array.isArray(step.arquivos) && step.arquivos.length > 0 && (
                   <div className="bg-emerald-500/10 dark:bg-emerald-500/20 rounded-lg p-4 mb-6 border border-emerald-500/20">
                     <h4 className="text-lg font-semibold text-emerald-700 dark:text-emerald-300 mb-3 flex items-center justify-center">
@@ -280,9 +279,12 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
 
       case 'delay':
         return (
-          <DelayTimer
+          <ImprovedDelayTimer
             availableAt={step.availableAt || new Date().toISOString()}
-            onDelayExpired={handleSubmit}
+            onDelayExpired={() => {
+              // Auto-redirect sem possibilidade de pular
+              window.location.href = '/';
+            }}
           />
         );
 
@@ -331,7 +333,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
     }
   };
 
-  // Para calculadora, condições, delay e novos nós que têm seus próprios botões
+  // Para nós com interface própria
   if (step.nodeType === 'calculator' || step.nodeType === 'conditions' || step.nodeType === 'number' || step.nodeType === 'simpleCalculator' || step.nodeType === 'specialConditions' || step.nodeType === 'delay' || step.nodeType === 'formStart' || step.nodeType === 'formEnd') {
     return renderStepContent();
   }
