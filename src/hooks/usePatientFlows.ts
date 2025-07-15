@@ -122,25 +122,28 @@ export const usePatientFlows = () => {
       if (patient?.phone) {
         console.log('📱 usePatientFlows: Enviando WhatsApp de conclusão para:', patient.phone);
 
-        const message = `🎉 *Formulário Concluído!*
-
-Olá ${patient.name}! Você concluiu o formulário com sucesso.
-
-📁 *Seus materiais estão prontos:*
-${contentUrl}
-
-_Este link expira em 30 dias._`;
-
         // Retry com edge function
         const sendWithRetry = async (attempts = 3) => {
           for (let i = 0; i < attempts; i++) {
             try {
               console.log(`📱 usePatientFlows: Tentativa ${i + 1}/${attempts} de envio WhatsApp...`);
               
+              // ✨ ENVIAR PARÂMETROS CORRETOS PARA A EDGE FUNCTION
               const response = await supabase.functions.invoke('send-whatsapp', {
                 body: {
-                  phone: patient.phone,
-                  message: message
+                  patientId: execution.patient_id,
+                  executionId: executionId,
+                  files: arquivosNormalizados.length > 0 ? arquivosNormalizados.map(arquivo => ({
+                    name: arquivo.nome,
+                    description: `Material educativo - ${arquivo.nome}`,
+                    url: arquivo.url
+                  })) : [
+                    {
+                      name: "Formulário Concluído",
+                      description: "Parabéns! Você concluiu o formulário com sucesso.",
+                      url: contentUrl
+                    }
+                  ]
                 }
               });
               
@@ -167,7 +170,7 @@ _Este link expira em 30 dias._`;
         };
         
         // Executar envio
-        sendWithRetry();
+        await sendWithRetry();
       } else {
         console.warn('⚠️ usePatientFlows: Paciente sem telefone configurado');
       }
