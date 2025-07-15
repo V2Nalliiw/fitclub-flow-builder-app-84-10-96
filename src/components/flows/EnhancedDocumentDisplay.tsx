@@ -70,30 +70,60 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
     }
   };
 
-  const handleDownload = async () => {
+  const handleForceDownload = async () => {
     setDownloading(true);
     try {
-      // ✨ MELHORADO: Priorizar clinic-materials sobre flow-documents
+      // Tentar usar Edge Function para download forçado
+      const downloadUrl = `https://oilnybhaboefqyhjrmvl.supabase.co/functions/v1/serve-content/download/${encodeURIComponent(fileName)}`;
+      
+      console.log('📥 Tentando download via Edge Function:', downloadUrl);
+      
+      try {
+        const response = await fetch(downloadUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': '*/*',
+          }
+        });
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          if (blob.size > 0) {
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            toast.success(`Download de "${fileName}" iniciado!`);
+            console.log('✅ Download via Edge Function bem-sucedido');
+            return;
+          }
+        }
+      } catch (edgeFunctionError) {
+        console.warn('❌ Edge Function falhou:', edgeFunctionError);
+      }
+
+      // Fallback: Download direto dos buckets
       const urls = [
         fileUrl,
-        // Clinic-materials (bucket principal)
         `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/clinic-materials/${fileName}`,
         `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/clinic-materials/${fileUrl.split('/').pop()}`,
-        // Flow-documents (fallback)
         `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${fileName}`,
         `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${fileUrl.split('/').pop()}`
       ].filter(url => url && url.trim());
 
-      console.log('📥 EnhancedDocumentDisplay: Tentando download das URLs:', urls);
-      let downloadSuccessful = false;
+      console.log('🔄 Tentando download direto das URLs:', urls);
       
       for (const url of urls) {
         try {
-          console.log(`🔄 Tentativa de download: ${url}`);
           const response = await fetch(url);
           if (response.ok) {
             const blob = await response.blob();
-            
             if (blob.size > 0) {
               const link = document.createElement('a');
               link.href = URL.createObjectURL(blob);
@@ -103,25 +133,17 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
               document.body.removeChild(link);
               URL.revokeObjectURL(link.href);
               
-              console.log(`✅ Download bem-sucedido de: ${url}`);
-              toast.success('Download iniciado!');
-              downloadSuccessful = true;
-              break;
-            } else {
-              console.warn(`⚠️ Arquivo vazio: ${url}`);
+              toast.success(`Download de "${fileName}" iniciado!`);
+              console.log(`✅ Download direto bem-sucedido de: ${url}`);
+              return;
             }
-          } else {
-            console.warn(`❌ HTTP ${response.status}: ${url}`);
           }
         } catch (urlError) {
           console.warn('❌ Falha no download da URL:', url, urlError.message);
         }
       }
       
-      if (!downloadSuccessful) {
-        console.error('❌ Todas as tentativas de download falharam');
-        toast.error('Arquivo não disponível para download. Entre em contato com sua clínica.');
-      }
+      toast.error('Arquivo não disponível para download. Entre em contato com sua clínica.');
     } catch (error) {
       console.error('Erro ao baixar arquivo:', error);
       toast.error('Erro ao baixar arquivo');
@@ -219,14 +241,16 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
         <p className="text-gray-600 mb-4">
           📎 {fileName}
         </p>
-        <Button
-          onClick={handlePreview}
-          variant="outline"
-          className="mb-2"
-        >
-          <Eye className="h-4 w-4 mr-2" />
-          Visualizar PDF
-        </Button>
+        <div className="flex justify-center gap-2">
+          <Button
+            onClick={handlePreview}
+            variant="outline"
+            size="sm"
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            Visualizar PDF
+          </Button>
+        </div>
       </div>
     );
   };
@@ -251,9 +275,17 @@ export const EnhancedDocumentDisplay: React.FC<EnhancedDocumentDisplayProps> = (
 
         <div className="flex justify-center gap-3">
           <Button
-            onClick={handleDownload}
+            onClick={handlePreview}
+            variant="outline"
+            className="border-border hover:bg-accent"
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            Visualizar
+          </Button>
+          <Button
+            onClick={handleForceDownload}
             disabled={downloading}
-            className="bg-primary-gradient hover:opacity-90 text-white"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             <Download className="h-4 w-4 mr-2" />
             {downloading ? 'Baixando...' : 'Baixar'}
