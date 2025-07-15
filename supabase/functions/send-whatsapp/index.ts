@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,22 +13,19 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
+    console.log('🚀 send-whatsapp function called');
+    
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { phone, message } = await req.json();
+    const { patientId, executionId, files } = await req.json();
+    console.log('📨 Request data:', { patientId, executionId, filesCount: files?.length });
 
-    if (!phone || !message) {
+    if (!patientId || !executionId || !files || files.length === 0) {
+      console.error('❌ Missing required parameters');
       return new Response(
-        JSON.stringify({ error: 'Telefone e mensagem são obrigatórios' }),
+        JSON.stringify({ error: 'Missing required parameters' }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -36,203 +33,155 @@ serve(async (req) => {
       );
     }
 
-    console.log('📱 send-whatsapp: Enviando mensagem para:', phone);
-
-    // Buscar configurações do WhatsApp
-    const { data: whatsappSettings, error: settingsError } = await supabase
-      .from('whatsapp_settings')
-      .select('*')
-      .eq('is_active', true)
+    // Get patient and WhatsApp settings
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('name, phone, clinic_id')
+      .eq('user_id', patientId)
       .single();
 
-    if (settingsError || !whatsappSettings) {
-      console.error('❌ send-whatsapp: Configuração WhatsApp não encontrada:', settingsError);
+    if (!profile?.phone) {
+      console.error('❌ Patient phone not found');
       return new Response(
-        JSON.stringify({ error: 'Configuração do WhatsApp não encontrada' }),
+        JSON.stringify({ error: 'Patient phone not found' }),
         { 
-          status: 404,
+          status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
-    console.log('⚙️ send-whatsapp: Usando provider:', whatsappSettings.provider);
+    const { data: whatsappSettings } = await supabase
+      .from('whatsapp_settings')
+      .select('*')
+      .eq('clinic_id', profile.clinic_id)
+      .eq('is_active', true)
+      .single();
 
-    let sendResponse;
-
-    switch (whatsappSettings.provider) {
-      case 'meta':
-        sendResponse = await sendMetaMessage(whatsappSettings, phone, message);
-        break;
-      case 'evolution':
-        sendResponse = await sendEvolutionMessage(whatsappSettings, phone, message);
-        break;
-      case 'twilio':
-        sendResponse = await sendTwilioMessage(whatsappSettings, phone, message);
-        break;
-      default:
-        return new Response(
-          JSON.stringify({ error: 'Provedor de WhatsApp não suportado' }),
-          { 
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
+    if (!whatsappSettings) {
+      console.error('❌ WhatsApp settings not found');
+      return new Response(
+        JSON.stringify({ error: 'WhatsApp settings not configured' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    return new Response(
-      JSON.stringify(sendResponse),
-      { 
-        status: sendResponse.success ? 200 : 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    // Create content access token
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30); // 30 days expiry
 
-  } catch (error) {
-    console.error('❌ send-whatsapp: Erro geral:', error);
-    return new Response(
-      JSON.stringify({ error: 'Erro interno do servidor' }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
-  }
-});
+    const { data: contentAccess, error: contentError } = await supabase
+      .from('content_access')
+      .insert({
+        execution_id: executionId,
+        patient_id: patientId,
+        files: files,
+        expires_at: expiresAt.toISOString()
+      })
+      .select()
+      .single();
 
-async function sendMetaMessage(settings: any, phone: string, message: string) {
-  try {
-    const cleanPhone = phone.replace(/\D/g, '');
+    if (contentError || !contentAccess) {
+      console.error('❌ Error creating content access:', contentError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to create content access' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    console.log('✅ Content access created:', contentAccess.id);
+
+    // Generate download link
+    const downloadLink = `${supabaseUrl}/functions/v1/serve-content?token=${contentAccess.access_token}`;
     
-    const response = await fetch(
-      `https://graph.facebook.com/v18.0/${settings.business_account_id}/messages`,
-      {
+    // Create WhatsApp message
+    const message = `Olá ${profile.name}! 👋\n\nSeus materiais estão prontos para download!\n\nClique no link abaixo para acessar:\n${downloadLink}\n\n📅 Válido até: ${new Date(expiresAt).toLocaleDateString('pt-BR')}\n\nQualquer dúvida, entre em contato conosco! 😊`;
+
+    // Send WhatsApp message based on provider
+    let whatsappResponse;
+    
+    if (whatsappSettings.provider === 'meta') {
+      const metaUrl = `https://graph.facebook.com/v17.0/${whatsappSettings.phone_number}/messages`;
+      
+      whatsappResponse = await fetch(metaUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${settings.access_token}`,
+          'Authorization': `Bearer ${whatsappSettings.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           messaging_product: 'whatsapp',
-          to: cleanPhone,
+          to: profile.phone,
           type: 'text',
-          text: {
-            body: message
-          }
+          text: { body: message }
         }),
-      }
-    );
-
-    const data = await response.json();
-    
-    if (!response.ok) {
-      console.error('❌ Meta API error:', data);
-      return {
-        success: false,
-        error: data.error?.message || 'Erro na API Meta'
-      };
-    }
-
-    console.log('✅ Meta message sent:', data);
-    return {
-      success: true,
-      messageId: data.messages?.[0]?.id
-    };
-
-  } catch (error) {
-    console.error('❌ Meta send error:', error);
-    return {
-      success: false,
-      error: 'Erro ao enviar via Meta'
-    };
-  }
-}
-
-async function sendEvolutionMessage(settings: any, phone: string, message: string) {
-  try {
-    const cleanPhone = phone.replace(/\D/g, '');
-    
-    const response = await fetch(
-      `${settings.base_url}/message/sendText/${settings.session_name}`,
-      {
+      });
+    } else if (whatsappSettings.provider === 'evolution') {
+      const evolutionUrl = `${whatsappSettings.base_url}/message/sendText/${whatsappSettings.session_name}`;
+      
+      whatsappResponse = await fetch(evolutionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': settings.api_key,
+          'apikey': whatsappSettings.api_key || '',
         },
         body: JSON.stringify({
-          number: cleanPhone,
-          text: message,
+          number: profile.phone,
+          text: message
         }),
-      }
-    );
-
-    const data = await response.json();
-    
-    if (!response.ok) {
-      console.error('❌ Evolution API error:', data);
-      return {
-        success: false,
-        error: data.message || 'Erro na API Evolution'
-      };
+      });
+    } else {
+      console.error('❌ Unsupported WhatsApp provider:', whatsappSettings.provider);
+      return new Response(
+        JSON.stringify({ error: 'Unsupported WhatsApp provider' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    console.log('✅ Evolution message sent:', data);
-    return {
-      success: true,
-      messageId: data.key?.id
-    };
+    if (!whatsappResponse.ok) {
+      const errorText = await whatsappResponse.text();
+      console.error('❌ WhatsApp API error:', errorText);
+      return new Response(
+        JSON.stringify({ error: 'Failed to send WhatsApp message', details: errorText }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
-  } catch (error) {
-    console.error('❌ Evolution send error:', error);
-    return {
-      success: false,
-      error: 'Erro ao enviar via Evolution'
-    };
-  }
-}
+    const whatsappResult = await whatsappResponse.json();
+    console.log('✅ WhatsApp message sent successfully:', whatsappResult);
 
-async function sendTwilioMessage(settings: any, phone: string, message: string) {
-  try {
-    const auth = btoa(`${settings.account_sid}:${settings.auth_token}`);
-    
-    const response = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${settings.account_sid}/Messages.json`,
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        accessId: contentAccess.id,
+        downloadLink,
+        whatsappResult
+      }),
       {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${auth}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          From: `whatsapp:${settings.phone_number}`,
-          To: `whatsapp:${phone}`,
-          Body: message,
-        }),
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
 
-    const data = await response.json();
-    
-    if (!response.ok) {
-      console.error('❌ Twilio API error:', data);
-      return {
-        success: false,
-        error: data.message || 'Erro na API Twilio'
-      };
-    }
-
-    console.log('✅ Twilio message sent:', data);
-    return {
-      success: true,
-      messageId: data.sid
-    };
-
   } catch (error) {
-    console.error('❌ Twilio send error:', error);
-    return {
-      success: false,
-      error: 'Erro ao enviar via Twilio'
-    };
+    console.error('❌ Error in send-whatsapp function:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
-}
+});
