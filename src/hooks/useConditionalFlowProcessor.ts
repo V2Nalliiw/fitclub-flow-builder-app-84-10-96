@@ -44,17 +44,24 @@ export const useConditionalFlowProcessor = () => {
       const { campo, operador, valor, valorFinal } = condition;
       let compareValue: any;
 
-      // Buscar valor nas respostas do usuário ou resultados de calculadoras
+      // Buscar valor nas respostas do usuário ou resultados de calculadoras por nomenclatura
       if (calculatorResults[campo] !== undefined) {
         compareValue = calculatorResults[campo];
       } else if (userResponses[campo] !== undefined) {
         compareValue = userResponses[campo];
       } else {
-        console.warn(`Campo ${campo} não encontrado nas respostas ou resultados. Dados disponíveis:`, {
-          userResponses,
-          calculatorResults
-        });
-        return false;
+        // Buscar em respostas diretas também
+        const allData = { ...userResponses, ...calculatorResults };
+        if (allData[campo] !== undefined) {
+          compareValue = allData[campo];
+        } else {
+          console.warn(`Campo ${campo} não encontrado nas respostas ou resultados. Dados disponíveis:`, {
+            userResponses,
+            calculatorResults,
+            allData
+          });
+          return false;
+        }
       }
 
       console.log(`Avaliando condição: ${campo} ${operador} ${valor}. Valor atual: ${compareValue}`);
@@ -63,17 +70,17 @@ export const useConditionalFlowProcessor = () => {
         case 'igual':
           return compareValue === valor;
         case 'maior':
-          return compareValue > valor;
+          return parseFloat(compareValue) > parseFloat(valor);
         case 'menor':
-          return compareValue < valor;
+          return parseFloat(compareValue) < parseFloat(valor);
         case 'maior_igual':
-          return compareValue >= valor;
+          return parseFloat(compareValue) >= parseFloat(valor);
         case 'menor_igual':
-          return compareValue <= valor;
+          return parseFloat(compareValue) <= parseFloat(valor);
         case 'diferente':
           return compareValue !== valor;
         case 'entre':
-          return compareValue >= valor && compareValue <= (valorFinal || valor);
+          return parseFloat(compareValue) >= parseFloat(valor) && parseFloat(compareValue) <= parseFloat(valorFinal || valor);
         default:
           return false;
       }

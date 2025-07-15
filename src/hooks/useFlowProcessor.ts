@@ -180,17 +180,29 @@ export const useFlowProcessor = () => {
           completedStep.calculatorResult = response.result;
         }
         
-        // Store calculation responses (numeric inputs)
+        // Store calculation responses (numeric inputs) by nomenclatura
         if (response?.calculationResponses) {
           Object.keys(response.calculationResponses).forEach(key => {
             updatedCalculatorResults[key] = response.calculationResponses[key];
           });
         }
         
-        // Store question responses from calculator
+        // Store question responses from calculator by nomenclatura
         if (response?.questionResponses) {
           Object.keys(response.questionResponses).forEach(key => {
             updatedUserResponses[key] = response.questionResponses[key];
+          });
+        }
+        
+        // Store all field responses by nomenclatura for conditions evaluation
+        if (response?.fieldResponses) {
+          Object.keys(response.fieldResponses).forEach(key => {
+            const fieldData = response.fieldResponses[key];
+            if (fieldData.fieldType === 'calculo') {
+              updatedCalculatorResults[key] = fieldData.value;
+            } else if (fieldData.fieldType === 'pergunta') {
+              updatedUserResponses[key] = fieldData.value;
+            }
           });
         }
       }

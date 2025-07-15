@@ -107,11 +107,25 @@ export const CalculatorStepRenderer: React.FC<CalculatorStepRendererProps> = ({
   };
 
   const handleComplete = () => {
+    // Create fieldResponses mapping nomenclatura to field data for conditions evaluation
+    const fieldResponses: Record<string, { value: any, fieldType: string }> = {};
+    
+    // Add calculation responses
+    Object.entries(calculationResponses).forEach(([nomenclatura, value]) => {
+      fieldResponses[nomenclatura] = { value, fieldType: 'calculo' };
+    });
+    
+    // Add question responses  
+    Object.entries(questionResponses).forEach(([nomenclatura, value]) => {
+      fieldResponses[nomenclatura] = { value, fieldType: 'pergunta' };
+    });
+
     onComplete({
       nodeId: step.nodeId,
       nodeType: 'calculator',
       calculationResponses,
       questionResponses,
+      fieldResponses,
       result: calculatedResult,
       timestamp: new Date().toISOString()
     });
