@@ -101,58 +101,33 @@ serve(async (req) => {
         
         console.log('📁 Caminho do arquivo extraído:', filePath);
 
-        // Tentar primeiro no bucket clinic-materials
+        // Usar apenas clinic-materials (bucket unificado)
         const { data: fileData, error: downloadError } = await supabase.storage
           .from('clinic-materials')
           .download(filePath);
 
         if (downloadError) {
-          console.log('❌ Erro no clinic-materials:', downloadError);
-          console.log('🔄 Tentando no bucket flow-documents...');
+          console.error('❌ Erro ao baixar arquivo:', downloadError);
           
-          // Tentar no outro bucket
-          const { data: fileData2, error: downloadError2 } = await supabase.storage
-            .from('flow-documents')
-            .download(filePath);
-
-          if (downloadError2) {
-            console.error('❌ Erro ao baixar arquivo de ambos buckets:', { 
-              clinic: downloadError, 
-              flow: downloadError2 
-            });
-            
-            // ÚLTIMO FALLBACK: Redirect para URL original
-            if (file.url && file.url.startsWith('http')) {
-              console.log('🔄 Fazendo redirect para URL original...');
-              return new Response(null, {
-                status: 302,
-                headers: {
-                  ...corsHeaders,
-                  'Location': file.url,
-                },
-              });
-            }
-            
-            return new Response('Arquivo não encontrado no storage', { 
-              status: 404,
-              headers: corsHeaders
+          // FALLBACK: Redirect para URL original se disponível
+          if (file.url && file.url.startsWith('http')) {
+            console.log('🔄 Fazendo redirect para URL original...');
+            return new Response(null, {
+              status: 302,
+              headers: {
+                ...corsHeaders,
+                'Location': file.url,
+              },
             });
           }
-
-          console.log('✅ Arquivo encontrado no flow-documents');
-          // Retornar arquivo do segundo bucket
-          return new Response(fileData2, {
-            headers: {
-              ...corsHeaders,
-              'Content-Type': file.tipo || file.file_type || 'application/octet-stream',
-              'Content-Disposition': `attachment; filename="${filename}"`,
-              'Content-Length': fileData2.size.toString(),
-            },
+          
+          return new Response('Arquivo não encontrado no storage', { 
+            status: 404,
+            headers: corsHeaders
           });
         }
 
         console.log('✅ Arquivo encontrado no clinic-materials');
-        // Retornar arquivo do primeiro bucket
         return new Response(fileData, {
           headers: {
             ...corsHeaders,

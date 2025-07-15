@@ -100,29 +100,74 @@ serve(async (req) => {
     // Generate download link
     const downloadLink = `${supabaseUrl}/functions/v1/serve-content?token=${contentAccess.access_token}`;
     
-    // Create WhatsApp message
-    const message = `Olá ${profile.name}! 👋\n\nSeus materiais estão prontos para download!\n\nClique no link abaixo para acessar:\n${downloadLink}\n\n📅 Válido até: ${new Date(expiresAt).toLocaleDateString('pt-BR')}\n\nQualquer dúvida, entre em contato conosco! 😊`;
-
-    // Send WhatsApp message based on provider
+    // Try to send using official template first, fallback to simple message
     let whatsappResponse;
+    let templateSuccess = false;
     
     if (whatsappSettings.provider === 'meta') {
-      const metaUrl = `https://graph.facebook.com/v17.0/${whatsappSettings.phone_number}/messages`;
+      console.log('🔄 Tentando template oficial formulario_concluido...');
       
-      whatsappResponse = await fetch(metaUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${whatsappSettings.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to: profile.phone,
-          type: 'text',
-          text: { body: message }
-        }),
-      });
+      // Try official template first
+      try {
+        const templateUrl = `https://graph.facebook.com/v17.0/${whatsappSettings.phone_number}/messages`;
+        
+        whatsappResponse = await fetch(templateUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${whatsappSettings.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: profile.phone,
+            type: 'template',
+            template: {
+              name: 'formulario_concluido',
+              language: { code: 'pt_BR' },
+              components: [
+                {
+                  type: 'body',
+                  parameters: [
+                    { type: 'text', text: profile.name },
+                    { type: 'text', text: downloadLink }
+                  ]
+                }
+              ]
+            }
+          }),
+        });
+
+        if (whatsappResponse.ok) {
+          templateSuccess = true;
+          console.log('✅ Template oficial enviado com sucesso');
+        } else {
+          console.log('❌ Template oficial falhou, tentando mensagem simples...');
+        }
+      } catch (templateError) {
+        console.log('❌ Erro no template oficial:', templateError);
+      }
+
+      // Fallback to simple message if template failed
+      if (!templateSuccess) {
+        const simpleMessage = `🎉 *Formulário Concluído!*\n\nOlá ${profile.name}! Seus materiais estão prontos para download.\n\n📁 Acesse aqui: ${downloadLink}\n\n📅 Válido até: ${new Date(expiresAt).toLocaleDateString('pt-BR')}\n\nQualquer dúvida, entre em contato conosco! 😊`;
+        
+        whatsappResponse = await fetch(`https://graph.facebook.com/v17.0/${whatsappSettings.phone_number}/messages`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${whatsappSettings.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: profile.phone,
+            type: 'text',
+            text: { body: simpleMessage }
+          }),
+        });
+      }
     } else if (whatsappSettings.provider === 'evolution') {
+      const simpleMessage = `🎉 *Formulário Concluído!*\n\nOlá ${profile.name}! Seus materiais estão prontos para download.\n\n📁 Acesse aqui: ${downloadLink}\n\n📅 Válido até: ${new Date(expiresAt).toLocaleDateString('pt-BR')}\n\nQualquer dúvida, entre em contato conosco! 😊`;
+      
       const evolutionUrl = `${whatsappSettings.base_url}/message/sendText/${whatsappSettings.session_name}`;
       
       whatsappResponse = await fetch(evolutionUrl, {
@@ -133,7 +178,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           number: profile.phone,
-          text: message
+          text: simpleMessage
         }),
       });
     } else {
