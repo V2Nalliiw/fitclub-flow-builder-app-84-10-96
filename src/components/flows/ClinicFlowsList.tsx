@@ -42,15 +42,6 @@ export const ClinicFlowsList = () => {
               
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button 
-                  onClick={refreshFlows}
-                  variant="outline" 
-                  size="lg"
-                  className="w-full sm:w-auto"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Tentar Novamente
-                </Button>
-                <Button 
                   onClick={() => navigate('/flows')} 
                   variant="outline" 
                   size="lg"

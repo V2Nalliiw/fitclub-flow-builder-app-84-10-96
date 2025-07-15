@@ -330,10 +330,6 @@ export const useFlowBuilder = () => {
         toast.success('Fluxo salvo com sucesso!');
       }
 
-      // Redirecionar para a página "Meus Fluxos" após sucesso
-      setTimeout(() => {
-        navigate('/my-flows');
-      }, 1500);
 
     } catch (error) {
       console.error('Erro ao salvar fluxo:', error);

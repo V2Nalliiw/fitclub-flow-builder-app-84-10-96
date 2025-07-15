@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowUpDown, Eraser, Eye, Save, Square, Clock, FileText, CheckCircle, MessageCircle, Calculator, GitBranch, Hash, Plus, Download, Upload } from 'lucide-react';
+import { ArrowUpDown, Eraser, Eye, Save, Square, Clock, FileText, CheckCircle, MessageCircle, Calculator, GitBranch, Download, Upload } from 'lucide-react';
 
 interface FlowBuilderTopMenuProps {
   flowName: string;
@@ -119,37 +119,6 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           title="Condições"
         >
           <GitBranch className="h-4 w-4 text-muted-foreground" />
-        </Button>
-
-        {/* Separador */}
-        <div className="w-px h-6 bg-gray-300 mx-1" />
-
-        {/* Novos Nós Numéricos */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddNode('number')}
-          title="Número"
-        >
-          <Hash className="h-4 w-4 text-muted-foreground" />
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddNode('simpleCalculator')}
-          title="Cálculo Simples"
-        >
-          <Plus className="h-4 w-4 text-muted-foreground" />
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddNode('specialConditions')}
-          title="Condições Especiais"
-        >
-          <GitBranch className="h-4 w-4 text-primary" />
         </Button>
 
         {/* Separador */}

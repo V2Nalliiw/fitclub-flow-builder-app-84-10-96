@@ -20,7 +20,6 @@ import {
   Shuffle,
   Calculator,
   GitBranch,
-  Hash,
   MessageCircle
 } from 'lucide-react';
 import { FlowNode } from '@/types/flow';
@@ -60,9 +59,6 @@ export const TabletFlowMenu = ({
     { type: 'delay' as FlowNode['type'], label: 'Aguardar', icon: Clock, color: 'text-orange-500' },
     { type: 'calculator' as FlowNode['type'], label: 'Calculadora', icon: Calculator, color: 'text-green-500' },
     { type: 'conditions' as FlowNode['type'], label: 'Condições', icon: GitBranch, color: 'text-indigo-500' },
-    { type: 'number' as FlowNode['type'], label: 'Número', icon: Hash, color: 'text-blue-600' },
-    { type: 'simpleCalculator' as FlowNode['type'], label: 'Calc. Simples', icon: Plus, color: 'text-green-600' },
-    { type: 'specialConditions' as FlowNode['type'], label: 'Cond. Especiais', icon: GitBranch, color: 'text-purple-600' },
   ];
 
   const handleAddNode = (type: FlowNode['type']) => {
