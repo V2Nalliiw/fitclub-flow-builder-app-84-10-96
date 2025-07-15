@@ -76,6 +76,8 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
 }) => {
   const [conditions, setConditions] = useState<AdvancedSpecialCondition[]>([]);
   const [selectedTab, setSelectedTab] = useState('data-sources');
+  const [titulo, setTitulo] = useState('');
+  const [descricao, setDescricao] = useState('');
   const [detectedFields, setDetectedFields] = useState<{
     calculations: string[];
     questions: string[];
@@ -131,6 +133,19 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
       setConditions([]);
     }
   }, [initialData]);
+
+  // Inicializar título e descrição quando modal abre
+  useEffect(() => {
+    if (isOpen && initialData) {
+      console.log('🔧 Initializing titulo and descricao from initialData');
+      setTitulo(initialData.titulo || '');
+      setDescricao(initialData.descricao || '');
+    } else if (isOpen && !initialData) {
+      console.log('🆕 Modal opened with no initial data - clearing titulo and descricao');
+      setTitulo('');
+      setDescricao('');
+    }
+  }, [isOpen, initialData]);
 
   // Auto-detect available fields from previous nodes
   useEffect(() => {
@@ -298,6 +313,8 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
 
   const handleSave = () => {
     console.log('💾 Saving special conditions:', conditions);
+    console.log('💾 Saving titulo:', titulo);
+    console.log('💾 Saving descricao:', descricao);
     
     // Converter para formato compatível com sistema antigo
     const compatibleData = conditions.map(condition => ({
@@ -320,6 +337,8 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
 
     // Salvar tanto no formato novo quanto no antigo para compatibilidade
     const saveData = { 
+      titulo: titulo,
+      descricao: descricao,
       compositeConditions: compatibleData,
       condicoesEspeciais: compatibleData 
     };
@@ -356,6 +375,36 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
 
           <div className="flex-1 overflow-y-auto mt-4 min-h-0">
             <TabsContent value="data-sources" className="space-y-4">
+              {/* Campos básicos do nó */}
+              <Card className="bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    📝 Configurações Básicas do Nó
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium">Título do Nó</Label>
+                    <Input
+                      value={titulo}
+                      onChange={(e) => setTitulo(e.target.value)}
+                      placeholder="Ex: Avaliação de Risco, Classificação IMC..."
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Descrição (opcional)</Label>
+                    <Textarea
+                      value={descricao}
+                      onChange={(e) => setDescricao(e.target.value)}
+                      placeholder="Descreva o que este nó de condições especiais faz no fluxo..."
+                      className="mt-1"
+                      rows={2}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+              
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
