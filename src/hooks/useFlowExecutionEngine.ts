@@ -214,26 +214,34 @@ export const useFlowExecutionEngine = () => {
   };
 
   const processFormEndNode = async (executionId: string, step: ExecutionStep, nodeData: any) => {
+    console.log('🏁 FlowEngine: ===== INICIANDO PROCESSAMENTO FORMEND =====');
     console.log('🏁 FlowEngine: Processando FormEnd node', { executionId, nodeData });
+    console.log('🏁 FlowEngine: Step completo:', step);
     
     try {
       // Buscar dados da execução e do paciente
+      console.log('🔍 FlowEngine: Buscando dados da execução...');
       const { data: execution } = await supabase
         .from('flow_executions')
         .select('patient_id')
         .eq('id', executionId)
         .single();
 
+      console.log('🔍 FlowEngine: Resultado da busca de execução:', execution);
+
       if (!execution) {
         console.error('❌ FlowEngine: Execução não encontrada');
         return;
       }
 
+      console.log('🔍 FlowEngine: Buscando dados do paciente...');
       const { data: patient } = await supabase
         .from('profiles')
         .select('name, phone')
         .eq('user_id', (execution as any).patient_id)
         .single();
+
+      console.log('🔍 FlowEngine: Resultado da busca de paciente:', patient);
 
       if (!patient) {
         console.error('❌ FlowEngine: Paciente não encontrado');
@@ -329,14 +337,30 @@ export const useFlowExecutionEngine = () => {
       console.log('🔗 FlowEngine: URL final de conteúdo:', contentUrl);
 
       // ✨ ENVIAR WHATSAPP COM TEMPLATE OFICIAL
+      console.log('🔍 FlowEngine: Verificando condições para envio WhatsApp...');
+      console.log('🔍 FlowEngine: Patient existe:', !!patient);
+      console.log('🔍 FlowEngine: Patient phone:', patient ? (patient as any).phone : 'N/A');
+      
       if (patient && (patient as any).phone) {
+        console.log('📱 FlowEngine: ===== INICIANDO ENVIO WHATSAPP =====');
         console.log('📱 FlowEngine: Enviando WhatsApp de conclusão com template oficial...');
+        console.log('📱 FlowEngine: Dados do envio:', {
+          phone: (patient as any).phone,
+          template: 'formulario_concluido',
+          variables: {
+            patient_name: (patient as any).name || 'Paciente',
+            content_url: contentUrl
+          }
+        });
 
         // Usar template oficial aprovado
         const sendWithRetry = async (attempts = 3) => {
+          console.log(`🔄 FlowEngine: Iniciando retry com ${attempts} tentativas...`);
+          
           for (let i = 0; i < attempts; i++) {
             try {
-              console.log(`📱 Tentativa ${i + 1}/${attempts} de envio WhatsApp...`);
+              console.log(`📱 FlowEngine: ===== TENTATIVA ${i + 1}/${attempts} =====`);
+              console.log(`📱 FlowEngine: Chamando sendWhatsAppTemplateMessage...`);
               
               // Tentar template oficial primeiro
               const result = await sendWhatsAppTemplateMessage(
@@ -348,7 +372,10 @@ export const useFlowExecutionEngine = () => {
                 }
               );
               
+              console.log(`📱 FlowEngine: Resultado da tentativa ${i + 1}:`, result);
+              
               if (result.success) {
+                console.log('✅ FlowEngine: Enviando atividade de opt-in...');
                 await recordOptInActivity(
                   (execution as any).patient_id,
                   (patient as any).phone,
@@ -357,14 +384,16 @@ export const useFlowExecutionEngine = () => {
                 console.log('✅ FlowEngine: WhatsApp enviado com sucesso usando template oficial!');
                 return true;
               } else {
-                console.error(`❌ Falha no envio (tentativa ${i + 1}):`, result.error);
+                console.error(`❌ FlowEngine: Falha no envio (tentativa ${i + 1}):`, result.error);
                 if (i < attempts - 1) {
+                  console.log(`⏳ FlowEngine: Aguardando ${1000 * (i + 1)}ms antes da próxima tentativa...`);
                   await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
                 }
               }
             } catch (error) {
-              console.error(`❌ Erro no envio (tentativa ${i + 1}):`, error);
+              console.error(`❌ FlowEngine: Erro no envio (tentativa ${i + 1}):`, error);
               if (i < attempts - 1) {
+                console.log(`⏳ FlowEngine: Aguardando ${1000 * (i + 1)}ms antes da próxima tentativa...`);
                 await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
               }
             }
@@ -374,7 +403,8 @@ export const useFlowExecutionEngine = () => {
         };
         
         // Executar envio
-        sendWithRetry();
+        console.log('🚀 FlowEngine: Iniciando processo de envio...');
+        await sendWithRetry();
       } else {
         console.warn('⚠️ FlowEngine: Paciente sem telefone configurado');
       }
