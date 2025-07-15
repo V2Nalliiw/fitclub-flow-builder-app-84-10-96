@@ -220,46 +220,17 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
                 </h4>
                 <div className="space-y-3">
                   {step.arquivos.map((arquivo: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800/50">
-                      <div className="flex items-center">
-                        <FileText className="h-4 w-4 text-green-600 dark:text-green-400 mr-3" />
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-gray-100">
-                            {arquivo.original_filename || arquivo.nome || 'Arquivo'}
-                          </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {arquivo.file_type || arquivo.tipo || 'Documento'}
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const url = arquivo.file_url || arquivo.url;
-                          if (url) {
-                            window.open(url, '_blank');
-                          }
-                        }}
-                        className="text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-950/50"
-                      >
-                        Baixar
-                      </Button>
-                    </div>
+                    <EnhancedDocumentDisplay
+                      key={index}
+                      fileName={arquivo.original_filename || arquivo.nome || 'Arquivo'}
+                      fileUrl={arquivo.file_url || arquivo.url}
+                      fileType={arquivo.file_type || arquivo.tipo || 'application/pdf'}
+                      title={arquivo.original_filename || arquivo.nome || 'Material de Tratamento'}
+                      description="Conteúdo complementar para seu acompanhamento"
+                    />
                   ))}
                 </div>
               </div>
-            )}
-
-            {step.arquivo && (
-              <EnhancedDocumentDisplay
-                fileName={step.arquivo.split('/').pop() || 'documento'}
-                fileUrl={step.arquivo}
-                fileType={step.tipoConteudo === 'pdf' ? 'application/pdf' : 
-                         step.tipoConteudo === 'video' ? 'video/mp4' : 'image/jpeg'}
-                title="Material de Tratamento"
-                description="Conteúdo complementar para seu acompanhamento"
-              />
             )}
 
             {step.mensagemFinal && (
