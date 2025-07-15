@@ -8,6 +8,7 @@ interface CalculatorNodeProps {
   data: {
     label: string;
     calculatorFields?: any[];
+    calculatorQuestionFields?: any[];
     formula?: string;
     onDelete?: (nodeId: string) => void;
     onEdit?: () => void;
@@ -16,7 +17,8 @@ interface CalculatorNodeProps {
 }
 
 const CalculatorNode: React.FC<CalculatorNodeProps> = ({ data, id }) => {
-  const fieldCount = data.calculatorFields?.length || 0;
+  const calculatorFieldCount = data.calculatorFields?.length || 0;
+  const questionFieldCount = data.calculatorQuestionFields?.length || 0;
   const hasFormula = data.formula && data.formula.trim().length > 0;
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -67,8 +69,12 @@ const CalculatorNode: React.FC<CalculatorNodeProps> = ({ data, id }) => {
       
       <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
         <div className="flex items-center gap-1">
-          <span>📝</span>
-          <span>{fieldCount} campos</span>
+          <span>🧮</span>
+          <span>{calculatorFieldCount} cálculos</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span>❓</span>
+          <span>{questionFieldCount} perguntas</span>
         </div>
         {hasFormula && (
           <div className="flex items-center gap-1">

@@ -22,10 +22,12 @@ export interface FlowNode {
     formName?: string;
     // Campos específicos para o nó calculadora
     calculatorFields?: CalculatorField[];
+    calculatorQuestionFields?: CalculatorQuestionField[];
     formula?: string;
     resultLabel?: string;
     // Campos específicos para o nó condições
     conditions?: LegacyConditionRule[];
+    compositeConditions?: CompositeCondition[];
     // Campos específicos para o nó número
     pergunta?: string; // Nova: pergunta para o paciente responder
     nomenclatura?: string;
@@ -47,6 +49,18 @@ export interface CalculatorField {
   prefixo?: string;
   sufixo?: string;
   tipo: 'numero' | 'decimal';
+  fieldType: 'calculo'; // Tipo do campo
+  order: number; // Para ordenação
+}
+
+export interface CalculatorQuestionField {
+  id: string;
+  nomenclatura: string;
+  pergunta: string;
+  fieldType: 'pergunta'; // Tipo do campo
+  questionType: 'escolha-unica' | 'multipla-escolha';
+  opcoes: string[];
+  order: number; // Para ordenação
 }
 
 // Interface legada para compatibilidade
@@ -105,6 +119,23 @@ export interface ConditionRule {
   operator: 'eq' | 'ne' | 'gt' | 'lt' | 'gte' | 'lte' | 'between' | 'contains' | 'in';
   value: any;
   valueEnd?: any; // Para operador 'between'
+}
+
+// Novas interfaces para condições compostas
+export interface CompositeConditionRule {
+  id: string;
+  sourceType: 'calculation' | 'question'; // Fonte dos dados
+  sourceField: string; // Campo específico (nomenclatura)
+  operator: 'equal' | 'not_equal' | 'greater' | 'less' | 'greater_equal' | 'less_equal' | 'between' | 'contains' | 'in';
+  value: any;
+  valueEnd?: any; // Para operador 'between'
+}
+
+export interface CompositeCondition {
+  id: string;
+  label: string;
+  logic: 'AND' | 'OR'; // Operador lógico entre regras
+  rules: CompositeConditionRule[]; // Múltiplas regras
 }
 
 export interface FlowEdge {

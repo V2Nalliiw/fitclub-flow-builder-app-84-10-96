@@ -1,10 +1,11 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calculator, ArrowRight } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Calculator, ArrowRight, Hash, HelpCircle } from 'lucide-react';
 
 interface CalculatorStepRendererProps {
   step: any;
@@ -18,27 +19,67 @@ export const CalculatorStepRenderer: React.FC<CalculatorStepRendererProps> = ({
   isLoading = false
 }) => {
   const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
-  const [responses, setResponses] = useState<Record<string, number>>({});
+  const [calculationResponses, setCalculationResponses] = useState<Record<string, number>>({});
+  const [questionResponses, setQuestionResponses] = useState<Record<string, any>>({});
   const [showResult, setShowResult] = useState(false);
   const [calculatedResult, setCalculatedResult] = useState<number | null>(null);
 
-  const fields = step.calculatorFields || [];
-  const currentField = fields[currentFieldIndex];
+  // Combinar todos os campos e ordenar
+  const calculatorFields = step.calculatorFields || [];
+  const questionFields = step.calculatorQuestionFields || [];
+  
+  const allFields = [
+    ...calculatorFields.map((f: any) => ({ ...f, fieldType: 'calculo' })),
+    ...questionFields.map((f: any) => ({ ...f, fieldType: 'pergunta' }))
+  ].sort((a, b) => (a.order || 0) - (b.order || 0));
 
-  const handleFieldResponse = (value: string) => {
+  const currentField = allFields[currentFieldIndex];
+
+  const handleCalculationResponse = (value: string) => {
     const numericValue = parseFloat(value) || 0;
     const newResponses = {
-      ...responses,
+      ...calculationResponses,
       [currentField.nomenclatura]: numericValue
     };
-    setResponses(newResponses);
+    setCalculationResponses(newResponses);
+    moveToNextField();
+  };
 
-    if (currentFieldIndex < fields.length - 1) {
+  const handleQuestionResponse = (value: any) => {
+    const newResponses = {
+      ...questionResponses,
+      [currentField.nomenclatura]: value
+    };
+    setQuestionResponses(newResponses);
+    moveToNextField();
+  };
+
+  const handleMultipleChoiceChange = (option: string, checked: boolean) => {
+    const currentValues = questionResponses[currentField.nomenclatura] || [];
+    let newValues;
+    
+    if (checked) {
+      newValues = [...currentValues, option];
+    } else {
+      newValues = currentValues.filter((v: string) => v !== option);
+    }
+    
+    const newResponses = {
+      ...questionResponses,
+      [currentField.nomenclatura]: newValues
+    };
+    setQuestionResponses(newResponses);
+  };
+
+  const moveToNextField = () => {
+    if (currentFieldIndex < allFields.length - 1) {
       setCurrentFieldIndex(currentFieldIndex + 1);
     } else {
-      // Calcular resultado
-      const result = calculateFormula(step.formula, newResponses);
-      setCalculatedResult(result);
+      // Calcular resultado apenas se houver fórmula e campos de cálculo
+      if (step.formula && calculatorFields.length > 0) {
+        const result = calculateFormula(step.formula, calculationResponses);
+        setCalculatedResult(result);
+      }
       setShowResult(true);
     }
   };
@@ -69,7 +110,8 @@ export const CalculatorStepRenderer: React.FC<CalculatorStepRendererProps> = ({
     onComplete({
       nodeId: step.nodeId,
       nodeType: 'calculator',
-      responses,
+      calculationResponses,
+      questionResponses,
       result: calculatedResult,
       timestamp: new Date().toISOString()
     });
@@ -85,19 +127,52 @@ export const CalculatorStepRenderer: React.FC<CalculatorStepRendererProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="text-center py-8">
-            <div className="text-4xl font-bold text-orange-600 mb-4">
-              {calculatedResult?.toFixed(2)}
+          {/* Resultado do Cálculo */}
+          {calculatedResult !== null && (
+            <div className="text-center py-6">
+              <div className="text-4xl font-bold text-orange-600 mb-4">
+                {calculatedResult.toFixed(2)}
+              </div>
             </div>
-            
-            <div className="space-y-2 text-sm text-gray-600">
-              <h4 className="font-semibold">Valores informados:</h4>
-              {fields.map((field: any) => (
-                <div key={field.id}>
-                  {field.pergunta}: {field.prefixo}{responses[field.nomenclatura]}{field.sufixo}
+          )}
+          
+          {/* Resumo das Respostas */}
+          <div className="space-y-4">
+            {calculatorFields.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-blue-600 mb-2 flex items-center gap-2">
+                  <Hash className="h-4 w-4" />
+                  Valores Informados
+                </h4>
+                <div className="space-y-2 text-sm text-gray-600">
+                  {calculatorFields.map((field: any) => (
+                    <div key={field.id}>
+                      {field.pergunta}: {field.prefixo}{calculationResponses[field.nomenclatura]}{field.sufixo}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
+
+            {questionFields.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-green-600 mb-2 flex items-center gap-2">
+                  <HelpCircle className="h-4 w-4" />
+                  Respostas das Perguntas
+                </h4>
+                <div className="space-y-2 text-sm text-gray-600">
+                  {questionFields.map((field: any) => {
+                    const response = questionResponses[field.nomenclatura];
+                    const displayResponse = Array.isArray(response) ? response.join(', ') : response;
+                    return (
+                      <div key={field.id}>
+                        {field.pergunta}: <strong>{displayResponse}</strong>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-center">
@@ -128,57 +203,115 @@ export const CalculatorStepRenderer: React.FC<CalculatorStepRendererProps> = ({
           {step.title}
         </CardTitle>
         <div className="text-sm text-gray-500">
-          Pergunta {currentFieldIndex + 1} de {fields.length}
+          {currentField.fieldType === 'calculo' ? 'Campo de Cálculo' : 'Pergunta'} {currentFieldIndex + 1} de {allFields.length}
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
-          <div>
+          <div className="flex items-center gap-2">
+            {currentField.fieldType === 'calculo' ? (
+              <Hash className="h-5 w-5 text-blue-600" />
+            ) : (
+              <HelpCircle className="h-5 w-5 text-green-600" />
+            )}
             <Label className="text-lg">{currentField.pergunta}</Label>
           </div>
           
-          <div className="flex items-center gap-2">
-            {currentField.prefixo && (
-              <span className="text-gray-600">{currentField.prefixo}</span>
-            )}
-            <Input
-              type={currentField.tipo === 'decimal' ? 'number' : 'number'}
-              step={currentField.tipo === 'decimal' ? '0.01' : '1'}
-              placeholder="Digite o valor..."
-              className="text-lg text-center"
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  const target = e.target as HTMLInputElement;
-                  handleFieldResponse(target.value);
-                }
-              }}
-              autoFocus
-            />
-            {currentField.sufixo && (
-              <span className="text-gray-600">{currentField.sufixo}</span>
-            )}
-          </div>
+          {/* Renderização baseada no tipo de campo */}
+          {currentField.fieldType === 'calculo' ? (
+            /* Campo de Cálculo */
+            <div className="flex items-center gap-2">
+              {currentField.prefixo && (
+                <span className="text-gray-600">{currentField.prefixo}</span>
+              )}
+              <Input
+                type={currentField.tipo === 'decimal' ? 'number' : 'number'}
+                step={currentField.tipo === 'decimal' ? '0.01' : '1'}
+                placeholder="Digite o valor..."
+                className="text-lg text-center"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    const target = e.target as HTMLInputElement;
+                    handleCalculationResponse(target.value);
+                  }
+                }}
+                autoFocus
+              />
+              {currentField.sufixo && (
+                <span className="text-gray-600">{currentField.sufixo}</span>
+              )}
+            </div>
+          ) : currentField.questionType === 'escolha-unica' ? (
+            /* Pergunta com Escolha Única */
+            <Select onValueChange={handleQuestionResponse}>
+              <SelectTrigger className="text-lg">
+                <SelectValue placeholder="Selecione uma opção..." />
+              </SelectTrigger>
+              <SelectContent>
+                {currentField.opcoes.map((opcao: string) => (
+                  <SelectItem key={opcao} value={opcao}>
+                    {opcao}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            /* Pergunta com Múltipla Escolha */
+            <div className="space-y-3">
+              {currentField.opcoes.map((opcao: string) => (
+                <div key={opcao} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={opcao}
+                    onCheckedChange={(checked) => handleMultipleChoiceChange(opcao, checked as boolean)}
+                  />
+                  <Label htmlFor={opcao} className="text-base">
+                    {opcao}
+                  </Label>
+                </div>
+              ))}
+              
+              <Button
+                onClick={() => {
+                  const currentValues = questionResponses[currentField.nomenclatura] || [];
+                  handleQuestionResponse(currentValues);
+                }}
+                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white mt-4"
+                size="lg"
+                disabled={!questionResponses[currentField.nomenclatura]?.length}
+              >
+                Próxima Pergunta
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          )}
 
-          <Button
-            onClick={() => {
-              const input = document.querySelector('input[type="number"]') as HTMLInputElement;
-              if (input) {
-                handleFieldResponse(input.value);
-              }
-            }}
-            className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white"
-            size="lg"
-          >
-            {currentFieldIndex < fields.length - 1 ? 'Próxima Pergunta' : 'Calcular'}
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
+          {/* Botão para campos de cálculo e escolha única */}
+          {(currentField.fieldType === 'calculo' || currentField.questionType === 'escolha-unica') && (
+            <Button
+              onClick={() => {
+                if (currentField.fieldType === 'calculo') {
+                  const input = document.querySelector('input[type="number"]') as HTMLInputElement;
+                  if (input) {
+                    handleCalculationResponse(input.value);
+                  }
+                }
+                // Para escolha única, o onClick do Select já chama handleQuestionResponse
+              }}
+              className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white"
+              size="lg"
+              disabled={currentField.questionType === 'escolha-unica' && !questionResponses[currentField.nomenclatura]}
+            >
+              {currentFieldIndex < allFields.length - 1 ? 'Próximo Campo' : 'Finalizar'}
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          )}
         </div>
 
         {/* Progress */}
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
             className="bg-orange-500 h-2 rounded-full transition-all duration-300"
-            style={{ width: `${((currentFieldIndex + 1) / fields.length) * 100}%` }}
+            style={{ width: `${((currentFieldIndex + 1) / allFields.length) * 100}%` }}
           ></div>
         </div>
       </CardContent>
