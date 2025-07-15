@@ -28,7 +28,7 @@ import CalculatorNodeConfig from './CalculatorNodeConfig';
 import ConditionsNodeConfig from './ConditionsNodeConfig';
 import { NumberNodeConfig } from './NumberNodeConfig';
 import { SimpleCalculatorNodeConfig } from './SimpleCalculatorNodeConfig';
-import { SpecialConditionsNodeConfig } from './SpecialConditionsNodeConfig';
+
 import { TabletFlowMenu } from '@/components/layout/components/TabletFlowMenu';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
 
@@ -357,13 +357,6 @@ export const FlowBuilder = () => {
         availableFields={getConnectedNumberFields(selectedNode?.id || '')}
       />
 
-      <SpecialConditionsNodeConfig
-        isOpen={isSpecialConditionsConfigOpen}
-        onClose={() => setIsSpecialConditionsConfigOpen(false)}
-        onSave={handleSpecialConditionsConfigSave}
-        initialData={selectedNode?.data}
-        availableFields={getConnectedCalculatorFields(selectedNode?.id || '')}
-      />
 
       <FlowPreviewModal
         isOpen={isPreviewModalOpen}
