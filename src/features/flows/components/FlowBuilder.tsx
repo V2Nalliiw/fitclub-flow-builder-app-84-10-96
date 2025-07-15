@@ -329,6 +329,21 @@ export const FlowBuilder = () => {
         onClose={() => setIsConditionsConfigOpen(false)}
         onSave={handleConditionsConfigSave}
         initialData={selectedNode?.data}
+        availableCalculations={(() => {
+          const { calculations } = getConnectedCalculatorFields(selectedNode?.id || '');
+          return calculations.map(calc => ({ 
+            nomenclatura: calc.nomenclatura, 
+            label: calc.label 
+          }));
+        })()}
+        availableQuestions={(() => {
+          const { questions } = getConnectedCalculatorFields(selectedNode?.id || '');
+          return questions.map(quest => ({ 
+            nomenclatura: quest.nomenclatura, 
+            pergunta: quest.label,
+            opcoes: quest.opcoes || []
+          }));
+        })()}
       />
 
       <NumberNodeConfig
