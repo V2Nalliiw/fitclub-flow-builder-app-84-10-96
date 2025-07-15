@@ -7,6 +7,7 @@ import { NodeHelpButton } from '@/components/ui/node-help-button';
 interface SpecialConditionsNodeProps {
   data: {
     label: string;
+    compositeConditions?: any[];
     condicoesEspeciais?: any[];
     onDelete?: (nodeId: string) => void;
     onEdit?: () => void;
@@ -18,7 +19,7 @@ interface SpecialConditionsNodeProps {
 
 const SpecialConditionsNode: React.FC<SpecialConditionsNodeProps> = ({ data, id, selected }) => {
 
-  const condicoes = data.condicoesEspeciais || [];
+  const condicoes = data.compositeConditions || data.condicoesEspeciais || [];
   const condicaoCount = condicoes.length;
 
   return (

@@ -82,12 +82,19 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
   }>({ calculations: [], questions: [] });
 
   useEffect(() => {
-    if (initialData?.condicoesEspeciais) {
+    console.log('🔍 SpecialConditions useEffect triggered - initialData:', initialData);
+    
+    // Procurar por ambos os formatos: compositeConditions (novo) e condicoesEspeciais (antigo)
+    const existingConditions = initialData?.compositeConditions || initialData?.condicoesEspeciais;
+    
+    console.log('📋 Found existing conditions:', existingConditions);
+    
+    if (existingConditions && existingConditions.length > 0) {
       // Migrar dados antigos para novo formato se necessário
-      const migratedConditions = initialData.condicoesEspeciais.map((old: any) => ({
+      const migratedConditions = existingConditions.map((old: any) => ({
         id: old.id || Date.now().toString(),
         name: old.label || 'Condição sem nome',
-        description: '',
+        description: old.description || '',
         dataSources: {
           numericFields: old.tipos?.includes('numerico') ? [old.campo || ''] : [],
           questionResponses: old.tipos?.includes('pergunta') ? [old.campo || ''] : [],
@@ -116,26 +123,41 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
         },
         label: old.label || 'Condição',
       }));
+      
+      console.log('✅ Migrated conditions:', migratedConditions);
       setConditions(migratedConditions);
+    } else {
+      console.log('🆕 No existing conditions found - starting fresh');
+      setConditions([]);
     }
   }, [initialData]);
 
   // Auto-detect available fields from previous nodes
   useEffect(() => {
     console.log('🔍 SpecialConditionsNodeConfigAdvanced - availableFields:', availableFields);
+    console.log('🔍 Modal isOpen:', isOpen);
+    
     if (availableFields) {
-      const detectedCalcs = availableFields.calculations.map(f => f.nomenclatura);
-      const detectedQuests = availableFields.questions.map(f => f.nomenclatura);
+      const detectedCalcs = availableFields.calculations?.map(f => f.nomenclatura) || [];
+      const detectedQuests = availableFields.questions?.map(f => f.nomenclatura) || [];
       
       console.log('✅ Detected calculations:', detectedCalcs);
       console.log('✅ Detected questions:', detectedQuests);
+      console.log('📊 Available calculations full data:', availableFields.calculations);
+      console.log('❓ Available questions full data:', availableFields.questions);
       
       setDetectedFields({
         calculations: detectedCalcs,
         questions: detectedQuests
       });
+    } else {
+      console.log('❌ No availableFields provided');
+      setDetectedFields({
+        calculations: [],
+        questions: []
+      });
     }
-  }, [availableFields]);
+  }, [availableFields, isOpen]);
 
   const operatorLabels = {
     'eq': 'Igual a (=)',
@@ -275,10 +297,13 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
   };
 
   const handleSave = () => {
+    console.log('💾 Saving special conditions:', conditions);
+    
     // Converter para formato compatível com sistema antigo
     const compatibleData = conditions.map(condition => ({
       id: condition.id,
       label: condition.name,
+      description: condition.description,
       tipos: [
         ...(condition.dataSources.numericFields.length > 0 ? ['numerico'] : []),
         ...(condition.dataSources.questionResponses.length > 0 ? ['pergunta'] : []),
@@ -293,7 +318,14 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
       _advanced: condition,
     }));
 
-    onSave({ condicoesEspeciais: compatibleData });
+    // Salvar tanto no formato novo quanto no antigo para compatibilidade
+    const saveData = { 
+      compositeConditions: compatibleData,
+      condicoesEspeciais: compatibleData 
+    };
+    
+    console.log('💾 Final save data:', saveData);
+    onSave(saveData);
   };
 
   return (
@@ -332,8 +364,39 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
                 </AlertDescription>
               </Alert>
 
+              {/* Debug: Status dos campos disponíveis */}
+              <Card className="bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    🔍 Debug: Status dos Campos Disponíveis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-xs">
+                  <div>
+                    <strong>Modal aberto:</strong> {isOpen ? '✅ Sim' : '❌ Não'}
+                  </div>
+                  <div>
+                    <strong>AvailableFields recebido:</strong> {availableFields ? '✅ Sim' : '❌ Não'}
+                  </div>
+                  <div>
+                    <strong>Cálculos detectados:</strong> {detectedFields.calculations.length} campos
+                  </div>
+                  <div>
+                    <strong>Perguntas detectadas:</strong> {detectedFields.questions.length} campos
+                  </div>
+                  {availableFields && (
+                    <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                      <div><strong>Raw availableFields:</strong></div>
+                      <pre className="text-xs overflow-x-auto">
+                        {JSON.stringify(availableFields, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
               {/* Auto-detected fields */}
-              {(detectedFields.calculations.length > 0 || detectedFields.questions.length > 0) && (
+              {(detectedFields.calculations.length > 0 || detectedFields.questions.length > 0) ? (
                 <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">
@@ -345,7 +408,7 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
                     {detectedFields.calculations.length > 0 && (
                       <div>
                         <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">
-                          Campos de Cálculo Disponíveis ({detectedFields.calculations.length}):
+                          Cálculos Disponíveis ({detectedFields.calculations.length}):
                         </Label>
                         <div className="flex flex-wrap gap-2 mt-1">
                           {detectedFields.calculations.map((field, index) => (
@@ -360,7 +423,7 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
                     {detectedFields.questions.length > 0 && (
                       <div>
                         <Label className="text-xs font-medium text-green-700 dark:text-green-300">
-                          Campos de Pergunta Disponíveis ({detectedFields.questions.length}):
+                          Perguntas Disponíveis ({detectedFields.questions.length}):
                         </Label>
                         <div className="flex flex-wrap gap-2 mt-1">
                           {detectedFields.questions.map((field, index) => (
@@ -372,6 +435,20 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
                         </div>
                       </div>
                     )}
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      ⚠️ Nenhum Campo Disponível Detectado
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-red-700 dark:text-red-300">
+                      Não foram encontrados campos de cálculo ou perguntas anteriores neste fluxo.
+                      Certifique-se de que há nós de "Calculadora" ou "Pergunta" antes deste nó de condições especiais.
+                    </p>
                   </CardContent>
                 </Card>
               )}
