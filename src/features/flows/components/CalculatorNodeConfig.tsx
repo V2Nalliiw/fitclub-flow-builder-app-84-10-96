@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,25 +25,59 @@ const CalculatorNodeConfig: React.FC<CalculatorNodeConfigProps> = ({
   onSave,
   initialData
 }) => {
-  const [titulo, setTitulo] = useState(initialData?.titulo || '');
-  const [descricao, setDescricao] = useState(initialData?.descricao || '');
-  const [resultLabel, setResultLabel] = useState(initialData?.resultLabel || 'Resultado');
-  const [formula, setFormula] = useState(initialData?.formula || '');
-  // Unified field list combining both calculation and question fields
-  const [allFields, setAllFields] = useState<(CalculatorField | CalculatorQuestionField)[]>(() => {
-    const calcFields = (initialData?.calculatorFields || []).map((field: any, index: number) => ({
+  const [titulo, setTitulo] = useState('');
+  const [descricao, setDescricao] = useState('');
+  const [resultLabel, setResultLabel] = useState('Resultado');
+  const [formula, setFormula] = useState('');
+  const [allFields, setAllFields] = useState<(CalculatorField | CalculatorQuestionField)[]>([]);
+
+  // Função para inicializar os campos a partir dos dados iniciais
+  const initializeFields = useCallback((data: any) => {
+    console.log('🔄 Initializing calculator fields with data:', data);
+    
+    if (!data) {
+      console.log('⚠️ No initial data provided');
+      return [];
+    }
+
+    const calcFields = (data.calculatorFields || []).map((field: any, index: number) => ({
       ...field,
       fieldType: 'calculo',
       order: field.order ?? index
     }));
-    const questFields = (initialData?.calculatorQuestionFields || []).map((field: any, index: number) => ({
+    
+    const questFields = (data.calculatorQuestionFields || []).map((field: any, index: number) => ({
       ...field,
       fieldType: 'pergunta',
       order: field.order ?? (calcFields.length + index)
     }));
     
-    return [...calcFields, ...questFields].sort((a, b) => a.order - b.order);
-  });
+    const combined = [...calcFields, ...questFields].sort((a, b) => a.order - b.order);
+    console.log('📊 Initialized fields:', combined);
+    
+    return combined;
+  }, []);
+
+  // Sincronizar estado com initialData quando modal abre ou dados mudam
+  useEffect(() => {
+    if (isOpen && initialData) {
+      console.log('🚀 Calculator modal opened with initial data:', initialData);
+      
+      setTitulo(initialData.titulo || '');
+      setDescricao(initialData.descricao || '');
+      setResultLabel(initialData.resultLabel || 'Resultado');
+      setFormula(initialData.formula || '');
+      setAllFields(initializeFields(initialData));
+    } else if (isOpen && !initialData) {
+      console.log('🆕 Calculator modal opened with no initial data - resetting');
+      
+      setTitulo('');
+      setDescricao('');
+      setResultLabel('Resultado');
+      setFormula('');
+      setAllFields([]);
+    }
+  }, [isOpen, initialData, initializeFields]);
 
   const addCalculatorField = () => {
     const maxOrder = Math.max(...allFields.map(f => f.order), -1);
