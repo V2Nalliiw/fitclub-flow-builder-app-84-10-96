@@ -8,8 +8,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowRight, ArrowLeft, FileText, MessageCircle, CheckCircle, Clock } from 'lucide-react';
+import { DelayTimer } from './DelayTimer';
 import { EnhancedDocumentDisplay } from './EnhancedDocumentDisplay';
-import { CalculatorStepRenderer } from './CalculatorStepRenderer';
+import { MedicalQuestionnaireStepRenderer } from './MedicalQuestionnaireStepRenderer';
 import { ConditionsStepRenderer } from './ConditionsStepRenderer';
 import { NumberStepRenderer } from './NumberStepRenderer';
 import { SimpleCalculatorStepRenderer } from './SimpleCalculatorStepRenderer';
@@ -67,7 +68,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
     switch (step.nodeType) {
       case 'calculator':
         return (
-          <CalculatorStepRenderer
+          <MedicalQuestionnaireStepRenderer
             step={step}
             onComplete={onComplete}
             isLoading={isLoading}
@@ -116,26 +117,38 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
 
       case 'formStart':
         return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FileText className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                {step.title}
-              </h3>
-              {step.description && (
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  {step.description}
-                </p>
-              )}
-            </div>
-            
-            <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-4">
-              <p className="text-green-800 dark:text-green-200 text-center font-medium">
-                ✅ Clique em "Continuar" para iniciar este formulário
-              </p>
-            </div>
+          <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
+            <Card className="w-full max-w-md bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-0 shadow-xl animate-fade-in">
+              <CardContent className="p-8 text-center">
+                <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FileText className="h-10 w-10 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+                  {step.title || 'Novo Formulário'}
+                </h3>
+                {step.description && (
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    {step.description}
+                  </p>
+                )}
+                
+                <div className="bg-green-500/10 dark:bg-green-500/20 rounded-lg p-4 mb-6">
+                  <p className="text-green-700 dark:text-green-300 font-medium">
+                    ✅ Formulário pronto para preenchimento
+                  </p>
+                </div>
+
+                <Button
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 rounded-xl font-medium"
+                  size="lg"
+                >
+                  {isLoading ? 'Processando...' : 'Iniciar Formulário'}
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         );
 
@@ -202,103 +215,75 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
 
       case 'formEnd':
         return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-primary to-primary/80 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                {step.title || 'Formulário Concluído'}
-              </h3>
-              {step.description && (
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  {step.description}
-                </p>
-              )}
-            </div>
-
-            {/* ✨ EXIBIR ARQUIVOS PARA DOWNLOAD */}
-            {step.arquivos && Array.isArray(step.arquivos) && step.arquivos.length > 0 && (
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-lg p-6 border border-green-200 dark:border-green-800/50">
-                <h4 className="text-lg font-semibold text-green-800 dark:text-green-200 mb-4 flex items-center">
-                  <FileText className="h-5 w-5 mr-2" />
-                  Seus materiais estão prontos para download
-                </h4>
-                <div className="space-y-3">
-                  {step.arquivos.map((arquivo: any, index: number) => (
-                    <EnhancedDocumentDisplay
-                      key={index}
-                      fileName={arquivo.original_filename || arquivo.nome || 'Arquivo'}
-                      fileUrl={arquivo.file_url || arquivo.url}
-                      fileType={arquivo.file_type || arquivo.tipo || 'application/pdf'}
-                      title={arquivo.original_filename || arquivo.nome || 'Material de Tratamento'}
-                      description="Conteúdo complementar para seu acompanhamento"
-                    />
-                  ))}
+          <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
+            <Card className="w-full max-w-md bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-0 shadow-xl animate-fade-in">
+              <CardContent className="p-8 text-center">
+                <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle className="h-10 w-10 text-white" />
                 </div>
-              </div>
-            )}
-
-            {step.mensagemFinal && (
-              <div className="bg-primary/10 dark:bg-primary/20 rounded-lg p-6 border border-primary/20 dark:border-primary/30">
-                <p className="text-primary dark:text-primary text-center font-medium">
-                  {step.mensagemFinal}
-                </p>
-              </div>
-            )}
-
-            <div className="bg-primary/10 dark:bg-primary/20 rounded-lg p-4">
-              <p className="text-primary dark:text-primary text-center font-medium">
-                🎉 Clique em "Finalizar" para concluir esta etapa
-                {step.delayAmount && step.delayType && (
-                  <span className="block mt-2 text-sm">
-                    ⏰ Após finalizar, aguarde {step.delayAmount} {step.delayType} para a próxima etapa
-                  </span>
+                
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+                  {step.title || 'Formulário Concluído! ✅'}
+                </h3>
+                
+                {step.description && (
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    {step.description}
+                  </p>
                 )}
-              </p>
-            </div>
+
+                {/* ✨ EXIBIR ARQUIVOS PARA DOWNLOAD */}
+                {step.arquivos && Array.isArray(step.arquivos) && step.arquivos.length > 0 && (
+                  <div className="bg-emerald-500/10 dark:bg-emerald-500/20 rounded-lg p-4 mb-6 border border-emerald-500/20">
+                    <h4 className="text-lg font-semibold text-emerald-700 dark:text-emerald-300 mb-3 flex items-center justify-center">
+                      <FileText className="h-5 w-5 mr-2" />
+                      Materiais Enviados
+                    </h4>
+                    <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                      Seus materiais foram enviados por WhatsApp
+                    </p>
+                  </div>
+                )}
+
+                {step.mensagemFinal && (
+                  <div className="bg-emerald-500/10 dark:bg-emerald-500/20 rounded-lg p-4 mb-6 border border-emerald-500/20">
+                    <p className="text-emerald-700 dark:text-emerald-300 font-medium">
+                      {step.mensagemFinal}
+                    </p>
+                  </div>
+                )}
+
+                <div className="bg-emerald-500/10 dark:bg-emerald-500/20 rounded-lg p-4 mb-6">
+                  <p className="text-emerald-700 dark:text-emerald-300 font-medium">
+                    🎉 Parabéns! Você concluiu este formulário com sucesso.
+                    {step.delayAmount && step.delayType && (
+                      <span className="block mt-2 text-sm">
+                        ⏰ Em {step.delayAmount} {step.delayType} você receberá a próxima etapa
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                <Button
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-3 rounded-xl font-medium"
+                  size="lg"
+                >
+                  {isLoading ? 'Processando...' : 'Finalizar'}
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         );
 
       case 'delay':
         return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Clock className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                Aguardando próxima etapa
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                O sistema está processando um intervalo de tempo programado.
-              </p>
-            </div>
-            
-            <div className="bg-orange-50 dark:bg-orange-950/20 rounded-lg p-6 border border-orange-200 dark:border-orange-800/50">
-              <div className="flex items-center justify-center mb-4">
-                <Clock className="h-6 w-6 text-orange-600 dark:text-orange-400 mr-2" />
-                <span className="text-lg font-semibold text-orange-800 dark:text-orange-200">
-                  Intervalo Programado
-                </span>
-              </div>
-              {step.delayAmount && step.delayType && (
-                <p className="text-orange-700 dark:text-orange-300 text-center mb-4">
-                  📅 Aguardar {step.delayAmount} {step.delayType}
-                </p>
-              )}
-              <p className="text-orange-600 dark:text-orange-400 text-center text-sm">
-                Este intervalo foi programado pela clínica para otimizar seu tratamento.
-                Você receberá uma notificação quando a próxima etapa estiver disponível.
-              </p>
-            </div>
-            
-            <div className="bg-primary/10 dark:bg-primary/20 rounded-lg p-4">
-              <p className="text-primary dark:text-primary text-center font-medium">
-                ✅ Clique em "Continuar" para processar este intervalo
-              </p>
-            </div>
-          </div>
+          <DelayTimer
+            availableAt={step.availableAt || new Date().toISOString()}
+            onDelayExpired={handleSubmit}
+          />
         );
 
       default:
@@ -346,8 +331,8 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
     }
   };
 
-  // Para calculadora, condições e novos nós que têm seus próprios botões
-  if (step.nodeType === 'calculator' || step.nodeType === 'conditions' || step.nodeType === 'number' || step.nodeType === 'simpleCalculator' || step.nodeType === 'specialConditions') {
+  // Para calculadora, condições, delay e novos nós que têm seus próprios botões
+  if (step.nodeType === 'calculator' || step.nodeType === 'conditions' || step.nodeType === 'number' || step.nodeType === 'simpleCalculator' || step.nodeType === 'specialConditions' || step.nodeType === 'delay' || step.nodeType === 'formStart' || step.nodeType === 'formEnd') {
     return renderStepContent();
   }
 

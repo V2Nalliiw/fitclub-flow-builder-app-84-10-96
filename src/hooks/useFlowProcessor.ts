@@ -213,6 +213,49 @@ export const useFlowProcessor = () => {
 
       updatedSteps[stepIndex] = completedStep;
 
+      // Find next available step
+      let nextStepIndex = stepIndex + 1;
+      let nextStep = null;
+      let nextAvailableAt = null;
+      let newStatus = 'completed';
+
+      if (nextStepIndex < updatedSteps.length) {
+        nextStep = updatedSteps[nextStepIndex];
+      }
+
+      // ⚠️ ENVIAR WHATSAPP PARA FORMSTART NODES
+      if (nextStep && nextStep.nodeType === 'formStart') {
+        console.log('📱 FlowProcessor: Próximo step é FormStart, enviando notificação WhatsApp');
+        
+        try {
+          // Buscar dados da execução
+          const { data: executionData } = await supabase
+            .from('flow_executions')
+            .select('patient_id, flow_name')
+            .eq('id', executionId)
+            .single();
+
+          if (executionData) {
+            // Enviar notificação de novo formulário
+            const { data: response, error } = await supabase.functions.invoke('send-form-notification', {
+              body: {
+                patientId: executionData.patient_id,
+                formName: nextStep.title || executionData.flow_name || 'Formulário',
+                executionId: executionId
+              }
+            });
+
+            if (error) {
+              console.error('❌ FlowProcessor: Erro ao enviar notificação FormStart:', error);
+            } else {
+              console.log('✅ FlowProcessor: Notificação FormStart enviada:', response);
+            }
+          }
+        } catch (error) {
+          console.error('❌ FlowProcessor: Erro crítico ao enviar notificação FormStart:', error);
+        }
+      }
+
       // Recalcular steps baseado nas respostas atuais (para fluxos condicionais)
       if (completedStep.nodeType === 'conditions' || completedStep.nodeType === 'calculator') {
         console.log('🔄 Recalculando fluxo condicional baseado nas respostas...');
@@ -258,15 +301,8 @@ export const useFlowProcessor = () => {
       const completedStepsCount = updatedSteps.filter((step: any) => step.completed).length;
       const newProgress = Math.round((completedStepsCount / updatedSteps.length) * 100);
 
-      // Find next available step
-      let nextStepIndex = stepIndex + 1;
-      let nextStep = null;
-      let nextAvailableAt = null;
-      let newStatus = 'completed';
-
-      if (nextStepIndex < updatedSteps.length) {
-        nextStep = updatedSteps[nextStepIndex];
-        
+      // Update next step details if it exists
+      if (nextStep) {
         // Pass calculator result to conditions step
         if (nextStep.nodeType === 'conditions' && response?.result !== undefined) {
           nextStep.calculatorResult = response.result;

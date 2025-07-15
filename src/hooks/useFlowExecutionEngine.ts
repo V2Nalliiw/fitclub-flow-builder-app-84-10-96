@@ -100,79 +100,32 @@ export const useFlowExecutionEngine = () => {
     // Buscar dados da execução para obter o patient_id
     const { data: execution } = await supabase
       .from('flow_executions')
-      .select('patient_id')
+      .select('patient_id, flow_name')
       .eq('id', executionId)
       .single();
 
     if (execution) {
-      console.log('📞 FlowEngine: Enviando formulário via WhatsApp para paciente', { 
-        patientId: (execution as any).patient_id,
-        formName: nodeData.titulo || 'Formulário'
-      });
+      console.log('📞 FlowEngine: Enviando notificação de novo formulário via WhatsApp');
 
       try {
-        // Buscar dados do paciente diretamente
-        const { data: patient } = await supabase
-          .from('profiles')
-          .select('name, phone')
-          .eq('user_id', (execution as any).patient_id)
-          .single();
-
-        if (patient && (patient as any).phone) {
-          console.log('📞 FlowEngine: Enviando link do painel via WhatsApp', { 
+        // 🚀 USAR NOVA EDGE FUNCTION PARA NOTIFICAÇÃO DE FORMULÁRIO
+        console.log('📱 FlowEngine: Enviando via Edge Function send-form-notification...');
+        
+        const { data: response, error } = await supabase.functions.invoke('send-form-notification', {
+          body: {
             patientId: (execution as any).patient_id,
-            phone: (patient as any).phone,
-            formName: nodeData.titulo || 'Formulário'
-          });
+            formName: nodeData.titulo || (execution as any).flow_name || 'Formulário',
+            executionId: executionId
+          }
+        });
 
-          // Enviar link do painel principal diretamente
-          const patientDashboardUrl = `${window.location.origin}/`;
-          const customMessage = `📋 *${nodeData.titulo || 'Formulário'}*\n\nOlá ${(patient as any).name}! Você tem um novo formulário para preencher.\n\n🔗 Acesse aqui: ${patientDashboardUrl}\n\n_O formulário aparecerá automaticamente quando você abrir o link._`;
-          
-          // Simplificar validação - enviar imediatamente
-          console.log('🚀 FlowEngine: Enviando link do painel via WhatsApp imediatamente...');
-          
-          // Implementar retry robusto com múltiplas tentativas
-          const sendWithRetry = async (attempts = 5) => {
-            for (let i = 0; i < attempts; i++) {
-              try {
-                console.log(`📱 FlowEngine: Enviando via WhatsApp (tentativa ${i + 1}/${attempts})...`);
-                const result = await sendMessage((patient as any).phone, customMessage);
-                
-                console.log('📱 FlowEngine: Resultado do envio:', result);
-                
-                if (result.success) {
-                  await recordOptInActivity(
-                    (execution as any).patient_id,
-                    (patient as any).phone,
-                    'whatsapp_sent'
-                  );
-                  console.log('✅ FlowEngine: Link do painel enviado com sucesso via WhatsApp');
-                  return true;
-                } else {
-                  console.error(`❌ FlowEngine: Falha no envio (tentativa ${i + 1}):`, result.error);
-                  if (i < attempts - 1) {
-                    await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000)); // Delay progressivo mais rápido
-                  }
-                }
-              } catch (error) {
-                console.error(`❌ FlowEngine: Erro no envio (tentativa ${i + 1}):`, error);
-                if (i < attempts - 1) {
-                  await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000));
-                }
-              }
-            }
-            console.error('❌ FlowEngine: Falha após todas as tentativas de envio');
-            return false;
-          };
-          
-          // Executar envio sem await para não bloquear
-          sendWithRetry();
+        if (error) {
+          console.error('❌ FlowEngine: Erro na Edge Function de notificação:', error);
         } else {
-          console.warn('⚠️ FlowEngine: Paciente sem telefone configurado');
+          console.log('✅ FlowEngine: Notificação de formulário enviada com sucesso:', response);
         }
       } catch (error) {
-        console.error('❌ FlowEngine: Erro ao enviar link do painel via WhatsApp:', error);
+        console.error('❌ FlowEngine: Erro ao chamar Edge Function de notificação:', error);
       }
     } else {
       console.error('❌ FlowEngine: Execução não encontrada');
