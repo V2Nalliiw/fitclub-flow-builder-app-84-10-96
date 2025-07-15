@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowRight, ArrowLeft, FileText, MessageCircle, CheckCircle } from 'lucide-react';
+import { ArrowRight, ArrowLeft, FileText, MessageCircle, CheckCircle, Clock } from 'lucide-react';
 import { EnhancedDocumentDisplay } from './EnhancedDocumentDisplay';
 import { CalculatorStepRenderer } from './CalculatorStepRenderer';
 import { ConditionsStepRenderer } from './ConditionsStepRenderer';
@@ -254,6 +254,47 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
           </div>
         );
 
+      case 'delay':
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                Aguardando próxima etapa
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                O sistema está processando um intervalo de tempo programado.
+              </p>
+            </div>
+            
+            <div className="bg-orange-50 dark:bg-orange-950/20 rounded-lg p-6 border border-orange-200 dark:border-orange-800/50">
+              <div className="flex items-center justify-center mb-4">
+                <Clock className="h-6 w-6 text-orange-600 dark:text-orange-400 mr-2" />
+                <span className="text-lg font-semibold text-orange-800 dark:text-orange-200">
+                  Intervalo Programado
+                </span>
+              </div>
+              {step.delayAmount && step.delayType && (
+                <p className="text-orange-700 dark:text-orange-300 text-center mb-4">
+                  📅 Aguardar {step.delayAmount} {step.delayType}
+                </p>
+              )}
+              <p className="text-orange-600 dark:text-orange-400 text-center text-sm">
+                Este intervalo foi programado pela clínica para otimizar seu tratamento.
+                Você receberá uma notificação quando a próxima etapa estiver disponível.
+              </p>
+            </div>
+            
+            <div className="bg-primary/10 dark:bg-primary/20 rounded-lg p-4">
+              <p className="text-primary dark:text-primary text-center font-medium">
+                ✅ Clique em "Continuar" para processar este intervalo
+              </p>
+            </div>
+          </div>
+        );
+
       default:
         return (
           <div className="text-center py-8">
@@ -266,7 +307,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
   };
 
   const canSubmit = () => {
-    if (step.nodeType === 'formStart' || step.nodeType === 'formEnd' || step.nodeType === 'calculator' || step.nodeType === 'conditions' || step.nodeType === 'number' || step.nodeType === 'simpleCalculator' || step.nodeType === 'specialConditions') {
+    if (step.nodeType === 'formStart' || step.nodeType === 'formEnd' || step.nodeType === 'calculator' || step.nodeType === 'conditions' || step.nodeType === 'number' || step.nodeType === 'simpleCalculator' || step.nodeType === 'specialConditions' || step.nodeType === 'delay') {
       return true;
     }
     
@@ -291,6 +332,8 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
       case 'calculator':
         return 'Calcular';
       case 'conditions':
+        return 'Continuar';
+      case 'delay':
         return 'Continuar';
       default:
         return 'Continuar';
