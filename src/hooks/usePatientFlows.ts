@@ -372,6 +372,12 @@ _Este link expira em 30 dias._`;
       // ✨ NOVO: Trigger FormEnd processing se o formulário foi completado
       if (isFormCompleted) {
         console.log('🎯 usePatientFlows: Formulário completado, processando FormEnd...');
+        console.log('🎯 usePatientFlows: Dados de execução para FormEnd:', {
+          executionId,
+          flowId: execution.flow_id,
+          progress: newProgress,
+          status: newStatus
+        });
         
         try {
           // Buscar o flow para encontrar o nó FormEnd
@@ -381,12 +387,18 @@ _Este link expira em 30 dias._`;
             .eq('id', execution.flow_id)
             .single();
 
+          console.log('🔍 usePatientFlows: Flow obtido:', { hasNodes: !!flow?.nodes, nodeCount: Array.isArray(flow?.nodes) ? flow.nodes.length : 0 });
+
           if (flow?.nodes) {
-            const nodes = Array.isArray(flow.nodes) ? flow.nodes : [];
+            const nodes = Array.isArray(flow.nodes) ? flow.nodes as any[] : [];
+            console.log('🔍 usePatientFlows: Buscando FormEnd entre os nodes:', nodes.map((n: any) => ({ type: n.type, id: n.id })));
+            
             const formEndNode = nodes.find((node: any) => node.type === 'formEnd');
             
+            console.log('🔍 usePatientFlows: Resultado da busca FormEnd:', { found: !!formEndNode, nodeType: formEndNode?.type });
+            
             if (formEndNode && typeof formEndNode === 'object' && formEndNode !== null) {
-              console.log('🎉 usePatientFlows: Nó FormEnd encontrado, dados do nó:', (formEndNode as any).data);
+              console.log('🎉 usePatientFlows: Nó FormEnd encontrado! Dados completos:', JSON.stringify(formEndNode, null, 2));
               
               // ✨ USAR A LÓGICA DO FLOW EXECUTION ENGINE
               await processFormEndNode(executionId, execution, (formEndNode as any).data);
@@ -394,7 +406,10 @@ _Este link expira em 30 dias._`;
               console.log('✅ usePatientFlows: Processamento FormEnd concluído');
             } else {
               console.warn('⚠️ usePatientFlows: Nó FormEnd não encontrado no flow');
+              console.warn('⚠️ usePatientFlows: Tipos de nodes encontrados:', nodes.map((n: any) => n.type));
             }
+          } else {
+            console.warn('⚠️ usePatientFlows: Flow sem nodes ou nodes inválido');
           }
         } catch (endError) {
           console.error('❌ usePatientFlows: Erro ao processar FormEnd geral:', endError);
