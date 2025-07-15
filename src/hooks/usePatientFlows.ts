@@ -370,9 +370,15 @@ _Este link expira em 30 dias._`;
       }
 
       // ✨ NOVO: Verificar se chegamos ao nó FormEnd (independente do progresso)
+      console.log('🔍 usePatientFlows: SEMPRE - Verificando current_step...', { 
+        hasCurrentStep: !!execution.current_step,
+        currentStepType: execution.current_step && typeof execution.current_step === 'object' && 'type' in execution.current_step ? (execution.current_step as any).type : 'N/A',
+        currentStep: execution.current_step 
+      });
+      
       const currentStep = execution.current_step;
       if (currentStep && typeof currentStep === 'object' && 'type' in currentStep) {
-        console.log('🎯 usePatientFlows: Verificando tipo do nó atual:', (currentStep as any).type);
+        console.log('🎯 usePatientFlows: Current step tem type:', (currentStep as any).type);
         
         if ((currentStep as any).type === 'formEnd') {
           console.log('🎉 usePatientFlows: CHEGOU NO FORMEND! Processando imediatamente...');
@@ -392,9 +398,11 @@ _Este link expira em 30 dias._`;
           } catch (endError) {
             console.error('❌ usePatientFlows: Erro ao processar FormEnd:', endError);
           }
+        } else {
+          console.log('🔍 usePatientFlows: Tipo do nó atual não é formEnd:', (currentStep as any).type);
         }
       } else {
-        console.log('🔍 usePatientFlows: Current step não é um objeto válido ou não tem type:', currentStep);
+        console.log('🔍 usePatientFlows: Current step não é um objeto válido ou não tem type. Tipo:', typeof currentStep, 'Valor:', currentStep);
       }
 
       await loadPatientFlows();
