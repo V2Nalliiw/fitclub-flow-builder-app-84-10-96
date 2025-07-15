@@ -4,10 +4,12 @@ import { PatientFlowExecution, PatientFlowStep } from '@/types/patient';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useFlowExecutionEngine } from '@/hooks/useFlowExecutionEngine';
 
 export const usePatientFlows = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { executeFlowStep } = useFlowExecutionEngine();
   const [executions, setExecutions] = useState<PatientFlowExecution[]>([]);
   const [steps, setSteps] = useState<PatientFlowStep[]>([]);
   const [loading, setLoading] = useState(true);
@@ -225,8 +227,17 @@ export const usePatientFlows = () => {
             currentStep
           });
           
-          // ✨ FormEnd é processado automaticamente pelo useFlowExecutionEngine
-          console.log('✅ usePatientFlows: FormEnd será processado pelo FlowExecutionEngine');
+          // 🚀 EXECUTAR O FORMEND AGORA!
+          try {
+            await executeFlowStep(executionId, {
+              nodeId: (currentStep as any).nodeId || 'formEnd',
+              nodeType: 'formEnd',
+              status: 'running'
+            }, currentStep);
+            console.log('✅ usePatientFlows: FormEnd processado com sucesso!');
+          } catch (error) {
+            console.error('❌ usePatientFlows: Erro ao processar FormEnd:', error);
+          }
         } else {
           console.log('🔍 usePatientFlows: Tipo do nó atual não é formEnd:', (currentStep as any).type);
         }
