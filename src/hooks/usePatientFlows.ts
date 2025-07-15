@@ -369,52 +369,32 @@ _Este link expira em 30 dias._`;
           .eq('id', executionId);
       }
 
-      // ✨ NOVO: Trigger FormEnd processing se o formulário foi completado
-      if (isFormCompleted) {
-        console.log('🎯 usePatientFlows: Formulário completado, processando FormEnd...');
-        console.log('🎯 usePatientFlows: Dados de execução para FormEnd:', {
-          executionId,
-          flowId: execution.flow_id,
-          progress: newProgress,
-          status: newStatus
-        });
+      // ✨ NOVO: Verificar se chegamos ao nó FormEnd (independente do progresso)
+      const currentStep = execution.current_step;
+      if (currentStep && typeof currentStep === 'object' && 'type' in currentStep) {
+        console.log('🎯 usePatientFlows: Verificando tipo do nó atual:', (currentStep as any).type);
         
-        try {
-          // Buscar o flow para encontrar o nó FormEnd
-          const { data: flow } = await supabase
-            .from('flows')
-            .select('nodes')
-            .eq('id', execution.flow_id)
-            .single();
-
-          console.log('🔍 usePatientFlows: Flow obtido:', { hasNodes: !!flow?.nodes, nodeCount: Array.isArray(flow?.nodes) ? flow.nodes.length : 0 });
-
-          if (flow?.nodes) {
-            const nodes = Array.isArray(flow.nodes) ? flow.nodes as any[] : [];
-            console.log('🔍 usePatientFlows: Buscando FormEnd entre os nodes:', nodes.map((n: any) => ({ type: n.type, id: n.id })));
+        if ((currentStep as any).type === 'formEnd') {
+          console.log('🎉 usePatientFlows: CHEGOU NO FORMEND! Processando imediatamente...');
+          console.log('🎯 usePatientFlows: Dados de execução para FormEnd:', {
+            executionId,
+            flowId: execution.flow_id,
+            progress: newProgress,
+            status: newStatus,
+            currentStep
+          });
+          
+          try {
+            // ✨ USAR A LÓGICA DO FLOW EXECUTION ENGINE
+            await processFormEndNode(executionId, execution, (currentStep as any).data || {});
             
-            const formEndNode = nodes.find((node: any) => node.type === 'formEnd');
-            
-            console.log('🔍 usePatientFlows: Resultado da busca FormEnd:', { found: !!formEndNode, nodeType: formEndNode?.type });
-            
-            if (formEndNode && typeof formEndNode === 'object' && formEndNode !== null) {
-              console.log('🎉 usePatientFlows: Nó FormEnd encontrado! Dados completos:', JSON.stringify(formEndNode, null, 2));
-              
-              // ✨ USAR A LÓGICA DO FLOW EXECUTION ENGINE
-              await processFormEndNode(executionId, execution, (formEndNode as any).data);
-              
-              console.log('✅ usePatientFlows: Processamento FormEnd concluído');
-            } else {
-              console.warn('⚠️ usePatientFlows: Nó FormEnd não encontrado no flow');
-              console.warn('⚠️ usePatientFlows: Tipos de nodes encontrados:', nodes.map((n: any) => n.type));
-            }
-          } else {
-            console.warn('⚠️ usePatientFlows: Flow sem nodes ou nodes inválido');
+            console.log('✅ usePatientFlows: Processamento FormEnd concluído');
+          } catch (endError) {
+            console.error('❌ usePatientFlows: Erro ao processar FormEnd:', endError);
           }
-        } catch (endError) {
-          console.error('❌ usePatientFlows: Erro ao processar FormEnd geral:', endError);
-          // Não falhar toda a operação por causa do FormEnd
         }
+      } else {
+        console.log('🔍 usePatientFlows: Current step não é um objeto válido ou não tem type:', currentStep);
       }
 
       await loadPatientFlows();
