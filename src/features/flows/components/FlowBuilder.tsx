@@ -86,8 +86,14 @@ export const FlowBuilder = () => {
 
   // Modificar onNodeDoubleClick para abrir o modal correto
   const handleNodeDoubleClick = (event: React.MouseEvent, node: Node) => {
+    console.log('🖱️ Double click on node:', node.id, 'type:', node.type);
+    console.log('📊 Node data:', node.data);
     onNodeClick(event, node);
-    handleNodeConfigModal();
+    
+    // Usar setTimeout para garantir que selectedNode seja atualizado primeiro
+    setTimeout(() => {
+      handleNodeConfigModal();
+    }, 50);
   };
 
   const [isCalculatorConfigOpen, setIsCalculatorConfigOpen] = useState(false);
@@ -96,11 +102,20 @@ export const FlowBuilder = () => {
   const [isSimpleCalculatorConfigOpen, setIsSimpleCalculatorConfigOpen] = useState(false);
 
   const handleNodeConfigModal = () => {
-    if (!selectedNode) return;
+    console.log('⚙️ handleNodeConfigModal called with selectedNode:', selectedNode);
+    
+    if (!selectedNode) {
+      console.log('❌ No selectedNode found!');
+      return;
+    }
 
+    console.log('🎯 Opening modal for node type:', selectedNode.type);
+    
     if (selectedNode.type === 'calculator') {
+      console.log('🧮 Opening calculator config modal');
       setIsCalculatorConfigOpen(true);
     } else if (selectedNode.type === 'conditions') {
+      console.log('🧩 Opening conditions config modal');
       setIsConditionsConfigOpen(true);
     } else if (selectedNode.type === 'number') {
       setIsNumberConfigOpen(true);
@@ -112,11 +127,15 @@ export const FlowBuilder = () => {
   };
 
   const handleCalculatorConfigSave = (data: any) => {
+    console.log('🧮 FlowBuilder handleCalculatorConfigSave called with data:', data);
+    console.log('📝 Selected node for calculator:', selectedNode);
     handleNodeConfigSave(data);
     setIsCalculatorConfigOpen(false);
   };
 
   const handleConditionsConfigSave = (data: any) => {
+    console.log('🧩 FlowBuilder handleConditionsConfigSave called with data:', data);
+    console.log('📝 Selected node for conditions:', selectedNode);
     handleNodeConfigSave(data);
     setIsConditionsConfigOpen(false);
   };
@@ -252,8 +271,12 @@ export const FlowBuilder = () => {
       onDelete: deleteNode,
       onDuplicate: duplicateNode,
       onEdit: () => {
+        console.log('✏️ Edit button clicked for node:', node.id, 'type:', node.type);
         onNodeClick({} as any, node);
-        handleNodeConfigModal();
+        // Usar setTimeout para garantir que selectedNode seja atualizado primeiro
+        setTimeout(() => {
+          handleNodeConfigModal();
+        }, 50);
       }
     }
   }));
@@ -338,12 +361,15 @@ export const FlowBuilder = () => {
         })()}
         availableQuestions={(() => {
           const { questions } = getConnectedCalculatorFields(selectedNode?.id || '');
-          return questions.map(quest => ({ 
+          console.log('🔍 Building available questions for conditions:', questions);
+          const mapped = questions.map(quest => ({ 
             nomenclatura: quest.nomenclatura, 
-            pergunta: quest.label,
+            pergunta: quest.label, // Usar label da pergunta
             opcoes: quest.opcoes || [],
-            respostasDisponiveis: quest.opcoes || [] // Adicionar respostas disponíveis explicitamente
+            respostasDisponiveis: quest.opcoes || [] // Respostas disponíveis são as mesmas opções
           }));
+          console.log('📋 Mapped questions with answers:', mapped);
+          return mapped;
         })()}
       />
 

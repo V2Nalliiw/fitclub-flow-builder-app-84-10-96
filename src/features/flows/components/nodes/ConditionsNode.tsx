@@ -19,6 +19,10 @@ const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
   // Usar compositeConditions se disponível, senão usar conditions (compatibilidade)
   const conditions = data.compositeConditions || data.conditions || [];
   const conditionCount = conditions.length;
+  
+  console.log('🧩 ConditionsNode rendering with data:', data);
+  console.log('📋 Composite conditions:', data.compositeConditions);
+  console.log('📊 Condition count:', conditionCount);
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,11 +28,35 @@ const ConditionsNodeConfig: React.FC<ConditionsNodeConfigProps> = ({
   availableCalculations = [],
   availableQuestions = []
 }) => {
-  const [titulo, setTitulo] = useState(initialData?.titulo || '');
-  const [descricao, setDescricao] = useState(initialData?.descricao || '');
-  const [compositeConditions, setCompositeConditions] = useState<CompositeCondition[]>(
-    initialData?.compositeConditions || []
-  );
+  const [titulo, setTitulo] = useState('');
+  const [descricao, setDescricao] = useState('');
+  const [compositeConditions, setCompositeConditions] = useState<CompositeCondition[]>([]);
+
+  // Sincronizar estado com initialData quando modal abre ou dados mudam
+  useEffect(() => {
+    console.log('🔍 Conditions useEffect triggered:', { isOpen, hasInitialData: !!initialData });
+    
+    if (isOpen && initialData) {
+      console.log('🚀 Conditions modal opened with initial data:', initialData);
+      console.log('📋 Composite conditions in data:', initialData.compositeConditions);
+      console.log('📄 Title in data:', initialData.titulo);
+      console.log('📝 Description in data:', initialData.descricao);
+      
+      setTitulo(initialData.titulo || '');
+      setDescricao(initialData.descricao || '');
+      setCompositeConditions(initialData.compositeConditions || []);
+      
+      console.log('✅ Conditions state updated with initial data');
+    } else if (isOpen && !initialData) {
+      console.log('🆕 Conditions modal opened with no initial data - resetting');
+      
+      setTitulo('');
+      setDescricao('');
+      setCompositeConditions([]);
+    } else if (!isOpen) {
+      console.log('🚪 Conditions modal closed');
+    }
+  }, [isOpen, initialData]);
 
   const operatorsCalculation = [
     { value: 'equal', label: 'Igual a (=)' },
@@ -116,6 +140,9 @@ const ConditionsNodeConfig: React.FC<ConditionsNodeConfigProps> = ({
 
   const getQuestionOptions = (nomenclatura: string) => {
     const question = availableQuestions.find(q => q.nomenclatura === nomenclatura);
+    console.log('🔍 Getting question options for:', nomenclatura);
+    console.log('📦 Found question:', question);
+    console.log('📋 Available options:', question?.respostasDisponiveis || question?.opcoes || []);
     return question?.respostasDisponiveis || question?.opcoes || [];
   };
 
@@ -137,12 +164,19 @@ const ConditionsNodeConfig: React.FC<ConditionsNodeConfigProps> = ({
   };
 
   const handleSave = () => {
+    console.log('🧩 Conditions handleSave called with:');
+    console.log('📄 Title:', titulo);
+    console.log('📝 Description:', descricao);
+    console.log('📋 Composite conditions:', compositeConditions);
+    
     const data = {
       titulo,
       descricao,
       compositeConditions,
       label: titulo || 'Condições',
     };
+    
+    console.log('💾 Final conditions data to save:', data);
     onSave(data);
     onClose();
   };
