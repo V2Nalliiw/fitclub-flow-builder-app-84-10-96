@@ -23,7 +23,6 @@ import CalculatorNode from './nodes/CalculatorNode';
 import ConditionsNode from './nodes/ConditionsNode';
 import NumberNode from './nodes/NumberNode';
 import SimpleCalculatorNode from './nodes/SimpleCalculatorNode';
-import SpecialConditionsNode from './nodes/SpecialConditionsNode';
 import CalculatorNodeConfig from './CalculatorNodeConfig';
 import ConditionsNodeConfig from './ConditionsNodeConfig';
 import { NumberNodeConfig } from './NumberNodeConfig';
@@ -44,15 +43,13 @@ const nodeTypes = {
   conditions: ConditionsNode,
   number: NumberNode,
   simpleCalculator: SimpleCalculatorNode,
-  specialConditions: SpecialConditionsNode,
 };
 
 // Debug: Log dos tipos de nós registrados
 console.log('=== Tipos de nós registrados no FlowBuilder ===', {
   nodeTypes: Object.keys(nodeTypes),
   NumberNode: !!NumberNode,
-  SimpleCalculatorNode: !!SimpleCalculatorNode,
-  SpecialConditionsNode: !!SpecialConditionsNode
+  SimpleCalculatorNode: !!SimpleCalculatorNode
 });
 
 export const FlowBuilder = () => {
@@ -97,7 +94,6 @@ export const FlowBuilder = () => {
   const [isConditionsConfigOpen, setIsConditionsConfigOpen] = useState(false);
   const [isNumberConfigOpen, setIsNumberConfigOpen] = useState(false);
   const [isSimpleCalculatorConfigOpen, setIsSimpleCalculatorConfigOpen] = useState(false);
-  const [isSpecialConditionsConfigOpen, setIsSpecialConditionsConfigOpen] = useState(false);
 
   const handleNodeConfigModal = () => {
     if (!selectedNode) return;
@@ -110,8 +106,6 @@ export const FlowBuilder = () => {
       setIsNumberConfigOpen(true);
     } else if (selectedNode.type === 'simpleCalculator') {
       setIsSimpleCalculatorConfigOpen(true);
-    } else if (selectedNode.type === 'specialConditions') {
-      setIsSpecialConditionsConfigOpen(true);
     } else {
       setIsConfigModalOpen(true);
     }
@@ -135,11 +129,6 @@ export const FlowBuilder = () => {
   const handleSimpleCalculatorConfigSave = (data: any) => {
     handleNodeConfigSave(data);
     setIsSimpleCalculatorConfigOpen(false);
-  };
-
-  const handleSpecialConditionsConfigSave = (data: any) => {
-    handleNodeConfigSave(data);
-    setIsSpecialConditionsConfigOpen(false);
   };
 
   // Função para obter campos numéricos conectados a um nó
