@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +16,7 @@ interface FlowStep {
   canGoBack?: boolean;
   pergunta?: string;
   tipoResposta?: 'escolha-unica' | 'multipla-escolha' | 'texto-livre';
+  tipoExibicao?: 'aberto' | 'select';
   opcoes?: string[];
   formId?: string;
   tipoConteudo?: 'pdf' | 'imagem' | 'video' | 'ebook';
@@ -27,6 +29,14 @@ interface FlowStep {
   resultLabel?: string;
   conditions?: any[];
   calculatorResult?: number;
+  nomenclatura?: string;
+  prefixo?: string;
+  sufixo?: string;
+  tipoNumero?: 'inteiro' | 'decimal';
+  operacao?: string;
+  camposReferenciados?: string[];
+  condicoesEspeciais?: any[];
+  response?: any;
 }
 
 export const useFlowProcessor = () => {
@@ -69,7 +79,7 @@ export const useFlowProcessor = () => {
         throw new Error('Nenhuma etapa válida encontrada no fluxo');
       }
 
-      // Create the flow execution with proper step structure
+      // Create the flow execution with proper step structure - cast to Json
       const executionData = {
         flow_id: flowId,
         flow_name: flow.name,
@@ -84,7 +94,7 @@ export const useFlowProcessor = () => {
           currentStepIndex: 0,
           calculatorResults: {},
           userResponses: {}
-        },
+        } as any,
         next_step_available_at: null
       };
 
@@ -186,11 +196,15 @@ export const useFlowProcessor = () => {
           .single();
 
         if (flowData) {
-          const startNode = flowData.nodes.find((node: any) => node.type === 'start');
+          // Type cast the Json data to proper types
+          const flowNodes = flowData.nodes as FlowNode[];
+          const flowEdges = flowData.edges as FlowEdge[];
+          
+          const startNode = flowNodes.find((node: FlowNode) => node.type === 'start');
           if (startNode) {
             const newSteps = buildConditionalFlowSteps(
-              flowData.nodes, 
-              flowData.edges, 
+              flowNodes, 
+              flowEdges, 
               startNode, 
               updatedUserResponses, 
               updatedCalculatorResults
@@ -263,7 +277,7 @@ export const useFlowProcessor = () => {
           totalSteps: updatedSteps.length,
           calculatorResults: updatedCalculatorResults,
           userResponses: updatedUserResponses
-        }
+        } as any
       };
 
       if (newStatus === 'completed') {
@@ -342,12 +356,12 @@ export const useFlowProcessor = () => {
       }
 
       const updateData = {
-        status: 'in-progress', // Use valid status
+        status: 'in-progress',
         current_node: targetStep.nodeId,
         current_step: {
           ...currentStepData,
           currentStepIndex: targetStepIndex
-        },
+        } as any,
         updated_at: new Date().toISOString()
       };
 

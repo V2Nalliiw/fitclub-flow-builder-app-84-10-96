@@ -12,6 +12,7 @@ interface FlowStep {
   canGoBack?: boolean;
   pergunta?: string;
   tipoResposta?: 'escolha-unica' | 'multipla-escolha' | 'texto-livre';
+  tipoExibicao?: 'aberto' | 'select';
   opcoes?: string[];
   formId?: string;
   tipoConteudo?: 'pdf' | 'imagem' | 'video' | 'ebook';
@@ -25,6 +26,14 @@ interface FlowStep {
   resultLabel?: string;
   conditions?: any[];
   calculatorResult?: number;
+  nomenclatura?: string;
+  prefixo?: string;
+  sufixo?: string;
+  tipoNumero?: 'inteiro' | 'decimal';
+  operacao?: string;
+  camposReferenciados?: string[];
+  condicoesEspeciais?: any[];
+  response?: any;
 }
 
 export const useConditionalFlowProcessor = () => {

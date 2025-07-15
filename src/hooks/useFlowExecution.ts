@@ -1,208 +1,140 @@
 
-import { useState, useCallback } from 'react';
-import { FlowNode } from '@/types/flow';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useFlowProcessor } from './useFlowProcessor';
 
-export const useFlowExecution = () => {
+interface FlowStep {
+  nodeId: string;
+  nodeType: string;
+  title: string;
+  description?: string;
+  pergunta?: string;
+  opcoes?: string[];
+  tipoResposta?: string;
+  tipoExibicao?: string;
+  arquivo?: string;
+  arquivos?: any[];
+  mensagemFinal?: string;
+  tipoConteudo?: string;
+  delayAmount?: number;
+  delayType?: string;
+  calculatorFields?: any[];
+  formula?: string;
+  resultLabel?: string;
+  conditions?: any[];
+  calculatorResult?: number;
+  nomenclatura?: string;
+  prefixo?: string;
+  sufixo?: string;
+  tipoNumero?: string;
+  operacao?: string;
+  camposReferenciados?: string[];
+  condicoesEspeciais?: any[];
+  completed: boolean;
+  response?: any;
+  order: number;
+  availableAt: string;
+  canGoBack?: boolean;
+}
+
+export const useFlowExecution = (executionId: string) => {
   const { toast } = useToast();
-  const [processing, setProcessing] = useState(false);
+  const { completeFlowStep, goBackToStep } = useFlowProcessor();
+  const [execution, setExecution] = useState<any>(null);
+  const [currentStep, setCurrentStep] = useState<FlowStep | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [canGoBack, setCanGoBack] = useState(false);
 
-  const startFlowExecution = useCallback(async (
-    flowId: string,
-    patientId: string,
-    nodes: FlowNode[]
-  ) => {
-    const startNode = nodes.find(node => node.type === 'start');
-    if (!startNode) {
-      throw new Error('Fluxo deve ter um nó de início');
-    }
+  const fetchExecution = useCallback(async () => {
+    if (!executionId) return;
 
     try {
-      const { data: flow, error: flowError } = await supabase
-        .from('flows')
-        .select('name')
-        .eq('id', flowId)
-        .single();
+      setIsLoading(true);
+      setError(null);
 
-      if (flowError || !flow) {
-        throw new Error('Fluxo não encontrado');
-      }
-
-      const { data: execution, error: executionError } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('flow_executions')
-        .insert({
-          flow_id: flowId,
-          flow_name: (flow as any).name,
-          patient_id: patientId,
-          status: 'em-andamento',
-          current_node: startNode.id,
-          progress: 0,
-          total_steps: nodes.length,
-          completed_steps: 0,
-          current_step: {
-            id: startNode.id,
-            type: startNode.type,
-            title: startNode.data.label || 'Início',
-            description: startNode.data.descricao,
-            completed: false,
-          },
-        })
-        .select()
-        .single();
-
-      if (executionError) {
-        console.error('Erro ao criar execução:', executionError);
-        throw executionError;
-      }
-
-      console.log('Execução do fluxo iniciada:', execution);
-      return execution;
-
-    } catch (error) {
-      console.error('Erro ao iniciar execução:', error);
-      toast({
-        title: "Erro ao iniciar fluxo",
-        description: "Não foi possível iniciar o fluxo",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  }, [toast]);
-
-  const processNode = useCallback(async (
-    executionId: string,
-    nodeId: string,
-    nodeType: string,
-    nodeData: any
-  ) => {
-    setProcessing(true);
-    
-    try {
-      console.log(`Processando nó ${nodeType}:`, { executionId, nodeId, nodeData });
-
-      switch (nodeType) {
-        case 'formStart':
-          // Create flow step record instead of using flow_steps table directly
-          console.log('Etapa de formulário processada');
-          break;
-
-        case 'formEnd':
-          console.log('Processando fim de formulário:', nodeData);
-          break;
-
-        case 'delay':
-          const delay = nodeData.quantidade || 1;
-          const tipo = nodeData.tipoIntervalo || 'dias';
-          
-          let nextDate = new Date();
-          switch (tipo) {
-            case 'minutos':
-              nextDate.setMinutes(nextDate.getMinutes() + delay);
-              break;
-            case 'horas':
-              nextDate.setHours(nextDate.getHours() + delay);
-              break;
-            case 'dias':
-            default:
-              nextDate.setDate(nextDate.getDate() + delay);
-              break;
-          }
-
-          await supabase
-            .from('flow_executions')
-            .update({
-              status: 'aguardando',
-              next_step_available_at: nextDate.toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', executionId);
-
-          console.log('Delay processado, próxima execução em:', nextDate);
-          break;
-
-        case 'question':
-          // Process question step
-          console.log('Etapa de pergunta processada');
-          break;
-
-        case 'end':
-          await supabase
-            .from('flow_executions')
-            .update({
-              status: 'concluido',
-              progress: 100,
-              completed_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', executionId);
-          
-          console.log('Fluxo finalizado');
-          break;
-
-        default:
-          console.log('Tipo de nó não reconhecido:', nodeType);
-      }
-
-    } catch (error) {
-      console.error('Erro ao processar nó:', error);
-      toast({
-        title: "Erro no processamento",
-        description: "Ocorreu um erro ao processar a etapa do fluxo",
-        variant: "destructive",
-      });
-      throw error;
-    } finally {
-      setProcessing(false);
-    }
-  }, [toast]);
-
-  const saveFormResponse = useCallback(async (
-    executionId: string,
-    nodeId: string,
-    patientId: string,
-    response: any
-  ) => {
-    try {
-      // Save response directly to flow_executions for now
-      const { data, error } = await supabase
-        .from('flow_executions')
-        .update({
-          current_step: {
-            ...response,
-            nodeId,
-            patientId,
-            completed: true
-          },
-          updated_at: new Date().toISOString(),
-        })
+        .select('*')
         .eq('id', executionId)
-        .select()
         .single();
 
-      if (error) {
-        console.error('Erro ao salvar resposta:', error);
+      if (fetchError) {
+        throw new Error('Execução não encontrada');
+      }
+
+      setExecution(data);
+
+      // Parse current step data
+      const currentStepData = data.current_step as {
+        steps?: FlowStep[];
+        currentStepIndex?: number;
+      } | null;
+
+      if (currentStepData?.steps && typeof currentStepData.currentStepIndex === 'number') {
+        const steps = currentStepData.steps;
+        const stepIndex = currentStepData.currentStepIndex;
+        
+        if (stepIndex >= 0 && stepIndex < steps.length) {
+          setCurrentStep(steps[stepIndex]);
+          setCanGoBack(stepIndex > 0);
+        } else {
+          setCurrentStep(null); // Flow completed
+          setCanGoBack(false);
+        }
+      } else {
+        setCurrentStep(null);
+        setCanGoBack(false);
+      }
+
+    } catch (err) {
+      console.error('Error fetching execution:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao carregar execução');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [executionId]);
+
+  useEffect(() => {
+    fetchExecution();
+  }, [fetchExecution]);
+
+  const completeStep = useCallback(async (response: any) => {
+    if (!currentStep) return;
+
+    try {
+      await completeFlowStep(executionId, currentStep.nodeId, response);
+      await fetchExecution(); // Refresh data
+    } catch (error) {
+      console.error('Error completing step:', error);
+      throw error;
+    }
+  }, [currentStep, executionId, completeFlowStep, fetchExecution]);
+
+  const goBack = useCallback(async () => {
+    const currentStepData = execution?.current_step as {
+      currentStepIndex?: number;
+    } | null;
+
+    if (currentStepData?.currentStepIndex && currentStepData.currentStepIndex > 0) {
+      try {
+        await goBackToStep(executionId, currentStepData.currentStepIndex - 1);
+        await fetchExecution(); // Refresh data
+      } catch (error) {
+        console.error('Error going back:', error);
         throw error;
       }
-
-      console.log('Resposta salva:', data);
-      return data;
-
-    } catch (error) {
-      console.error('Erro ao salvar resposta:', error);
-      toast({
-        title: "Erro ao salvar resposta",
-        description: "Não foi possível salvar a resposta",
-        variant: "destructive",
-      });
-      throw error;
     }
-  }, [toast]);
+  }, [execution, executionId, goBackToStep, fetchExecution]);
 
   return {
-    processing,
-    startFlowExecution,
-    processNode,
-    saveFormResponse,
+    execution,
+    currentStep,
+    isLoading,
+    error,
+    completeStep,
+    canGoBack,
+    goBack
   };
 };

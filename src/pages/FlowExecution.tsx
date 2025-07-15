@@ -50,7 +50,7 @@ const FlowExecution = () => {
     setIsSubmitting(true);
     try {
       if (executionId) {
-        await completeStep(executionId, response);
+        await completeStep(response);
         await completePatientStep(executionId, currentStep?.nodeId, response);
       } else {
         console.error("Execution ID is missing");
@@ -167,14 +167,77 @@ const FlowExecution = () => {
             )}
           </div>
 
-          <FlowStepRenderer
-            step={currentStep}
-            onComplete={handleStepComplete}
-            onGoBack={canGoBack ? goBack : undefined}
-            isLoading={isSubmitting}
-            canGoBack={canGoBack}
-            calculatorResult={currentStep.calculatorResult}
-          />
+          {isLoading && (
+            <div className="text-center">
+              <LoadingSpinner />
+              <p className="text-muted-foreground mt-4">Carregando formulário...</p>
+            </div>
+          )}
+
+          {error && (
+            <Card className="max-w-md mx-auto shadow-lg border-0 bg-white/90 dark:bg-[#0E0E0E]/90 backdrop-blur-sm">
+              <CardHeader className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertTriangle className="h-8 w-8 text-white" />
+                </div>
+                <CardTitle className="text-xl text-gray-900 dark:text-gray-100">
+                  Erro ao carregar formulário
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 text-center">
+                <p className="text-gray-600 dark:text-gray-400">
+                  {error}
+                </p>
+                <div className="space-y-2">
+                  <Button 
+                    onClick={() => navigate('/my-flows')}
+                    className="w-full bg-primary-gradient hover:opacity-90 text-white"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Voltar aos Formulários
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.location.reload()}
+                    className="w-full"
+                  >
+                    Tentar Novamente
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {!isLoading && !error && !currentStep && (
+            <Card className="max-w-md mx-auto shadow-lg border-0 bg-white/90 dark:bg-[#0E0E0E]/90 backdrop-blur-sm">
+              <CardContent className="py-16 text-center">
+                <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                  Formulário Concluído
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  Você completou todas as etapas deste formulário.
+                </p>
+                <Button 
+                  onClick={() => navigate('/my-flows')}
+                  className="bg-primary-gradient hover:opacity-90 text-white"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Voltar aos Formulários
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {!isLoading && !error && currentStep && (
+            <FlowStepRenderer
+              step={currentStep}
+              onComplete={handleStepComplete}
+              onGoBack={canGoBack ? goBack : undefined}
+              isLoading={isSubmitting}
+              canGoBack={canGoBack}
+              calculatorResult={currentStep.calculatorResult}
+            />
+          )}
         </div>
       </div>
     </MobileErrorBoundary>
