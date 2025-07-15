@@ -1,7 +1,1 @@
 project_id = "oilnybhaboefqyhjrmvl"
-
-[functions.send-whatsapp]
-verify_jwt = false
-
-[functions.serve-content]
-verify_jwt = false
