@@ -13,6 +13,7 @@ interface State {
   hasError: boolean;
   error: Error | null;
   retryCount: number;
+  isRetrying: boolean;
 }
 
 export class MobileErrorBoundary extends Component<Props, State> {
@@ -20,7 +21,7 @@ export class MobileErrorBoundary extends Component<Props, State> {
 
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null, retryCount: 0 };
+    this.state = { hasError: false, error: null, retryCount: 0, isRetrying: false };
   }
 
   static getDerivedStateFromError(error: Error): State {
@@ -32,7 +33,8 @@ export class MobileErrorBoundary extends Component<Props, State> {
     return {
       hasError: true,
       error: isDOMError ? error : null,
-      retryCount: 0
+      retryCount: 0,
+      isRetrying: isDOMError // Start retrying immediately for DOM errors
     };
   }
 
@@ -57,20 +59,25 @@ export class MobileErrorBoundary extends Component<Props, State> {
       clearTimeout(this.retryTimeout);
     }
     
+    // Fast retry for DOM errors (100ms for first retry)
+    const delay = this.state.retryCount === 0 ? 100 : 300 + (this.state.retryCount * 200);
+    
     this.retryTimeout = setTimeout(() => {
       this.setState(prevState => ({
         hasError: false,
         error: null,
-        retryCount: prevState.retryCount + 1
+        retryCount: prevState.retryCount + 1,
+        isRetrying: false
       }));
-    }, 1000 + (this.state.retryCount * 500)); // Progressive delay
+    }, delay);
   };
 
   private handleManualRetry = () => {
     this.setState({
       hasError: false,
       error: null,
-      retryCount: 0
+      retryCount: 0,
+      isRetrying: false
     });
   };
 
@@ -86,6 +93,19 @@ export class MobileErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
+      // For DOM errors that are being retried, show loading instead of error
+      if (this.state.isRetrying && this.isDOMError(this.state.error) && this.state.retryCount < 3) {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:bg-[#0E0E0E] p-6 flex items-center justify-center">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+              <p className="text-sm text-muted-foreground">Carregando...</p>
+            </div>
+          </div>
+        );
+      }
+
+      // Show full error UI only for non-DOM errors or after 3 failed retries
       return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:bg-[#0E0E0E] p-6 flex items-center justify-center">
           <Card className="max-w-md mx-auto shadow-lg border-0 bg-white/90 dark:bg-[#0E0E0E]/90 backdrop-blur-sm">
@@ -105,9 +125,9 @@ export class MobileErrorBoundary extends Component<Props, State> {
                 }
               </p>
               
-              {this.state.retryCount < 3 && (
+              {this.state.retryCount >= 3 && this.isDOMError(this.state.error) && (
                 <p className="text-sm text-orange-600 dark:text-orange-400">
-                  Tentando reconectar automaticamente... ({this.state.retryCount + 1}/3)
+                  Tentativas automáticas esgotadas. Use o botão abaixo para tentar novamente.
                 </p>
               )}
 
