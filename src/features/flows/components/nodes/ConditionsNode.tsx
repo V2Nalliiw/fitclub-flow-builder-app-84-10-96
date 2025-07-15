@@ -8,6 +8,7 @@ interface ConditionsNodeProps {
   data: {
     label: string;
     conditions?: any[];
+    compositeConditions?: any[];
     onDelete?: (nodeId: string) => void;
     onEdit?: () => void;
   };
@@ -15,7 +16,8 @@ interface ConditionsNodeProps {
 }
 
 const ConditionsNode: React.FC<ConditionsNodeProps> = ({ data, id }) => {
-  const conditions = data.conditions || [];
+  // Usar compositeConditions se disponível, senão usar conditions (compatibilidade)
+  const conditions = data.compositeConditions || data.conditions || [];
   const conditionCount = conditions.length;
 
   const handleDelete = (e: React.MouseEvent) => {

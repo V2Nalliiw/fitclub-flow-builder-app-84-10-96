@@ -341,7 +341,8 @@ export const FlowBuilder = () => {
           return questions.map(quest => ({ 
             nomenclatura: quest.nomenclatura, 
             pergunta: quest.label,
-            opcoes: quest.opcoes || []
+            opcoes: quest.opcoes || [],
+            respostasDisponiveis: quest.opcoes || [] // Adicionar respostas disponíveis explicitamente
           }));
         })()}
       />

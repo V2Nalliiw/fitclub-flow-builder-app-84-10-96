@@ -17,7 +17,7 @@ interface ConditionsNodeConfigProps {
   onSave: (data: any) => void;
   initialData?: any;
   availableCalculations?: { nomenclatura: string; label: string }[];
-  availableQuestions?: { nomenclatura: string; pergunta: string; opcoes: string[] }[];
+  availableQuestions?: { nomenclatura: string; pergunta: string; opcoes: string[]; respostasDisponiveis?: string[] }[];
 }
 
 const ConditionsNodeConfig: React.FC<ConditionsNodeConfigProps> = ({
@@ -116,7 +116,7 @@ const ConditionsNodeConfig: React.FC<ConditionsNodeConfigProps> = ({
 
   const getQuestionOptions = (nomenclatura: string) => {
     const question = availableQuestions.find(q => q.nomenclatura === nomenclatura);
-    return question?.opcoes || [];
+    return question?.respostasDisponiveis || question?.opcoes || [];
   };
 
   const getOperators = (sourceType: 'calculation' | 'question') => {
