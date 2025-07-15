@@ -10,6 +10,7 @@ interface ConditionsStepRendererProps {
   isLoading?: boolean;
   calculatorResult?: number;
   questionResponses?: Record<string, any>; // Respostas de perguntas anteriores
+  calculatorResults?: Record<string, number>; // Resultados de cálculos
 }
 
 export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
@@ -17,7 +18,8 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
   onComplete,
   isLoading = false,
   calculatorResult = 0,
-  questionResponses = {}
+  questionResponses = {},
+  calculatorResults = {}
 }) => {
   const [selectedCondition, setSelectedCondition] = useState<string | null>(null);
 
@@ -75,10 +77,14 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
     
     // Obter valor baseado na fonte
     if (rule.sourceType === 'calculation') {
-      fieldValue = calculatorResult;
+      // Buscar em calculatorResults por nomenclatura
+      fieldValue = calculatorResults[rule.sourceField] || calculatorResult;
     } else if (rule.sourceType === 'question') {
+      // Buscar em questionResponses por nomenclatura
       fieldValue = questionResponses[rule.sourceField];
     }
+    
+    console.log(`Avaliando regra: ${rule.sourceField} (${rule.sourceType}) ${rule.operator} ${rule.value}. Valor: ${fieldValue}`);
     
     // Aplicar operador
     switch (rule.operator) {
@@ -123,6 +129,7 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
       nodeType: 'conditions',
       result: calculatorResult,
       questionResponses,
+      calculatorResults,
       matchedCondition: matchedCondition,
       conditionLabel: matchedCondition?.label || 'Nenhuma condição atendida',
       timestamp: new Date().toISOString()

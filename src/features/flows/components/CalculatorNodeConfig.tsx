@@ -28,30 +28,28 @@ const CalculatorNodeConfig: React.FC<CalculatorNodeConfigProps> = ({
   const [descricao, setDescricao] = useState(initialData?.descricao || '');
   const [resultLabel, setResultLabel] = useState(initialData?.resultLabel || 'Resultado');
   const [formula, setFormula] = useState(initialData?.formula || '');
-  const [calculatorFields, setCalculatorFields] = useState<CalculatorField[]>(
-    initialData?.calculatorFields?.map((field: any, index: number) => ({
+  // Unified field list combining both calculation and question fields
+  const [allFields, setAllFields] = useState<(CalculatorField | CalculatorQuestionField)[]>(() => {
+    const calcFields = (initialData?.calculatorFields || []).map((field: any, index: number) => ({
       ...field,
       fieldType: 'calculo',
       order: field.order ?? index
-    })) || []
-  );
-  const [questionFields, setQuestionFields] = useState<CalculatorQuestionField[]>(
-    initialData?.calculatorQuestionFields?.map((field: any, index: number) => ({
+    }));
+    const questFields = (initialData?.calculatorQuestionFields || []).map((field: any, index: number) => ({
       ...field,
       fieldType: 'pergunta',
-      order: field.order ?? (calculatorFields.length + index)
-    })) || []
-  );
+      order: field.order ?? (calcFields.length + index)
+    }));
+    
+    return [...calcFields, ...questFields].sort((a, b) => a.order - b.order);
+  });
 
   const addCalculatorField = () => {
-    const maxOrder = Math.max(
-      ...calculatorFields.map(f => f.order),
-      ...questionFields.map(f => f.order),
-      -1
-    );
+    const maxOrder = Math.max(...allFields.map(f => f.order), -1);
+    const calcFields = allFields.filter(f => f.fieldType === 'calculo');
     const newField: CalculatorField = {
       id: `calc_field_${Date.now()}`,
-      nomenclatura: `campo_${calculatorFields.length + 1}`,
+      nomenclatura: `campo_${calcFields.length + 1}`,
       pergunta: 'Nova pergunta',
       prefixo: '',
       sufixo: '',
@@ -59,79 +57,95 @@ const CalculatorNodeConfig: React.FC<CalculatorNodeConfigProps> = ({
       fieldType: 'calculo',
       order: maxOrder + 1
     };
-    setCalculatorFields([...calculatorFields, newField]);
+    setAllFields([...allFields, newField]);
   };
 
   const addQuestionField = () => {
-    const maxOrder = Math.max(
-      ...calculatorFields.map(f => f.order),
-      ...questionFields.map(f => f.order),
-      -1
-    );
+    const maxOrder = Math.max(...allFields.map(f => f.order), -1);
+    const questFields = allFields.filter(f => f.fieldType === 'pergunta');
     const newField: CalculatorQuestionField = {
       id: `quest_field_${Date.now()}`,
-      nomenclatura: `pergunta_${questionFields.length + 1}`,
+      nomenclatura: `pergunta_${questFields.length + 1}`,
       pergunta: 'Nova pergunta',
       fieldType: 'pergunta',
       questionType: 'escolha-unica',
       opcoes: ['Sim', 'Não'],
       order: maxOrder + 1
     };
-    setQuestionFields([...questionFields, newField]);
+    setAllFields([...allFields, newField]);
   };
 
-  const updateCalculatorField = (index: number, updates: Partial<CalculatorField>) => {
-    const updatedFields = calculatorFields.map((field, i) => 
+  const updateField = (index: number, updates: Partial<any>) => {
+    const updatedFields = allFields.map((field, i) => 
       i === index ? { ...field, ...updates } : field
     );
-    setCalculatorFields(updatedFields);
+    setAllFields(updatedFields as (CalculatorField | CalculatorQuestionField)[]);
   };
 
-  const updateQuestionField = (index: number, updates: Partial<CalculatorQuestionField>) => {
-    const updatedFields = questionFields.map((field, i) => 
-      i === index ? { ...field, ...updates } : field
-    );
-    setQuestionFields(updatedFields);
+  const removeField = (index: number) => {
+    setAllFields(allFields.filter((_, i) => i !== index));
   };
 
-  const removeCalculatorField = (index: number) => {
-    setCalculatorFields(calculatorFields.filter((_, i) => i !== index));
-  };
-
-  const removeQuestionField = (index: number) => {
-    setQuestionFields(questionFields.filter((_, i) => i !== index));
+  const moveField = (dragIndex: number, hoverIndex: number) => {
+    const dragField = allFields[dragIndex];
+    const updatedFields = [...allFields];
+    updatedFields.splice(dragIndex, 1);
+    updatedFields.splice(hoverIndex, 0, dragField);
+    
+    // Update order based on position
+    const reorderedFields = updatedFields.map((field, index) => ({
+      ...field,
+      order: index
+    }));
+    
+    setAllFields(reorderedFields);
   };
 
   const updateQuestionOptions = (fieldIndex: number, options: string[]) => {
-    updateQuestionField(fieldIndex, { opcoes: options });
+    const field = allFields[fieldIndex];
+    if (field.fieldType === 'pergunta') {
+      updateField(fieldIndex, { opcoes: options });
+    }
   };
 
   const addOption = (fieldIndex: number) => {
-    const field = questionFields[fieldIndex];
-    const newOptions = [...field.opcoes, `Opção ${field.opcoes.length + 1}`];
-    updateQuestionOptions(fieldIndex, newOptions);
+    const field = allFields[fieldIndex];
+    if (field.fieldType === 'pergunta') {
+      const questField = field as CalculatorQuestionField;
+      const newOptions = [...questField.opcoes, `Opção ${questField.opcoes.length + 1}`];
+      updateQuestionOptions(fieldIndex, newOptions);
+    }
   };
 
   const removeOption = (fieldIndex: number, optionIndex: number) => {
-    const field = questionFields[fieldIndex];
-    const newOptions = field.opcoes.filter((_, i) => i !== optionIndex);
-    updateQuestionOptions(fieldIndex, newOptions);
+    const field = allFields[fieldIndex];
+    if (field.fieldType === 'pergunta') {
+      const questField = field as CalculatorQuestionField;
+      const newOptions = questField.opcoes.filter((_, i) => i !== optionIndex);
+      updateQuestionOptions(fieldIndex, newOptions);
+    }
   };
 
   const updateOption = (fieldIndex: number, optionIndex: number, value: string) => {
-    const field = questionFields[fieldIndex];
-    const newOptions = field.opcoes.map((opt, i) => i === optionIndex ? value : opt);
-    updateQuestionOptions(fieldIndex, newOptions);
+    const field = allFields[fieldIndex];
+    if (field.fieldType === 'pergunta') {
+      const questField = field as CalculatorQuestionField;
+      const newOptions = questField.opcoes.map((opt, i) => i === optionIndex ? value : opt);
+      updateQuestionOptions(fieldIndex, newOptions);
+    }
   };
 
   const handleSave = () => {
+    const calculatorFields = allFields.filter(f => f.fieldType === 'calculo') as CalculatorField[];
+    const calculatorQuestionFields = allFields.filter(f => f.fieldType === 'pergunta') as CalculatorQuestionField[];
+    
     const data = {
       titulo,
       descricao,
       resultLabel,
       formula,
       calculatorFields,
-      calculatorQuestionFields: questionFields,
+      calculatorQuestionFields,
       label: titulo || 'Calculadora',
     };
     onSave(data);
@@ -187,61 +201,61 @@ const CalculatorNodeConfig: React.FC<CalculatorNodeConfigProps> = ({
             </div>
           </div>
 
-          {/* Campos de Entrada - Com Tabs */}
-          <Tabs defaultValue="calculation" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="calculation" className="flex items-center gap-2">
-                <Hash className="h-4 w-4" />
-                Campos de Cálculo
-              </TabsTrigger>
-              <TabsTrigger value="questions" className="flex items-center gap-2">
-                <HelpCircle className="h-4 w-4" />
-                Campos de Pergunta
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="calculation" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Campos de Cálculo</h3>
-                <Button onClick={addCalculatorField} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Campo
+          {/* Campos Unificados */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Campos da Calculadora</h3>
+              <div className="flex gap-2">
+                <Button onClick={addCalculatorField} size="sm" variant="outline">
+                  <Hash className="h-4 w-4 mr-2" />
+                  Campo Cálculo
+                </Button>
+                <Button onClick={addQuestionField} size="sm" variant="outline">
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  Campo Pergunta
                 </Button>
               </div>
+            </div>
 
-              {calculatorFields.map((field, index) => (
-                <Card key={field.id} className="border">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <GripVertical className="h-4 w-4 text-gray-400" />
+            {allFields.map((field, index) => (
+              <Card key={field.id} className="border">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                      {field.fieldType === 'calculo' ? (
                         <Hash className="h-4 w-4 text-blue-600" />
-                        Campo de Cálculo {index + 1}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeCalculatorField(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <Label>Nomenclatura (para fórmula)</Label>
-                        <Input
-                          value={field.nomenclatura}
-                          onChange={(e) => updateCalculatorField(index, { nomenclatura: e.target.value })}
-                          placeholder="Ex: peso, altura, idade"
-                        />
-                      </div>
+                      ) : (
+                        <HelpCircle className="h-4 w-4 text-green-600" />
+                      )}
+                      <span className="text-sm text-gray-500">#{field.order + 1}</span>
+                      {field.fieldType === 'calculo' ? 'Campo de Cálculo' : 'Campo de Pergunta'}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeField(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <Label>Nomenclatura {field.fieldType === 'calculo' ? '(para fórmula)' : '(para condições)'}</Label>
+                      <Input
+                        value={field.nomenclatura}
+                        onChange={(e) => updateField(index, { nomenclatura: e.target.value })}
+                        placeholder={field.fieldType === 'calculo' ? 'Ex: peso, altura, idade' : 'Ex: quer_emagrecer, pratica_esportes'}
+                      />
+                    </div>
+                    {field.fieldType === 'calculo' ? (
                       <div>
                         <Label>Tipo</Label>
                         <Select
-                          value={field.tipo}
-                          onValueChange={(value: 'numero' | 'decimal') => updateCalculatorField(index, { tipo: value })}
+                          value={(field as CalculatorField).tipo}
+                          onValueChange={(value: 'numero' | 'decimal') => updateField(index, { tipo: value })}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -252,89 +266,13 @@ const CalculatorNodeConfig: React.FC<CalculatorNodeConfigProps> = ({
                           </SelectContent>
                         </Select>
                       </div>
-                    </div>
-
-                    <div>
-                      <Label>Pergunta</Label>
-                      <Input
-                        value={field.pergunta}
-                        onChange={(e) => updateCalculatorField(index, { pergunta: e.target.value })}
-                        placeholder="Ex: Qual o seu peso?"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label>Prefixo</Label>
-                        <Input
-                          value={field.prefixo || ''}
-                          onChange={(e) => updateCalculatorField(index, { prefixo: e.target.value })}
-                          placeholder="Ex: R$"
-                        />
-                      </div>
-                      <div>
-                        <Label>Sufixo</Label>
-                        <Input
-                          value={field.sufixo || ''}
-                          onChange={(e) => updateCalculatorField(index, { sufixo: e.target.value })}
-                          placeholder="Ex: kg, cm, anos"
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-
-              {calculatorFields.length === 0 && (
-                <div className="text-center text-gray-500 py-8">
-                  Nenhum campo de cálculo configurado. Adicione campos para usar na fórmula.
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="questions" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Campos de Pergunta</h3>
-                <Button onClick={addQuestionField} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Pergunta
-                </Button>
-              </div>
-
-              {questionFields.map((field, index) => (
-                <Card key={field.id} className="border">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <GripVertical className="h-4 w-4 text-gray-400" />
-                        <HelpCircle className="h-4 w-4 text-green-600" />
-                        Campo de Pergunta {index + 1}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeQuestionField(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <Label>Nomenclatura (para condições)</Label>
-                        <Input
-                          value={field.nomenclatura}
-                          onChange={(e) => updateQuestionField(index, { nomenclatura: e.target.value })}
-                          placeholder="Ex: quer_emagrecer, pratica_esportes"
-                        />
-                      </div>
+                    ) : (
                       <div>
                         <Label>Tipo de Pergunta</Label>
                         <Select
-                          value={field.questionType}
+                          value={(field as CalculatorQuestionField).questionType}
                           onValueChange={(value: 'escolha-unica' | 'multipla-escolha') => 
-                            updateQuestionField(index, { questionType: value })}
+                            updateField(index, { questionType: value })}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -345,20 +283,41 @@ const CalculatorNodeConfig: React.FC<CalculatorNodeConfigProps> = ({
                           </SelectContent>
                         </Select>
                       </div>
-                    </div>
+                    )}
+                  </div>
 
-                    <div>
-                      <Label>Pergunta</Label>
-                      <Input
-                        value={field.pergunta}
-                        onChange={(e) => updateQuestionField(index, { pergunta: e.target.value })}
-                        placeholder="Ex: Você quer emagrecer?"
-                      />
-                    </div>
+                  <div>
+                    <Label>Pergunta</Label>
+                    <Input
+                      value={field.pergunta}
+                      onChange={(e) => updateField(index, { pergunta: e.target.value })}
+                      placeholder={field.fieldType === 'calculo' ? 'Ex: Qual o seu peso?' : 'Ex: Você quer emagrecer?'}
+                    />
+                  </div>
 
+                  {field.fieldType === 'calculo' ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label>Prefixo</Label>
+                        <Input
+                          value={(field as CalculatorField).prefixo || ''}
+                          onChange={(e) => updateField(index, { prefixo: e.target.value })}
+                          placeholder="Ex: R$"
+                        />
+                      </div>
+                      <div>
+                        <Label>Sufixo</Label>
+                        <Input
+                          value={(field as CalculatorField).sufixo || ''}
+                          onChange={(e) => updateField(index, { sufixo: e.target.value })}
+                          placeholder="Ex: kg, cm, anos"
+                        />
+                      </div>
+                    </div>
+                  ) : (
                     <div className="space-y-2">
                       <Label>Opções de Resposta</Label>
-                      {field.opcoes.map((opcao, optIndex) => (
+                      {(field as CalculatorQuestionField).opcoes.map((opcao, optIndex) => (
                         <div key={optIndex} className="flex items-center gap-2">
                           <Input
                             value={opcao}
@@ -369,7 +328,7 @@ const CalculatorNodeConfig: React.FC<CalculatorNodeConfigProps> = ({
                             variant="ghost"
                             size="sm"
                             onClick={() => removeOption(index, optIndex)}
-                            disabled={field.opcoes.length <= 1}
+                            disabled={(field as CalculatorQuestionField).opcoes.length <= 1}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -384,20 +343,20 @@ const CalculatorNodeConfig: React.FC<CalculatorNodeConfigProps> = ({
                         Adicionar Opção
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
+                  )}
+                </CardContent>
+              </Card>
+            ))}
 
-              {questionFields.length === 0 && (
-                <div className="text-center text-gray-500 py-8">
-                  Nenhuma pergunta configurada. Adicione perguntas para usar nas condições.
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+            {allFields.length === 0 && (
+              <div className="text-center text-gray-500 py-8">
+                Nenhum campo configurado. Adicione campos de cálculo e pergunta para usar na calculadora.
+              </div>
+            )}
+          </div>
 
           {/* Fórmula */}
-          {calculatorFields.length > 0 && (
+          {allFields.filter(f => f.fieldType === 'calculo').length > 0 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Fórmula de Cálculo</h3>
               
@@ -429,9 +388,9 @@ const CalculatorNodeConfig: React.FC<CalculatorNodeConfigProps> = ({
                 <p className="text-sm text-gray-500 mt-1">
                   Use as nomenclaturas dos campos de cálculo. Operadores: +, -, *, /, (), ²
                 </p>
-                {calculatorFields.length > 0 && (
+                {allFields.filter(f => f.fieldType === 'calculo').length > 0 && (
                   <p className="text-sm text-blue-600 mt-1">
-                    Campos disponíveis: {calculatorFields.map(f => f.nomenclatura).join(', ')}
+                    Campos disponíveis: {allFields.filter(f => f.fieldType === 'calculo').map(f => f.nomenclatura).join(', ')}
                   </p>
                 )}
               </div>

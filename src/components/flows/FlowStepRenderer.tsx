@@ -22,6 +22,8 @@ interface FlowStepRendererProps {
   isLoading?: boolean;
   canGoBack?: boolean;
   calculatorResult?: number;
+  questionResponses?: Record<string, any>;
+  calculatorResults?: Record<string, number>;
 }
 
 export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
@@ -30,7 +32,9 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
   onGoBack,
   isLoading = false,
   canGoBack = false,
-  calculatorResult
+  calculatorResult,
+  questionResponses = {},
+  calculatorResults = {}
 }) => {
   const [response, setResponse] = useState<any>('');
   const [multipleChoiceResponse, setMultipleChoiceResponse] = useState<string[]>([]);
@@ -77,6 +81,8 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
             onComplete={onComplete}
             isLoading={isLoading}
             calculatorResult={calculatorResult || 0}
+            questionResponses={questionResponses}
+            calculatorResults={calculatorResults}
           />
         );
 

@@ -173,9 +173,26 @@ export const useFlowProcessor = () => {
       let updatedUserResponses = { ...currentResponses };
       let updatedCalculatorResults = { ...currentCalculatorResults };
       
-      if (response?.nodeType === 'calculator' && response?.result !== undefined) {
-        updatedCalculatorResults[stepId] = response.result;
-        completedStep.calculatorResult = response.result;
+      if (response?.nodeType === 'calculator') {
+        // Store calculator result
+        if (response?.result !== undefined) {
+          updatedCalculatorResults[stepId] = response.result;
+          completedStep.calculatorResult = response.result;
+        }
+        
+        // Store calculation responses (numeric inputs)
+        if (response?.calculationResponses) {
+          Object.keys(response.calculationResponses).forEach(key => {
+            updatedCalculatorResults[key] = response.calculationResponses[key];
+          });
+        }
+        
+        // Store question responses from calculator
+        if (response?.questionResponses) {
+          Object.keys(response.questionResponses).forEach(key => {
+            updatedUserResponses[key] = response.questionResponses[key];
+          });
+        }
       }
       
       if (response?.answer !== undefined) {

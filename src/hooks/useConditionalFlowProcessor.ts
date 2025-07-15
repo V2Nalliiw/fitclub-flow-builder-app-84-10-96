@@ -50,8 +50,14 @@ export const useConditionalFlowProcessor = () => {
       } else if (userResponses[campo] !== undefined) {
         compareValue = userResponses[campo];
       } else {
+        console.warn(`Campo ${campo} não encontrado nas respostas ou resultados. Dados disponíveis:`, {
+          userResponses,
+          calculatorResults
+        });
         return false;
       }
+
+      console.log(`Avaliando condição: ${campo} ${operador} ${valor}. Valor atual: ${compareValue}`);
 
       switch (operador) {
         case 'igual':
