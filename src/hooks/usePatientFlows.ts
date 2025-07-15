@@ -118,8 +118,9 @@ export const usePatientFlows = () => {
       console.log('🔗 usePatientFlows: URL final de conteúdo:', contentUrl);
 
       // ✨ ENVIAR WHATSAPP USANDO EDGE FUNCTION
+      console.log('🔍 usePatientFlows: Verificando envio WhatsApp - patient:', patient);
       if (patient?.phone) {
-        console.log('📱 usePatientFlows: Enviando WhatsApp de conclusão...');
+        console.log('📱 usePatientFlows: Enviando WhatsApp de conclusão para:', patient.phone);
 
         const message = `🎉 *Formulário Concluído!*
 
