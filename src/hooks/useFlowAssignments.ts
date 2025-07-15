@@ -367,8 +367,8 @@ export const useFlowAssignments = () => {
               // Tentar template oficial primeiro
               let result = await whatsappService.sendTemplate(
                 patient.phone,
-                'envio_formulario',
-                [execution.flow_name || 'Fluxo', patient.name || 'Paciente', patientDashboardUrl]
+                'novo_formulario',
+                [patient.name || 'Paciente', patientDashboardUrl]
               );
 
               console.log('📊 executeFirstNode: Resultado template oficial:', result);
@@ -378,7 +378,7 @@ export const useFlowAssignments = () => {
                 console.log('🔄 executeFirstNode: Template oficial falhou, tentando template básico');
                 result = await sendWhatsAppTemplateMessage(
                   patient.phone,
-                  'envio_formulario',
+                  'novo_formulario',
                   {
                     form_name: execution.flow_name || 'Fluxo',
                     patient_name: patient.name || 'Paciente',

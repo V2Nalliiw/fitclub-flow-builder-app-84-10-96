@@ -79,8 +79,11 @@ class WhatsAppTemplateService {
       case 'codigo_verificacao':
         return `🔐 *Código de Verificação*\n\nSeu código de verificação é: *${variables.code || '______'}*\n\nEste código expira em ${variables.expiry_time || '5 minutos'}.\n\n_Não compartilhe este código com ninguém._`;
       
-      case 'envio_formulario':
+      case 'novo_formulario':
         return `📋 *${variables.form_name || 'Formulário'}*\n\nOlá${variables.patient_name ? ` ${variables.patient_name}` : ''}! Você tem um formulário para preencher.\n\n🔗 Acesse o link: ${variables.form_url || '#'}\n\n_Responda assim que possível._`;
+      
+      case 'formulario_concluido':
+        return `🎉 *Parabéns ${variables.patient_name || 'Paciente'}!*\n\nVocê concluiu o formulário com sucesso!\n\n📁 *Seus materiais estão prontos:*\n${variables.content_url || '#'}\n\n_Este link expira em 30 dias._`;
       
       case 'mensagem_geral':
         return `💬 *Mensagem${variables.clinic_name ? ` de ${variables.clinic_name}` : ''}*\n\n${variables.message || ''}\n\n_Atenciosamente${variables.clinic_name ? `, ${variables.clinic_name}` : ''}_`;

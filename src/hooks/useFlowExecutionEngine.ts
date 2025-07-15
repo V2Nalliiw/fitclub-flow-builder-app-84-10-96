@@ -328,25 +328,25 @@ export const useFlowExecutionEngine = () => {
 
       console.log('🔗 FlowEngine: URL final de conteúdo:', contentUrl);
 
-      // ✨ ENVIAR WHATSAPP SIMPLIFICADO
+      // ✨ ENVIAR WHATSAPP COM TEMPLATE OFICIAL
       if (patient && (patient as any).phone) {
-        console.log('📱 FlowEngine: Enviando WhatsApp de conclusão...');
+        console.log('📱 FlowEngine: Enviando WhatsApp de conclusão com template oficial...');
 
-        const message = `🎉 *Formulário Concluído!*
-
-Olá ${(patient as any).name}! Você concluiu o formulário com sucesso.
-
-📁 *Seus materiais estão prontos:*
-${contentUrl}
-
-_Este link expira em 30 dias._`;
-
-        // Retry simples e eficaz
+        // Usar template oficial aprovado
         const sendWithRetry = async (attempts = 3) => {
           for (let i = 0; i < attempts; i++) {
             try {
               console.log(`📱 Tentativa ${i + 1}/${attempts} de envio WhatsApp...`);
-              const result = await sendMessage((patient as any).phone, message);
+              
+              // Tentar template oficial primeiro
+              const result = await sendWhatsAppTemplateMessage(
+                (patient as any).phone,
+                'formulario_concluido',
+                {
+                  patient_name: (patient as any).name || 'Paciente',
+                  content_url: contentUrl
+                }
+              );
               
               if (result.success) {
                 await recordOptInActivity(
@@ -354,7 +354,7 @@ _Este link expira em 30 dias._`;
                   (patient as any).phone,
                   'whatsapp_sent'
                 );
-                console.log('✅ FlowEngine: WhatsApp enviado com sucesso!');
+                console.log('✅ FlowEngine: WhatsApp enviado com sucesso usando template oficial!');
                 return true;
               } else {
                 console.error(`❌ Falha no envio (tentativa ${i + 1}):`, result.error);

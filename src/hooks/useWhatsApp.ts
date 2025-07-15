@@ -140,7 +140,7 @@ export const useWhatsApp = () => {
       message = customMessage;
     } else {
       try {
-        message = await renderTemplate('envio_formulario', {
+        message = await renderTemplate('novo_formulario', {
           form_name: formName,
           patient_name: '', // Pode ser passado como parâmetro no futuro
           form_url: formUrl
