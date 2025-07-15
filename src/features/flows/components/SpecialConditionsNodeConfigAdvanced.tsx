@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, Plus, Trash2, Info, GitBranch, Calculator, Hash, HelpCircle, Lightbulb } from 'lucide-react';
+import { Save, Plus, Trash2, Info, GitBranch, Calculator, Hash, HelpCircle, Lightbulb, Search } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface AdvancedSpecialCondition {
@@ -61,16 +61,25 @@ interface SpecialConditionsNodeConfigAdvancedProps {
   onClose: () => void;
   onSave: (data: any) => void;
   initialData?: any;
+  availableFields?: {
+    calculations: Array<{ nomenclatura: string; label: string; type: 'number' | 'decimal' }>;
+    questions: Array<{ nomenclatura: string; label: string; type: 'single' | 'multiple' }>;
+  };
 }
 
 export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNodeConfigAdvancedProps> = ({
   isOpen,
   onClose,
   onSave,
-  initialData
+  initialData,
+  availableFields
 }) => {
   const [conditions, setConditions] = useState<AdvancedSpecialCondition[]>([]);
   const [selectedTab, setSelectedTab] = useState('data-sources');
+  const [detectedFields, setDetectedFields] = useState<{
+    calculations: string[];
+    questions: string[];
+  }>({ calculations: [], questions: [] });
 
   useEffect(() => {
     if (initialData?.condicoesEspeciais) {
@@ -110,6 +119,16 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
       setConditions(migratedConditions);
     }
   }, [initialData]);
+
+  // Auto-detect available fields from previous nodes
+  useEffect(() => {
+    if (availableFields) {
+      setDetectedFields({
+        calculations: availableFields.calculations.map(f => f.nomenclatura),
+        questions: availableFields.questions.map(f => f.nomenclatura)
+      });
+    }
+  }, [availableFields]);
 
   const operatorLabels = {
     'eq': 'Igual a (=)',
@@ -306,6 +325,50 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
                 </AlertDescription>
               </Alert>
 
+              {/* Auto-detected fields */}
+              {(detectedFields.calculations.length > 0 || detectedFields.questions.length > 0) && (
+                <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Search className="h-4 w-4 text-blue-600" />
+                      Campos Detectados Automaticamente
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {detectedFields.calculations.length > 0 && (
+                      <div>
+                        <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                          Campos de Cálculo Disponíveis ({detectedFields.calculations.length}):
+                        </Label>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {detectedFields.calculations.map((field, index) => (
+                            <span key={index} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-md text-xs">
+                              <Hash className="h-3 w-3" />
+                              {field}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {detectedFields.questions.length > 0 && (
+                      <div>
+                        <Label className="text-xs font-medium text-green-700 dark:text-green-300">
+                          Campos de Pergunta Disponíveis ({detectedFields.questions.length}):
+                        </Label>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {detectedFields.questions.map((field, index) => (
+                            <span key={index} className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 rounded-md text-xs">
+                              <HelpCircle className="h-3 w-3" />
+                              {field}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               <div className="flex justify-between items-center">
                 <p className="text-sm text-muted-foreground">
                   {conditions.length} condição(ões) configurada(s)
@@ -363,21 +426,33 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
                         <div className="mt-2 space-y-2">
                           {condition.dataSources.numericFields.map((field, index) => (
                             <div key={index} className="flex items-center gap-2">
-                              <Input
-                                value={field}
-                                onChange={(e) => {
-                                  const updated = [...condition.dataSources.numericFields];
-                                  updated[index] = e.target.value;
-                                  updateCondition(condition.id, {
-                                    dataSources: {
-                                      ...condition.dataSources,
-                                      numericFields: updated,
-                                    },
-                                  });
-                                }}
-                                placeholder="peso, altura, idade..."
-                                className="text-xs"
-                              />
+                                <Select
+                                  value={field}
+                                  onValueChange={(value) => {
+                                    const updated = [...condition.dataSources.numericFields];
+                                    updated[index] = value;
+                                    updateCondition(condition.id, {
+                                      dataSources: {
+                                        ...condition.dataSources,
+                                        numericFields: updated,
+                                      },
+                                    });
+                                  }}
+                                >
+                                  <SelectTrigger className="text-xs">
+                                    <SelectValue placeholder="Selecione um campo..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {detectedFields.calculations.map((calcField) => (
+                                      <SelectItem key={calcField} value={calcField}>
+                                        <div className="flex items-center gap-2">
+                                          <Hash className="h-3 w-3 text-blue-600" />
+                                          {calcField}
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                               <Button
                                 type="button"
                                 variant="ghost"
@@ -415,21 +490,33 @@ export const SpecialConditionsNodeConfigAdvanced: React.FC<SpecialConditionsNode
                         <div className="mt-2 space-y-2">
                           {condition.dataSources.questionResponses.map((field, index) => (
                             <div key={index} className="flex items-center gap-2">
-                              <Input
-                                value={field}
-                                onChange={(e) => {
-                                  const updated = [...condition.dataSources.questionResponses];
-                                  updated[index] = e.target.value;
-                                  updateCondition(condition.id, {
-                                    dataSources: {
-                                      ...condition.dataSources,
-                                      questionResponses: updated,
-                                    },
-                                  });
-                                }}
-                                placeholder="pergunta_1, sintomas..."
-                                className="text-xs"
-                              />
+                                <Select
+                                  value={field}
+                                  onValueChange={(value) => {
+                                    const updated = [...condition.dataSources.questionResponses];
+                                    updated[index] = value;
+                                    updateCondition(condition.id, {
+                                      dataSources: {
+                                        ...condition.dataSources,
+                                        questionResponses: updated,
+                                      },
+                                    });
+                                  }}
+                                >
+                                  <SelectTrigger className="text-xs">
+                                    <SelectValue placeholder="Selecione uma pergunta..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {detectedFields.questions.map((questField) => (
+                                      <SelectItem key={questField} value={questField}>
+                                        <div className="flex items-center gap-2">
+                                          <HelpCircle className="h-3 w-3 text-green-600" />
+                                          {questField}
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                               <Button
                                 type="button"
                                 variant="ghost"

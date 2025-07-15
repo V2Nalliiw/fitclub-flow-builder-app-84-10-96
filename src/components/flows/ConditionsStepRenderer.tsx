@@ -2,283 +2,336 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { GitBranch, ArrowRight, Hash, HelpCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { GitBranch, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
 
 interface ConditionsStepRendererProps {
   step: any;
   onComplete: (response: any) => void;
   isLoading?: boolean;
   calculatorResult?: number;
-  questionResponses?: Record<string, any>; // Respostas de perguntas anteriores
-  calculatorResults?: Record<string, number>; // Resultados de cálculos
+  questionResponses?: Record<string, any>;
+  calculatorResults?: Record<string, number>;
 }
 
 export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
   step,
   onComplete,
   isLoading = false,
-  calculatorResult = 0,
+  calculatorResult,
   questionResponses = {},
   calculatorResults = {}
 }) => {
-  const [selectedCondition, setSelectedCondition] = useState<string | null>(null);
+  const [evaluatedCondition, setEvaluatedCondition] = useState<any>(null);
 
-  // Avaliação de condições legadas (compatibilidade)
-  const evaluateConditions = (result: number, conditions: any[]) => {
+  console.log('=== DEBUGGING CONDIÇÕES ===');
+  console.log('Step:', step);
+  console.log('Calculator Result:', calculatorResult);
+  console.log('Question Responses:', questionResponses);
+  console.log('Calculator Results:', calculatorResults);
+
+  // Evaluate legacy conditions (for backwards compatibility)
+  const evaluateConditions = (result: number, conditions: any[]): any | null => {
+    if (!conditions || conditions.length === 0) return null;
+    
+    console.log('Evaluating legacy conditions:', conditions);
+    
     for (const condition of conditions) {
-      const fieldValue = result; // Usando o resultado da calculadora
+      const { campo, operador, valor, valorFinal } = condition;
+      let compareValue: any;
+
+      // Look for value in calculator results first (by nomenclatura)
+      if (calculatorResults[campo] !== undefined) {
+        compareValue = calculatorResults[campo];
+        console.log(`Found in calculatorResults: ${campo} = ${compareValue}`);
+      } else if (questionResponses[campo] !== undefined) {
+        compareValue = questionResponses[campo];
+        console.log(`Found in questionResponses: ${campo} = ${compareValue}`);
+      } else {
+        console.warn(`Field ${campo} not found in any data source`);
+        continue;
+      }
+
+      console.log(`Evaluating: ${campo} ${operador} ${valor} (current: ${compareValue})`);
+
+      let conditionMet = false;
       
-      switch (condition.operador) {
+      switch (operador) {
         case 'igual':
-          if (fieldValue === condition.valor) return condition;
+          conditionMet = compareValue === valor;
           break;
         case 'maior':
-          if (fieldValue > condition.valor) return condition;
+          conditionMet = parseFloat(compareValue) > parseFloat(valor);
           break;
         case 'menor':
-          if (fieldValue < condition.valor) return condition;
+          conditionMet = parseFloat(compareValue) < parseFloat(valor);
           break;
         case 'maior_igual':
-          if (fieldValue >= condition.valor) return condition;
+          conditionMet = parseFloat(compareValue) >= parseFloat(valor);
           break;
         case 'menor_igual':
-          if (fieldValue <= condition.valor) return condition;
+          conditionMet = parseFloat(compareValue) <= parseFloat(valor);
           break;
         case 'diferente':
-          if (fieldValue !== condition.valor) return condition;
+          conditionMet = compareValue !== valor;
           break;
         case 'entre':
-          if (fieldValue >= condition.valor && fieldValue <= (condition.valorFinal || 0)) return condition;
+          conditionMet = parseFloat(compareValue) >= parseFloat(valor) && parseFloat(compareValue) <= parseFloat(valorFinal || valor);
           break;
+        default:
+          conditionMet = false;
       }
-    }
-    return null;
-  };
 
-  // Avaliação de condições compostas
-  const evaluateCompositeConditions = (conditions: any[]) => {
-    for (const condition of conditions) {
-      const ruleResults = condition.rules.map((rule: any) => evaluateRule(rule));
+      console.log(`Condition result: ${conditionMet}`);
       
-      const conditionMet = condition.logic === 'AND' 
-        ? ruleResults.every(result => result)
-        : ruleResults.some(result => result);
-        
       if (conditionMet) {
         return condition;
       }
     }
+    
     return null;
   };
 
-  // Avaliação de uma regra individual
-  const evaluateRule = (rule: any) => {
-    let fieldValue: any;
+  // Evaluate composite conditions (new format)
+  const evaluateCompositeConditions = (conditions: any[]): any | null => {
+    if (!conditions || conditions.length === 0) return null;
     
-    // Obter valor baseado na fonte
-    if (rule.sourceType === 'calculation') {
-      // Buscar em calculatorResults por nomenclatura
-      fieldValue = calculatorResults[rule.sourceField] || calculatorResult;
-    } else if (rule.sourceType === 'question') {
-      // Buscar em questionResponses por nomenclatura
-      fieldValue = questionResponses[rule.sourceField];
+    console.log('Evaluating composite conditions:', conditions);
+    
+    for (const condition of conditions) {
+      if (!condition.rules || condition.rules.length === 0) continue;
+      
+      const results = condition.rules.map((rule: any) => {
+        const { sourceType, sourceField, operator, value, valueEnd } = rule;
+        let compareValue: any;
+
+        if (sourceType === 'calculation') {
+          compareValue = calculatorResults[sourceField];
+        } else if (sourceType === 'question') {
+          compareValue = questionResponses[sourceField];
+        }
+
+        if (compareValue === undefined) {
+          console.warn(`Field ${sourceField} not found for rule evaluation`);
+          return false;
+        }
+
+        console.log(`Evaluating rule: ${sourceField} ${operator} ${value} (current: ${compareValue})`);
+
+        switch (operator) {
+          case 'equal':
+            return compareValue === value;
+          case 'not_equal':
+            return compareValue !== value;
+          case 'greater':
+            return parseFloat(compareValue) > parseFloat(value);
+          case 'less':
+            return parseFloat(compareValue) < parseFloat(value);
+          case 'greater_equal':
+            return parseFloat(compareValue) >= parseFloat(value);
+          case 'less_equal':
+            return parseFloat(compareValue) <= parseFloat(value);
+          case 'between':
+            return parseFloat(compareValue) >= parseFloat(value) && parseFloat(compareValue) <= parseFloat(valueEnd);
+          case 'contains':
+            return String(compareValue).includes(String(value));
+          case 'in':
+            return Array.isArray(value) ? value.includes(compareValue) : false;
+          default:
+            return false;
+        }
+      });
+
+      const finalResult = condition.logic === 'AND' ? 
+        results.every(r => r) : 
+        results.some(r => r);
+
+      console.log(`Composite condition result: ${finalResult}`);
+      
+      if (finalResult) {
+        return condition;
+      }
     }
     
-    console.log(`Avaliando regra: ${rule.sourceField} (${rule.sourceType}) ${rule.operator} ${rule.value}. Valor: ${fieldValue}`);
-    
-    // Aplicar operador
-    switch (rule.operator) {
-      case 'equal':
-        return fieldValue === rule.value;
-      case 'not_equal':
-        return fieldValue !== rule.value;
-      case 'greater':
-        return parseFloat(fieldValue) > parseFloat(rule.value);
-      case 'less':
-        return parseFloat(fieldValue) < parseFloat(rule.value);
-      case 'greater_equal':
-        return parseFloat(fieldValue) >= parseFloat(rule.value);
-      case 'less_equal':
-        return parseFloat(fieldValue) <= parseFloat(rule.value);
-      case 'between':
-        return parseFloat(fieldValue) >= parseFloat(rule.value) && parseFloat(fieldValue) <= parseFloat(rule.valueEnd);
-      case 'contains':
-        return String(fieldValue).includes(String(rule.value));
-      case 'in':
-        return Array.isArray(fieldValue) ? fieldValue.includes(rule.value) : false;
-      default:
-        return false;
-    }
+    return null;
   };
 
   const handleComplete = () => {
-    // Verificar se há condições compostas ou legadas
-    const compositeConditions = step.compositeConditions || [];
-    const legacyConditions = step.conditions || [];
-    
     let matchedCondition = null;
     
-    if (compositeConditions.length > 0) {
-      matchedCondition = evaluateCompositeConditions(compositeConditions);
-    } else if (legacyConditions.length > 0) {
-      matchedCondition = evaluateConditions(calculatorResult, legacyConditions);
+    // Try composite conditions first (new format)
+    if (step.compositeConditions && step.compositeConditions.length > 0) {
+      matchedCondition = evaluateCompositeConditions(step.compositeConditions);
     }
+    
+    // Fallback to legacy conditions
+    if (!matchedCondition && step.conditions && step.conditions.length > 0) {
+      matchedCondition = evaluateConditions(calculatorResult || 0, step.conditions);
+    }
+    
+    // Try special conditions (advanced format)
+    if (!matchedCondition && step.condicoesEspeciais && step.condicoesEspeciais.length > 0) {
+      matchedCondition = evaluateConditions(calculatorResult || 0, step.condicoesEspeciais);
+    }
+
+    console.log('Final matched condition:', matchedCondition);
+    setEvaluatedCondition(matchedCondition);
     
     onComplete({
       nodeId: step.nodeId,
       nodeType: 'conditions',
-      result: calculatorResult,
-      questionResponses,
-      calculatorResults,
-      matchedCondition: matchedCondition,
-      conditionLabel: matchedCondition?.label || 'Nenhuma condição atendida',
+      condition: matchedCondition,
+      allData: {
+        calculatorResult,
+        questionResponses,
+        calculatorResults
+      },
       timestamp: new Date().toISOString()
     });
   };
-
-  // Determinar que tipo de condições usar
-  const compositeConditions = step.compositeConditions || [];
-  const legacyConditions = step.conditions || [];
-  
-  const matchedCondition = compositeConditions.length > 0 
-    ? evaluateCompositeConditions(compositeConditions)
-    : evaluateConditions(calculatorResult, legacyConditions);
 
   return (
     <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <GitBranch className="h-6 w-6 text-primary" />
+          <GitBranch className="h-6 w-6 text-blue-500" />
           {step.title || 'Avaliação de Condições'}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="text-center py-4">
-          <div className="text-2xl font-bold text-gray-800 mb-4">
-            Resultado: {calculatorResult.toFixed(2)}
-          </div>
-          
-          {step.description && (
-            <p className="text-gray-600 mb-6">{step.description}</p>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          <h3 className="font-semibold text-lg">Condições Avaliadas:</h3>
-          
-          {/* Renderizar condições compostas */}
-          {compositeConditions.length > 0 && compositeConditions.map((condition: any, index: number) => {
-            const isMatched = matchedCondition?.id === condition.id;
-            
-            return (
-              <div
-                key={condition.id}
-                className={`p-4 rounded-lg border-2 transition-colors ${
-                  isMatched 
-                    ? 'border-primary bg-primary/10 dark:bg-primary/20' 
-                    : 'border-gray-200 bg-gray-50 dark:bg-none dark:bg-[#0E0E0E]'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <div className="font-medium text-gray-900 dark:text-gray-100">
-                      {condition.label}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {condition.rules.length} regras com lógica {condition.logic}
-                    </div>
-                  </div>
-                  
-                  <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    isMatched
-                      ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary'
-                      : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-                  }`}>
-                    {isMatched ? '✓ Atendida' : 'Não atendida'}
-                  </div>
-                </div>
-                
-                {/* Mostrar regras */}
-                <div className="space-y-2">
-                  {condition.rules.map((rule: any, ruleIndex: number) => {
-                    const ruleResult = evaluateRule(rule);
-                    const sourceIcon = rule.sourceType === 'calculation' ? '🧮' : '❓';
-                    
-                    return (
-                      <div key={rule.id} className="flex items-center gap-2 text-sm">
-                        <div className={`w-2 h-2 rounded-full ${ruleResult ? 'bg-green-500' : 'bg-red-500'}`} />
-                        <span>{sourceIcon}</span>
-                        <span className="text-gray-700 dark:text-gray-300">
-                          {rule.sourceField} {rule.operator} {rule.value}
-                          {rule.valueEnd && ` - ${rule.valueEnd}`}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-          
-          {/* Renderizar condições legadas */}
-          {legacyConditions.length > 0 && legacyConditions.map((condition: any, index: number) => {
-            const isMatched = matchedCondition?.id === condition.id;
-            
-            return (
-              <div
-                key={condition.id}
-                className={`p-4 rounded-lg border-2 transition-colors ${
-                  isMatched 
-                    ? 'border-primary bg-primary/10 dark:bg-primary/20' 
-                    : 'border-gray-200 bg-gray-50 dark:bg-none dark:bg-[#0E0E0E]'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium text-gray-900 dark:text-gray-100">
-                      {condition.label}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      <Hash className="inline h-3 w-3 mr-1" />
-                      {condition.operador === 'entre' 
-                        ? `${condition.campo} entre ${condition.valor} e ${condition.valorFinal}`
-                        : `${condition.campo} ${condition.operador} ${condition.valor}`
-                      }
-                    </div>
-                  </div>
-                  
-                  <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    isMatched
-                      ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary'
-                      : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-                  }`}>
-                    {isMatched ? '✓ Atendida' : 'Não atendida'}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {matchedCondition && (
-          <div className="bg-primary/10 dark:bg-primary/20 rounded-lg p-4 border border-primary/20 dark:border-primary/30">
-            <h4 className="font-semibold text-primary dark:text-primary mb-2">
-              Resultado da Avaliação:
+        {step.descricao && (
+          <p className="text-gray-600 dark:text-gray-300">{step.descricao}</p>
+        )}
+        
+        {/* Show calculation result if available */}
+        {calculatorResult !== undefined && (
+          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+            <h4 className="font-semibold text-orange-800 dark:text-orange-200 mb-2">
+              Resultado do Cálculo:
             </h4>
-            <p className="text-primary dark:text-primary">
-              {matchedCondition.label}
-            </p>
+            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+              {calculatorResult}
+            </div>
           </div>
         )}
 
-        <div className="flex justify-center pt-4">
+        {/* Show available data for debugging */}
+        {Object.keys(calculatorResults).length > 0 && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
+              Dados de Cálculo Disponíveis:
+            </h4>
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(calculatorResults).map(([key, value]) => (
+                <div key={key} className="flex justify-between items-center text-sm">
+                  <span className="text-blue-700 dark:text-blue-300">{key}:</span>
+                  <span className="font-semibold text-blue-900 dark:text-blue-100">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {Object.keys(questionResponses).length > 0 && (
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">
+              Respostas das Perguntas:
+            </h4>
+            <div className="space-y-2">
+              {Object.entries(questionResponses).map(([key, value]) => (
+                <div key={key} className="flex justify-between items-center text-sm">
+                  <span className="text-green-700 dark:text-green-300">{key}:</span>
+                  <span className="font-semibold text-green-900 dark:text-green-100">
+                    {Array.isArray(value) ? value.join(', ') : String(value)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Show conditions that will be evaluated */}
+        <div className="space-y-3">
+          <h4 className="font-semibold text-gray-800 dark:text-gray-200">
+            Condições Configuradas:
+          </h4>
+          
+          {/* Legacy conditions */}
+          {step.conditions && step.conditions.length > 0 && (
+            <div className="space-y-2">
+              {step.conditions.map((condition: any, index: number) => {
+                const isMatched = evaluatedCondition?.id === condition.id;
+                return (
+                  <div
+                    key={index}
+                    className={`flex items-center justify-between p-3 rounded-lg border ${
+                      isMatched
+                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                        : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {isMatched ? (
+                        <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-gray-400" />
+                      )}
+                      <span className="text-sm">
+                        {condition.campo} {condition.operador} {condition.valor}
+                        {condition.valorFinal && ` e ${condition.valorFinal}`}
+                      </span>
+                    </div>
+                    <Badge variant={isMatched ? 'default' : 'secondary'}>
+                      {condition.label}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Composite conditions */}
+          {step.compositeConditions && step.compositeConditions.length > 0 && (
+            <div className="space-y-2">
+              {step.compositeConditions.map((condition: any, index: number) => {
+                const isMatched = evaluatedCondition?.id === condition.id;
+                return (
+                  <div
+                    key={index}
+                    className={`flex items-center justify-between p-3 rounded-lg border ${
+                      isMatched
+                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                        : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {isMatched ? (
+                        <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-gray-400" />
+                      )}
+                      <span className="text-sm">
+                        {condition.rules?.length || 0} regra(s) - {condition.logic}
+                      </span>
+                    </div>
+                    <Badge variant={isMatched ? 'default' : 'secondary'}>
+                      {condition.label}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-center">
           <Button
             onClick={handleComplete}
             disabled={isLoading}
-            className="bg-primary-gradient hover:opacity-90 text-white px-8 py-3 font-medium"
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 font-medium"
             size="lg"
           >
-            {isLoading ? 'Processando...' : 'Continuar'}
+            {isLoading ? 'Avaliando...' : 'Continuar'}
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </div>

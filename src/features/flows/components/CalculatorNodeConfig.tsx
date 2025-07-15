@@ -10,6 +10,7 @@ import { Plus, Trash2, Calculator, GripVertical, HelpCircle, Hash } from 'lucide
 import { CalculatorField, CalculatorQuestionField } from '@/types/flow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 interface CalculatorNodeConfigProps {
   isOpen: boolean;
@@ -86,11 +87,16 @@ const CalculatorNodeConfig: React.FC<CalculatorNodeConfigProps> = ({
     setAllFields(allFields.filter((_, i) => i !== index));
   };
 
-  const moveField = (dragIndex: number, hoverIndex: number) => {
-    const dragField = allFields[dragIndex];
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+    
+    const { source, destination } = result;
+    if (source.index === destination.index) return;
+    
+    const dragField = allFields[source.index];
     const updatedFields = [...allFields];
-    updatedFields.splice(dragIndex, 1);
-    updatedFields.splice(hoverIndex, 0, dragField);
+    updatedFields.splice(source.index, 1);
+    updatedFields.splice(destination.index, 0, dragField);
     
     // Update order based on position
     const reorderedFields = updatedFields.map((field, index) => ({
@@ -217,136 +223,157 @@ const CalculatorNodeConfig: React.FC<CalculatorNodeConfigProps> = ({
               </div>
             </div>
 
-            {allFields.map((field, index) => (
-              <Card key={field.id} className="border">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
-                      {field.fieldType === 'calculo' ? (
-                        <Hash className="h-4 w-4 text-blue-600" />
-                      ) : (
-                        <HelpCircle className="h-4 w-4 text-green-600" />
-                      )}
-                      <span className="text-sm text-gray-500">#{field.order + 1}</span>
-                      {field.fieldType === 'calculo' ? 'Campo de Cálculo' : 'Campo de Pergunta'}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeField(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <Label>Nomenclatura {field.fieldType === 'calculo' ? '(para fórmula)' : '(para condições)'}</Label>
-                      <Input
-                        value={field.nomenclatura}
-                        onChange={(e) => updateField(index, { nomenclatura: e.target.value })}
-                        placeholder={field.fieldType === 'calculo' ? 'Ex: peso, altura, idade' : 'Ex: quer_emagrecer, pratica_esportes'}
-                      />
-                    </div>
-                    {field.fieldType === 'calculo' ? (
-                      <div>
-                        <Label>Tipo</Label>
-                        <Select
-                          value={(field as CalculatorField).tipo}
-                          onValueChange={(value: 'numero' | 'decimal') => updateField(index, { tipo: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="numero">Número Inteiro</SelectItem>
-                            <SelectItem value="decimal">Número Decimal</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ) : (
-                      <div>
-                        <Label>Tipo de Pergunta</Label>
-                        <Select
-                          value={(field as CalculatorQuestionField).questionType}
-                          onValueChange={(value: 'escolha-unica' | 'multipla-escolha') => 
-                            updateField(index, { questionType: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="escolha-unica">Escolha Única (Dropdown)</SelectItem>
-                            <SelectItem value="multipla-escolha">Múltipla Escolha (Checkboxes)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label>Pergunta</Label>
-                    <Input
-                      value={field.pergunta}
-                      onChange={(e) => updateField(index, { pergunta: e.target.value })}
-                      placeholder={field.fieldType === 'calculo' ? 'Ex: Qual o seu peso?' : 'Ex: Você quer emagrecer?'}
-                    />
-                  </div>
-
-                  {field.fieldType === 'calculo' ? (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label>Prefixo</Label>
-                        <Input
-                          value={(field as CalculatorField).prefixo || ''}
-                          onChange={(e) => updateField(index, { prefixo: e.target.value })}
-                          placeholder="Ex: R$"
-                        />
-                      </div>
-                      <div>
-                        <Label>Sufixo</Label>
-                        <Input
-                          value={(field as CalculatorField).sufixo || ''}
-                          onChange={(e) => updateField(index, { sufixo: e.target.value })}
-                          placeholder="Ex: kg, cm, anos"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Label>Opções de Resposta</Label>
-                      {(field as CalculatorQuestionField).opcoes.map((opcao, optIndex) => (
-                        <div key={optIndex} className="flex items-center gap-2">
-                          <Input
-                            value={opcao}
-                            onChange={(e) => updateOption(index, optIndex, e.target.value)}
-                            placeholder="Digite a opção..."
-                          />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeOption(index, optIndex)}
-                            disabled={(field as CalculatorQuestionField).opcoes.length <= 1}
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="calculator-fields">
+                {(provided) => (
+                  <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
+                    {allFields.map((field, index) => (
+                      <Draggable key={field.id} draggableId={field.id} index={index}>
+                        {(provided, snapshot) => (
+                          <Card 
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className={`border transition-all duration-200 ${
+                              snapshot.isDragging ? 'shadow-lg scale-[1.02] rotate-1' : ''
+                            }`}
                           >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addOption(index)}
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Adicionar Opção
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                            <CardHeader className="pb-3">
+                              <CardTitle className="flex items-center justify-between text-sm">
+                                <div className="flex items-center gap-2">
+                                  <div {...provided.dragHandleProps}>
+                                    <GripVertical className="h-4 w-4 text-gray-400 cursor-move hover:text-gray-600" />
+                                  </div>
+                                  {field.fieldType === 'calculo' ? (
+                                    <Hash className="h-4 w-4 text-blue-600" />
+                                  ) : (
+                                    <HelpCircle className="h-4 w-4 text-green-600" />
+                                  )}
+                                  <span className="text-sm text-gray-500">#{field.order + 1}</span>
+                                  {field.fieldType === 'calculo' ? 'Campo de Cálculo' : 'Campo de Pergunta'}
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeField(index)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                  <Label>Nomenclatura {field.fieldType === 'calculo' ? '(para fórmula)' : '(para condições)'}</Label>
+                                  <Input
+                                    value={field.nomenclatura}
+                                    onChange={(e) => updateField(index, { nomenclatura: e.target.value })}
+                                    placeholder={field.fieldType === 'calculo' ? 'Ex: peso, altura, idade' : 'Ex: quer_emagrecer, pratica_esportes'}
+                                  />
+                                </div>
+                                {field.fieldType === 'calculo' ? (
+                                  <div>
+                                    <Label>Tipo</Label>
+                                    <Select
+                                      value={(field as CalculatorField).tipo}
+                                      onValueChange={(value: 'numero' | 'decimal') => updateField(index, { tipo: value })}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="numero">Número Inteiro</SelectItem>
+                                        <SelectItem value="decimal">Número Decimal</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <Label>Tipo de Pergunta</Label>
+                                    <Select
+                                      value={(field as CalculatorQuestionField).questionType}
+                                      onValueChange={(value: 'escolha-unica' | 'multipla-escolha') => 
+                                        updateField(index, { questionType: value })}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="escolha-unica">Escolha Única (Dropdown)</SelectItem>
+                                        <SelectItem value="multipla-escolha">Múltipla Escolha (Checkboxes)</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div>
+                                <Label>Pergunta</Label>
+                                <Input
+                                  value={field.pergunta}
+                                  onChange={(e) => updateField(index, { pergunta: e.target.value })}
+                                  placeholder={field.fieldType === 'calculo' ? 'Ex: Qual o seu peso?' : 'Ex: Você quer emagrecer?'}
+                                />
+                              </div>
+
+                              {field.fieldType === 'calculo' ? (
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <Label>Prefixo</Label>
+                                    <Input
+                                      value={(field as CalculatorField).prefixo || ''}
+                                      onChange={(e) => updateField(index, { prefixo: e.target.value })}
+                                      placeholder="Ex: R$"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label>Sufixo</Label>
+                                    <Input
+                                      value={(field as CalculatorField).sufixo || ''}
+                                      onChange={(e) => updateField(index, { sufixo: e.target.value })}
+                                      placeholder="Ex: kg, cm, anos"
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  <Label>Opções de Resposta</Label>
+                                  {(field as CalculatorQuestionField).opcoes.map((opcao, optIndex) => (
+                                    <div key={optIndex} className="flex items-center gap-2">
+                                      <Input
+                                        value={opcao}
+                                        onChange={(e) => updateOption(index, optIndex, e.target.value)}
+                                        placeholder="Digite a opção..."
+                                      />
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => removeOption(index, optIndex)}
+                                        disabled={(field as CalculatorQuestionField).opcoes.length <= 1}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => addOption(index)}
+                                  >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Adicionar Opção
+                                  </Button>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
 
             {allFields.length === 0 && (
               <div className="text-center text-gray-500 py-8">
