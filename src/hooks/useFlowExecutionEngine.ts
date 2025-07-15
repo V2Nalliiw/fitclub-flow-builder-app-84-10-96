@@ -7,6 +7,8 @@ import { useWhatsApp } from '@/hooks/useWhatsApp';
 import { useWhatsAppValidations } from '@/hooks/useWhatsAppValidations';
 import { useWhatsAppSettings } from '@/hooks/useWhatsAppSettings';
 import { usePatientWhatsApp } from '@/hooks/usePatientWhatsApp';
+import { whatsappService } from '@/services/whatsapp/WhatsAppService';
+import { whatsappTemplateService } from '@/services/whatsapp/WhatsAppTemplateService';
 
 interface ExecutionStep {
   nodeId: string;
@@ -42,6 +44,24 @@ export const useFlowExecutionEngine = () => {
           ready 
         });
         setIsWhatsAppReady(ready);
+        
+        // Configurar WhatsApp service se configuração estiver disponível
+        if (config && config.is_active) {
+          whatsappService.setConfig({
+            provider: config.provider,
+            access_token: config.access_token,
+            business_account_id: config.business_account_id,
+            phone_number: config.phone_number,
+            webhook_url: config.webhook_url,
+            base_url: config.base_url,
+            api_key: config.api_key,
+            session_name: config.session_name,
+            account_sid: config.account_sid,
+            auth_token: config.auth_token,
+            is_active: config.is_active
+          });
+          console.log('✅ FlowEngine: WhatsApp service configurado');
+        }
         
         // Se não estiver pronto, tentar novamente em 2 segundos
         if (!ready && !whatsappLoading) {
@@ -237,7 +257,7 @@ export const useFlowExecutionEngine = () => {
       console.log('🔍 FlowEngine: Buscando dados do paciente...');
       const { data: patient } = await supabase
         .from('profiles')
-        .select('name, phone')
+        .select('name, phone, clinic_id')
         .eq('user_id', (execution as any).patient_id)
         .single();
 
@@ -360,16 +380,22 @@ export const useFlowExecutionEngine = () => {
           for (let i = 0; i < attempts; i++) {
             try {
               console.log(`📱 FlowEngine: ===== TENTATIVA ${i + 1}/${attempts} =====`);
-              console.log(`📱 FlowEngine: Chamando sendWhatsAppTemplateMessage...`);
+              console.log(`📱 FlowEngine: Tentando enviar template "formulario_concluido"...`);
               
-              // Tentar template oficial primeiro
-              const result = await sendWhatsAppTemplateMessage(
+              // ✨ CORRIGIDO: Usar placeholders {{1}} e {{2}} para template oficial
+              const templateParams = [
+                (patient as any).name || 'Paciente',  // {{1}} - Nome do paciente
+                contentUrl                             // {{2}} - URL do conteúdo
+              ];
+              
+              console.log(`📧 FlowEngine: Enviando template com parâmetros:`, templateParams);
+              
+              // Tentar template oficial primeiro via Meta API
+              const result = await whatsappService.sendTemplate(
                 (patient as any).phone,
                 'formulario_concluido',
-                {
-                  patient_name: (patient as any).name || 'Paciente',
-                  content_url: contentUrl
-                }
+                templateParams,
+                'pt_BR'
               );
               
               console.log(`📱 FlowEngine: Resultado da tentativa ${i + 1}:`, result);
@@ -381,17 +407,44 @@ export const useFlowExecutionEngine = () => {
                   (patient as any).phone,
                   'whatsapp_sent'
                 );
-                console.log('✅ FlowEngine: WhatsApp enviado com sucesso usando template oficial!');
+                console.log('✅ FlowEngine: WhatsApp template enviado com sucesso!');
                 return true;
               } else {
-                console.error(`❌ FlowEngine: Falha no envio (tentativa ${i + 1}):`, result.error);
+                console.error(`❌ FlowEngine: Falha no template (tentativa ${i + 1}):`, result.error);
+                
+                // FALLBACK: Tentar com mensagem renderizada
+                console.log('🔄 FlowEngine: Tentando fallback com mensagem renderizada...');
+                
+                const renderedMessage = await whatsappTemplateService.renderTemplate(
+                  'formulario_concluido',
+                  {
+                    patient_name: (patient as any).name || 'Paciente',
+                    content_url: contentUrl
+                  }
+                );
+                
+                const fallbackResult = await whatsappService.sendMessage(
+                  (patient as any).phone,
+                  renderedMessage
+                );
+                
+                if (fallbackResult.success) {
+                  console.log('✅ FlowEngine: Fallback enviado com sucesso!');
+                  await recordOptInActivity(
+                    (execution as any).patient_id,
+                    (patient as any).phone,
+                    'whatsapp_sent'
+                  );
+                  return true;
+                }
+                
                 if (i < attempts - 1) {
                   console.log(`⏳ FlowEngine: Aguardando ${1000 * (i + 1)}ms antes da próxima tentativa...`);
                   await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
                 }
               }
             } catch (error) {
-              console.error(`❌ FlowEngine: Erro no envio (tentativa ${i + 1}):`, error);
+              console.error(`❌ FlowEngine: Erro crítico no envio (tentativa ${i + 1}):`, error);
               if (i < attempts - 1) {
                 console.log(`⏳ FlowEngine: Aguardando ${1000 * (i + 1)}ms antes da próxima tentativa...`);
                 await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));

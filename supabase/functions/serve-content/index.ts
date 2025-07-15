@@ -16,6 +16,117 @@ serve(async (req) => {
     console.log('🚀 serve-content function called');
     
     const url = new URL(req.url);
+    const pathParts = url.pathname.split('/');
+    
+    // Verificar se é uma requisição de download direto
+    const isDownload = pathParts.includes('download');
+    
+    if (isDownload) {
+      // Rota: /serve-content/download/{token}/{filename}
+      const token = pathParts[pathParts.length - 2];
+      const filename = decodeURIComponent(pathParts[pathParts.length - 1]);
+      
+      console.log('📥 Download direto solicitado:', { token, filename });
+      
+      if (!token || !filename) {
+        return new Response('Token ou nome do arquivo não fornecido', { 
+          status: 400,
+          headers: corsHeaders
+        });
+      }
+
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+      // Get content access
+      const { data: contentAccess, error } = await supabase
+        .from('content_access')
+        .select('*')
+        .eq('access_token', token)
+        .single();
+
+      if (error || !contentAccess) {
+        console.error('❌ Content access not found:', error);
+        return new Response('Token inválido ou expirado', { 
+          status: 404,
+          headers: corsHeaders
+        });
+      }
+
+      // Check if token is expired
+      if (new Date() > new Date(contentAccess.expires_at)) {
+        return new Response('Token expirado', { 
+          status: 410,
+          headers: corsHeaders
+        });
+      }
+
+      // Encontrar o arquivo específico
+      const files = contentAccess.files as any[];
+      const file = files.find(f => f.nome === filename || f.original_filename === filename || f.filename === filename);
+      
+      if (!file) {
+        console.error('❌ Arquivo não encontrado:', filename);
+        return new Response('Arquivo não encontrado', { 
+          status: 404,
+          headers: corsHeaders
+        });
+      }
+
+      console.log('📁 Arquivo encontrado:', file);
+
+      try {
+        // Fazer download do arquivo do storage
+        const { data: fileData, error: downloadError } = await supabase.storage
+          .from('clinic-materials')
+          .download(file.url.split('/').pop() || filename);
+
+        if (downloadError) {
+          // Tentar no outro bucket
+          const { data: fileData2, error: downloadError2 } = await supabase.storage
+            .from('flow-documents')
+            .download(file.url.split('/').pop() || filename);
+
+          if (downloadError2) {
+            console.error('❌ Erro ao baixar arquivo:', downloadError2);
+            return new Response('Arquivo não encontrado no storage', { 
+              status: 404,
+              headers: corsHeaders
+            });
+          }
+
+          // Retornar arquivo do segundo bucket
+          return new Response(fileData2, {
+            headers: {
+              ...corsHeaders,
+              'Content-Type': file.tipo || 'application/octet-stream',
+              'Content-Disposition': `attachment; filename="${filename}"`,
+              'Content-Length': fileData2.size.toString(),
+            },
+          });
+        }
+
+        // Retornar arquivo do primeiro bucket
+        return new Response(fileData, {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': file.tipo || 'application/octet-stream',
+            'Content-Disposition': `attachment; filename="${filename}"`,
+            'Content-Length': fileData.size.toString(),
+          },
+        });
+
+      } catch (storageError) {
+        console.error('❌ Erro crítico no storage:', storageError);
+        return new Response('Erro interno do servidor', {
+          status: 500,
+          headers: corsHeaders,
+        });
+      }
+    }
+
+    // Rota padrão: exibir página HTML
     const token = url.searchParams.get('token');
 
     if (!token) {
@@ -162,10 +273,10 @@ serve(async (req) => {
                 ${files.map(file => `
                     <div class="file-item">
                         <div class="file-info">
-                            <div class="file-name">${file.name}</div>
-                            <div class="file-desc">${file.description || 'Material educativo'}</div>
+                            <div class="file-name">${file.nome || file.name}</div>
+                            <div class="file-desc">${file.descricao || file.description || 'Material educativo'}</div>
                         </div>
-                        <a href="${file.url}" class="download-btn" download target="_blank">
+                        <a href="https://oilnybhaboefqyhjrmvl.supabase.co/functions/v1/serve-content/download/${token}/${encodeURIComponent(file.nome || file.name)}" class="download-btn" download>
                             📥 Download
                         </a>
                     </div>

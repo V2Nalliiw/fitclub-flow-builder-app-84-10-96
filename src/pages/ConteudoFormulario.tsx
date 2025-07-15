@@ -133,89 +133,65 @@ export default function ConteudoFormulario() {
         return;
       }
       
-        // ✨ MELHORADO: Estratégia robusta de download com múltiplas tentativas
-        const downloadUrls = [
-          // 1. URL via serve-content function (mais confiável)
-          `https://oilnybhaboefqyhjrmvl.supabase.co/functions/v1/serve-content/${token}/${encodeURIComponent(arquivo.nome)}`,
-          // 2. URL direta do storage (se disponível e válida)
-          arquivo.url && arquivo.url.startsWith('http') ? arquivo.url : null,
-          // 3. URL pública alternativa
-          arquivo.publicUrl && arquivo.publicUrl.startsWith('http') ? arquivo.publicUrl : null,
-          // 4. URLs diretas alternativas para ambos os buckets
-          `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/clinic-materials/${arquivo.nome}`,
-          `https://oilnybhaboefqyhjrmvl.supabase.co/storage/v1/object/public/flow-documents/${arquivo.nome}`
-        ].filter(url => url && url.trim() && url.startsWith('http'));
+      // ✨ CORRIGIDO: Usar Edge Function para download direto de arquivo
+      const downloadUrl = `https://oilnybhaboefqyhjrmvl.supabase.co/functions/v1/serve-content/download/${token}/${encodeURIComponent(arquivo.nome)}`;
       
-      console.log('🔗 ConteudoFormulario: URLs para tentativa:', downloadUrls);
+      console.log('🔗 ConteudoFormulario: URL de download:', downloadUrl);
       
-      let downloadSuccess = false;
-      let lastError = '';
-      
-      for (let i = 0; i < downloadUrls.length && !downloadSuccess; i++) {
-        try {
-          const downloadUrl = downloadUrls[i];
-          console.log(`🔄 Tentativa ${i + 1}/${downloadUrls.length}: ${downloadUrl}`);
+      try {
+        console.log('📥 Fazendo download via edge function...');
+        
+        const response = await fetch(downloadUrl);
+        
+        if (response.ok) {
+          const blob = await response.blob();
           
-          // Para a edge function, fazer download direto sem HEAD request
-          if (downloadUrl.includes('/functions/v1/serve-content/')) {
-            console.log('📥 Fazendo download via edge function...');
-            
-            const response = await fetch(downloadUrl);
-            
-            if (response.ok) {
-              const blob = await response.blob();
-              const url = window.URL.createObjectURL(blob);
-              
-              const link = document.createElement('a');
-              link.href = url;
-              link.download = arquivo.nome;
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              
-              window.URL.revokeObjectURL(url);
-              
-              toast.success(`Download de "${arquivo.nome}" iniciado com sucesso`);
-              downloadSuccess = true;
-              console.log('✅ Download via edge function bem-sucedido');
-            } else {
-              const errorText = await response.text();
-              lastError = `Edge function retornou ${response.status}: ${errorText}`;
-              console.warn(`❌ Edge function falhou (${response.status}):`, errorText);
-            }
-          } else {
-            // Para URLs diretas, fazer HEAD request primeiro
-            console.log('🔍 Testando URL direta...');
-            
-            const headResponse = await fetch(downloadUrl, { method: 'HEAD' });
-            
-            if (headResponse.ok) {
-              const link = document.createElement('a');
-              link.href = downloadUrl;
-              link.download = arquivo.nome;
-              link.target = '_blank';
-              link.rel = 'noopener noreferrer';
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              
-              toast.success(`Download de "${arquivo.nome}" iniciado`);
-              downloadSuccess = true;
-              console.log('✅ Download via URL direta bem-sucedido');
-            } else {
-              lastError = `URL direta retornou ${headResponse.status}`;
-              console.warn(`❌ URL direta falhou (${headResponse.status})`);
-            }
+          // Verificar se o blob tem conteúdo válido
+          if (blob.size === 0) {
+            throw new Error('Arquivo vazio recebido');
           }
-        } catch (urlError: any) {
-          lastError = urlError.message || 'Erro desconhecido';
-          console.warn(`❌ Erro na tentativa ${i + 1}:`, urlError);
+          
+          const url = window.URL.createObjectURL(blob);
+          
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = arquivo.nome;
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          window.URL.revokeObjectURL(url);
+          
+          toast.success(`Download de "${arquivo.nome}" iniciado com sucesso`);
+          console.log('✅ Download bem-sucedido');
+        } else {
+          const errorText = await response.text();
+          console.warn(`❌ Edge function falhou (${response.status}):`, errorText);
+          
+          // FALLBACK: Tentar download direto via URL original
+          if (arquivo.url && arquivo.url.startsWith('http')) {
+            console.log('🔄 Tentando download direto via URL original...');
+            
+            const link = document.createElement('a');
+            link.href = arquivo.url;
+            link.download = arquivo.nome;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            toast.success(`Download de "${arquivo.nome}" iniciado`);
+            console.log('✅ Download via URL direta bem-sucedido');
+          } else {
+            throw new Error(`Servidor retornou ${response.status}: ${errorText}`);
+          }
         }
-      }
-      
-      if (!downloadSuccess) {
-        console.error('❌ Todas as tentativas de download falharam. Último erro:', lastError);
-        toast.error(`Não foi possível baixar "${arquivo.nome}". ${lastError ? `Erro: ${lastError}` : 'Tente novamente mais tarde.'}`);
+      } catch (downloadError: any) {
+        console.error('❌ Erro no download:', downloadError);
+        toast.error(`Não foi possível baixar "${arquivo.nome}". ${downloadError.message}`);
       }
       
     } catch (error: any) {
