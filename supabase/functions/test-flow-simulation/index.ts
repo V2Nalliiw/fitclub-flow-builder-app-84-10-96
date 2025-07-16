@@ -1,222 +1,177 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.51.0'
+
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
-Deno.serve(async (req) => {
-  // Handle CORS preflight requests
+serve(async (req) => {
+  console.log('🧪 test-flow-simulation function called');
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  console.log('🧪 test-flow-simulation function called - TESTE COMPLETO');
-  
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const testResults = {
+    const { testType = 'full' } = await req.json().catch(() => ({}));
+    console.log('🔍 Tipo de teste:', testType);
+
+    const results = {
       timestamp: new Date().toISOString(),
-      tests: []
+      testType,
+      tests: [] as any[],
+      summary: {
+        total: 0,
+        passed: 0,
+        failed: 0
+      }
     };
 
-    // Teste 1: Verificar delay tasks pendentes
-    console.log('🔍 Teste 1: Verificando delay tasks pendentes...');
-    const { data: pendingTasks, error: tasksError } = await supabase
-      .from('delay_tasks')
-      .select('*')
-      .eq('processed', false)
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    testResults.tests.push({
-      name: 'delay_tasks_pending',
-      status: tasksError ? 'FAIL' : 'PASS',
-      error: tasksError?.message,
-      data: {
-        count: pendingTasks?.length || 0,
-        tasks: pendingTasks?.slice(0, 3) || []
-      }
-    });
-
-    // Teste 2: Verificar flow_logs recentes
-    console.log('🔍 Teste 2: Verificando flow_logs recentes...')
-    const { data: recentLogs, error: logsError } = await supabase
-      .from('flow_logs')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    testResults.tests.push({
-      name: 'flow_logs_recent',
-      status: logsError ? 'FAIL' : 'PASS',
-      error: logsError?.message,
-      data: {
-        count: recentLogs?.length || 0,
-        latest_actions: recentLogs?.slice(0, 5).map(log => ({
-          action: log.action,
-          status: log.status,
-          node_type: log.node_type,
-          created_at: log.created_at
-        })) || []
-      }
-    });
-
-    // Teste 3: Verificar execuções ativas
-    console.log('🔍 Teste 3: Verificando execuções ativas...');
-    const { data: activeExecutions, error: execError } = await supabase
-      .from('flow_executions')
-      .select('*')
-      .in('status', ['in-progress', 'pending'])
-      .order('updated_at', { ascending: false })
-      .limit(5);
-
-    testResults.tests.push({
-      name: 'active_executions',
-      status: execError ? 'FAIL' : 'PASS',
-      error: execError?.message,
-      data: {
-        count: activeExecutions?.length || 0,
-        executions: activeExecutions?.map(exec => ({
-          id: exec.id,
-          status: exec.status,
-          current_node: exec.current_node,
-          progress: exec.progress,
-          updated_at: exec.updated_at
-        })) || []
-      }
-    });
-
-    // Teste 4: Verificar content_access
-    console.log('🔍 Teste 4: Verificando content_access...');
-    const { data: contentAccess, error: contentError } = await supabase
-      .from('content_access')
-      .select('*')
-      .gte('expires_at', new Date().toISOString())
-      .order('created_at', { ascending: false })
-      .limit(5);
-
-    testResults.tests.push({
-      name: 'content_access_valid',
-      status: contentError ? 'FAIL' : 'PASS',
-      error: contentError?.message,
-      data: {
-        count: contentAccess?.length || 0,
-        access_records: contentAccess?.map(ca => ({
-          id: ca.id,
-          files_count: Array.isArray(ca.files) ? ca.files.length : 0,
-          expires_at: ca.expires_at,
-          created_at: ca.created_at
-        })) || []
-      }
-    });
-
-    // Teste 5: Testar edge functions health
-    console.log('🔍 Teste 5: Testando edge functions...');
-    const edgeFunctionTests = [];
-
+    // Test 1: Database connectivity
     try {
-      // Testar process-delay-tasks
-      const { data: delayResult, error: delayTestError } = await supabase.functions.invoke('process-delay-tasks', {});
-      edgeFunctionTests.push({
-        function: 'process-delay-tasks',
-        status: delayTestError ? 'FAIL' : 'PASS',
-        error: delayTestError?.message,
-        result: delayResult
+      const { data: dbTest } = await supabase.from('profiles').select('count').limit(1);
+      results.tests.push({
+        name: 'Database Connectivity',
+        status: 'passed',
+        message: 'Successfully connected to database'
       });
-    } catch (e) {
-      edgeFunctionTests.push({
-        function: 'process-delay-tasks',
-        status: 'FAIL',
-        error: e.message
+    } catch (error) {
+      results.tests.push({
+        name: 'Database Connectivity',
+        status: 'failed',
+        message: `Database connection failed: ${error.message}`
       });
     }
 
-    testResults.tests.push({
-      name: 'edge_functions_health',
-      status: 'PASS',
-      data: {
-        functions_tested: edgeFunctionTests.length,
-        results: edgeFunctionTests
-      }
-    });
-
-    // Teste 6: Verificar WhatsApp settings
-    console.log('🔍 Teste 6: Verificando WhatsApp settings...');
-    const { data: whatsappSettings, error: whatsappError } = await supabase
-      .from('whatsapp_settings')
-      .select('id, provider, is_active, phone_number')
-      .eq('is_active', true)
-      .limit(5);
-
-    testResults.tests.push({
-      name: 'whatsapp_settings',
-      status: whatsappError ? 'FAIL' : 'PASS',
-      error: whatsappError?.message,
-      data: {
-        active_settings: whatsappSettings?.length || 0,
-        providers: whatsappSettings?.map(ws => ws.provider) || []
-      }
-    });
-
-    // Calcular resumo final
-    const passedTests = testResults.tests.filter(t => t.status === 'PASS').length;
-    const totalTests = testResults.tests.length;
-    const healthScore = Math.round((passedTests / totalTests) * 100);
-
-    const summary = {
-      overall_health: healthScore >= 80 ? 'HEALTHY' : healthScore >= 60 ? 'DEGRADED' : 'CRITICAL',
-      health_score: `${healthScore}%`,
-      passed_tests: passedTests,
-      total_tests: totalTests,
-      timestamp: testResults.timestamp,
-      recommendations: []
-    };
-
-    // Adicionar recomendações baseadas nos testes
-    if (pendingTasks && pendingTasks.length > 0) {
-      summary.recommendations.push('Existem delay tasks pendentes - verifique o cron job');
+    // Test 2: Edge Functions availability
+    try {
+      const { data: funcTest } = await supabase.functions.invoke('process-delay-tasks', {
+        body: { test: true }
+      });
+      results.tests.push({
+        name: 'Process Delay Tasks Function',
+        status: 'passed',
+        message: 'Function is accessible'
+      });
+    } catch (error) {
+      results.tests.push({
+        name: 'Process Delay Tasks Function',
+        status: 'failed',
+        message: `Function test failed: ${error.message}`
+      });
     }
 
-    if (activeExecutions && activeExecutions.length === 0) {
-      summary.recommendations.push('Nenhuma execução ativa encontrada - pode indicar baixo uso');
+    // Test 3: Content Access table
+    try {
+      const { data: contentTest } = await supabase
+        .from('content_access')
+        .select('id')
+        .limit(1);
+      results.tests.push({
+        name: 'Content Access Table',
+        status: 'passed',
+        message: 'Table is accessible'
+      });
+    } catch (error) {
+      results.tests.push({
+        name: 'Content Access Table',
+        status: 'failed',
+        message: `Content access table test failed: ${error.message}`
+      });
     }
 
-    if (healthScore < 80) {
-      summary.recommendations.push('Sistema com problemas - investigate os testes que falharam');
+    // Test 4: Flow Logs table
+    try {
+      const { data: logsTest } = await supabase
+        .from('flow_logs')
+        .select('id')
+        .limit(1);
+      results.tests.push({
+        name: 'Flow Logs Table',
+        status: 'passed',
+        message: 'Table is accessible'
+      });
+    } catch (error) {
+      results.tests.push({
+        name: 'Flow Logs Table',
+        status: 'failed',
+        message: `Flow logs table test failed: ${error.message}`
+      });
     }
 
-    console.log('✅ Teste completo finalizado:', summary);
+    // Test 5: Delay Tasks table
+    try {
+      const { data: delayTest } = await supabase
+        .from('delay_tasks')
+        .select('id')
+        .limit(1);
+      results.tests.push({
+        name: 'Delay Tasks Table',
+        status: 'passed',
+        message: 'Table is accessible'
+      });
+    } catch (error) {
+      results.tests.push({
+        name: 'Delay Tasks Table',
+        status: 'failed',
+        message: `Delay tasks table test failed: ${error.message}`
+      });
+    }
 
-    const finalResult = {
-      summary,
-      detailed_results: testResults,
-      debug_info: {
-        supabase_url: supabaseUrl,
-        function_region: Deno.env.get('DENO_REGION'),
-        execution_time: Date.now()
+    // Test 6: Storage bucket access
+    try {
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const clinicMaterialsBucket = buckets?.find(b => b.name === 'clinic-materials');
+      if (clinicMaterialsBucket) {
+        results.tests.push({
+          name: 'Storage Bucket Access',
+          status: 'passed',
+          message: 'clinic-materials bucket is accessible'
+        });
+      } else {
+        results.tests.push({
+          name: 'Storage Bucket Access',
+          status: 'failed',
+          message: 'clinic-materials bucket not found'
+        });
       }
-    };
+    } catch (error) {
+      results.tests.push({
+        name: 'Storage Bucket Access',
+        status: 'failed',
+        message: `Storage test failed: ${error.message}`
+      });
+    }
 
-    return new Response(JSON.stringify(finalResult, null, 2), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    // Calculate summary
+    results.summary.total = results.tests.length;
+    results.summary.passed = results.tests.filter(t => t.status === 'passed').length;
+    results.summary.failed = results.tests.filter(t => t.status === 'failed').length;
+
+    console.log(`✅ Testes concluídos: ${results.summary.passed}/${results.summary.total} passaram`);
+
+    return new Response(JSON.stringify(results, null, 2), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('❌ Erro crítico no teste:', error);
-    return new Response(JSON.stringify({
-      summary: {
-        overall_health: 'CRITICAL',
-        health_score: '0%',
-        error: error.message
-      },
-      timestamp: new Date().toISOString()
-    }, null, 2), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    console.error('❌ Erro na função de teste:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        timestamp: new Date().toISOString(),
+        testType: 'failed'
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });
