@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowRight, CheckCircle2, Heart, FileText, Clock, Send, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { PatientDelayDisplay } from './PatientDelayDisplay';
+import { FlowDelayTimer } from './FlowDelayTimer';
 import { FlowEndDisplay } from './FlowEndDisplay';
 import { FlowEndNode } from './FlowEndNode';
 
@@ -521,7 +521,7 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
     );
   }
 
-  // Delay Timer - aguarda o tempo definido (oculto do paciente)
+  // Delay Timer - aguarda o tempo definido e continua automaticamente
   if (step.nodeType === 'delay') {
     const executionId = window.location.pathname.split('/').pop();
     const availableAt = step.next_step_available_at || step.availableAt;
@@ -535,13 +535,22 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
       );
     }
 
+    if (!executionId) {
+      console.error('❌ DelayTimer: executionId não encontrado');
+      return (
+        <div className="text-center p-8">
+          <p className="text-red-500">Erro: ID de execução não encontrado</p>
+        </div>
+      );
+    }
+
     return (
-      <PatientDelayDisplay 
+      <FlowDelayTimer 
         availableAt={availableAt} 
         executionId={executionId}
         onDelayExpired={() => {
-          console.log('⏰ DelayTimer expirado, progredindo para próximo step...');
-          handleComplete();
+          console.log('⏰ DelayTimer expirado, recarregando para próximo step...');
+          window.location.reload();
         }}
       />
     );
