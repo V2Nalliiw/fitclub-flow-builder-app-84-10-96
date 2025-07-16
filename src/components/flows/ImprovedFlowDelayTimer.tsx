@@ -83,163 +83,19 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
   const handleTimeExpired = async () => {
     if (isProgressing || hasProgressedRef.current) return;
     
-    console.log('🚀 DelayTimer: Tempo expirado, progredindo automaticamente');
+    console.log('⏰ DelayTimer: Tempo expirado, redirecionando para página inicial');
     setIsProgressing(true);
 
-    try {
-      // Buscar dados atuais da execução
-      const { data: execution, error: execError } = await supabase
-        .from('flow_executions')
-        .select('*')
-        .eq('id', executionId)
-        .single();
+    toast({
+      title: "Tempo Concluído! ⏰",
+      description: "Redirecionando para página inicial...",
+    });
 
-      if (execError || !execution) {
-        console.error('❌ DelayTimer: Erro ao buscar execução:', execError);
-        toast({
-          title: "Erro",
-          description: "Não foi possível continuar o fluxo automaticamente",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const currentStepData = execution.current_step as {
-        steps?: any[];
-        currentStepIndex?: number;
-        calculatorResults?: Record<string, number>;
-        userResponses?: Record<string, any>;
-      } | null;
-
-      const currentSteps = currentStepData?.steps || [];
-      const currentIndex = currentStepData?.currentStepIndex || 0;
-
-      // Encontrar próximo step válido (pular o delay atual)
-      let nextStepIndex = currentIndex + 1;
-      let nextStep = null;
-
-      // Buscar próximo step disponível
-      for (let i = nextStepIndex; i < currentSteps.length; i++) {
-        const candidateStep = currentSteps[i];
-        if (!candidateStep.completed) {
-          nextStep = candidateStep;
-          nextStepIndex = i;
-          break;
-        }
-      }
-
-      if (!nextStep) {
-        console.log('✅ DelayTimer: Nenhum próximo step encontrado, fluxo concluído');
-        
-        const { error: updateError } = await supabase
-          .from('flow_executions')
-          .update({
-            status: 'completed',
-            completed_at: new Date().toISOString(),
-            current_node: null,
-            next_step_available_at: null,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', executionId);
-
-        if (updateError) {
-          console.error('❌ DelayTimer: Erro ao finalizar execução:', updateError);
-        }
-
-        toast({
-          title: "Fluxo Concluído! 🎉",
-          description: "Você completou todas as etapas com sucesso!",
-        });
-
-        // Redirecionar para página inicial após 2 segundos
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 2000);
-        return;
-      }
-
-      console.log('🔄 DelayTimer: Progredindo para próximo step:', nextStep);
-
-      // Atualizar execução para próximo step
-      const updateData = {
-        status: 'in-progress',
-        current_node: nextStep.nodeId,
-        current_step: {
-          ...currentStepData,
-          currentStepIndex: nextStepIndex
-        } as any,
-        next_step_available_at: null,
-        updated_at: new Date().toISOString()
-      };
-
-      const { error: updateError } = await supabase
-        .from('flow_executions')
-        .update(updateData)
-        .eq('id', executionId);
-
-      if (updateError) {
-        console.error('❌ DelayTimer: Erro ao atualizar execução:', updateError);
-        toast({
-          title: "Erro",
-          description: "Não foi possível continuar automaticamente",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Enviar WhatsApp APENAS se próximo step for FormStart
-      if (nextStep.nodeType === 'formStart') {
-        console.log('📱 DelayTimer: Enviando notificação WhatsApp para FormStart');
-        
-        try {
-          const { data: executionData } = await supabase
-            .from('flow_executions')
-            .select('patient_id, flow_name')
-            .eq('id', executionId)
-            .single();
-
-          if (executionData) {
-            const { error: whatsappError } = await supabase.functions.invoke('send-form-notification', {
-              body: {
-                patientId: executionData.patient_id,
-                formName: nextStep.title || executionData.flow_name || 'Formulário',
-                executionId: executionId
-              }
-            });
-
-            if (whatsappError) {
-              console.error('❌ DelayTimer: Erro ao enviar WhatsApp:', whatsappError);
-            } else {
-              console.log('✅ DelayTimer: WhatsApp enviado com sucesso para FormStart');
-            }
-          }
-        } catch (error) {
-          console.error('❌ DelayTimer: Erro crítico ao enviar WhatsApp:', error);
-        }
-      } else {
-        console.log('🔕 DelayTimer: Próximo step não é FormStart, não enviando WhatsApp');
-      }
-
-      toast({
-        title: "Tempo Concluído! ⏰",
-        description: "Redirecionando para página inicial...",
-      });
-
-      // Redirecionar para página inicial onde o próximo step estará disponível
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 1500);
-
-    } catch (error) {
-      console.error('❌ DelayTimer: Erro crítico na progressão automática:', error);
-      toast({
-        title: "Erro",
-        description: "Falha na progressão automática do fluxo",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProgressing(false);
-    }
+    // Aguardar 2 segundos para dar tempo do cron job processar
+    setTimeout(() => {
+      console.log('🔄 DelayTimer: Redirecionando para página inicial onde o próximo step estará disponível');
+      window.location.href = '/';
+    }, 2000);
   };
 
   const formatTime = (seconds: number) => {
@@ -271,18 +127,14 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
               </h3>
               
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                O tempo de espera foi concluído. Progredindo para próxima etapa...
+                Redirecionando automaticamente para a próxima etapa...
               </p>
 
-              <Button
-                onClick={onComplete}
-                disabled={isProgressing}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-3 font-medium"
-                size="lg"
-              >
-                {isProgressing ? 'Carregando...' : 'Continuar'}
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
+              <div className="flex items-center justify-center space-x-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
             </>
           ) : (
             <>
