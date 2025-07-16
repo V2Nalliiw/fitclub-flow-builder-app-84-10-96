@@ -48,7 +48,8 @@ serve(async (req) => {
     }
 
     const phoneNumber = patient.phone.replace(/\D/g, '');
-    const dashboardUrl = `${supabaseUrl.replace('/rest/v1', '')}/patient-dashboard?execution=${executionId}`;
+    // 🔧 CORREÇÃO: Link direto para o formulário com executionId
+    const formUrl = `https://oilnybhaboefqyhjrmvl.supabase.co/flow-execution/${executionId}`;
 
     // Tentar template oficial primeiro
     console.log('🔄 Tentando template oficial novo_formulario...');
@@ -73,7 +74,7 @@ serve(async (req) => {
             sub_type: "url",
             index: "0",
             parameters: [
-              { type: "text", text: dashboardUrl }
+              { type: "text", text: formUrl }
             ]
           }
         ]
@@ -110,7 +111,7 @@ serve(async (req) => {
       to: phoneNumber,
       type: "text",
       text: {
-        body: `Olá ${patient.name || 'Paciente'}! 👋\n\n📋 *${formName || 'Novo formulário'}* está disponível para preenchimento.\n\n🔗 Acesse aqui: ${dashboardUrl}\n\n⏰ Preencha assim que possível.\n\nObrigado! 🙏`
+        body: `Olá ${patient.name || 'Paciente'}! 👋\n\n📋 *${formName || 'Novo formulário'}* está disponível para preenchimento.\n\n🔗 Acesse aqui: ${formUrl}\n\n⏰ Preencha assim que possível.\n\nObrigado! 🙏`
       }
     };
 
