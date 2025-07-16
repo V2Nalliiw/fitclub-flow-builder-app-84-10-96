@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
@@ -8,153 +7,150 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log('🚀 send-form-notification function called');
+  console.log('📨 send-form-notification function called');
   
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { patientId, formName, executionId } = await req.json();
-    console.log('📨 Request data:', { patientId, formName, executionId });
-
-    // Inicializar cliente Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Verificar se a execução ainda está ativa (não completed)
-    const { data: execution } = await supabase
-      .from('flow_executions')
-      .select('status')
-      .eq('id', executionId)
-      .single();
-    
-    if (execution?.status === 'completed') {
-      console.log('⚠️ Execução já finalizada, não enviando WhatsApp');
-      return new Response(JSON.stringify({ 
-        success: false, 
-        message: 'Execução já finalizada' 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const { patientId, formName, executionId } = await req.json();
+    console.log('📨 Enviando notificação de formulário:', { patientId, formName, executionId });
+
+    if (!patientId || !formName || !executionId) {
+      console.error('❌ Parâmetros obrigatórios não fornecidos');
+      return new Response(
+        JSON.stringify({ error: 'Missing required parameters' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     // Buscar dados do paciente
-    const { data: patient } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('name, phone, clinic_id')
       .eq('user_id', patientId)
       .single();
 
-    if (!patient?.phone) {
-      throw new Error('Paciente não encontrado ou sem telefone');
+    if (!profile?.phone) {
+      console.error('❌ Telefone do paciente não encontrado');
+      return new Response(
+        JSON.stringify({ error: 'Patient phone not found' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    // Buscar configurações do WhatsApp da clínica
-    const { data: whatsappConfig } = await supabase
+    // Buscar configurações do WhatsApp
+    const { data: whatsappSettings } = await supabase
       .from('whatsapp_settings')
       .select('*')
-      .eq('clinic_id', patient.clinic_id)
+      .eq('clinic_id', profile.clinic_id)
       .eq('is_active', true)
       .single();
 
-    if (!whatsappConfig) {
-      console.log('❌ Configuração WhatsApp não encontrada para a clínica');
-      throw new Error('WhatsApp não configurado para esta clínica');
-    }
-
-    const phoneNumber = patient.phone.replace(/\D/g, '');
-    // 🔧 CORREÇÃO: Link para página inicial do paciente (detecta automaticamente novos formulários)  
-    const formUrl = `${req.headers.get('origin') || 'https://lovable.dev'}/`;
-
-    // Tentar template oficial primeiro
-    console.log('🔄 Tentando template oficial novo_formulario...');
-    
-    const officialPayload = {
-      messaging_product: "whatsapp",
-      to: phoneNumber,
-      type: "template",
-      template: {
-        name: "novo_formulario",
-        language: { code: "pt_BR" },
-        components: [
-          {
-            type: "body",
-            parameters: [
-              { type: "text", text: patient.name || "Paciente" },
-              { type: "text", text: formUrl }
-            ]
-          },
-          {
-            type: "button",
-            sub_type: "url",
-            index: "0",
-            parameters: [
-              { type: "text", text: formUrl }
-            ]
-          }
-        ]
-      }
-    };
-
-    try {
-      const officialResponse = await fetch(
-        `https://graph.facebook.com/v17.0/${whatsappConfig.phone_number}/messages`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${whatsappConfig.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(officialPayload),
+    if (!whatsappSettings) {
+      console.error('❌ Configurações do WhatsApp não encontradas');
+      return new Response(
+        JSON.stringify({ error: 'WhatsApp settings not configured' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
-      
-      if (officialResponse.ok) {
-        const result = await officialResponse.json();
-        console.log('✅ WhatsApp form notification sent successfully:', result);
-        return new Response(JSON.stringify({ success: true, result }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-    } catch (error) {
-      console.log('❌ Template oficial falhou, tentando mensagem simples...');
     }
 
-    // Fallback para mensagem de texto simples
-    const simplePayload = {
-      messaging_product: "whatsapp",
-      to: phoneNumber,
-      type: "text",
-      text: {
-        body: `Olá ${patient.name || 'Paciente'}! 👋\n\n📋 *${formName || 'Novo formulário'}* está disponível para preenchimento.\n\n🔗 Acesse aqui: ${formUrl}\n\n⏰ Preencha assim que possível.\n\nObrigado! 🙏`
-      }
-    };
+    console.log('✅ Dados coletados, enviando WhatsApp via', whatsappSettings.provider);
 
-    const simpleResponse = await fetch(
-      `https://graph.facebook.com/v17.0/${whatsappConfig.phone_number}/messages`,
-      {
+    // Gerar link para continuar o fluxo - usar URL da aplicação
+    const continueLink = `https://oilnybhaboefqyhjrmvl.lovable.app/patient-dashboard?execution=${executionId}`;
+    
+    // Preparar mensagem
+    const message = `🔔 *Novo Formulário Disponível!*\n\nOlá ${profile.name}! 🙋‍♀️\n\nSeu formulário "${formName}" está pronto para preenchimento.\n\n📝 Acesse aqui: ${continueLink}\n\n⏰ Complete quando puder!\n\nQualquer dúvida, entre em contato conosco! 😊`;
+
+    let whatsappResponse;
+    
+    if (whatsappSettings.provider === 'meta') {
+      console.log('📱 Enviando via Meta WhatsApp API...');
+      
+      whatsappResponse = await fetch(`https://graph.facebook.com/v17.0/${whatsappSettings.phone_number}/messages`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${whatsappConfig.access_token}`,
+          'Authorization': `Bearer ${whatsappSettings.access_token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(simplePayload),
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: profile.phone,
+          type: 'text',
+          text: { body: message }
+        }),
+      });
+      
+    } else if (whatsappSettings.provider === 'evolution') {
+      console.log('📱 Enviando via Evolution API...');
+      
+      const evolutionUrl = `${whatsappSettings.base_url}/message/sendText/${whatsappSettings.session_name}`;
+      
+      whatsappResponse = await fetch(evolutionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': whatsappSettings.api_key || '',
+        },
+        body: JSON.stringify({
+          number: profile.phone,
+          text: message
+        }),
+      });
+      
+    } else {
+      console.error('❌ Provedor de WhatsApp não suportado:', whatsappSettings.provider);
+      return new Response(
+        JSON.stringify({ error: 'Unsupported WhatsApp provider' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    if (!whatsappResponse.ok) {
+      const errorText = await whatsappResponse.text();
+      console.error('❌ Erro na API do WhatsApp:', errorText);
+      return new Response(
+        JSON.stringify({ error: 'Failed to send WhatsApp message', details: errorText }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    const whatsappResult = await whatsappResponse.json();
+    console.log('✅ Mensagem WhatsApp enviada com sucesso:', whatsappResult);
+
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        message: 'Form notification sent successfully',
+        whatsappResult,
+        patientName: profile.name,
+        formName
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
-
-    if (simpleResponse.ok) {
-      const result = await simpleResponse.json();
-      console.log('✅ WhatsApp form notification sent successfully:', result);
-      return new Response(JSON.stringify({ success: true, result }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    } else {
-      const error = await simpleResponse.text();
-      console.error('❌ Erro ao enviar mensagem simples:', error);
-      throw new Error(`Falha no envio: ${error}`);
-    }
 
   } catch (error) {
     console.error('❌ Erro na função send-form-notification:', error);

@@ -20,11 +20,14 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Buscar tasks que precisam ser processadas (delay expirado)
+    const currentTime = new Date().toISOString();
+    console.log('⏰ Hora atual para comparação:', currentTime);
+    
     const { data: pendingTasks, error: tasksError } = await supabase
       .from('delay_tasks')
       .select('*')
       .eq('processed', false)
-      .lte('trigger_at', new Date().toISOString());
+      .lte('trigger_at', currentTime);
 
     if (tasksError) {
       throw new Error(`Erro ao buscar tasks: ${tasksError.message}`);
@@ -54,30 +57,80 @@ serve(async (req) => {
             continue;
           }
 
-          // Processar apenas se o próximo nó for FormStart
+          // Processar tasks de delay - CRÍTICO para WhatsApp
+          console.log(`📱 Processando delay task para ${task.next_node_type} na execução ${task.execution_id}`);
+          console.log(`📋 Task details:`, {
+            id: task.id,
+            patientId: task.patient_id,
+            nextNodeType: task.next_node_type,
+            formName: task.form_name,
+            triggerAt: task.trigger_at,
+            createdAt: task.created_at
+          });
+          
           if (task.next_node_type === 'formStart') {
-            console.log(`📱 Enviando WhatsApp para FormStart na execução ${task.execution_id}`);
+            console.log(`📱 CRÍTICO: Enviando WhatsApp para FormStart na execução ${task.execution_id}`);
             
-            // Chamar a edge function send-form-notification
-            const { error: notificationError } = await supabase.functions.invoke('send-form-notification', {
-              body: {
-                patientId: task.patient_id,
-                formName: task.form_name,
-                executionId: task.execution_id
-              }
-            });
+            try {
+              // Chamar a edge function send-form-notification
+              const { data: notificationResult, error: notificationError } = await supabase.functions.invoke('send-form-notification', {
+                body: {
+                  patientId: task.patient_id,
+                  formName: task.form_name,
+                  executionId: task.execution_id
+                }
+              });
 
-            if (notificationError) {
-              console.error(`❌ Erro ao enviar notificação para task ${task.id}:`, notificationError);
+              if (notificationError) {
+                console.error(`❌ CRÍTICO: Erro ao enviar notificação para task ${task.id}:`, notificationError);
+                errorCount++;
+                continue;
+              }
+
+              console.log(`✅ SUCESSO: Notificação WhatsApp enviada para task ${task.id}`, notificationResult);
+
+              // Após enviar notificação com sucesso, avançar o flow para o próximo step
+              console.log(`🔄 Avançando execução para o próximo step (FormStart)`);
+              
+              if (execution?.current_step) {
+                const currentStep = execution.current_step;
+                const currentStepIndex = currentStep.currentStepIndex || 0;
+                
+                // Marcar o step de delay atual como completed
+                if (currentStep.steps && currentStep.steps[currentStepIndex]) {
+                  currentStep.steps[currentStepIndex].completed = true;
+                  currentStep.steps[currentStepIndex].completedAt = new Date().toISOString();
+                }
+                
+                // Avançar para o próximo step (FormStart)
+                const nextStepIndex = currentStepIndex + 1;
+                currentStep.currentStepIndex = nextStepIndex;
+                
+                // Atualizar status para in-progress para que o paciente possa continuar
+                await supabase
+                  .from('flow_executions')
+                  .update({
+                    current_node: task.next_node_id,
+                    current_step: currentStep,
+                    status: 'in-progress',
+                    next_step_available_at: null,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('id', task.execution_id);
+                  
+                console.log(`✅ Execução avançada para node ${task.next_node_id}, step index ${nextStepIndex}, status: in-progress`);
+              }
+              
+            } catch (sendError) {
+              console.error(`❌ CRÍTICO: Erro ao processar envio para task ${task.id}:`, sendError);
               errorCount++;
               continue;
             }
-
-            console.log(`✅ Notificação enviada com sucesso para task ${task.id}`);
-
-            // Após enviar notificação com sucesso, avançar o flow para o próximo step
-            console.log(`🔄 Avançando execução para o próximo step (FormStart)`);
             
+          } else {
+            console.log(`🔕 Próximo nó não é FormStart (${task.next_node_type}), processando outros tipos...`);
+            
+            // Para outros tipos de nó, avançar a execução sem enviar WhatsApp
             if (execution?.current_step) {
               const currentStep = execution.current_step;
               const currentStepIndex = currentStep.currentStepIndex || 0;
@@ -85,26 +138,26 @@ serve(async (req) => {
               // Marcar o step de delay atual como completed
               if (currentStep.steps && currentStep.steps[currentStepIndex]) {
                 currentStep.steps[currentStepIndex].completed = true;
+                currentStep.steps[currentStepIndex].completedAt = new Date().toISOString();
               }
               
-              // Avançar para o próximo step (FormStart)
+              // Avançar para o próximo step
               const nextStepIndex = currentStepIndex + 1;
               currentStep.currentStepIndex = nextStepIndex;
               
-              // Atualizar a execução do flow
               await supabase
                 .from('flow_executions')
                 .update({
                   current_node: task.next_node_id,
                   current_step: currentStep,
+                  status: 'in-progress',
+                  next_step_available_at: null,
                   updated_at: new Date().toISOString()
                 })
                 .eq('id', task.execution_id);
                 
-              console.log(`✅ Execução avançada para node ${task.next_node_id}, step index ${nextStepIndex}`);
+              console.log(`✅ Execução avançada para node ${task.next_node_id} (tipo: ${task.next_node_type})`);
             }
-          } else {
-            console.log(`🔕 Próximo nó não é FormStart (${task.next_node_type}), apenas marcando como processado`);
           }
 
           // Marcar task como processada

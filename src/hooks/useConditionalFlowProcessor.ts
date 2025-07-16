@@ -96,61 +96,108 @@ export const useConditionalFlowProcessor = () => {
   ): FlowStep[] => {
     const steps: FlowStep[] = [];
     const visited = new Set<string>();
-    const pathTaken = new Set<string>(); // Rastreio do caminho específico seguido
+    const correctPath = new Set<string>(); // Track the correct path taken
     
-    console.log('🚀 Construindo fluxo condicional:', { userResponses, calculatorResults });
+    console.log('🚀 NOVA LÓGICA: Construindo fluxo condicional:', { userResponses, calculatorResults });
     
-    const traverseFlow = (nodeId: string, fromCondition: boolean = false) => {
+    // First pass: determine the correct path based on conditions
+    const determineCorrectPath = (nodeId: string, path: string[] = []): string[] => {
+      if (path.includes(nodeId)) return path; // Prevent infinite loops
+      
+      const node = nodes.find(n => n.id === nodeId);
+      if (!node) return path;
+      
+      const newPath = [...path, nodeId];
+      console.log(`🔍 Analisando nó: ${node.type} (${node.data.titulo || node.data.label || nodeId})`);
+      
+      // For conditions nodes, determine which path to follow
+      if (node.type === 'conditions') {
+        const conditionMet = evaluateConditions(
+          node.data.conditions || [], 
+          userResponses, 
+          calculatorResults
+        );
+        
+        const nextEdges = edges.filter(edge => edge.source === nodeId);
+        console.log(`🎯 Conditions ${nodeId}: ${conditionMet ? 'ATENDIDA' : 'NÃO ATENDIDA'} | Edges: ${nextEdges.length}`);
+        
+        // Choose the correct edge based on condition evaluation
+        let targetEdge = null;
+        if (conditionMet && nextEdges.length > 0) {
+          targetEdge = nextEdges[0]; // TRUE path
+          console.log(`✅ Escolhendo caminho TRUE: ${targetEdge.target}`);
+        } else if (!conditionMet && nextEdges.length > 1) {
+          targetEdge = nextEdges[1]; // FALSE path  
+          console.log(`❌ Escolhendo caminho FALSE: ${targetEdge.target}`);
+        } else if (nextEdges.length > 0) {
+          targetEdge = nextEdges[0]; // Fallback
+          console.log(`🔄 Fallback: ${targetEdge.target}`);
+        }
+        
+        if (targetEdge) {
+          return determineCorrectPath(targetEdge.target, newPath);
+        }
+      } else {
+        // For other nodes, follow all edges (but we'll filter later)
+        const nextEdges = edges.filter(edge => edge.source === nodeId);
+        if (nextEdges.length > 0) {
+          // For non-condition nodes, just take the first edge to continue the path
+          return determineCorrectPath(nextEdges[0].target, newPath);
+        }
+      }
+      
+      return newPath;
+    };
+    
+    // Determine the correct path first
+    const correctPathIds = determineCorrectPath(startNode.id);
+    correctPathIds.forEach(id => correctPath.add(id));
+    
+    console.log(`📍 Caminho correto determinado: ${correctPathIds.join(' → ')}`);
+    
+    // Second pass: build steps only for nodes in the correct path
+    const traverseFlow = (nodeId: string) => {
       if (visited.has(nodeId)) return;
       visited.add(nodeId);
-      pathTaken.add(nodeId);
       
       const node = nodes.find(n => n.id === nodeId);
       if (!node) return;
       
-      console.log(`📍 Processando nó: ${node.type} (${node.data.titulo || node.data.label || nodeId})`);
+      // Only process nodes that are in the correct path
+      if (!correctPath.has(nodeId)) {
+        console.log(`⏭️ Pulando nó fora do caminho correto: ${node.type} (${nodeId})`);
+        return;
+      }
+      
+      console.log(`📍 Processando nó no caminho correto: ${node.type} (${node.data.titulo || node.data.label || nodeId})`);
       
       // Skip start and end nodes in steps
       if (node.type !== 'start' && node.type !== 'end') {
         
-        // Para FormEnd, verificar se é o caminho correto baseado nas condições
+        // Special handling for FormEnd - only include if in correct path
         if (node.type === 'formEnd') {
+          // Check if this FormEnd is connected to a conditions node
           const conditionsEdge = edges.find(edge => edge.target === nodeId);
           if (conditionsEdge) {
             const conditionsNode = nodes.find(n => n.id === conditionsEdge.source);
             if (conditionsNode?.type === 'conditions') {
+              // Only include if conditions are met
               const shouldInclude = evaluateConditions(
                 conditionsNode.data.conditions || [], 
                 userResponses, 
                 calculatorResults
               );
               
-              console.log(`🎯 FormEnd: Condição ${shouldInclude ? 'ATENDIDA' : 'NÃO ATENDIDA'} para nó ${nodeId}`);
+              console.log(`🎯 FormEnd ${nodeId}: Condição ${shouldInclude ? 'ATENDIDA' : 'NÃO ATENDIDA'}`);
               
               if (!shouldInclude) {
-                console.log(`❌ FormEnd: Pulando nó ${nodeId} - condição não atendida`);
-                return; // Não incluir este FormEnd
+                console.log(`❌ FormEnd ${nodeId} REJEITADO - condição não atendida`);
+                return;
               }
             }
           }
-        }
-
-        // Para nós condicionais, avaliar antes de incluir
-        if (node.type === 'conditions') {
-          const shouldInclude = evaluateConditions(
-            node.data.conditions || [], 
-            userResponses, 
-            calculatorResults
-          );
           
-          console.log(`🔍 Conditions: ${shouldInclude ? 'ATENDIDA' : 'NÃO ATENDIDA'} para nó ${nodeId}`);
-          
-          // Incluir o nó de condições apenas se a condição for atendida
-          if (!shouldInclude) {
-            // Pular este nó e não seguir seus caminhos
-            console.log(`❌ Conditions: Pulando nó ${nodeId} e seus caminhos`);
-            return;
-          }
+          console.log(`✅ FormEnd ${nodeId} INCLUÍDO - no caminho correto`);
         }
         
         const step: FlowStep = {
@@ -187,64 +234,24 @@ export const useConditionalFlowProcessor = () => {
         };
         
         steps.push(step);
+        console.log(`✅ Step adicionado: ${step.nodeType}:${step.title}`);
       }
       
-      // Find next nodes - lógica melhorada para seguir apenas um caminho correto
+      // Continue traversing in the correct path
       const nextEdges = edges.filter(edge => edge.source === nodeId);
-      
-      if (node.type === 'conditions') {
-        // Para nós de condições, seguir apenas o caminho correto baseado na avaliação
-        const conditionMet = evaluateConditions(
-          node.data.conditions || [], 
-          userResponses, 
-          calculatorResults
-        );
-        
-        console.log(`🎯 Avaliando caminhos para conditions ${nodeId}: condição ${conditionMet ? 'ATENDIDA' : 'NÃO ATENDIDA'}`);
-        
-        // Estratégia específica: se condição atendida, seguir primeiro caminho; se não, segundo caminho
-        let targetEdge = null;
-        
-        if (conditionMet && nextEdges.length > 0) {
-          // Condição atendida - seguir primeiro edge (normalmente FormEnd "true")
-          targetEdge = nextEdges[0];
-          console.log(`✅ Seguindo primeiro caminho (condição TRUE): ${targetEdge.target}`);
-        } else if (!conditionMet && nextEdges.length > 1) {
-          // Condição não atendida - seguir segundo edge (normalmente FormEnd "false")
-          targetEdge = nextEdges[1];
-          console.log(`❌ Seguindo segundo caminho (condição FALSE): ${targetEdge.target}`);
-        } else if (nextEdges.length > 0) {
-          // Fallback - seguir primeiro disponível
-          targetEdge = nextEdges[0];
-          console.log(`🔄 Fallback: seguindo primeiro edge disponível: ${targetEdge.target}`);
+      nextEdges.forEach(edge => {
+        if (correctPath.has(edge.target)) {
+          traverseFlow(edge.target);
         }
-        
-        if (targetEdge) {
-          traverseFlow(targetEdge.target, true);
-        }
-      } else if (node.type === 'formEnd') {
-        // FormEnd termina formulário, mas pode continuar fluxo
-        console.log(`🏁 FormEnd: Terminando formulário ${nodeId}, verificando continuação...`);
-        
-        // Verificar se há continuação após FormEnd
-        if (nextEdges.length > 0) {
-          console.log(`➡️ FormEnd: Encontrada continuação, seguindo fluxo...`);
-          nextEdges.forEach(edge => traverseFlow(edge.target));
-        } else {
-          console.log(`🛑 FormEnd: Fim da linha, formulário finalizado`);
-        }
-      } else {
-        // Para outros tipos de nó, seguir todos os caminhos disponíveis
-        nextEdges.forEach(edge => traverseFlow(edge.target));
-      }
+      });
     };
     
     traverseFlow(startNode.id);
     
-    console.log(`🎯 Fluxo condicional construído:`);
+    console.log(`🎯 RESULTADO FINAL:`);
+    console.log(`   - Caminho correto: ${Array.from(correctPath).join(' → ')}`);
     console.log(`   - Total de steps: ${steps.length}`);
-    console.log(`   - Caminho seguido: ${Array.from(pathTaken).join(' → ')}`);
-    console.log(`   - Steps finais:`, steps.map(s => `${s.nodeType}:${s.title}`));
+    console.log(`   - Steps incluídos:`, steps.map(s => `${s.nodeType}:${s.title}`));
     
     return steps;
   };

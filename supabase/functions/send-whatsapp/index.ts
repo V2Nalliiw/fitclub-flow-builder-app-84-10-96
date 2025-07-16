@@ -69,25 +69,21 @@ serve(async (req) => {
       );
     }
 
-    // Create content access token
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30); // 30 days expiry
+    // Generate secure download link using the new function
+    console.log('🔗 Gerando link seguro para download...');
+    
+    const { data: secureLink, error: linkError } = await supabase.functions.invoke('generate-secure-download-link', {
+      body: {
+        patientId,
+        executionId,
+        files
+      }
+    });
 
-    const { data: contentAccess, error: contentError } = await supabase
-      .from('content_access')
-      .insert({
-        execution_id: executionId,
-        patient_id: patientId,
-        files: files,
-        expires_at: expiresAt.toISOString()
-      })
-      .select()
-      .single();
-
-    if (contentError || !contentAccess) {
-      console.error('❌ Error creating content access:', contentError);
+    if (linkError || !secureLink) {
+      console.error('❌ Error generating secure download link:', linkError);
       return new Response(
-        JSON.stringify({ error: 'Failed to create content access' }),
+        JSON.stringify({ error: 'Failed to generate secure download link' }),
         { 
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -95,10 +91,8 @@ serve(async (req) => {
       );
     }
 
-    console.log('✅ Content access created:', contentAccess.id);
-
-    // Generate download link
-    const downloadLink = `${supabaseUrl}/functions/v1/serve-content?token=${contentAccess.access_token}`;
+    console.log('✅ Secure download link generated:', secureLink.accessId);
+    const downloadLink = secureLink.secureUrl;
     
     // Try to send using official template first, fallback to simple message
     let whatsappResponse;
@@ -149,7 +143,8 @@ serve(async (req) => {
 
       // Fallback to simple message if template failed
       if (!templateSuccess) {
-        const simpleMessage = `🎉 *Formulário Concluído!*\n\nOlá ${profile.name}! Seus materiais estão prontos para download.\n\n📁 Acesse aqui: ${downloadLink}\n\n📅 Válido até: ${new Date(expiresAt).toLocaleDateString('pt-BR')}\n\nQualquer dúvida, entre em contato conosco! 😊`;
+        const expiryDate = new Date(secureLink.expiresAt);
+        const simpleMessage = `🎉 *Formulário Concluído!*\n\nOlá ${profile.name}! Seus materiais estão prontos para download.\n\n📁 Acesse aqui: ${downloadLink}\n\n📅 Válido até: ${expiryDate.toLocaleDateString('pt-BR')}\n\nQualquer dúvida, entre em contato conosco! 😊`;
         
         whatsappResponse = await fetch(`https://graph.facebook.com/v17.0/${whatsappSettings.phone_number}/messages`, {
           method: 'POST',
@@ -166,7 +161,8 @@ serve(async (req) => {
         });
       }
     } else if (whatsappSettings.provider === 'evolution') {
-      const simpleMessage = `🎉 *Formulário Concluído!*\n\nOlá ${profile.name}! Seus materiais estão prontos para download.\n\n📁 Acesse aqui: ${downloadLink}\n\n📅 Válido até: ${new Date(expiresAt).toLocaleDateString('pt-BR')}\n\nQualquer dúvida, entre em contato conosco! 😊`;
+      const expiryDate = new Date(secureLink.expiresAt);
+      const simpleMessage = `🎉 *Formulário Concluído!*\n\nOlá ${profile.name}! Seus materiais estão prontos para download.\n\n📁 Acesse aqui: ${downloadLink}\n\n📅 Válido até: ${expiryDate.toLocaleDateString('pt-BR')}\n\nQualquer dúvida, entre em contato conosco! 😊`;
       
       const evolutionUrl = `${whatsappSettings.base_url}/message/sendText/${whatsappSettings.session_name}`;
       
@@ -210,7 +206,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        accessId: contentAccess.id,
+        accessId: secureLink.accessId,
         downloadLink,
         whatsappResult
       }),
