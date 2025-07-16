@@ -353,6 +353,48 @@ export type Database = {
           },
         ]
       }
+      flow_logs: {
+        Row: {
+          action: string
+          created_at: string
+          error_message: string | null
+          execution_id: string
+          id: string
+          metadata: Json | null
+          node_id: string
+          node_type: string
+          patient_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          error_message?: string | null
+          execution_id: string
+          id?: string
+          metadata?: Json | null
+          node_id: string
+          node_type: string
+          patient_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          error_message?: string | null
+          execution_id?: string
+          id?: string
+          metadata?: Json | null
+          node_id?: string
+          node_type?: string
+          patient_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       flows: {
         Row: {
           clinic_id: string | null

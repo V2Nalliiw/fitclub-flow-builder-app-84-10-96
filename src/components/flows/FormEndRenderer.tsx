@@ -25,8 +25,57 @@ export const FormEndRenderer: React.FC<FormEndRendererProps> = ({
     handleFormEndWhatsApp();
   }, []);
 
+  const createContentAccess = async (executionId: string, patientId: string, files: any[]) => {
+    console.log('🔐 FormEnd: Criando content access...');
+    
+    try {
+      const { data: contentAccess, error } = await supabase
+        .from('content_access')
+        .insert({
+          execution_id: executionId,
+          patient_id: patientId,
+          files: files,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 dias
+          metadata: {
+            node_type: 'formEnd',
+            created_by: 'FormEndRenderer',
+            file_count: files.length
+          }
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Erro ao criar content access:', error);
+        return null;
+      }
+
+      console.log('✅ Content access criado:', contentAccess.id);
+      
+      // Log da criação
+      await supabase.from('flow_logs').insert({
+        execution_id: executionId,
+        patient_id: patientId,
+        node_id: step.nodeId || 'formEnd',
+        node_type: 'formEnd',
+        action: 'content_access_created',
+        status: 'completed',
+        metadata: {
+          access_id: contentAccess.id,
+          file_count: files.length,
+          expires_at: contentAccess.expires_at
+        }
+      });
+
+      return contentAccess;
+    } catch (error) {
+      console.error('❌ Erro crítico ao criar content access:', error);
+      return null;
+    }
+  };
+
   const handleFormEndWhatsApp = async () => {
-    console.log('🏁 FormEnd: Enviando materiais WhatsApp automaticamente');
+    console.log('🏁 FormEnd: Processando materiais automaticamente');
     setWhatsappStatus('sending');
     
     try {
@@ -39,6 +88,17 @@ export const FormEndRenderer: React.FC<FormEndRendererProps> = ({
         return;
       }
 
+      // Log início do processo
+      await supabase.from('flow_logs').insert({
+        execution_id: executionId,
+        patient_id: '',
+        node_id: step.nodeId || 'formEnd',
+        node_type: 'formEnd',
+        action: 'process_start',
+        status: 'processing',
+        metadata: { step_data: step }
+      });
+
       // Buscar dados da execução
       const { data: execution } = await supabase
         .from('flow_executions')
@@ -49,11 +109,25 @@ export const FormEndRenderer: React.FC<FormEndRendererProps> = ({
       if (!execution) {
         console.error('❌ FormEnd: Execução não encontrada');
         setWhatsappStatus('error');
+        
+        await supabase.from('flow_logs').insert({
+          execution_id: executionId,
+          patient_id: '',
+          node_id: step.nodeId || 'formEnd',
+          node_type: 'formEnd',
+          action: 'execution_not_found',
+          status: 'error',
+          error_message: 'Execution not found'
+        });
         return;
       }
 
+      console.log('📊 FormEnd: Execution encontrada, patient:', execution.patient_id);
+
       // Normalizar arquivos se existirem
       const arquivosNormalizados = (step.arquivos || []).map((arquivo: any) => {
+        console.log('📁 FormEnd: Processando arquivo:', arquivo);
+        
         let cleanUrl = arquivo.file_url || arquivo.url || arquivo.publicUrl || '';
         
         // Corrigir URLs duplicadas
@@ -80,19 +154,56 @@ export const FormEndRenderer: React.FC<FormEndRendererProps> = ({
         };
       });
 
+      console.log('📦 FormEnd: Arquivos normalizados:', arquivosNormalizados.length);
+
       // Enviar materiais se houver arquivos
       if (arquivosNormalizados.length > 0) {
+        // Criar content access para downloads seguros
+        const contentAccess = await createContentAccess(executionId, execution.patient_id, arquivosNormalizados);
+        
+        if (!contentAccess) {
+          console.error('❌ FormEnd: Falha ao criar content access');
+          setWhatsappStatus('error');
+          return;
+        }
+
+        // Criar links seguros usando nosso proxy
+        const secureLinks = arquivosNormalizados.map(arquivo => {
+          const proxyUrl = `${window.location.origin.replace('https://lovable.dev', 'https://oilnybhaboefqyhjrmvl.supabase.co')}/functions/v1/serve-content?token=${contentAccess.access_token}&filename=${encodeURIComponent(arquivo.original_filename)}`;
+          
+          return {
+            ...arquivo,
+            secure_url: proxyUrl,
+            download_instructions: `Para fazer download do arquivo "${arquivo.original_filename}", clique no link acima. O link é válido por 30 dias.`
+          };
+        });
+
+        console.log('🔗 FormEnd: Links seguros criados:', secureLinks.length);
+
         const { data: response, error } = await supabase.functions.invoke('send-whatsapp', {
           body: {
             patientId: execution.patient_id,
             executionId: executionId,
-            files: arquivosNormalizados
+            files: secureLinks,
+            contentAccessId: contentAccess.id
           }
         });
 
         if (error) {
           console.error('❌ FormEnd: Erro ao enviar WhatsApp:', error);
           setWhatsappStatus('error');
+          
+          await supabase.from('flow_logs').insert({
+            execution_id: executionId,
+            patient_id: execution.patient_id,
+            node_id: step.nodeId || 'formEnd',
+            node_type: 'formEnd',
+            action: 'whatsapp_send_failed',
+            status: 'error',
+            error_message: error.message || 'WhatsApp send failed',
+            metadata: { file_count: arquivosNormalizados.length }
+          });
+          
           toast({
             title: "Erro no WhatsApp",
             description: "Não foi possível enviar os materiais",
@@ -101,22 +212,59 @@ export const FormEndRenderer: React.FC<FormEndRendererProps> = ({
         } else {
           console.log('✅ FormEnd: WhatsApp enviado com sucesso:', response);
           setWhatsappStatus('sent');
+          
+          await supabase.from('flow_logs').insert({
+            execution_id: executionId,
+            patient_id: execution.patient_id,
+            node_id: step.nodeId || 'formEnd',
+            node_type: 'formEnd',
+            action: 'whatsapp_send_success',
+            status: 'completed',
+            metadata: { 
+              file_count: arquivosNormalizados.length,
+              content_access_id: contentAccess.id,
+              whatsapp_response: response
+            }
+          });
+          
           toast({
             title: "Materiais Enviados!",
-            description: "Arquivos foram enviados por WhatsApp",
+            description: "Arquivos foram enviados por WhatsApp com links seguros",
           });
         }
       } else {
         console.log('📝 FormEnd: Nenhum arquivo para enviar');
         setWhatsappStatus('sent');
+        
+        await supabase.from('flow_logs').insert({
+          execution_id: executionId,
+          patient_id: execution.patient_id,
+          node_id: step.nodeId || 'formEnd',
+          node_type: 'formEnd',
+          action: 'no_files_to_send',
+          status: 'completed',
+          metadata: { message: 'No files to send' }
+        });
       }
       
     } catch (error) {
       console.error('❌ FormEnd: Erro crítico:', error);
       setWhatsappStatus('error');
+      
+      await supabase.from('flow_logs').insert({
+        execution_id: window.location.pathname.split('/').pop() || '',
+        patient_id: '',
+        node_id: step.nodeId || 'formEnd',
+        node_type: 'formEnd',
+        action: 'critical_error',
+        status: 'error',
+        error_message: error.message || 'Critical error in FormEnd',
+        metadata: { error_stack: error.stack }
+      });
+      
       toast({
         title: "Erro",
-        description: "Falha ao enviar materiais WhatsApp",
+        description: "Falha ao processar materiais no FormEnd",
         variant: "destructive",
       });
     }
