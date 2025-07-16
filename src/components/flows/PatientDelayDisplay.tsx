@@ -145,10 +145,15 @@ export const PatientDelayDisplay: React.FC<PatientDelayDisplayProps> = ({
         }
       }
 
-      // CRUCIAL: Redirecionar para o próximo formulário na URL
-      console.log('🔄 Redirecionando para próximo formulário...');
-      const newUrl = `/flow-execution/${executionId}`;
-      window.location.href = newUrl;
+      // CRUCIAL: Chamar callback se existir, senão redirecionar
+      if (onDelayExpired) {
+        console.log('🔄 Chamando onDelayExpired callback...');
+        onDelayExpired();
+      } else {
+        console.log('🔄 Redirecionando para próximo formulário...');
+        const newUrl = `/flow-execution/${executionId}`;
+        window.location.href = newUrl;
+      }
 
     } catch (error) {
       console.error('❌ Erro na auto-progressão:', error);
