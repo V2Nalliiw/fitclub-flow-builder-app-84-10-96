@@ -16,15 +16,19 @@ serve(async (req) => {
     console.log('🚀 serve-content function called');
     
     const url = new URL(req.url);
-    const pathParts = url.pathname.split('/');
+    const pathParts = url.pathname.split('/').filter(p => p);
+    
+    console.log('🔍 URL path parts:', pathParts);
     
     // Verificar se é uma requisição de download direto
-    const isDownload = pathParts.includes('download');
+    // A URL deve ser: /serve-content/download/{token}/{filename}
+    const downloadIndex = pathParts.findIndex(p => p === 'download');
+    const isDownload = downloadIndex !== -1 && pathParts.length >= downloadIndex + 3;
     
     if (isDownload) {
       // Rota: /serve-content/download/{token}/{filename}
-      const token = pathParts[pathParts.length - 2];
-      const filename = decodeURIComponent(pathParts[pathParts.length - 1]);
+      const token = pathParts[downloadIndex + 1];
+      const filename = decodeURIComponent(pathParts[downloadIndex + 2]);
       
       console.log('📥 Download direto solicitado:', { token, filename });
       
