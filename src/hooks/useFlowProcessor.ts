@@ -139,14 +139,20 @@ export const useFlowProcessor = () => {
     try {
       console.log('useFlowProcessor: Completando step:', { executionId, stepId, response });
       
-      // Buscar patient_id da execução para delay tasks
-      const { data: execInfo } = await supabase
+      // Buscar patient_id da execução ANTES de qualquer processamento
+      const { data: execInfo, error: execInfoError } = await supabase
         .from('flow_executions')
-        .select('patient_id')
+        .select('patient_id, flow_id')
         .eq('id', executionId)
         .single();
       
-      const patientId = execInfo?.patient_id;
+      if (execInfoError || !execInfo?.patient_id) {
+        console.error('❌ Erro ao buscar patient_id:', execInfoError);
+        throw new Error('Patient ID não encontrado na execução');
+      }
+      
+      const patientId = execInfo.patient_id;
+      console.log('✅ Patient ID capturado:', patientId);
       
       const { data: execution, error: execError } = await supabase
         .from('flow_executions')
@@ -236,9 +242,86 @@ export const useFlowProcessor = () => {
         nextStep = updatedSteps[nextStepIndex];
       }
 
-      // Log para FormStart (delay task será criada mais tarde se necessário)
-      if (nextStep && nextStep.nodeType === 'formStart') {
-        console.log('📝 FlowProcessor: Próximo step é FormStart');
+      // 🎯 CORREÇÃO: Detectar sequência Delay -> FormStart corretamente
+      if (nextStep) {
+        console.log('📝 FlowProcessor: Analisando próximo step:', { 
+          nodeType: nextStep.nodeType, 
+          title: nextStep.title,
+          hasDelay: !!(nextStep.delayAmount && nextStep.delayType)
+        });
+        
+        // Se o próximo step é delay E há um FormStart depois dele
+        if (nextStep.nodeType === 'delay' && (nextStep.delayAmount && nextStep.delayType)) {
+          // Verificar se depois do delay há um FormStart
+          const afterDelayIndex = nextStepIndex + 1;
+          if (afterDelayIndex < updatedSteps.length) {
+            const formStartStep = updatedSteps[afterDelayIndex];
+            if (formStartStep.nodeType === 'formStart') {
+              console.log('🎯 Detectada sequência: FormEnd -> Delay -> FormStart');
+              
+              // Calcular quando o FormStart deve estar disponível
+              nextAvailableAt = calculateNextStepAvailableAt(
+                nextStep.delayAmount, 
+                nextStep.delayType as 'minutos' | 'horas' | 'dias'
+              );
+              
+              console.log('📅 FormStart será disponível em:', nextAvailableAt);
+              
+              // Criar delay task para o FormStart
+              if (patientId) {
+                try {
+                  await supabase.from('delay_tasks').insert({
+                    execution_id: executionId,
+                    patient_id: patientId,
+                    next_node_id: formStartStep.nodeId,
+                    next_node_type: 'formStart',
+                    form_name: formStartStep.title || 'Novo Formulário',
+                    trigger_at: nextAvailableAt
+                  });
+                  console.log('✅ DelayTask criada para sequência Delay -> FormStart');
+                } catch (delayTaskError) {
+                  console.error('❌ Erro ao criar delay task:', delayTaskError);
+                }
+              }
+              
+              // Marcar ambos os steps como tendo delay
+              updatedSteps[nextStepIndex] = { ...nextStep, availableAt: nextAvailableAt };
+              updatedSteps[afterDelayIndex] = { ...formStartStep, availableAt: nextAvailableAt };
+              newStatus = 'pending';
+            }
+          }
+        }
+        // Se o próximo step é FormStart direto com delay
+        else if (nextStep.nodeType === 'formStart' && (nextStep.delayAmount && nextStep.delayType)) {
+          console.log('🎯 FormStart direto com delay detectado');
+          
+          nextAvailableAt = calculateNextStepAvailableAt(
+            nextStep.delayAmount, 
+            nextStep.delayType as 'minutos' | 'horas' | 'dias'
+          );
+          
+          console.log('📅 FormStart direto disponível em:', nextAvailableAt);
+          
+          // Criar delay task
+          if (patientId) {
+            try {
+              await supabase.from('delay_tasks').insert({
+                execution_id: executionId,
+                patient_id: patientId,
+                next_node_id: nextStep.nodeId,
+                next_node_type: 'formStart',
+                form_name: nextStep.title || 'Novo Formulário',
+                trigger_at: nextAvailableAt
+              });
+              console.log('✅ DelayTask criada para FormStart direto');
+            } catch (delayTaskError) {
+              console.error('❌ Erro ao criar delay task:', delayTaskError);
+            }
+          }
+          
+          updatedSteps[nextStepIndex] = { ...nextStep, availableAt: nextAvailableAt };
+          newStatus = 'pending';
+        }
       }
 
       // Recalcular steps baseado nas respostas atuais (para fluxos condicionais)
@@ -294,37 +377,19 @@ export const useFlowProcessor = () => {
           updatedSteps[nextStepIndex] = nextStep;
         }
         
-        // Verificar se o próximo step tem delay - usar hook dedicado
-        if (nextStep.delayAmount && nextStep.delayType) {
-          console.log('⏰ Calculando delay com hook:', { delayAmount: nextStep.delayAmount, delayType: nextStep.delayType });
+        // Se não foi processado pelos casos especiais acima, processar delay genérico
+        if (!nextAvailableAt && nextStep.delayAmount && nextStep.delayType) {
+          console.log('⏰ Processando delay genérico:', { delayAmount: nextStep.delayAmount, delayType: nextStep.delayType });
           
           nextAvailableAt = calculateNextStepAvailableAt(
             nextStep.delayAmount, 
             nextStep.delayType as 'minutos' | 'horas' | 'dias'
           );
           
-          console.log('📅 Próximo step disponível em:', nextAvailableAt);
-          
+          console.log('📅 Próximo step genérico disponível em:', nextAvailableAt);
           updatedSteps[nextStepIndex] = { ...nextStep, availableAt: nextAvailableAt };
           newStatus = 'pending';
-          
-          // Criar delay task se for FormStart
-          if (nextStep.nodeType === 'formStart' && patientId) {
-            try {
-              await supabase.from('delay_tasks').insert({
-                execution_id: executionId,
-                patient_id: patientId,
-                next_node_id: nextStep.nodeId,
-                next_node_type: 'formStart',
-                form_name: nextStep.title || 'Formulário',
-                trigger_at: nextAvailableAt
-              });
-              console.log('✅ DelayTask criada para FormStart com delay');
-            } catch (delayTaskError) {
-              console.error('❌ Erro ao criar delay task:', delayTaskError);
-            }
-          }
-        } else {
+        } else if (!nextAvailableAt) {
           newStatus = 'in-progress';
         }
       }
