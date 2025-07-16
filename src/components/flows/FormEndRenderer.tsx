@@ -356,6 +356,12 @@ export const FormEndRenderer: React.FC<FormEndRendererProps> = ({
                             📎 Material educativo
                           </p>
                         </div>
+                        <RobustDocumentDownload 
+                          fileName={fileName}
+                          fileUrl={arquivo.file_url || arquivo.url || arquivo.publicUrl}
+                          documentId={arquivo.id || arquivo.document_id}
+                          fileType={arquivo.file_type?.includes('pdf') ? 'pdf' : arquivo.file_type?.includes('image') ? 'image' : 'pdf'}
+                        />
                       </div>
                     </div>
                   );

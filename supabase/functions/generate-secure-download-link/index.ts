@@ -38,29 +38,56 @@ serve(async (req) => {
     const signedUrls = [];
     
     for (const file of files) {
-      console.log('📁 Processando arquivo:', file.filename);
+      const fileName = file.original_filename || file.filename || file.nome || 'arquivo';
+      console.log('📁 Processando arquivo:', fileName);
       
       try {
+        // Se o arquivo já tem uma URL pública válida, usar diretamente
+        if (file.file_url && file.file_url.includes('/storage/v1/object/public/')) {
+          signedUrls.push({
+            filename: fileName,
+            signedUrl: file.file_url,
+            originalPath: file.file_url
+          });
+          console.log('✅ URL pública direta para:', fileName);
+          continue;
+        }
+        
+        // Tentar extrair o path do arquivo
+        let filePath = file.path;
+        if (!filePath && file.file_url) {
+          // Extrair path da URL: https://domain/storage/v1/object/public/bucket/path
+          const urlParts = file.file_url.split('/clinic-materials/');
+          if (urlParts.length > 1) {
+            filePath = urlParts[1];
+          }
+        }
+        
+        if (!filePath) {
+          console.error('❌ Não foi possível determinar o path para:', fileName);
+          continue;
+        }
+        
         // Gerar signed URL com 24 horas de expiração
         const { data: signedUrlData, error: signedError } = await supabase.storage
           .from('clinic-materials')
-          .createSignedUrl(file.path, 86400); // 24 horas em segundos
+          .createSignedUrl(filePath, 86400); // 24 horas em segundos
         
         if (signedError) {
-          console.error('❌ Erro ao gerar signed URL para', file.filename, ':', signedError);
+          console.error('❌ Erro ao gerar signed URL para', fileName, ':', signedError);
           continue;
         }
         
         signedUrls.push({
-          filename: file.filename,
+          filename: fileName,
           signedUrl: signedUrlData.signedUrl,
-          originalPath: file.path
+          originalPath: filePath
         });
         
-        console.log('✅ Signed URL gerada para:', file.filename);
+        console.log('✅ Signed URL gerada para:', fileName);
         
       } catch (fileError) {
-        console.error('❌ Erro ao processar arquivo', file.filename, ':', fileError);
+        console.error('❌ Erro ao processar arquivo', fileName, ':', fileError);
         continue;
       }
     }
