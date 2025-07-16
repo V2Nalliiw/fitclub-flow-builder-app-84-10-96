@@ -12,6 +12,8 @@ interface RobustDocumentDownloadProps {
   description?: string;
   fileType?: 'pdf' | 'image' | 'video' | 'ebook';
   documentId?: string;
+  compact?: boolean;
+  autoDownload?: boolean;
 }
 
 export const RobustDocumentDownload: React.FC<RobustDocumentDownloadProps> = ({
@@ -20,7 +22,9 @@ export const RobustDocumentDownload: React.FC<RobustDocumentDownloadProps> = ({
   title,
   description,
   fileType = 'pdf',
-  documentId
+  documentId,
+  compact = false,
+  autoDownload = false
 }) => {
   const [downloading, setDownloading] = useState(false);
   const [previewing, setPreviewing] = useState(false);
@@ -148,6 +152,13 @@ export const RobustDocumentDownload: React.FC<RobustDocumentDownloadProps> = ({
         toast.error('Pop-up bloqueado. Permita pop-ups para visualizar.');
       } else {
         toast.success('Abrindo visualização...');
+        
+        // Se autoDownload está ativo, também iniciar download
+        if (autoDownload) {
+          setTimeout(() => {
+            handleDownload();
+          }, 1000); // Delay de 1s para não conflitar
+        }
       }
 
     } catch (error) {
@@ -158,6 +169,45 @@ export const RobustDocumentDownload: React.FC<RobustDocumentDownloadProps> = ({
     }
   };
 
+  // Modo compacto para FormEnd
+  if (compact) {
+    return (
+      <div className="flex gap-2">
+        <Button
+          onClick={handleDownload}
+          disabled={downloading || !fileName}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white"
+          size="sm"
+        >
+          {downloading ? (
+            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4 mr-1" />
+          )}
+          Baixar
+        </Button>
+        
+        {fileType === 'pdf' && (
+          <Button
+            onClick={handlePreview}
+            disabled={previewing || !fileName}
+            variant="outline"
+            size="sm"
+            className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+          >
+            {previewing ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <Eye className="h-4 w-4 mr-1" />
+            )}
+            Visualizar
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  // Modo card completo
   return (
     <Card className="bg-muted/50 dark:bg-muted/20 border-border">
       <CardContent className="p-6">

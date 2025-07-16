@@ -330,12 +330,6 @@ export const FormEndRenderer: React.FC<FormEndRendererProps> = ({
                   <span className="text-sm font-medium">✅ Materiais enviados por WhatsApp!</span>
                 </div>
               )}
-              
-              {whatsappStatus === 'error' && (
-                <p className="text-sm text-red-600 dark:text-red-400 mb-4">
-                  ❌ Erro ao enviar materiais
-                </p>
-              )}
 
               <div className="space-y-3">
                 {step.arquivos.slice(0, 3).map((arquivo: any, index: number) => {
@@ -356,12 +350,16 @@ export const FormEndRenderer: React.FC<FormEndRendererProps> = ({
                             📎 Material educativo
                           </p>
                         </div>
-                        <RobustDocumentDownload 
-                          fileName={fileName}
-                          fileUrl={arquivo.file_url || arquivo.url || arquivo.publicUrl}
-                          documentId={arquivo.id || arquivo.document_id}
-                          fileType={arquivo.file_type?.includes('pdf') ? 'pdf' : arquivo.file_type?.includes('image') ? 'image' : 'pdf'}
-                        />
+                        <div className="flex gap-2">
+                          <RobustDocumentDownload 
+                            fileName={fileName}
+                            fileUrl={arquivo.file_url || arquivo.url || arquivo.publicUrl}
+                            documentId={arquivo.id || arquivo.document_id}
+                            fileType={arquivo.file_type?.includes('pdf') ? 'pdf' : arquivo.file_type?.includes('image') ? 'image' : 'pdf'}
+                            compact={true}
+                            autoDownload={true}
+                          />
+                        </div>
                       </div>
                     </div>
                   );
