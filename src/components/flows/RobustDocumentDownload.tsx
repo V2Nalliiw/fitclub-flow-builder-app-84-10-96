@@ -40,56 +40,41 @@ export const RobustDocumentDownload: React.FC<RobustDocumentDownloadProps> = ({
 
   const generateSecureDownloadUrl = async (): Promise<string | null> => {
     try {
-      console.log('🔗 Gerando URL segura para download:', { fileName, fileUrl, documentId });
+      console.log('🔗 Gerando URL para download:', { fileName, fileUrl, documentId });
 
-      // Tentar diferentes métodos para obter a URL
-      if (fileUrl && fileUrl.startsWith('http')) {
+      // Prioridade 1: URL direta se já válida
+      if (fileUrl && fileUrl.startsWith('https://')) {
         console.log('✅ Usando URL direta:', fileUrl);
         return fileUrl;
       }
 
-      // Método 1: Buscar documento por ID
+      // Prioridade 2: Buscar no banco por ID
       if (documentId) {
         const { data: document } = await supabase
           .from('clinic_documents')
-          .select('file_url, filename')
+          .select('file_url')
           .eq('id', documentId)
           .single();
 
         if (document?.file_url) {
-          console.log('✅ URL obtida do banco:', document.file_url);
+          console.log('✅ URL do banco:', document.file_url);
           return document.file_url;
         }
       }
 
-      // Método 2: Buscar por nome do arquivo
-      const { data: documents } = await supabase
-        .from('clinic_documents')
-        .select('file_url, filename')
-        .eq('filename', fileName)
-        .limit(1);
-
-      if (documents && documents.length > 0) {
-        console.log('✅ URL obtida por filename:', documents[0].file_url);
-        return documents[0].file_url;
-      }
-
-      // Método 3: Construir URL do bucket clinic-materials
-      const cleanFileName = fileName.replace(/^.*\//, ''); // Remove path prefixes
+      // Prioridade 3: URL pública do storage
       const { data } = supabase.storage
         .from('clinic-materials')
-        .getPublicUrl(cleanFileName);
+        .getPublicUrl(fileName);
 
       if (data?.publicUrl) {
-        console.log('✅ URL pública gerada:', data.publicUrl);
+        console.log('✅ URL pública:', data.publicUrl);
         return data.publicUrl;
       }
 
-      console.log('❌ Nenhum método de URL funcionou');
       return null;
-
     } catch (error) {
-      console.error('❌ Erro ao gerar URL de download:', error);
+      console.error('❌ Erro ao gerar URL:', error);
       return null;
     }
   };

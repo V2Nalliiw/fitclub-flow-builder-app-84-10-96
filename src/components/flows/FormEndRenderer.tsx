@@ -167,14 +167,14 @@ export const FormEndRenderer: React.FC<FormEndRendererProps> = ({
           return;
         }
 
-        // Criar links seguros usando nosso proxy
+        // Criar links seguros com URL absoluta corrigida
         const secureLinks = arquivosNormalizados.map(arquivo => {
-          const proxyUrl = `${window.location.origin.replace('https://lovable.dev', 'https://oilnybhaboefqyhjrmvl.supabase.co')}/functions/v1/serve-content?token=${contentAccess.access_token}&filename=${encodeURIComponent(arquivo.original_filename)}`;
+          const proxyUrl = `https://oilnybhaboefqyhjrmvl.supabase.co/functions/v1/serve-content?token=${contentAccess.access_token}&filename=${encodeURIComponent(arquivo.original_filename)}`;
           
           return {
             ...arquivo,
             secure_url: proxyUrl,
-            download_instructions: `Para fazer download do arquivo "${arquivo.original_filename}", clique no link acima. O link é válido por 30 dias.`
+            download_instructions: `Clique no link para baixar "${arquivo.original_filename}". Válido por 30 dias.`
           };
         });
 
@@ -338,17 +338,33 @@ export const FormEndRenderer: React.FC<FormEndRendererProps> = ({
               )}
 
               <div className="space-y-3">
-                {step.arquivos.map((arquivo: any, index: number) => (
-                  <RobustDocumentDownload
-                    key={index}
-                    fileName={arquivo.original_filename || arquivo.filename || arquivo.nome || 'Arquivo'}
-                    fileUrl={arquivo.file_url || arquivo.url || arquivo.publicUrl}
-                    title={arquivo.original_filename || arquivo.nome || 'Material'}
-                    description={`Arquivo enviado via WhatsApp (${((arquivo.file_size || arquivo.tamanho || 0) / 1024).toFixed(1)}KB)`}
-                    fileType={arquivo.file_type?.includes('pdf') ? 'pdf' : 'image'}
-                    documentId={arquivo.id || arquivo.document_id}
-                  />
-                ))}
+                {step.arquivos.slice(0, 3).map((arquivo: any, index: number) => {
+                  const fileName = arquivo.original_filename || arquivo.filename || arquivo.nome || 'Material';
+                  const displayName = fileName.length > 30 ? fileName.substring(0, 30) + '...' : fileName;
+                  
+                  return (
+                    <div key={index} className="bg-muted/30 border border-muted rounded-lg p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary-gradient rounded-full flex items-center justify-center">
+                          <FileText className="h-5 w-5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground truncate" title={fileName}>
+                            {displayName}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            📎 Material educativo
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {step.arquivos.length > 3 && (
+                  <div className="text-center text-sm text-muted-foreground">
+                    + {step.arquivos.length - 3} arquivo(s) adicional(is)
+                  </div>
+                )}
               </div>
             </div>
           )}

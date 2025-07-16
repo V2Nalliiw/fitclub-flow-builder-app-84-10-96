@@ -84,27 +84,20 @@ serve(async (req) => {
       try {
         console.log('📁 Tentando download do storage - arquivo:', file);
         
-        // Simplificar extração do caminho do arquivo
-        let filePath = file.url;
+        // Simplificar e corrigir extração do caminho do arquivo
+        let filePath = file.original_filename || file.filename || filename;
         
-        console.log('🔍 URL original do arquivo:', filePath);
+        console.log('🔍 Usando filename direto:', filePath);
         
-        // Usar o caminho completo do storage corretamente
-        if (filePath.includes('/storage/v1/object/public/clinic-materials/')) {
-          // Extrair path após clinic-materials/
-          const parts = filePath.split('/storage/v1/object/public/clinic-materials/');
-          filePath = parts[1] || filename;
-        } else if (filePath.includes('clinic-materials/')) {
-          // Extrair path após clinic-materials/
-          filePath = filePath.split('clinic-materials/')[1] || filename;
-        } else {
-          // Usar filename original
-          filePath = file.original_filename || file.filename || filename;
+        // Se for um arquivo com nome único UUID, usar o filename original
+        if (file.url && file.url.includes('clinic-materials/')) {
+          const urlParts = file.url.split('clinic-materials/');
+          if (urlParts[1]) {
+            filePath = decodeURIComponent(urlParts[1]);
+          }
         }
         
-        console.log('📁 Nome do arquivo extraído:', filePath);
-        
-        console.log('📁 Caminho do arquivo extraído:', filePath);
+        console.log('📁 Caminho final do arquivo:', filePath);
 
         // Usar apenas clinic-materials (bucket unificado)
         const { data: fileData, error: downloadError } = await supabase.storage
