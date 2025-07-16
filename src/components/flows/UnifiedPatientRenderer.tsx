@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PatientDelayDisplay } from './PatientDelayDisplay';
 import { FlowEndDisplay } from './FlowEndDisplay';
+import { FlowEndNode } from './FlowEndNode';
 
 interface UnifiedPatientRendererProps {
   step: any;
@@ -32,18 +33,17 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
   const [whatsappStatus, setWhatsappStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [autoProgressTimer, setAutoProgressTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto-trigger WhatsApp for FormStart and FormEnd
+  // Auto-trigger WhatsApp for FormStart (silencioso) and FormEnd
   useEffect(() => {
     if (step.nodeType === 'formStart') {
-      handleFormStartWhatsApp();
+      handleFormStartWhatsAppSilent();
     } else if (step.nodeType === 'formEnd') {
       handleFormEndWhatsApp();
     }
   }, [step.nodeType]);
 
-  const handleFormStartWhatsApp = async () => {
-    console.log('🚀 FormStart: Enviando notificação WhatsApp automaticamente');
-    setWhatsappStatus('sending');
+  const handleFormStartWhatsAppSilent = async () => {
+    console.log('🚀 FormStart: Enviando notificação WhatsApp silenciosamente');
     
     try {
       // Buscar executionId da URL ou contexto
@@ -52,7 +52,8 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
       
       if (!executionId) {
         console.error('❌ FormStart: ExecutionId não encontrado');
-        setWhatsappStatus('error');
+        // Mesmo com erro, prosseguir para primeira pergunta
+        setTimeout(() => handleComplete(), 500);
         return;
       }
 
@@ -65,49 +66,37 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
 
       if (!execution) {
         console.error('❌ FormStart: Execução não encontrada');
-        setWhatsappStatus('error');
+        // Mesmo com erro, prosseguir para primeira pergunta
+        setTimeout(() => handleComplete(), 500);
         return;
       }
 
-      // Enviar notificação via edge function
-      const { data: response, error } = await supabase.functions.invoke('send-form-notification', {
+      // Enviar notificação via edge function (silencioso, sem feedback visual)
+      supabase.functions.invoke('send-form-notification', {
         body: {
           patientId: execution.patient_id,
           formName: step.title || execution.flow_name || 'Formulário',
           executionId: executionId
         }
+      }).then((response) => {
+        if (response.error) {
+          console.error('❌ FormStart: Erro ao enviar WhatsApp:', response.error);
+        } else {
+          console.log('✅ FormStart: WhatsApp enviado com sucesso:', response.data);
+        }
+      }).catch((error) => {
+        console.error('❌ FormStart: Erro crítico:', error);
       });
 
-      if (error) {
-        console.error('❌ FormStart: Erro ao enviar WhatsApp:', error);
-        setWhatsappStatus('error');
-        toast({
-          title: "Erro no WhatsApp",
-          description: "Não foi possível enviar a notificação",
-          variant: "destructive",
-        });
-      } else {
-        console.log('✅ FormStart: WhatsApp enviado com sucesso:', response);
-        setWhatsappStatus('sent');
-        toast({
-          title: "Notificação Enviada!",
-          description: "Link do formulário foi enviado por WhatsApp",
-        });
-        
-        // Auto-progredir após 3 segundos
-        const timer = setTimeout(() => {
-          handleComplete();
-        }, 3000);
-        setAutoProgressTimer(timer);
-      }
+      // Progredir IMEDIATAMENTE para primeira pergunta (não esperar WhatsApp)
+      setTimeout(() => {
+        handleComplete();
+      }, 100);
+      
     } catch (error) {
       console.error('❌ FormStart: Erro crítico:', error);
-      setWhatsappStatus('error');
-      toast({
-        title: "Erro",
-        description: "Falha ao enviar notificação WhatsApp",
-        variant: "destructive",
-      });
+      // Mesmo com erro, prosseguir para primeira pergunta
+      setTimeout(() => handleComplete(), 500);
     }
   };
 
@@ -422,65 +411,27 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
     );
   }
 
-  // FormStart com status do WhatsApp
+  // FormStart com redirecionamento automático (sem interface confusa)
   if (step.nodeType === 'formStart') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
         <Card className="w-full max-w-md bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-0 shadow-xl animate-fade-in">
           <CardContent className="p-8 text-center">
             <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FileText className="h-10 w-10 text-white" />
+              <Loader2 className="h-10 w-10 text-white animate-spin" />
             </div>
             <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              {step.title || 'Novo Formulário'}
+              Carregando Formulário...
             </h3>
-            {step.description && (
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {step.description}
-              </p>
-            )}
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Redirecionando para primeira pergunta
+            </p>
             
-            {/* Status do WhatsApp */}
-            <div className="bg-green-500/10 dark:bg-green-500/20 rounded-lg p-4 mb-6">
-              {whatsappStatus === 'sending' && (
-                <div className="flex items-center justify-center text-blue-700 dark:text-blue-300">
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  <span className="font-medium">Enviando notificação WhatsApp...</span>
-                </div>
-              )}
-              {whatsappStatus === 'sent' && (
-                <div className="flex items-center justify-center text-green-700 dark:text-green-300">
-                  <Send className="h-4 w-4 mr-2" />
-                  <span className="font-medium">✅ Link enviado por WhatsApp!</span>
-                </div>
-              )}
-              {whatsappStatus === 'error' && (
-                <p className="text-red-700 dark:text-red-300 font-medium">
-                  ❌ Erro ao enviar WhatsApp
-                </p>
-              )}
-              {whatsappStatus === 'idle' && (
-                <p className="text-green-700 dark:text-green-300 font-medium">
-                  📱 Preparando notificação...
-                </p>
-              )}
+            <div className="bg-green-500/10 dark:bg-green-500/20 rounded-lg p-4">
+              <p className="text-green-700 dark:text-green-300 font-medium">
+                📱 Enviando link por WhatsApp em background...
+              </p>
             </div>
-
-            {whatsappStatus === 'sent' && (
-              <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                Progredindo automaticamente em alguns segundos...
-              </div>
-            )}
-
-            <Button
-              onClick={handleComplete}
-              disabled={isLoading || whatsappStatus === 'sending'}
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 rounded-xl font-medium"
-              size="lg"
-            >
-              {isLoading ? 'Processando...' : whatsappStatus === 'sent' ? 'Iniciar Formulário' : 'Aguarde...'}
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
           </CardContent>
         </Card>
       </div>
@@ -584,6 +535,7 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
     return (
       <PatientDelayDisplay 
         availableAt={availableAt} 
+        executionId={executionId}
         onDelayExpired={() => {
           console.log('⏰ DelayTimer expirado, progredindo para próximo step...');
           handleComplete();
@@ -592,41 +544,13 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
     );
   }
 
-  // End Node - fim do fluxo (finaliza tratamento)
-  if (step.nodeType === 'end' || step.nodeType === 'flowEnd') {
-    const executionId = window.location.pathname.split('/').pop();
-    
-    // Buscar dados da execução para finalizar
-    const [execution, setExecution] = useState<any>(null);
-    
-    useEffect(() => {
-      const fetchExecution = async () => {
-        if (!executionId) return;
-        
-        const { data } = await supabase
-          .from('flow_executions')
-          .select('patient_id, flow_id')
-          .eq('id', executionId)
-          .single();
-          
-        setExecution(data);
-      };
-      
-      fetchExecution();
-    }, [executionId]);
-    
-    if (!executionId || !execution) {
-      return (
-        <div className="text-center p-8">
-          <p className="text-red-500">Erro: Dados da execução não encontrados</p>
-        </div>
-      );
-    }
-    
+  // Finalização do Fluxo - última tela para o paciente (DEFINITIVA)
+  if (step.nodeType === 'flowEnd' || step.nodeType === 'end') {
     return (
-      <FlowEndDisplay 
-        executionId={executionId}
-        execution={execution}
+      <FlowEndNode 
+        step={step}
+        onComplete={handleComplete}
+        isLoading={isLoading}
       />
     );
   }
