@@ -135,11 +135,8 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
         setWhatsappStatus('sent');
       }
       
-      // Auto-progredir após 3 segundos
-      const timer = setTimeout(() => {
-        handleComplete();
-      }, 3000);
-      setAutoProgressTimer(timer);
+      // NÃO auto-progredir automaticamente - aguardar clique do usuário para evitar finalização dupla
+      console.log('✅ FormEnd: Materiais enviados, aguardando ação do usuário');
       
     } catch (error) {
       console.error('❌ FormEnd: Erro crítico:', error);
@@ -507,8 +504,8 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
             </div>
 
             {whatsappStatus === 'sent' && (
-              <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                Finalizando automaticamente em alguns segundos...
+              <div className="text-sm text-emerald-600 dark:text-emerald-400 mb-4">
+                Materiais enviados! Clique em "Finalizar" para continuar.
               </div>
             )}
 
