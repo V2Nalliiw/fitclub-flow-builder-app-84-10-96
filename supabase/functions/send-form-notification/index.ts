@@ -83,7 +83,7 @@ serve(async (req) => {
             type: "body",
             parameters: [
               { type: "text", text: patient.name || "Paciente" },
-              { type: "text", text: formName || "Formulário" }
+              { type: "text", text: formUrl }
             ]
           },
           {
