@@ -330,6 +330,8 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
       clearTimeout(autoProgressTimer);
     }
 
+    console.log('🔄 UnifiedPatientRenderer: handleComplete chamado para nodeType:', step.nodeType);
+
     // Organizar respostas por tipo
     const calculationResponses: Record<string, number> = {};
     const questionResponses: Record<string, any> = {};
@@ -362,6 +364,7 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
       timestamp: new Date().toISOString()
     };
 
+    console.log('✅ UnifiedPatientRenderer: Enviando responseData:', responseData);
     onComplete(responseData);
   };
 

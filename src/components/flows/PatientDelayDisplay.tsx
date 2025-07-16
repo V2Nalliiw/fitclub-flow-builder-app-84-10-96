@@ -145,15 +145,10 @@ export const PatientDelayDisplay: React.FC<PatientDelayDisplayProps> = ({
         }
       }
 
-      // Callback para recarregar página/componente
-      if (onDelayExpired) {
-        onDelayExpired();
-      } else {
-        // Fallback: recarregar página
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
-      }
+      // CRUCIAL: Redirecionar para o próximo formulário na URL
+      console.log('🔄 Redirecionando para próximo formulário...');
+      const newUrl = `/flow-execution/${executionId}`;
+      window.location.href = newUrl;
 
     } catch (error) {
       console.error('❌ Erro na auto-progressão:', error);

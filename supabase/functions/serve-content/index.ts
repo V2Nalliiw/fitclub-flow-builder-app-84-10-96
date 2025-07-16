@@ -79,39 +79,21 @@ serve(async (req) => {
       try {
         console.log('📁 Tentando download do storage - arquivo:', file);
         
-        // Extrair o caminho real do arquivo do URL
+        // Simplificar extração do caminho do arquivo
         let filePath = file.url;
         
         console.log('🔍 URL original do arquivo:', filePath);
         
-        // Se for uma URL completa, extrair apenas o caminho do arquivo
-        if (filePath.includes('/storage/v1/object/public/')) {
-          const parts = filePath.split('/storage/v1/object/public/');
-          if (parts.length > 1) {
-            const pathPart = parts[1];
-            console.log('📁 PathPart extraído:', pathPart);
-            
-            // Se já contém clinic-materials/, usar path completo após clinic-materials/
-            if (pathPart.includes('clinic-materials/')) {
-              filePath = pathPart.split('clinic-materials/')[1];
-            } else {
-              // Tentar remover o nome do bucket do início se for outro bucket
-              const bucketlessPath = pathPart.split('/').slice(1).join('/');
-              filePath = bucketlessPath || pathPart;
-            }
-          }
-        } else if (filePath.includes('clinic-materials/')) {
-          // Extrair path após clinic-materials/
-          filePath = filePath.split('clinic-materials/')[1];
-        } else if (filePath.includes('flow-documents/')) {
-          // Converter flow-documents para clinic-materials path
-          filePath = filePath.split('flow-documents/')[1];
+        // Extrair apenas o nome do arquivo da URL ou usar filename
+        if (filePath.includes('/')) {
+          // Pegar a última parte da URL (filename)
+          filePath = filePath.split('/').pop() || filename;
         } else {
-          // Tentar usar filename diretamente
+          // Usar filename se não houver barra
           filePath = file.original_filename || file.filename || filename;
         }
         
-        console.log('📁 Caminho final extraído:', filePath);
+        console.log('📁 Nome do arquivo extraído:', filePath);
         
         console.log('📁 Caminho do arquivo extraído:', filePath);
 
