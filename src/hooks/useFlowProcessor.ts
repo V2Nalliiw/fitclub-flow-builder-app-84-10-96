@@ -309,22 +309,27 @@ export const useFlowProcessor = () => {
           updatedSteps[nextStepIndex] = nextStep;
         }
         
-        if (completedStep.delayAmount && completedStep.delayType) {
+        // Verificar se o próximo step tem delay
+        if (nextStep.delayAmount && nextStep.delayType) {
           const delayDate = new Date();
-          switch (completedStep.delayType) {
+          console.log('⏰ Calculando delay:', { delayAmount: nextStep.delayAmount, delayType: nextStep.delayType });
+          
+          switch (nextStep.delayType) {
             case 'minutos':
-              delayDate.setMinutes(delayDate.getMinutes() + completedStep.delayAmount);
+              delayDate.setMinutes(delayDate.getMinutes() + nextStep.delayAmount);
               break;
             case 'horas':
-              delayDate.setHours(delayDate.getHours() + completedStep.delayAmount);
+              delayDate.setHours(delayDate.getHours() + nextStep.delayAmount);
               break;
             case 'dias':
             default:
-              delayDate.setDate(delayDate.getDate() + completedStep.delayAmount);
+              delayDate.setDate(delayDate.getDate() + nextStep.delayAmount);
               break;
           }
           
           nextAvailableAt = delayDate.toISOString();
+          console.log('📅 Próximo step disponível em:', nextAvailableAt);
+          
           updatedSteps[nextStepIndex] = { ...nextStep, availableAt: nextAvailableAt };
           newStatus = 'pending';
         } else {

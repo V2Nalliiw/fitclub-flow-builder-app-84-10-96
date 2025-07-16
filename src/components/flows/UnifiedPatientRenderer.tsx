@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowRight, CheckCircle2, Heart, FileText, Clock, Send, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { FlowDelayTimer } from './FlowDelayTimer';
+import { ImprovedFlowDelayTimer } from './ImprovedFlowDelayTimer';
 import { FlowEndDisplay } from './FlowEndDisplay';
 import { FlowEndNode } from './FlowEndNode';
 
@@ -217,10 +217,24 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
       case 'calculator':
         const calculatorFields = step.calculatorFields || [];
         const questionFields = step.calculatorQuestionFields || [];
-        return [
-          ...calculatorFields.map((f: any) => ({ ...f, fieldType: 'calculo' })),
-          ...questionFields.map((f: any) => ({ ...f, fieldType: 'pergunta' }))
+        console.log('🔢 Preparando campos da calculadora:', { calculatorFields, questionFields });
+        
+        // Combinar todos os campos e ordenar
+        const allFields = [
+          ...calculatorFields.map((f: any, index: number) => ({ 
+            ...f, 
+            fieldType: 'calculo',
+            order: f.order !== undefined ? f.order : index
+          })),
+          ...questionFields.map((f: any, index: number) => ({ 
+            ...f, 
+            fieldType: 'pergunta',
+            order: f.order !== undefined ? f.order : (calculatorFields.length + index)
+          }))
         ].sort((a, b) => (a.order || 0) - (b.order || 0));
+        
+        console.log('📋 Campos ordenados:', allFields);
+        return allFields;
       
       case 'number':
         return [{
@@ -290,15 +304,25 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
       } else {
         // Calcular resultado se for calculadora
         if (step.nodeType === 'calculator' && step.formula) {
+          console.log('🧮 Iniciando cálculo da calculadora');
           const calculationFields = allFields.filter(f => f.fieldType === 'calculo');
           const calculationResponses: Record<string, number> = {};
           
           calculationFields.forEach(field => {
-            calculationResponses[field.nomenclatura] = responses[field.nomenclatura] || 0;
+            const value = responses[field.nomenclatura];
+            calculationResponses[field.nomenclatura] = typeof value === 'number' ? value : parseFloat(value) || 0;
+          });
+          
+          console.log('📊 Dados para cálculo:', { 
+            formula: step.formula, 
+            calculationResponses, 
+            allResponses: responses 
           });
           
           const result = calculateFormula(step.formula, calculationResponses);
           setCalculatedResult(result);
+          
+          console.log('🎯 Resultado final da calculadora:', result);
         }
         setShowResult(true);
       }
@@ -307,19 +331,33 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
 
   const calculateFormula = (formula: string, values: Record<string, number>): number => {
     try {
+      console.log('🧮 Calculando fórmula:', { formula, values });
       let processedFormula = formula;
       
-      Object.entries(values).forEach(([key, value]) => {
-        const regex = new RegExp(`\\b${key}\\b`, 'g');
+      // Substituir variáveis por valores - ordenar por tamanho decrescente para evitar conflitos
+      const sortedEntries = Object.entries(values).sort(([a], [b]) => b.length - a.length);
+      
+      sortedEntries.forEach(([key, value]) => {
+        // Usar regex mais específica que considera limites de palavra
+        const regex = new RegExp(`\\b${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
         processedFormula = processedFormula.replace(regex, value.toString());
+        console.log(`  Substituindo ${key} por ${value}: ${processedFormula}`);
       });
 
+      // Tratar operações matemáticas comuns
       processedFormula = processedFormula.replace(/²/g, '**2');
+      processedFormula = processedFormula.replace(/\^/g, '**');
       
+      console.log('📊 Fórmula processada:', processedFormula);
+      
+      // Avaliar a fórmula
       const result = new Function('return ' + processedFormula)();
-      return typeof result === 'number' ? result : 0;
+      const finalResult = typeof result === 'number' && !isNaN(result) ? result : 0;
+      
+      console.log('✅ Resultado calculado:', finalResult);
+      return finalResult;
     } catch (error) {
-      console.error('Erro no cálculo:', error);
+      console.error('❌ Erro no cálculo da fórmula:', error);
       return 0;
     }
   };
@@ -545,10 +583,10 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
     }
 
     return (
-      <FlowDelayTimer 
-        availableAt={availableAt} 
+      <ImprovedFlowDelayTimer 
+        step={{ ...step, availableAt }}
         executionId={executionId}
-        onDelayExpired={() => {
+        onComplete={() => {
           console.log('⏰ DelayTimer expirado, recarregando para próximo step...');
           window.location.reload();
         }}

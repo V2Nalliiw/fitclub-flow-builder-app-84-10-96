@@ -189,20 +189,24 @@ export const useConditionalFlowProcessor = () => {
           calculatorResults
         );
         
-        // Encontrar o edge correto baseado na condição
-        const targetEdge = nextEdges.find(edge => {
-          const targetNode = nodes.find(n => n.id === edge.target);
-          if (conditionMet && targetNode?.type === 'formEnd') {
-            // Se condição atendida, ir para o FormEnd correspondente
-            return targetNode.data.mensagemFinal?.includes('positivo') || 
-                   targetNode.data.mensagemFinal?.includes('aprovado');
-          } else if (!conditionMet && targetNode?.type === 'formEnd') {
-            // Se condição não atendida, ir para o outro FormEnd
-            return targetNode.data.mensagemFinal?.includes('negativo') ||
-                   targetNode.data.mensagemFinal?.includes('reprovado');
-          }
-          return false;
-        });
+        // Encontrar o edge correto baseado na condição - melhorar lógica
+        let targetEdge = null;
+        
+        if (conditionMet) {
+          // Se condição atendida, procurar primeiro FormEnd disponível
+          targetEdge = nextEdges.find(edge => {
+            const targetNode = nodes.find(n => n.id === edge.target);
+            return targetNode?.type === 'formEnd';
+          });
+        } else {
+          // Se condição não atendida, procurar outro FormEnd ou continuar fluxo
+          targetEdge = nextEdges.find(edge => {
+            const targetNode = nodes.find(n => n.id === edge.target);
+            return targetNode?.type === 'formEnd' || targetNode?.type !== 'conditions';
+          });
+        }
+        
+        console.log(`🎯 Condição ${conditionMet ? 'ATENDIDA' : 'NÃO ATENDIDA'}, seguindo para:`, targetEdge?.target);
         
         if (targetEdge) {
           traverseFlow(targetEdge.target);
