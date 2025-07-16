@@ -10,10 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowRight, ArrowLeft, FileText, MessageCircle, CheckCircle, Clock } from 'lucide-react';
 import { ImprovedDelayTimer } from './ImprovedDelayTimer';
 import { EnhancedDocumentDisplay } from './EnhancedDocumentDisplay';
-import { MedicalQuestionnaireRenderer } from './MedicalQuestionnaireRenderer';
+import { UnifiedPatientRenderer } from './UnifiedPatientRenderer';
 import { ConditionsStepRenderer } from './ConditionsStepRenderer';
-import { NumberStepRenderer } from './NumberStepRenderer';
-import { SimpleCalculatorStepRenderer } from './SimpleCalculatorStepRenderer';
 import { SpecialConditionsStepRenderer } from './SpecialConditionsStepRenderer';
 
 interface FlowStepRendererProps {
@@ -68,7 +66,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
     switch (step.nodeType) {
       case 'calculator':
         return (
-          <MedicalQuestionnaireRenderer
+          <UnifiedPatientRenderer
             step={step}
             onComplete={onComplete}
             isLoading={isLoading}
@@ -89,20 +87,19 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
 
       case 'number':
         return (
-          <NumberStepRenderer
+          <UnifiedPatientRenderer
             step={step}
             onComplete={onComplete}
             isLoading={isLoading}
           />
         );
 
-      case 'simpleCalculator':
+      case 'question':
         return (
-          <SimpleCalculatorStepRenderer
+          <UnifiedPatientRenderer
             step={step}
             onComplete={onComplete}
             isLoading={isLoading}
-            calculatorResults={{}}
           />
         );
 
@@ -117,164 +114,21 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
 
       case 'formStart':
         return (
-          <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
-            <Card className="w-full max-w-md bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-0 shadow-xl animate-fade-in">
-              <CardContent className="p-8 text-center">
-                <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FileText className="h-10 w-10 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                  {step.title || 'Novo Formulário'}
-                </h3>
-                {step.description && (
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    {step.description}
-                  </p>
-                )}
-                
-                <div className="bg-green-500/10 dark:bg-green-500/20 rounded-lg p-4 mb-6">
-                  <p className="text-green-700 dark:text-green-300 font-medium">
-                    ✅ Formulário pronto para preenchimento
-                  </p>
-                </div>
-
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 rounded-xl font-medium"
-                  size="lg"
-                >
-                  {isLoading ? 'Processando...' : 'Iniciar Formulário'}
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+          <UnifiedPatientRenderer
+            step={step}
+            onComplete={onComplete}
+            isLoading={isLoading}
+          />
         );
 
-      case 'question':
-        return (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-r from-primary to-primary/80 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageCircle className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                {step.pergunta || step.title}
-              </h3>
-            </div>
-
-            {step.tipoResposta === 'escolha-unica' && step.opcoes && Array.isArray(step.opcoes) && (
-              <RadioGroup value={response} onValueChange={setResponse}>
-                <div className="space-y-3">
-                  {step.opcoes.map((opcao: string, index: number) => (
-                     <div key={index} className="flex items-center space-x-2 p-3 border border-gray-200 dark:border-[#1A1A1A] rounded-lg hover:bg-gray-50 dark:hover:bg-[#0E0E0E]/50 transition-colors">
-                      <RadioGroupItem value={opcao} id={`option-${index}`} />
-                      <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
-                        {opcao}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </RadioGroup>
-            )}
-
-            {step.tipoResposta === 'multipla-escolha' && step.opcoes && Array.isArray(step.opcoes) && (
-              <div className="space-y-3">
-                {step.opcoes.map((opcao: string, index: number) => (
-                  <div key={index} className="flex items-center space-x-2 p-3 border border-gray-200 dark:border-[#1A1A1A] rounded-lg hover:bg-gray-50 dark:hover:bg-[#0E0E0E]/50 transition-colors">
-                    <Checkbox
-                      id={`checkbox-${index}`}
-                      checked={multipleChoiceResponse.includes(opcao)}
-                      onCheckedChange={(checked) => handleMultipleChoiceChange(opcao, !!checked)}
-                    />
-                    <Label htmlFor={`checkbox-${index}`} className="flex-1 cursor-pointer">
-                      {opcao}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {step.tipoResposta === 'texto-livre' && (
-              <div className="space-y-3">
-                <Label htmlFor="text-response" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Sua resposta:
-                </Label>
-                <Textarea
-                  id="text-response"
-                  value={response}
-                  onChange={(e) => setResponse(e.target.value)}
-                  placeholder="Digite sua resposta aqui..."
-                  className="min-h-[120px]"
-                />
-              </div>
-            )}
-          </div>
-        );
 
       case 'formEnd':
         return (
-          <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
-            <Card className="w-full max-w-md bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-0 shadow-xl animate-fade-in">
-              <CardContent className="p-8 text-center">
-                <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle className="h-10 w-10 text-white" />
-                </div>
-                
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                  {step.title || 'Formulário Concluído! ✅'}
-                </h3>
-                
-                {step.description && (
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    {step.description}
-                  </p>
-                )}
-
-                {step.arquivos && Array.isArray(step.arquivos) && step.arquivos.length > 0 && (
-                  <div className="bg-emerald-500/10 dark:bg-emerald-500/20 rounded-lg p-4 mb-6 border border-emerald-500/20">
-                    <h4 className="text-lg font-semibold text-emerald-700 dark:text-emerald-300 mb-3 flex items-center justify-center">
-                      <FileText className="h-5 w-5 mr-2" />
-                      Materiais Enviados
-                    </h4>
-                    <p className="text-sm text-emerald-600 dark:text-emerald-400">
-                      Seus materiais foram enviados por WhatsApp
-                    </p>
-                  </div>
-                )}
-
-                {step.mensagemFinal && (
-                  <div className="bg-emerald-500/10 dark:bg-emerald-500/20 rounded-lg p-4 mb-6 border border-emerald-500/20">
-                    <p className="text-emerald-700 dark:text-emerald-300 font-medium">
-                      {step.mensagemFinal}
-                    </p>
-                  </div>
-                )}
-
-                <div className="bg-emerald-500/10 dark:bg-emerald-500/20 rounded-lg p-4 mb-6">
-                  <p className="text-emerald-700 dark:text-emerald-300 font-medium">
-                    🎉 Parabéns! Você concluiu este formulário com sucesso.
-                    {step.delayAmount && step.delayType && (
-                      <span className="block mt-2 text-sm">
-                        ⏰ Em {step.delayAmount} {step.delayType} você receberá a próxima etapa
-                      </span>
-                    )}
-                  </p>
-                </div>
-
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-3 rounded-xl font-medium"
-                  size="lg"
-                >
-                  {isLoading ? 'Processando...' : 'Finalizar'}
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+          <UnifiedPatientRenderer
+            step={step}
+            onComplete={onComplete}
+            isLoading={isLoading}
+          />
         );
 
       case 'delay':
@@ -334,7 +188,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
   };
 
   // Para nós com interface própria
-  if (step.nodeType === 'calculator' || step.nodeType === 'conditions' || step.nodeType === 'number' || step.nodeType === 'simpleCalculator' || step.nodeType === 'specialConditions' || step.nodeType === 'delay' || step.nodeType === 'formStart' || step.nodeType === 'formEnd') {
+  if (['calculator', 'conditions', 'number', 'question', 'formStart', 'formEnd', 'specialConditions', 'delay'].includes(step.nodeType)) {
     return renderStepContent();
   }
 
