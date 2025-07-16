@@ -84,7 +84,7 @@ export const useImprovedFlowProcessor = () => {
           }
         }
 
-        // Para FormEnd, verificar se é o caminho correto
+        // Para FormEnd, verificar se é o caminho correto baseado nas condições
         if (node.type === 'formEnd') {
           const conditionsEdge = edges.find(edge => edge.target === nodeId);
           if (conditionsEdge) {
@@ -96,13 +96,16 @@ export const useImprovedFlowProcessor = () => {
                 calculatorResults
               );
               
+              console.log(`  🎯 FormEnd ${nodeId}: Condição ${shouldInclude ? 'ATENDIDA' : 'NÃO ATENDIDA'}`);
+              
               if (!shouldInclude) {
-                console.log(`  ❌ FormEnd rejeitado por condições`);
+                console.log(`  ❌ FormEnd ${nodeId} rejeitado por condições`);
                 return;
               }
             }
           }
         }
+
         
         // Criar step
         const step: FlowStep = {
@@ -147,32 +150,35 @@ export const useImprovedFlowProcessor = () => {
       const nextEdges = edges.filter(edge => edge.source === nodeId);
       
       if (node.type === 'conditions') {
-        // Para nós de condições, seguir apenas um caminho baseado na avaliação
+        // Para nós de condições, seguir apenas UM caminho baseado na avaliação
         const conditionMet = evaluateConditions(
           node.data.conditions || [], 
           userResponses, 
           calculatorResults
         );
         
-        const targetEdge = nextEdges.find(edge => {
-          const targetNode = nodes.find(n => n.id === edge.target);
-          
-          if (conditionMet) {
-            // Condição atendida - seguir primeiro caminho disponível
-            return targetNode?.type === 'formEnd' || targetNode?.type !== 'conditions';
-          } else {
-            // Condição não atendida - seguir caminho alternativo
-            return targetNode?.type === 'formEnd' || targetNode?.type !== 'conditions';
-          }
-        });
+        console.log(`  🎯 Conditions ${nodeId}: ${conditionMet ? 'ATENDIDA' : 'NÃO ATENDIDA'}`);
+        console.log(`  📊 Edges disponíveis: ${nextEdges.length}`);
+        
+        // Estratégia específica: primeiro edge = TRUE, segundo edge = FALSE
+        let targetEdge = null;
+        
+        if (conditionMet && nextEdges.length > 0) {
+          // Condição atendida - seguir primeiro edge
+          targetEdge = nextEdges[0];
+          console.log(`  ✅ Seguindo caminho TRUE: ${targetEdge.target}`);
+        } else if (!conditionMet && nextEdges.length > 1) {
+          // Condição não atendida - seguir segundo edge
+          targetEdge = nextEdges[1];
+          console.log(`  ❌ Seguindo caminho FALSE: ${targetEdge.target}`);
+        } else if (nextEdges.length > 0) {
+          // Fallback
+          targetEdge = nextEdges[0];
+          console.log(`  🔄 Fallback: ${targetEdge.target}`);
+        }
         
         if (targetEdge) {
           traverseFlow(targetEdge.target, depth + 1);
-        } else {
-          // Fallback: seguir primeiro edge
-          if (nextEdges.length > 0) {
-            traverseFlow(nextEdges[0].target, depth + 1);
-          }
         }
       } else {
         // Para outros tipos de nó, seguir todos os caminhos

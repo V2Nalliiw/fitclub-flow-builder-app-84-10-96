@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ImprovedFlowDelayTimer } from './ImprovedFlowDelayTimer';
 import { FlowEndDisplay } from './FlowEndDisplay';
 import { FlowEndNode } from './FlowEndNode';
+import { FormEndRenderer } from './FormEndRenderer';
 
 interface UnifiedPatientRendererProps {
   step: any;
@@ -444,8 +445,19 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
     );
   }
 
-  // FormEnd com status do WhatsApp
+  // FormEnd com status do WhatsApp - usa componente específico
   if (step.nodeType === 'formEnd') {
+    return (
+      <FormEndRenderer
+        step={step}
+        onComplete={onComplete}
+        isLoading={isLoading}
+      />
+    );
+  }
+
+  // FlowEnd - final definitivo do tratamento (não usado mais aqui)
+  if (step.nodeType === 'flowEnd' || step.nodeType === 'end') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
         <Card className="w-full max-w-md bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-0 shadow-xl animate-fade-in">
@@ -559,8 +571,8 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
     );
   }
 
-  // Finalização do Fluxo - última tela para o paciente (DEFINITIVA)
-  if (step.nodeType === 'flowEnd' || step.nodeType === 'end') {
+  // Finalização do Fluxo - última tela para o paciente (DEFINITIVA) 
+  if (step.nodeType === 'end') {
     return (
       <FlowEndNode 
         step={step}
