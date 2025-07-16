@@ -33,72 +33,19 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
   const [whatsappStatus, setWhatsappStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [autoProgressTimer, setAutoProgressTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto-trigger WhatsApp for FormStart (silencioso) and FormEnd
+  // Auto-trigger WhatsApp apenas para FormEnd (FormStart será tratado pelo DelayTimer)
   useEffect(() => {
-    if (step.nodeType === 'formStart') {
-      handleFormStartWhatsAppSilent();
-    } else if (step.nodeType === 'formEnd') {
+    if (step.nodeType === 'formEnd') {
       handleFormEndWhatsApp();
-    }
-  }, [step.nodeType]);
-
-  const handleFormStartWhatsAppSilent = async () => {
-    console.log('🚀 FormStart: Enviando notificação WhatsApp silenciosamente');
-    
-    try {
-      // Buscar executionId da URL ou contexto
-      const urlParams = new URLSearchParams(window.location.search);
-      const executionId = window.location.pathname.split('/').pop() || urlParams.get('execution');
-      
-      if (!executionId) {
-        console.error('❌ FormStart: ExecutionId não encontrado');
-        // Mesmo com erro, prosseguir para primeira pergunta
-        setTimeout(() => handleComplete(), 500);
-        return;
-      }
-
-      // Buscar dados da execução
-      const { data: execution } = await supabase
-        .from('flow_executions')
-        .select('patient_id, flow_name')
-        .eq('id', executionId)
-        .single();
-
-      if (!execution) {
-        console.error('❌ FormStart: Execução não encontrada');
-        // Mesmo com erro, prosseguir para primeira pergunta
-        setTimeout(() => handleComplete(), 500);
-        return;
-      }
-
-      // Enviar notificação via edge function (silencioso, sem feedback visual)
-      supabase.functions.invoke('send-form-notification', {
-        body: {
-          patientId: execution.patient_id,
-          formName: step.title || execution.flow_name || 'Formulário',
-          executionId: executionId
-        }
-      }).then((response) => {
-        if (response.error) {
-          console.error('❌ FormStart: Erro ao enviar WhatsApp:', response.error);
-        } else {
-          console.log('✅ FormStart: WhatsApp enviado com sucesso:', response.data);
-        }
-      }).catch((error) => {
-        console.error('❌ FormStart: Erro crítico:', error);
-      });
-
-      // Progredir IMEDIATAMENTE para primeira pergunta (não esperar WhatsApp)
+    } else if (step.nodeType === 'formStart') {
+      // FormStart agora apenas progride automaticamente sem enviar WhatsApp
+      console.log('🚀 FormStart: Progredindo diretamente para primeira pergunta');
       setTimeout(() => {
         handleComplete();
       }, 100);
-      
-    } catch (error) {
-      console.error('❌ FormStart: Erro crítico:', error);
-      // Mesmo com erro, prosseguir para primeira pergunta
-      setTimeout(() => handleComplete(), 500);
     }
-  };
+  }, [step.nodeType]);
+
 
   const handleFormEndWhatsApp = async () => {
     console.log('🏁 FormEnd: Enviando materiais WhatsApp automaticamente');
@@ -452,25 +399,25 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
     );
   }
 
-  // FormStart com redirecionamento automático (sem interface confusa)
+  // FormStart com progressão automática simplificada
   if (step.nodeType === 'formStart') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
         <Card className="w-full max-w-md bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-0 shadow-xl animate-fade-in">
           <CardContent className="p-8 text-center">
             <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Loader2 className="h-10 w-10 text-white animate-spin" />
+              <CheckCircle2 className="h-10 w-10 text-white" />
             </div>
             <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              Carregando Formulário...
+              Iniciando Formulário
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Redirecionando para primeira pergunta
+              Aguarde um momento...
             </p>
             
             <div className="bg-green-500/10 dark:bg-green-500/20 rounded-lg p-4">
               <p className="text-green-700 dark:text-green-300 font-medium">
-                📱 Enviando link por WhatsApp em background...
+                ✅ Carregando primeira pergunta
               </p>
             </div>
           </CardContent>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Clock, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [isExpired, setIsExpired] = useState(false);
   const [isProgressing, setIsProgressing] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const hasProgressedRef = useRef(false);
 
   useEffect(() => {
     const calculateTimeRemaining = () => {
@@ -44,7 +46,18 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
         console.log('✅ DelayTimer: Tempo expirado, liberando próximo step');
         setTimeRemaining(0);
         setIsExpired(true);
-        handleTimeExpired();
+        
+        // Parar o interval aqui para evitar múltiplas chamadas
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        
+        // Executar apenas uma vez
+        if (!hasProgressedRef.current) {
+          hasProgressedRef.current = true;
+          handleTimeExpired();
+        }
       } else {
         setTimeRemaining(Math.ceil(diff / 1000));
         setIsExpired(false);
@@ -54,14 +67,21 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
     // Calcular imediatamente
     calculateTimeRemaining();
 
-    // Verificar a cada segundo
-    const interval = setInterval(calculateTimeRemaining, 1000);
+    // Verificar a cada segundo apenas se não expirou
+    if (!isExpired && !hasProgressedRef.current) {
+      intervalRef.current = setInterval(calculateTimeRemaining, 1000);
+    }
 
-    return () => clearInterval(interval);
-  }, [step.availableAt]);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [step.availableAt, isExpired]);
 
   const handleTimeExpired = async () => {
-    if (isProgressing) return;
+    if (isProgressing || hasProgressedRef.current) return;
     
     console.log('🚀 DelayTimer: Tempo expirado, progredindo automaticamente');
     setIsProgressing(true);
@@ -94,12 +114,12 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
       const currentSteps = currentStepData?.steps || [];
       const currentIndex = currentStepData?.currentStepIndex || 0;
 
-      // Encontrar próximo step válido
-      let nextStepIndex = currentIndex;
+      // Encontrar próximo step válido (pular o delay atual)
+      let nextStepIndex = currentIndex + 1;
       let nextStep = null;
 
       // Buscar próximo step disponível
-      for (let i = currentIndex; i < currentSteps.length; i++) {
+      for (let i = nextStepIndex; i < currentSteps.length; i++) {
         const candidateStep = currentSteps[i];
         if (!candidateStep.completed) {
           nextStep = candidateStep;
@@ -131,7 +151,10 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
           description: "Você completou todas as etapas com sucesso!",
         });
 
-        onComplete();
+        // Redirecionar para página inicial após 2 segundos
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
         return;
       }
 
@@ -164,7 +187,7 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
         return;
       }
 
-      // Enviar WhatsApp se próximo step for FormStart
+      // Enviar WhatsApp APENAS se próximo step for FormStart
       if (nextStep.nodeType === 'formStart') {
         console.log('📱 DelayTimer: Enviando notificação WhatsApp para FormStart');
         
@@ -187,22 +210,24 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
             if (whatsappError) {
               console.error('❌ DelayTimer: Erro ao enviar WhatsApp:', whatsappError);
             } else {
-              console.log('✅ DelayTimer: WhatsApp enviado com sucesso');
+              console.log('✅ DelayTimer: WhatsApp enviado com sucesso para FormStart');
             }
           }
         } catch (error) {
           console.error('❌ DelayTimer: Erro crítico ao enviar WhatsApp:', error);
         }
+      } else {
+        console.log('🔕 DelayTimer: Próximo step não é FormStart, não enviando WhatsApp');
       }
 
       toast({
         title: "Tempo Concluído! ⏰",
-        description: "Próxima etapa liberada automaticamente.",
+        description: "Redirecionando para página inicial...",
       });
 
-      // Recarregar página para mostrar próximo step
+      // Redirecionar para página inicial onde o próximo step estará disponível
       setTimeout(() => {
-        window.location.reload();
+        window.location.href = '/';
       }, 1500);
 
     } catch (error) {
@@ -286,7 +311,7 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
 
               <div className="bg-amber-500/10 dark:bg-amber-500/20 rounded-lg p-4">
                 <p className="text-amber-700 dark:text-amber-300 font-medium">
-                  ⏰ A próxima etapa será liberada automaticamente
+                  ⏰ A próxima etapa será liberada automaticamente na página inicial
                 </p>
               </div>
             </>

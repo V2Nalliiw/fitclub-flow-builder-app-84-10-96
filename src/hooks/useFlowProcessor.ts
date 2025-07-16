@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { FlowNode, FlowEdge } from '@/types/flow';
 import { useConditionalFlowProcessor } from './useConditionalFlowProcessor';
 import { useImprovedFlowProcessor } from './useImprovedFlowProcessor';
+import { useDelayCalculator } from './useDelayCalculator';
 
 interface FlowStep {
   nodeId: string;
@@ -44,6 +45,7 @@ export const useFlowProcessor = () => {
   const { toast } = useToast();
   const { buildConditionalFlowSteps } = useConditionalFlowProcessor();
   const { buildFlowSteps, evaluateConditions } = useImprovedFlowProcessor();
+  const { calculateNextStepAvailableAt } = useDelayCalculator();
   const [processing, setProcessing] = useState(false);
 
   const processFlowAssignment = useCallback(async (
@@ -225,37 +227,9 @@ export const useFlowProcessor = () => {
         nextStep = updatedSteps[nextStepIndex];
       }
 
-      // ⚠️ ENVIAR WHATSAPP PARA FORMSTART NODES
+      // ✅ NÃO ENVIAR WHATSAPP AQUI - será enviado pelo DelayTimer quando apropriado
       if (nextStep && nextStep.nodeType === 'formStart') {
-        console.log('📱 FlowProcessor: Próximo step é FormStart, enviando notificação WhatsApp');
-        
-        try {
-          // Buscar dados da execução
-          const { data: executionData } = await supabase
-            .from('flow_executions')
-            .select('patient_id, flow_name')
-            .eq('id', executionId)
-            .single();
-
-          if (executionData) {
-            // Enviar notificação de novo formulário
-            const { data: response, error } = await supabase.functions.invoke('send-form-notification', {
-              body: {
-                patientId: executionData.patient_id,
-                formName: nextStep.title || executionData.flow_name || 'Formulário',
-                executionId: executionId
-              }
-            });
-
-            if (error) {
-              console.error('❌ FlowProcessor: Erro ao enviar notificação FormStart:', error);
-            } else {
-              console.log('✅ FlowProcessor: Notificação FormStart enviada:', response);
-            }
-          }
-        } catch (error) {
-          console.error('❌ FlowProcessor: Erro crítico ao enviar notificação FormStart:', error);
-        }
+        console.log('📝 FlowProcessor: Próximo step é FormStart - WhatsApp será enviado pelo DelayTimer');
       }
 
       // Recalcular steps baseado nas respostas atuais (para fluxos condicionais)
@@ -311,25 +285,15 @@ export const useFlowProcessor = () => {
           updatedSteps[nextStepIndex] = nextStep;
         }
         
-        // Verificar se o próximo step tem delay
+        // Verificar se o próximo step tem delay - usar hook dedicado
         if (nextStep.delayAmount && nextStep.delayType) {
-          const delayDate = new Date();
-          console.log('⏰ Calculando delay:', { delayAmount: nextStep.delayAmount, delayType: nextStep.delayType });
+          console.log('⏰ Calculando delay com hook:', { delayAmount: nextStep.delayAmount, delayType: nextStep.delayType });
           
-          switch (nextStep.delayType) {
-            case 'minutos':
-              delayDate.setMinutes(delayDate.getMinutes() + nextStep.delayAmount);
-              break;
-            case 'horas':
-              delayDate.setHours(delayDate.getHours() + nextStep.delayAmount);
-              break;
-            case 'dias':
-            default:
-              delayDate.setDate(delayDate.getDate() + nextStep.delayAmount);
-              break;
-          }
+          nextAvailableAt = calculateNextStepAvailableAt(
+            nextStep.delayAmount, 
+            nextStep.delayType as 'minutos' | 'horas' | 'dias'
+          );
           
-          nextAvailableAt = delayDate.toISOString();
           console.log('📅 Próximo step disponível em:', nextAvailableAt);
           
           updatedSteps[nextStepIndex] = { ...nextStep, availableAt: nextAvailableAt };
