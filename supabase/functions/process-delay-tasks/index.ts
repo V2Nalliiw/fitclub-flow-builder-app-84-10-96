@@ -91,19 +91,17 @@ serve(async (req) => {
               const nextStepIndex = currentStepIndex + 1;
               currentStep.currentStepIndex = nextStepIndex;
               
-              // 🔧 CORREÇÃO: Atualizar status para em-andamento e zerar progresso para novo FormStart
+              // Atualizar a execução do flow
               await supabase
                 .from('flow_executions')
                 .update({
                   current_node: task.next_node_id,
                   current_step: currentStep,
-                  status: 'in-progress', // Garantir que está em progresso
-                  progress: 0, // Zerar progresso para novo formulário
                   updated_at: new Date().toISOString()
                 })
                 .eq('id', task.execution_id);
                 
-              console.log(`✅ Execução avançada para node ${task.next_node_id}, step index ${nextStepIndex}, status: in-progress, progress: 0`);
+              console.log(`✅ Execução avançada para node ${task.next_node_id}, step index ${nextStepIndex}`);
             }
           } else {
             console.log(`🔕 Próximo nó não é FormStart (${task.next_node_type}), apenas marcando como processado`);
