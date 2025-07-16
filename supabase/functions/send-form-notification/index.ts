@@ -65,8 +65,8 @@ serve(async (req) => {
     }
 
     const phoneNumber = patient.phone.replace(/\D/g, '');
-    // 🔧 CORREÇÃO: Link direto para o formulário com executionId (vai direto para primeira pergunta)
-    const formUrl = `https://oilnybhaboefqyhjrmvl.supabase.co/flow-execution/${executionId}`;
+    // 🔧 CORREÇÃO: Link direto para o formulário com executionId (vai direto para primeira pergunta)  
+    const formUrl = `${req.headers.get('origin') || 'https://lovable.dev'}/flow-execution/${executionId}`;
 
     // Tentar template oficial primeiro
     console.log('🔄 Tentando template oficial novo_formulario...');
