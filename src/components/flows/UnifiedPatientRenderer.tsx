@@ -33,16 +33,18 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
   const [whatsappStatus, setWhatsappStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [autoProgressTimer, setAutoProgressTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto-trigger WhatsApp apenas para FormEnd (FormStart será tratado pelo DelayTimer)
+  // Auto-trigger apenas para FormEnd - FormStart não envia mais WhatsApp
   useEffect(() => {
     if (step.nodeType === 'formEnd') {
       handleFormEndWhatsApp();
     } else if (step.nodeType === 'formStart') {
-      // FormStart agora apenas progride automaticamente sem enviar WhatsApp
-      console.log('🚀 FormStart: Progredindo diretamente para primeira pergunta');
-      setTimeout(() => {
+      // FormStart agora apenas progride automaticamente após mostrar boas-vindas
+      console.log('🎉 FormStart: Mostrando boas-vindas e progredindo automaticamente');
+      const timer = setTimeout(() => {
         handleComplete();
-      }, 100);
+      }, 3000); // 3 segundos para ler a mensagem de boas-vindas
+      
+      return () => clearTimeout(timer);
     }
   }, [step.nodeType]);
 
@@ -399,26 +401,45 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
     );
   }
 
-  // FormStart com progressão automática simplificada
+  // FormStart com mensagem de boas-vindas acolhedora
   if (step.nodeType === 'formStart') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
-        <Card className="w-full max-w-md bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-0 shadow-xl animate-fade-in">
+        <Card className="w-full max-w-lg bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-0 shadow-xl animate-fade-in">
           <CardContent className="p-8 text-center">
             <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="h-10 w-10 text-white" />
+              <Heart className="h-10 w-10 text-white" />
             </div>
+            
             <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              Iniciando Formulário
+              Bem-vindo ao seu novo formulário! 🎉
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Aguarde um momento...
+            
+            <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
+              {step.title || 'Questionário Médico'}
             </p>
             
-            <div className="bg-green-500/10 dark:bg-green-500/20 rounded-lg p-4">
-              <p className="text-green-700 dark:text-green-300 font-medium">
-                ✅ Carregando primeira pergunta
+            {step.description && (
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                {step.description}
               </p>
+            )}
+
+            <div className="bg-green-500/10 dark:bg-green-500/20 rounded-2xl p-6 mb-6">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <FileText className="h-5 w-5 text-green-600" />
+                <span className="font-medium text-green-700 dark:text-green-300">
+                  Formulário Disponível
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Iniciando automaticamente em alguns segundos...
+              </p>
+            </div>
+            
+            <div className="flex items-center justify-center gap-2 text-emerald-600">
+              <CheckCircle2 className="h-4 w-4" />
+              <span className="text-sm font-medium">Pronto para começar</span>
             </div>
           </CardContent>
         </Card>
