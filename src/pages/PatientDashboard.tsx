@@ -22,21 +22,30 @@ const PatientDashboard = () => {
   const hasActiveForm = mostRecentExecution && (mostRecentExecution.status === 'em-andamento' || mostRecentExecution.status === 'pausado');
   const hasNoForms = !executions || executions.length === 0;
 
-  // Verificar se há um novo formulário (progresso = 0) - se sim, redirecionar automaticamente
+  // Verificar se há um novo formulário disponível - redirecionar automaticamente
   React.useEffect(() => {
     console.log('🔍 PatientDashboard: Verificando redirecionamento automático');
     console.log('🔍 flowsLoading:', flowsLoading);
     console.log('🔍 mostRecentExecution:', mostRecentExecution);
     
     if (!flowsLoading && mostRecentExecution) {
+      // Critérios para novo formulário:
+      // 1. Status em-andamento 
+      // 2. Progresso = 0 (não iniciado ainda)
+      // 3. Tem current_step definido
+      // 4. Current step é formStart (novo formulário disponível)
+      const currentStep = mostRecentExecution.current_step as any;
+      const isFormStart = currentStep?.nodeType === 'formStart' || currentStep?.type === 'formStart';
       const isNewForm = mostRecentExecution.status === 'em-andamento' && 
         mostRecentExecution.progresso === 0 &&
-        mostRecentExecution.current_step;
+        currentStep &&
+        isFormStart;
       
       console.log('🔍 Critérios para novo formulário:');
       console.log('  - Status:', mostRecentExecution.status);
       console.log('  - Progresso:', mostRecentExecution.progresso);
-      console.log('  - Current Step:', mostRecentExecution.current_step);
+      console.log('  - Current Step:', currentStep);
+      console.log('  - É FormStart?', isFormStart);
       console.log('  - É novo formulário?', isNewForm);
       
       if (isNewForm) {
