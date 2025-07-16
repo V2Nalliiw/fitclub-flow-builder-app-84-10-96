@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log('🔗 generate-secure-download-link function called');
+  console.log('🔗 generate-secure-download-link function called - NOVA ESTRATÉGIA STORAGE');
   
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -32,29 +32,43 @@ serve(async (req) => {
       );
     }
 
-    // Create secure download link with 24h expiry
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours expiry for WhatsApp links
-
-    const { data: contentAccess, error: contentError } = await supabase
-      .from('content_access')
-      .insert({
-        execution_id: executionId,
-        patient_id: patientId,
-        files: files,
-        expires_at: expiresAt.toISOString(),
-        metadata: {
-          created_for: 'whatsapp_download',
-          user_agent: req.headers.get('user-agent') || 'unknown'
+    console.log('🔄 Gerando Signed URLs para WhatsApp...');
+    
+    // Gerar signed URLs para cada arquivo usando Supabase Storage
+    const signedUrls = [];
+    
+    for (const file of files) {
+      console.log('📁 Processando arquivo:', file.filename);
+      
+      try {
+        // Gerar signed URL com 24 horas de expiração
+        const { data: signedUrlData, error: signedError } = await supabase.storage
+          .from('clinic-materials')
+          .createSignedUrl(file.path, 86400); // 24 horas em segundos
+        
+        if (signedError) {
+          console.error('❌ Erro ao gerar signed URL para', file.filename, ':', signedError);
+          continue;
         }
-      })
-      .select()
-      .single();
-
-    if (contentError || !contentAccess) {
-      console.error('❌ Error creating content access:', contentError);
+        
+        signedUrls.push({
+          filename: file.filename,
+          signedUrl: signedUrlData.signedUrl,
+          originalPath: file.path
+        });
+        
+        console.log('✅ Signed URL gerada para:', file.filename);
+        
+      } catch (fileError) {
+        console.error('❌ Erro ao processar arquivo', file.filename, ':', fileError);
+        continue;
+      }
+    }
+    
+    if (signedUrls.length === 0) {
+      console.error('❌ Nenhuma URL válida foi gerada');
       return new Response(
-        JSON.stringify({ error: 'Failed to create secure link' }),
+        JSON.stringify({ error: 'Falha ao gerar URLs de download' }),
         { 
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -62,18 +76,43 @@ serve(async (req) => {
       );
     }
 
-    console.log('✅ Secure download link created:', contentAccess.id);
+    // Salvar as URLs geradas para rastreamento
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
 
-    // Generate the secure download URL
-    const secureDownloadUrl = `${supabaseUrl}/functions/v1/serve-content?token=${contentAccess.access_token}`;
+    const { data: contentAccess, error: contentError } = await supabase
+      .from('content_access')
+      .insert({
+        execution_id: executionId,
+        patient_id: patientId,
+        files: signedUrls,
+        expires_at: expiresAt.toISOString(),
+        metadata: {
+          download_type: 'whatsapp_signed_urls',
+          urls_generated: signedUrls.length,
+          user_agent: req.headers.get('user-agent') || 'unknown'
+        }
+      })
+      .select()
+      .single();
+
+    if (contentError) {
+      console.error('❌ Erro ao salvar content access:', contentError);
+    }
+
+    console.log(`✅ ${signedUrls.length} Signed URLs geradas com sucesso`);
+
+    // Retornar a primeira URL (para um arquivo) ou uma lista (para múltiplos)
+    const primaryUrl = signedUrls[0].signedUrl;
     
     return new Response(
       JSON.stringify({ 
         success: true,
-        secureUrl: secureDownloadUrl,
-        accessId: contentAccess.id,
+        primaryDownloadUrl: primaryUrl,
+        allUrls: signedUrls,
+        urlsCount: signedUrls.length,
         expiresAt: expiresAt.toISOString(),
-        filesCount: files.length
+        accessId: contentAccess?.id || 'no-tracking'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

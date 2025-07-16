@@ -91,8 +91,8 @@ serve(async (req) => {
       );
     }
 
-    console.log('✅ Secure download link generated:', secureLink.accessId);
-    const downloadLink = secureLink.secureUrl;
+    console.log('✅ Signed URLs geradas:', secureLink.urlsCount);
+    const downloadLink = secureLink.primaryDownloadUrl;
     
     // Try to send using official template first, fallback to simple message
     let whatsappResponse;
@@ -144,7 +144,15 @@ serve(async (req) => {
       // Fallback to simple message if template failed
       if (!templateSuccess) {
         const expiryDate = new Date(secureLink.expiresAt);
-        const simpleMessage = `🎉 *Formulário Concluído!*\n\nOlá ${profile.name}! Seus materiais estão prontos para download.\n\n📁 Acesse aqui: ${downloadLink}\n\n📅 Válido até: ${expiryDate.toLocaleDateString('pt-BR')}\n\nQualquer dúvida, entre em contato conosco! 😊`;
+        
+        let message;
+        if (secureLink.urlsCount > 1) {
+          message = `🎉 *Formulário Concluído!*\n\nOlá ${profile.name}! Seus ${secureLink.urlsCount} materiais estão prontos para download.\n\n📁 Acesse o primeiro arquivo aqui: ${downloadLink}\n\n📅 Válido até: ${expiryDate.toLocaleDateString('pt-BR')}\n\nOs demais arquivos estarão no mesmo local! 📂\n\nQualquer dúvida, entre em contato conosco! 😊`;
+        } else {
+          message = `🎉 *Formulário Concluído!*\n\nOlá ${profile.name}! Seu material está pronto para download.\n\n📁 Acesse aqui: ${downloadLink}\n\n📅 Válido até: ${expiryDate.toLocaleDateString('pt-BR')}\n\nQualquer dúvida, entre em contato conosco! 😊`;
+        }
+        
+        const simpleMessage = message;
         
         whatsappResponse = await fetch(`https://graph.facebook.com/v17.0/${whatsappSettings.phone_number}/messages`, {
           method: 'POST',
@@ -162,7 +170,15 @@ serve(async (req) => {
       }
     } else if (whatsappSettings.provider === 'evolution') {
       const expiryDate = new Date(secureLink.expiresAt);
-      const simpleMessage = `🎉 *Formulário Concluído!*\n\nOlá ${profile.name}! Seus materiais estão prontos para download.\n\n📁 Acesse aqui: ${downloadLink}\n\n📅 Válido até: ${expiryDate.toLocaleDateString('pt-BR')}\n\nQualquer dúvida, entre em contato conosco! 😊`;
+      
+      let message;
+      if (secureLink.urlsCount > 1) {
+        message = `🎉 *Formulário Concluído!*\n\nOlá ${profile.name}! Seus ${secureLink.urlsCount} materiais estão prontos para download.\n\n📁 Acesse o primeiro arquivo aqui: ${downloadLink}\n\n📅 Válido até: ${expiryDate.toLocaleDateString('pt-BR')}\n\nOs demais arquivos estarão no mesmo local! 📂\n\nQualquer dúvida, entre em contato conosco! 😊`;
+      } else {
+        message = `🎉 *Formulário Concluído!*\n\nOlá ${profile.name}! Seu material está pronto para download.\n\n📁 Acesse aqui: ${downloadLink}\n\n📅 Válido até: ${expiryDate.toLocaleDateString('pt-BR')}\n\nQualquer dúvida, entre em contato conosco! 😊`;
+      }
+      
+      const simpleMessage = message;
       
       const evolutionUrl = `${whatsappSettings.base_url}/message/sendText/${whatsappSettings.session_name}`;
       
