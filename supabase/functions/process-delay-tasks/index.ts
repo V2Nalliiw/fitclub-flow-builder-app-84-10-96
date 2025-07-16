@@ -38,10 +38,10 @@ serve(async (req) => {
     if (pendingTasks && pendingTasks.length > 0) {
       for (const task of pendingTasks) {
         try {
-          // Verificar se a execução ainda está ativa
+          // Verificar se a execução ainda está ativa e buscar dados completos
           const { data: execution } = await supabase
             .from('flow_executions')
-            .select('status')
+            .select('*')
             .eq('id', task.execution_id)
             .single();
           
@@ -74,6 +74,35 @@ serve(async (req) => {
             }
 
             console.log(`✅ Notificação enviada com sucesso para task ${task.id}`);
+
+            // Após enviar notificação com sucesso, avançar o flow para o próximo step
+            console.log(`🔄 Avançando execução para o próximo step (FormStart)`);
+            
+            if (execution?.current_step) {
+              const currentStep = execution.current_step;
+              const currentStepIndex = currentStep.currentStepIndex || 0;
+              
+              // Marcar o step de delay atual como completed
+              if (currentStep.steps && currentStep.steps[currentStepIndex]) {
+                currentStep.steps[currentStepIndex].completed = true;
+              }
+              
+              // Avançar para o próximo step (FormStart)
+              const nextStepIndex = currentStepIndex + 1;
+              currentStep.currentStepIndex = nextStepIndex;
+              
+              // Atualizar a execução do flow
+              await supabase
+                .from('flow_executions')
+                .update({
+                  current_node: task.next_node_id,
+                  current_step: currentStep,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', task.execution_id);
+                
+              console.log(`✅ Execução avançada para node ${task.next_node_id}, step index ${nextStepIndex}`);
+            }
           } else {
             console.log(`🔕 Próximo nó não é FormStart (${task.next_node_type}), apenas marcando como processado`);
           }
