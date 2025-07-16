@@ -194,6 +194,53 @@ export type Database = {
         }
         Relationships: []
       }
+      delay_tasks: {
+        Row: {
+          created_at: string
+          execution_id: string
+          form_name: string
+          id: string
+          next_node_id: string
+          next_node_type: string
+          patient_id: string
+          processed: boolean
+          processed_at: string | null
+          trigger_at: string
+        }
+        Insert: {
+          created_at?: string
+          execution_id: string
+          form_name: string
+          id?: string
+          next_node_id: string
+          next_node_type: string
+          patient_id: string
+          processed?: boolean
+          processed_at?: string | null
+          trigger_at: string
+        }
+        Update: {
+          created_at?: string
+          execution_id?: string
+          form_name?: string
+          id?: string
+          next_node_id?: string
+          next_node_type?: string
+          patient_id?: string
+          processed?: boolean
+          processed_at?: string | null
+          trigger_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delay_tasks_execution_id_fkey"
+            columns: ["execution_id"]
+            isOneToOne: false
+            referencedRelation: "flow_executions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flow_assignments: {
         Row: {
           assigned_at: string | null

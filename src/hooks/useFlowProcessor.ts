@@ -139,6 +139,15 @@ export const useFlowProcessor = () => {
     try {
       console.log('useFlowProcessor: Completando step:', { executionId, stepId, response });
       
+      // Buscar patient_id da execução para delay tasks
+      const { data: execInfo } = await supabase
+        .from('flow_executions')
+        .select('patient_id')
+        .eq('id', executionId)
+        .single();
+      
+      const patientId = execInfo?.patient_id;
+      
       const { data: execution, error: execError } = await supabase
         .from('flow_executions')
         .select('*')
@@ -227,9 +236,9 @@ export const useFlowProcessor = () => {
         nextStep = updatedSteps[nextStepIndex];
       }
 
-      // ✅ NÃO ENVIAR WHATSAPP AQUI - será enviado pelo DelayTimer quando apropriado
+      // Log para FormStart (delay task será criada mais tarde se necessário)
       if (nextStep && nextStep.nodeType === 'formStart') {
-        console.log('📝 FlowProcessor: Próximo step é FormStart - WhatsApp será enviado pelo DelayTimer');
+        console.log('📝 FlowProcessor: Próximo step é FormStart');
       }
 
       // Recalcular steps baseado nas respostas atuais (para fluxos condicionais)
@@ -298,6 +307,23 @@ export const useFlowProcessor = () => {
           
           updatedSteps[nextStepIndex] = { ...nextStep, availableAt: nextAvailableAt };
           newStatus = 'pending';
+          
+          // Criar delay task se for FormStart
+          if (nextStep.nodeType === 'formStart' && patientId) {
+            try {
+              await supabase.from('delay_tasks').insert({
+                execution_id: executionId,
+                patient_id: patientId,
+                next_node_id: nextStep.nodeId,
+                next_node_type: 'formStart',
+                form_name: nextStep.title || 'Formulário',
+                trigger_at: nextAvailableAt
+              });
+              console.log('✅ DelayTask criada para FormStart com delay');
+            } catch (delayTaskError) {
+              console.error('❌ Erro ao criar delay task:', delayTaskError);
+            }
+          }
         } else {
           newStatus = 'in-progress';
         }

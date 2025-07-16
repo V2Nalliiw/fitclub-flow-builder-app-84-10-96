@@ -33,13 +33,13 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
   const [whatsappStatus, setWhatsappStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [autoProgressTimer, setAutoProgressTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto-trigger apenas para FormEnd - FormStart não envia mais WhatsApp
+  // Auto-trigger para FormEnd e FormStart
   useEffect(() => {
     if (step.nodeType === 'formEnd') {
       handleFormEndWhatsApp();
     } else if (step.nodeType === 'formStart') {
-      // FormStart agora apenas progride automaticamente após mostrar boas-vindas
-      console.log('🎉 FormStart: Mostrando boas-vindas e progredindo automaticamente');
+      // FormStart reconhecido - progride automaticamente após mostrar boas-vindas
+      console.log('🎉 FormStart: Reconhecido! Mostrando boas-vindas e progredindo automaticamente');
       const timer = setTimeout(() => {
         handleComplete();
       }, 3000); // 3 segundos para ler a mensagem de boas-vindas
