@@ -8,6 +8,7 @@ import { MetricCard } from '@/components/dashboard/MetricCard';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import { FlowAssignmentsList } from '@/components/dashboard/FlowAssignmentsList';
+import { DelayTaskMonitor } from '@/components/system/DelayTaskMonitor';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
@@ -83,6 +84,11 @@ export const Dashboard = () => {
               change={{ value: -3, label: "este mês" }}
             />
           </div>
+
+          {/* Monitor de Delays - Para super_admin */}
+          {user.role === 'super_admin' && (
+            <DelayTaskMonitor />
+          )}
 
           {/* Conteúdo Principal */}
           <div className="grid gap-6 lg:grid-cols-3">

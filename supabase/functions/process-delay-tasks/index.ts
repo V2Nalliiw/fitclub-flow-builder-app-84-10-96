@@ -19,15 +19,29 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Receber parâmetros do body (para execução forçada)
+    const body = await req.json().catch(() => ({}));
+    const { forcedExecution = false } = body;
+
     // Buscar tasks que precisam ser processadas (delay expirado)
     const currentTime = new Date().toISOString();
     console.log('⏰ Hora atual para comparação:', currentTime);
     
-    const { data: pendingTasks, error: tasksError } = await supabase
+    if (forcedExecution) {
+      console.log('🔥 EXECUÇÃO FORÇADA: Processando todas as tasks pendentes independente do horário');
+    }
+    
+    // Buscar tasks com base no modo de execução
+    let query = supabase
       .from('delay_tasks')
       .select('*')
-      .eq('processed', false)
-      .lte('trigger_at', currentTime);
+      .eq('processed', false);
+
+    if (!forcedExecution) {
+      query = query.lte('trigger_at', currentTime);
+    }
+
+    const { data: pendingTasks, error: tasksError } = await query;
 
     if (tasksError) {
       throw new Error(`Erro ao buscar tasks: ${tasksError.message}`);
