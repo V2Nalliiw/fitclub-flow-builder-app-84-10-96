@@ -65,8 +65,8 @@ serve(async (req) => {
     }
 
     const phoneNumber = patient.phone.replace(/\D/g, '');
-    // 🔧 CORREÇÃO: Link direto para o formulário com executionId (vai direto para primeira pergunta)  
-    const formUrl = `${req.headers.get('origin') || 'https://lovable.dev'}/flow-execution/${executionId}`;
+    // 🔧 CORREÇÃO: Link para página inicial do paciente (detecta automaticamente novos formulários)  
+    const formUrl = `${req.headers.get('origin') || 'https://lovable.dev'}/`;
 
     // Tentar template oficial primeiro
     console.log('🔄 Tentando template oficial novo_formulario...');
