@@ -84,12 +84,16 @@ serve(async (req) => {
         
         console.log('🔍 URL original do arquivo:', filePath);
         
-        // Extrair apenas o nome do arquivo da URL ou usar filename
-        if (filePath.includes('/')) {
-          // Pegar a última parte da URL (filename)
-          filePath = filePath.split('/').pop() || filename;
+        // Usar o caminho completo do storage corretamente
+        if (filePath.includes('/storage/v1/object/public/clinic-materials/')) {
+          // Extrair path após clinic-materials/
+          const parts = filePath.split('/storage/v1/object/public/clinic-materials/');
+          filePath = parts[1] || filename;
+        } else if (filePath.includes('clinic-materials/')) {
+          // Extrair path após clinic-materials/
+          filePath = filePath.split('clinic-materials/')[1] || filename;
         } else {
-          // Usar filename se não houver barra
+          // Usar filename original
           filePath = file.original_filename || file.filename || filename;
         }
         
