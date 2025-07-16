@@ -28,7 +28,7 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
   const [textResponse, setTextResponse] = useState('');
   const [multipleChoiceResponse, setMultipleChoiceResponse] = useState<string[]>([]);
   const [whatsappStatus, setWhatsappStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
-  const [autoProgressTimer, setAutoProgressTimer] = useState<number | null>(null);
+  const [autoProgressTimer, setAutoProgressTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   // Auto-trigger WhatsApp for FormStart and FormEnd
   useEffect(() => {
