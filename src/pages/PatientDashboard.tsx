@@ -11,45 +11,48 @@ const PatientDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { hasAccess } = useRoleBasedAccess(['patient']);
-  const { executions, loading: flowsLoading } = usePatientFlows();
+  const { executions, loading: flowsLoading, refetch } = usePatientFlows();
 
   if (!hasAccess) {
     return null;
   }
 
-  // Encontrar formulário disponível
-  const mostRecentExecution = executions?.find(e => e.status === 'em-andamento' || e.status === 'pausado') || executions?.[0];
-  const hasActiveForm = mostRecentExecution && (mostRecentExecution.status === 'em-andamento' || mostRecentExecution.status === 'pausado');
+  // Polling para verificar execuções disponíveis a cada 30 segundos
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('🔄 PatientDashboard: Verificando execuções disponíveis (polling)');
+      refetch();
+    }, 30000); // 30 segundos
+
+    return () => clearInterval(interval);
+  }, [refetch]);
+
+  // Encontrar qualquer execução em andamento
+  const availableExecution = executions?.find(e => {
+    const isInProgress = e.status === 'em-andamento';
+    const hasCurrentStep = e.current_step && typeof e.current_step === 'object';
+    const isNotCompleted = e.status !== 'concluido';
+    
+    return isInProgress && hasCurrentStep && isNotCompleted;
+  });
+
+  const hasActiveForm = availableExecution !== undefined;
   const hasNoForms = !executions || executions.length === 0;
 
-  // Verificar se há um novo formulário (progresso = 0) - se sim, redirecionar automaticamente
+  // Redirecionamento automático imediato para qualquer execução disponível
   React.useEffect(() => {
     console.log('🔍 PatientDashboard: Verificando redirecionamento automático');
     console.log('🔍 flowsLoading:', flowsLoading);
-    console.log('🔍 mostRecentExecution:', mostRecentExecution);
+    console.log('🔍 availableExecution:', availableExecution);
     
-    if (!flowsLoading && mostRecentExecution) {
-      const isNewForm = mostRecentExecution.status === 'em-andamento' && 
-        mostRecentExecution.progresso === 0 &&
-        mostRecentExecution.current_step;
-      
-      console.log('🔍 Critérios para novo formulário:');
-      console.log('  - Status:', mostRecentExecution.status);
-      console.log('  - Progresso:', mostRecentExecution.progresso);
-      console.log('  - Current Step:', mostRecentExecution.current_step);
-      console.log('  - É novo formulário?', isNewForm);
-      
-      if (isNewForm) {
-        console.log('✅ Novo formulário detectado, redirecionando:', mostRecentExecution);
-        navigate(`/flow-execution/${mostRecentExecution.id}`);
-        return;
-      } else {
-        console.log('❌ Não é um novo formulário - não redirecionando');
-      }
+    if (!flowsLoading && availableExecution) {
+      console.log('✅ Execução disponível detectada, redirecionando imediatamente:', availableExecution);
+      navigate(`/flow-execution/${availableExecution.id}`);
+      return;
     } else {
-      console.log('❌ Condições não atendidas - flowsLoading ou sem execução recente');
+      console.log('❌ Nenhuma execução disponível para redirecionamento');
     }
-  }, [flowsLoading, mostRecentExecution, navigate]);
+  }, [flowsLoading, availableExecution, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:bg-none dark:bg-[#0E0E0E] p-4 md:p-6">
@@ -95,13 +98,13 @@ const PatientDashboard = () => {
                     📋 Formulário em Andamento
                   </CardTitle>
                   <h3 className="text-lg font-medium text-[#5D8701] mb-1">
-                    {mostRecentExecution?.flow_name}
+                    {availableExecution?.flow_name}
                   </h3>
                 </div>
                 <div className="text-right">
                   <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Progresso</div>
                   <div className="text-2xl font-bold text-[#5D8701]">
-                    {mostRecentExecution?.progresso || 0}%
+                    {availableExecution?.progresso || 0}%
                   </div>
                 </div>
               </div>
@@ -111,23 +114,23 @@ const PatientDashboard = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
                   <span className="text-sm font-medium text-orange-600 dark:text-orange-400">
-                    {mostRecentExecution?.status === 'em-andamento' ? 'Em Andamento' : 'Pausado'}
+                    {availableExecution?.status === 'em-andamento' ? 'Em Andamento' : 'Pausado'}
                   </span>
                 </div>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {mostRecentExecution?.completed_steps || 0} de {mostRecentExecution?.total_steps || 0} etapas
+                  {availableExecution?.completed_steps || 0} de {availableExecution?.total_steps || 0} etapas
                 </span>
               </div>
               
               <div className="w-full bg-gray-200 dark:bg-[#1A1A1A] rounded-full h-2 mb-6">
                 <div 
                   className="bg-gradient-to-r from-[#5D8701] to-[#4a6e01] h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${mostRecentExecution?.progresso || 0}%` }}
+                  style={{ width: `${availableExecution?.progresso || 0}%` }}
                 ></div>
               </div>
 
               <Button 
-                onClick={() => navigate(`/flow-execution/${mostRecentExecution?.id}`)}
+                onClick={() => navigate(`/flow-execution/${availableExecution?.id}`)}
                 className="w-full bg-gradient-to-r from-[#5D8701] to-[#4a6e01] hover:from-[#4a6e01] hover:to-[#5D8701] text-white"
                 size="lg"
               >

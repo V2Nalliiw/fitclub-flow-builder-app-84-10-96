@@ -19,9 +19,36 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
   const { toast } = useToast();
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [isExpired, setIsExpired] = useState(false);
-  const [isProgressing, setIsProgressing] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const hasProgressedRef = useRef(false);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Verificar no backend se o delay expirou (polling)
+  const checkDelayStatus = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('flow_executions')
+        .select('status, next_step_available_at, current_step')
+        .eq('id', executionId)
+        .single();
+
+      if (error) {
+        console.error('❌ Erro ao verificar status do delay:', error);
+        return;
+      }
+
+      console.log('🔍 DelayTimer: Status atual da execução:', data);
+
+      // Se o status mudou ou se há próximo step disponível
+      if (data.status === 'em-andamento' && data.current_step && 
+          (!data.next_step_available_at || new Date(data.next_step_available_at) <= new Date())) {
+        console.log('✅ DelayTimer: Delay processado pelo backend, redirecionando...');
+        setIsExpired(true);
+        handleTimeExpired();
+      }
+    } catch (error) {
+      console.error('❌ Erro no polling do delay:', error);
+    }
+  };
 
   useEffect(() => {
     const calculateTimeRemaining = () => {
@@ -43,20 +70,14 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
       });
 
       if (diff <= 0) {
-        console.log('✅ DelayTimer: Tempo expirado, liberando próximo step');
+        console.log('✅ DelayTimer: Tempo expirado no frontend');
         setTimeRemaining(0);
         setIsExpired(true);
         
-        // Parar o interval aqui para evitar múltiplas chamadas
+        // Parar intervals
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
-        }
-        
-        // Executar apenas uma vez
-        if (!hasProgressedRef.current) {
-          hasProgressedRef.current = true;
-          handleTimeExpired();
         }
       } else {
         setTimeRemaining(Math.ceil(diff / 1000));
@@ -68,32 +89,36 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
     calculateTimeRemaining();
 
     // Verificar a cada segundo apenas se não expirou
-    if (!isExpired && !hasProgressedRef.current) {
+    if (!isExpired) {
       intervalRef.current = setInterval(calculateTimeRemaining, 1000);
     }
+
+    // Polling para verificar se backend processou o delay
+    pollingRef.current = setInterval(checkDelayStatus, 5000); // A cada 5 segundos
 
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
     };
-  }, [step.availableAt, isExpired]);
+  }, [step.availableAt, isExpired, executionId]);
 
-  const handleTimeExpired = async () => {
-    if (isProgressing || hasProgressedRef.current) return;
-    
-    console.log('⏰ DelayTimer: Tempo expirado, redirecionando para página inicial');
-    setIsProgressing(true);
+  const handleTimeExpired = () => {
+    console.log('⏰ DelayTimer: Redirecionando para página inicial');
 
     toast({
       title: "Tempo Concluído! ⏰",
       description: "Redirecionando para página inicial...",
     });
 
-    // Aguardar 2 segundos para dar tempo do cron job processar
+    // Redirecionamento imediato para página inicial
     setTimeout(() => {
-      console.log('🔄 DelayTimer: Redirecionando para página inicial onde o próximo step estará disponível');
+      console.log('🔄 DelayTimer: Redirecionando para página inicial');
       window.location.href = '/';
     }, 2000);
   };

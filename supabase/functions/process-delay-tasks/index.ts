@@ -125,14 +125,14 @@ serve(async (req) => {
                 const hasMoreSteps = nextStepIndex < currentSteps.length - 1;
                 const executionStatus = hasMoreSteps ? 'in-progress' : 'completed';
                 
-                // Atualizar status baseado se há mais steps
-                const updateData: any = {
-                  current_node: task.next_node_id,
-                  current_step: currentStep,
-                  status: executionStatus,
-                  next_step_available_at: null,
-                  updated_at: new Date().toISOString()
-                };
+              // Atualizar status baseado se há mais steps  
+              const updateData: any = {
+                current_node: task.next_node_id,
+                current_step: currentStep,
+                status: 'em-andamento', // Sempre manter em-andamento para permitir acesso
+                next_step_available_at: null,
+                updated_at: new Date().toISOString()
+              };
                 
                 // Se não há mais steps, marcar como completado
                 if (!hasMoreSteps) {
