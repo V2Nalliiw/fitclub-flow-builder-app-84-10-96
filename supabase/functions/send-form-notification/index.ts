@@ -23,6 +23,23 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Verificar se a execução ainda está ativa (não completed)
+    const { data: execution } = await supabase
+      .from('flow_executions')
+      .select('status')
+      .eq('id', executionId)
+      .single();
+    
+    if (execution?.status === 'completed') {
+      console.log('⚠️ Execução já finalizada, não enviando WhatsApp');
+      return new Response(JSON.stringify({ 
+        success: false, 
+        message: 'Execução já finalizada' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Buscar dados do paciente
     const { data: patient } = await supabase
       .from('profiles')

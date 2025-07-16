@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowRight, CheckCircle2, Heart, FileText, Clock, Send, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { PatientDelayDisplay } from './PatientDelayDisplay';
+import { FlowEndDisplay } from './FlowEndDisplay';
 
 interface UnifiedPatientRendererProps {
   step: any;
@@ -562,6 +564,70 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
           </CardContent>
         </Card>
       </div>
+    );
+  }
+
+  // Delay Timer - aguarda o tempo definido (oculto do paciente)
+  if (step.nodeType === 'delay') {
+    const executionId = window.location.pathname.split('/').pop();
+    const availableAt = step.next_step_available_at || step.availableAt;
+    
+    if (!availableAt) {
+      console.error('❌ DelayTimer: next_step_available_at não encontrado');
+      return (
+        <div className="text-center p-8">
+          <p className="text-red-500">Erro: Data de disponibilidade não encontrada</p>
+        </div>
+      );
+    }
+
+    return (
+      <PatientDelayDisplay 
+        availableAt={availableAt} 
+        onDelayExpired={() => {
+          console.log('⏰ DelayTimer expirado, progredindo para próximo step...');
+          handleComplete();
+        }}
+      />
+    );
+  }
+
+  // End Node - fim do fluxo (finaliza tratamento)
+  if (step.nodeType === 'end' || step.nodeType === 'flowEnd') {
+    const executionId = window.location.pathname.split('/').pop();
+    
+    // Buscar dados da execução para finalizar
+    const [execution, setExecution] = useState<any>(null);
+    
+    useEffect(() => {
+      const fetchExecution = async () => {
+        if (!executionId) return;
+        
+        const { data } = await supabase
+          .from('flow_executions')
+          .select('patient_id, flow_id')
+          .eq('id', executionId)
+          .single();
+          
+        setExecution(data);
+      };
+      
+      fetchExecution();
+    }, [executionId]);
+    
+    if (!executionId || !execution) {
+      return (
+        <div className="text-center p-8">
+          <p className="text-red-500">Erro: Dados da execução não encontrados</p>
+        </div>
+      );
+    }
+    
+    return (
+      <FlowEndDisplay 
+        executionId={executionId}
+        execution={execution}
+      />
     );
   }
 
