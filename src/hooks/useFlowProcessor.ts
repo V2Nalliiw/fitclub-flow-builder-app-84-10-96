@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { FlowNode, FlowEdge } from '@/types/flow';
 import { useConditionalFlowProcessor } from './useConditionalFlowProcessor';
+import { useImprovedFlowProcessor } from './useImprovedFlowProcessor';
 
 interface FlowStep {
   nodeId: string;
@@ -42,6 +43,7 @@ interface FlowStep {
 export const useFlowProcessor = () => {
   const { toast } = useToast();
   const { buildConditionalFlowSteps } = useConditionalFlowProcessor();
+  const { buildFlowSteps, evaluateConditions } = useImprovedFlowProcessor();
   const [processing, setProcessing] = useState(false);
 
   const processFlowAssignment = useCallback(async (
@@ -71,9 +73,9 @@ export const useFlowProcessor = () => {
         throw new Error('Fluxo não encontrado');
       }
 
-      // Build conditional execution steps - inicialmente sem respostas
-      const steps = buildConditionalFlowSteps(nodes, edges, startNode, {}, {});
-      console.log('📋 FlowProcessor: Steps condicionais construídos:', steps);
+      // Build improved execution steps - inicialmente sem respostas
+      const steps = buildFlowSteps(nodes, edges, startNode, {}, {});
+      console.log('📋 FlowProcessor: Steps melhorados construídos:', steps);
 
       if (steps.length === 0) {
         throw new Error('Nenhuma etapa válida encontrada no fluxo');
@@ -129,7 +131,7 @@ export const useFlowProcessor = () => {
     } finally {
       setProcessing(false);
     }
-  }, [toast, buildConditionalFlowSteps]);
+  }, [toast, buildFlowSteps]);
 
   const completeFlowStep = useCallback(async (executionId: string, stepId: string, response?: any) => {
     try {
@@ -274,7 +276,7 @@ export const useFlowProcessor = () => {
           
           const startNode = flowNodes.find((node: FlowNode) => node.type === 'start');
           if (startNode) {
-            const newSteps = buildConditionalFlowSteps(
+            const newSteps = buildFlowSteps(
               flowNodes, 
               flowEdges, 
               startNode, 
@@ -399,7 +401,7 @@ export const useFlowProcessor = () => {
       });
       throw error;
     }
-  }, [toast, buildConditionalFlowSteps]);
+  }, [toast, buildFlowSteps]);
 
   const goBackToStep = useCallback(async (executionId: string, targetStepIndex: number) => {
     try {

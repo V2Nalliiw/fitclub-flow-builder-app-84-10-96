@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowRight, ArrowLeft, FileText, MessageCircle, CheckCircle, Clock } from 'lucide-react';
-import { ImprovedDelayTimer } from './ImprovedDelayTimer';
+import { ImprovedFlowDelayTimer } from './ImprovedFlowDelayTimer';
 import { EnhancedDocumentDisplay } from './EnhancedDocumentDisplay';
 import { UnifiedPatientRenderer } from './UnifiedPatientRenderer';
 import { ConditionsStepRenderer } from './ConditionsStepRenderer';
@@ -132,12 +132,14 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
         );
 
       case 'delay':
+        const executionId = window.location.pathname.split('/').pop() || '';
         return (
-          <ImprovedDelayTimer
-            availableAt={step.availableAt || new Date().toISOString()}
-            onDelayExpired={() => {
-              // Auto-redirect sem possibilidade de pular
-              window.location.href = '/';
+          <ImprovedFlowDelayTimer
+            step={step}
+            executionId={executionId}
+            onComplete={() => {
+              console.log('⏰ DelayTimer expirado, recarregando...');
+              window.location.reload();
             }}
           />
         );
