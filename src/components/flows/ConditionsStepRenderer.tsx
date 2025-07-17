@@ -378,7 +378,7 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
   const applicableCondition = getApplicableCondition();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:bg-[#0E0E0E] flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -394,7 +394,7 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
           )}
         </div>
 
-        <Card className="bg-white/90 dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-xl">
+        <Card className="bg-white/90 dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl">
           <CardContent className="p-8">
             {applicableCondition && (
               <div className="text-center space-y-6">

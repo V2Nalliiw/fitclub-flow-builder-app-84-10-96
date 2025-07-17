@@ -144,7 +144,7 @@ export const CalculatorStepRenderer: React.FC<CalculatorStepRendererProps> = ({
 
   if (showResult) {
     return (
-      <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
+      <Card className="bg-white/90 dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calculator className="h-6 w-6 text-orange-500" />
@@ -221,7 +221,7 @@ export const CalculatorStepRenderer: React.FC<CalculatorStepRendererProps> = ({
   }
 
   return (
-    <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
+    <Card className="bg-white/90 dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calculator className="h-6 w-6 text-orange-500" />

@@ -48,13 +48,13 @@
   }
 
   .dark {
-    --background: 0 0% 6%;
+    --background: 0 0% 5%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 8%;
+    --card: 0 0% 5%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 8%;
+    --popover: 0 0% 5%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 93 87% 27%;
@@ -372,7 +372,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .dark .patient-gradient-bg {
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  background: #0E0E0E;
 }
 
 .patient-card-gradient {
@@ -380,23 +380,23 @@ input:focus, textarea:focus, select:focus {
 }
 
 .dark .patient-card-gradient {
-  background: linear-gradient(135deg, rgba(10, 10, 10, 0.9) 0%, rgba(26, 26, 26, 0.9) 100%);
+  background: #0E0E0E;
 }
 
 /* Form dark mode styling */
 .dark .form-card {
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-  border-color: #2a2a2a;
+  background: #0E0E0E;
+  border-color: #1E1E1E;
 }
 
 .dark .form-input {
-  background-color: #1a1a1a;
-  border-color: #2a2a2a;
+  background-color: #0E0E0E;
+  border-color: #1E1E1E;
   color: #f8fafc;
 }
 
 .dark .form-input:focus {
-  background-color: #0a0a0a;
+  background-color: #0E0E0E;
   border-color: #5D8701;
 }
 

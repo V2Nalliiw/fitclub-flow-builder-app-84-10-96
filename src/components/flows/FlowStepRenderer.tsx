@@ -195,7 +195,7 @@ export const FlowStepRenderer: React.FC<FlowStepRendererProps> = ({
   }
 
   return (
-    <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
+    <Card className="bg-white/90 dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="text-primary">

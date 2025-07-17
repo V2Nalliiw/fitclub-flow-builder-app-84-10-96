@@ -287,7 +287,7 @@ export const FormEndRenderer: React.FC<FormEndRendererProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
-      <Card className="w-full max-w-md bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-0 shadow-xl animate-fade-in">
+      <Card className="w-full max-w-md bg-white/95 dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in">
         <CardContent className="p-8 text-center">
           <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="h-10 w-10 text-white" />

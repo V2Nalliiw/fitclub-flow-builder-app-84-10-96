@@ -79,7 +79,7 @@ const FlowExecution = () => {
     return (
       <MobileErrorBoundary>
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
-          <Card className="max-w-md mx-auto shadow-lg border-0 bg-white/90 dark:bg-[#0E0E0E]/90 backdrop-blur-sm">
+          <Card className="max-w-md mx-auto shadow-lg border-0 bg-white/90 dark:bg-[#0E0E0E] backdrop-blur-sm">
             <CardHeader className="text-center">
               <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <AlertTriangle className="h-8 w-8 text-white" />
@@ -119,7 +119,7 @@ const FlowExecution = () => {
     return (
       <MobileErrorBoundary>
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
-          <Card className="max-w-md mx-auto shadow-lg border-0 bg-white/90 dark:bg-[#0E0E0E]/90 backdrop-blur-sm">
+          <Card className="max-w-md mx-auto shadow-lg border-0 bg-white/90 dark:bg-[#0E0E0E] backdrop-blur-sm">
             <CardContent className="py-16 text-center">
               <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Formulário Concluído
@@ -173,7 +173,7 @@ const FlowExecution = () => {
           )}
 
           {error && (
-            <Card className="max-w-md mx-auto shadow-lg border-0 bg-white/90 dark:bg-[#0E0E0E]/90 backdrop-blur-sm">
+            <Card className="max-w-md mx-auto shadow-lg border-0 bg-white/90 dark:bg-[#0E0E0E] backdrop-blur-sm">
               <CardHeader className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <AlertTriangle className="h-8 w-8 text-white" />
@@ -207,7 +207,7 @@ const FlowExecution = () => {
           )}
 
           {!isLoading && !error && !currentStep && (
-            <Card className="max-w-md mx-auto shadow-lg border-0 bg-white/90 dark:bg-[#0E0E0E]/90 backdrop-blur-sm">
+            <Card className="max-w-md mx-auto shadow-lg border-0 bg-white/90 dark:bg-[#0E0E0E] backdrop-blur-sm">
               <CardContent className="py-16 text-center">
                 <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Formulário Concluído
