@@ -70,8 +70,15 @@ interface FlowCardProps {
 }
 
 const FlowCard: React.FC<FlowCardProps> = ({ execution, onAction, getTimeUntilAvailable }) => {
+  console.log('🔍 FlowCard: Analisando execução', { 
+    id: execution.id,
+    status: execution.status,
+    currentStep: execution.current_step,
+    currentStepType: execution.current_step?.type || 'N/A'
+  });
+
   const canTakeAction = execution.status === 'em-andamento' && 
-    (execution.current_step.type === 'formStart' || execution.current_step.type === 'question');
+    (execution.current_step?.type === 'formStart' || execution.current_step?.type === 'question');
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -106,9 +113,9 @@ const FlowCard: React.FC<FlowCardProps> = ({ execution, onAction, getTimeUntilAv
             {execution.status === 'em-andamento' ? 'Formulário de Hoje:' : 'Último Formulário:'}
           </div>
           <div className="text-sm text-muted-foreground mb-2">
-            {execution.current_step.title}
+            {execution.current_step?.title || 'Carregando...'}
           </div>
-          {execution.current_step.description && (
+          {execution.current_step?.description && (
             <div className="text-xs text-muted-foreground">
               {execution.current_step.description}
             </div>
@@ -138,7 +145,7 @@ const FlowCard: React.FC<FlowCardProps> = ({ execution, onAction, getTimeUntilAv
               className="w-full"
               size="sm"
             >
-              {execution.current_step.type === 'formStart' ? 'Preencher Formulário' : 'Responder Pergunta'}
+              {execution.current_step?.type === 'formStart' ? 'Preencher Formulário' : 'Responder Pergunta'}
             </Button>
           )}
           
@@ -195,6 +202,14 @@ export const PatientFlowDashboard: React.FC = () => {
   const todayForms = executions.filter(e => e.status === 'em-andamento');
   const waitingForms = executions.filter(e => e.status === 'aguardando');
   const completedForms = executions.filter(e => e.status === 'concluido');
+
+  console.log('🔍 PatientFlowDashboard: Filtros aplicados:', {
+    totalExecutions: executions.length,
+    todayForms: todayForms.length,
+    waitingForms: waitingForms.length,
+    completedForms: completedForms.length,
+    allStatuses: executions.map(e => ({ id: e.id, status: e.status }))
+  });
 
   return (
     <div className="space-y-6">

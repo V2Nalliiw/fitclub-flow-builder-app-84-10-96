@@ -79,6 +79,25 @@ export const usePatientFlows = () => {
           hasSteps: currentStepDataForLog?.steps?.length > 0
         });
 
+        // Determinar o step atual baseado no currentStepIndex
+        const currentStepData = execution.current_step as any;
+        let currentStep = null;
+        
+        if (currentStepData?.steps && Array.isArray(currentStepData.steps)) {
+          const currentStepIndex = currentStepData.currentStepIndex || 0;
+          const currentStepInfo = currentStepData.steps[currentStepIndex];
+          
+          if (currentStepInfo) {
+            currentStep = {
+              type: currentStepInfo.nodeType,
+              title: currentStepInfo.title,
+              description: currentStepInfo.description,
+              available_at: currentStepInfo.availableAt,
+              completed: currentStepInfo.completed || false
+            };
+          }
+        }
+
         return {
           id: execution.id,
           flow_id: execution.flow_id,
@@ -90,17 +109,25 @@ export const usePatientFlows = () => {
           started_at: execution.started_at,
           completed_at: execution.completed_at || undefined,
           next_step_available_at: execution.next_step_available_at || undefined,
-          current_step: execution.current_step as any,
+          current_step: currentStep || { type: 'unknown', title: 'Carregando...', description: '' },
           total_steps: execution.total_steps,
           completed_steps: execution.completed_steps,
         };
       });
 
+      console.log('🔍 usePatientFlows: Execuções transformadas:', transformedExecutions.map(e => ({
+        id: e.id,
+        status: e.status,
+        currentStepType: e.current_step?.type,
+        currentStepTitle: e.current_step?.title,
+        currentStepCompleted: e.current_step?.completed
+      })));
+
       setExecutions(transformedExecutions);
 
       // Extract steps from execution metadata instead of separate table
       const transformedSteps: PatientFlowStep[] = [];
-      transformedExecutions.forEach(execution => {
+      flowExecutions.forEach(execution => {
         const currentStepData = execution.current_step as any;
         if (currentStepData?.steps) {
           currentStepData.steps.forEach((step: any) => {
@@ -281,6 +308,29 @@ export const usePatientFlows = () => {
   useEffect(() => {
     if (user?.role === 'patient') {
       loadPatientFlows();
+      
+      // Configurar realtime updates para flow_executions
+      const channel = supabase
+        .channel('flow_executions_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Escutar UPDATE, INSERT, DELETE
+            schema: 'public',
+            table: 'flow_executions',
+            filter: `patient_id=eq.${user.id}` // Apenas para este paciente
+          },
+          (payload) => {
+            console.log('🔄 Realtime update recebido:', payload);
+            // Recarregar dados quando houver mudanças
+            loadPatientFlows();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     } else {
       setLoading(false);
     }
