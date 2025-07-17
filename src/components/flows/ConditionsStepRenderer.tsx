@@ -270,148 +270,89 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
     onComplete(responseData);
   };
 
+  // Get the relevant calculator result for display
+  const getDisplayValue = () => {
+    // Find the primary result to show (IMC in this case)
+    if (calculatorResults && Object.keys(calculatorResults).length > 0) {
+      const primaryKey = Object.keys(calculatorResults)[0]; // Get first result
+      const value = calculatorResults[primaryKey];
+      return typeof value === 'number' ? value.toFixed(2) : value;
+    }
+    if (calculatorResult !== undefined) {
+      return typeof calculatorResult === 'number' ? calculatorResult.toFixed(2) : calculatorResult;
+    }
+    return null;
+  };
+
+  // Get the condition that would apply (without showing all debugging info)
+  const getApplicableCondition = () => {
+    let matchedCondition = null;
+    
+    // Try composite conditions first
+    if (step.compositeConditions && step.compositeConditions.length > 0) {
+      for (const condition of step.compositeConditions) {
+        const result = evaluateCompositeConditions([condition]);
+        if (result) {
+          matchedCondition = condition;
+          break;
+        }
+      }
+    }
+    
+    // Fallback to legacy conditions
+    if (!matchedCondition && step.conditions && step.conditions.length > 0) {
+      for (const condition of step.conditions) {
+        const result = evaluateConditions(calculatorResult || 0, [condition]);
+        if (result) {
+          matchedCondition = condition;
+          break;
+        }
+      }
+    }
+    
+    return matchedCondition;
+  };
+
+  const displayValue = getDisplayValue();
+  const applicableCondition = getApplicableCondition();
+
   return (
     <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <GitBranch className="h-6 w-6 text-blue-500" />
-          {step.title || 'Avaliação de Condições'}
+        <CardTitle className="flex items-center gap-2 text-center justify-center">
+          <CheckCircle className="h-6 w-6 text-green-500" />
+          {step.title || 'Resultado da Avaliação'}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {step.descricao && (
-          <p className="text-gray-600 dark:text-gray-300">{step.descricao}</p>
+          <p className="text-gray-600 dark:text-gray-300 text-center">{step.descricao}</p>
         )}
         
-        {/* Show calculation result if available */}
-        {calculatorResult !== undefined && (
-          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
-            <h4 className="font-semibold text-orange-800 dark:text-orange-200 mb-2">
-              Resultado do Cálculo:
-            </h4>
-            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-              {calculatorResult}
-            </div>
-          </div>
-        )}
-
-        {/* Show available data for debugging */}
-        {Object.keys(calculatorResults).length > 0 && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
-              Dados de Cálculo Disponíveis:
-            </h4>
-            <div className="grid grid-cols-2 gap-2">
-              {Object.entries(calculatorResults).map(([key, value]) => (
-                <div key={key} className="flex justify-between items-center text-sm">
-                  <span className="text-blue-700 dark:text-blue-300">{key}:</span>
-                  <span className="font-semibold text-blue-900 dark:text-blue-100">{value}</span>
+        {/* Clean result display */}
+        {displayValue && (
+          <div className="text-center space-y-4">
+            <div className="bg-primary/10 dark:bg-primary/20 border border-primary/20 rounded-lg p-6">
+              <div className="text-4xl font-bold text-primary mb-2">
+                {displayValue}
+              </div>
+              {applicableCondition && (
+                <div className="text-lg font-semibold text-primary/80">
+                  {applicableCondition.label}
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
-
-        {Object.keys(questionResponses).length > 0 && (
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-            <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">
-              Respostas das Perguntas:
-            </h4>
-            <div className="space-y-2">
-              {Object.entries(questionResponses).map(([key, value]) => (
-                <div key={key} className="flex justify-between items-center text-sm">
-                  <span className="text-green-700 dark:text-green-300">{key}:</span>
-                  <span className="font-semibold text-green-900 dark:text-green-100">
-                    {Array.isArray(value) ? value.join(', ') : String(value)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        {/* Show conditions that will be evaluated */}
-        <div className="space-y-3">
-          <h4 className="font-semibold text-gray-800 dark:text-gray-200">
-            Condições Configuradas:
-          </h4>
-          
-          {/* Legacy conditions */}
-          {step.conditions && step.conditions.length > 0 && (
-            <div className="space-y-2">
-              {step.conditions.map((condition: any, index: number) => {
-                const isMatched = evaluatedCondition?.id === condition.id;
-                return (
-                  <div
-                    key={index}
-                    className={`flex items-center justify-between p-3 rounded-lg border ${
-                      isMatched
-                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                        : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      {isMatched ? (
-                        <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-gray-400" />
-                      )}
-                      <span className="text-sm">
-                        {condition.campo} {condition.operador} {condition.valor}
-                        {condition.valorFinal && ` e ${condition.valorFinal}`}
-                      </span>
-                    </div>
-                    <Badge variant={isMatched ? 'default' : 'secondary'}>
-                      {condition.label}
-                    </Badge>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Composite conditions */}
-          {step.compositeConditions && step.compositeConditions.length > 0 && (
-            <div className="space-y-2">
-              {step.compositeConditions.map((condition: any, index: number) => {
-                const isMatched = evaluatedCondition?.id === condition.id;
-                return (
-                  <div
-                    key={index}
-                    className={`flex items-center justify-between p-3 rounded-lg border ${
-                      isMatched
-                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                        : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      {isMatched ? (
-                        <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-gray-400" />
-                      )}
-                      <span className="text-sm">
-                        {condition.rules?.length || 0} regra(s) - {condition.logic}
-                      </span>
-                    </div>
-                    <Badge variant={isMatched ? 'default' : 'secondary'}>
-                      {condition.label}
-                    </Badge>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
 
         <div className="flex justify-center">
           <Button
             onClick={handleComplete}
             disabled={isLoading}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 font-medium"
+            className="bg-primary-gradient hover:opacity-90 text-white px-8 py-3 font-medium"
             size="lg"
           >
-            {isLoading ? 'Avaliando...' : 'Continuar'}
+            {isLoading ? 'Processando...' : 'Continuar'}
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </div>
