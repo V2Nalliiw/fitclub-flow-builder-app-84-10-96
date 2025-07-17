@@ -69,9 +69,17 @@ serve(async (req) => {
       );
     }
 
-    // Gerar o link do paciente - sempre usar o domínio da aplicação
-    const baseUrl = 'https://oilnybhaboefqyhjrmvl.lovable.app';
+    // Buscar configurações do app para obter domínio personalizado
+    const { data: appSettings } = await supabase
+      .from('app_settings')
+      .select('app_name')
+      .single();
+      
+    // Gerar o link do paciente - usar domínio personalizado do FitClub
+    const baseUrl = 'https://fitclub.app'; // Domínio personalizado do FitClub
     const patientLink = `${baseUrl}/patient-dashboard?execution=${executionId}`;
+    
+    console.log('🏥 App:', appSettings?.app_name || 'FitClub');
     
     console.log('✅ Link gerado:', patientLink);
     
