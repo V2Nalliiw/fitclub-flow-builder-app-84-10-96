@@ -39,7 +39,7 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
       console.log('🔍 DelayTimer: Status atual da execução:', data);
 
       // Se o delay foi processado (next_step_available_at foi limpo)
-      if (data.status === 'em-andamento' && 
+      if (data.status === 'in-progress' && 
           (!data.next_step_available_at || new Date(data.next_step_available_at) <= new Date())) {
         console.log('✅ DelayTimer: Delay processado pelo backend, redirecionando...');
         setIsExpired(true);
