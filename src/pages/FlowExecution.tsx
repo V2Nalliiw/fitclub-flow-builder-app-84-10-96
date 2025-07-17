@@ -143,30 +143,27 @@ const FlowExecution = () => {
 
   return (
     <MobileErrorBoundary>
-      <div className="h-screen bg-white dark:bg-[#0E0E0E] flow-execution-container flex flex-col overflow-hidden">
-        {/* Header compacto */}
-        <div className="flex-shrink-0 h-12 px-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0E0E0E]">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/my-flows')}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white bg-transparent dark:bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 h-8 px-2 text-sm"
-          >
-            <ArrowLeft className="h-3 w-3 mr-1" />
-            Voltar aos Formulários
-          </Button>
-          
-          {execution && (
-            <div className="text-center">
-              <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {execution.flow_name}
-              </h1>
-            </div>
-          )}
-        </div>
-        
-        {/* Conteúdo centralizado */}
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl">
+      <div className="min-h-screen max-h-screen bg-white dark:bg-[#0E0E0E] flow-execution-container overflow-y-auto">
+        <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col h-screen justify-center space-y-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-8">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/my-flows')}
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white bg-transparent dark:bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar aos Formulários
+            </Button>
+            
+            {execution && (
+              <div className="text-right">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  {execution.flow_name}
+                </h1>
+                {/* Não mostrar progresso fixo, será calculado dinamicamente */}
+              </div>
+            )}
+          </div>
 
           {isLoading && (
             <div className="text-center">
@@ -241,7 +238,6 @@ const FlowExecution = () => {
               questionResponses={execution?.current_step?.userResponses || {}}
             />
           )}
-          </div>
         </div>
       </div>
     </MobileErrorBoundary>
