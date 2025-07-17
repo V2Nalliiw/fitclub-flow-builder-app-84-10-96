@@ -104,7 +104,7 @@ serve(async (req) => {
               console.log(`✅ SUCESSO: Notificação WhatsApp enviada para task ${task.id}`, notificationResult);
 
               // CRÍTICO: Após enviar notificação, atualizar execução corretamente
-              console.log(`🔄 Avançando execução para o próximo step (FormStart)`);
+              console.log(`🔄 Posicionando execução NO FormStart (não além dele)`);
               
               if (execution?.current_step) {
                 const currentStep = execution.current_step;
@@ -117,40 +117,40 @@ serve(async (req) => {
                 if (currentStep.steps && currentStep.steps[currentStepIndex]) {
                   currentStep.steps[currentStepIndex].completed = true;
                   currentStep.steps[currentStepIndex].completedAt = new Date().toISOString();
-                  console.log(`✅ Step ${currentStepIndex} marcado como concluído`);
+                  console.log(`✅ Step ${currentStepIndex} (delay) marcado como concluído`);
                 }
                 
-                // Avançar para o próximo step (FormStart)
+                // Avançar para o próximo step (FormStart) - mas deixá-lo como incompleto
                 const nextStepIndex = currentStepIndex + 1;
                 currentStep.currentStepIndex = nextStepIndex;
                 
-                // Verificar se há mais steps após este
-                const hasMoreSteps = nextStepIndex < currentSteps.length - 1;
-                console.log(`📊 Próximo step: index=${nextStepIndex}, hasMoreSteps=${hasMoreSteps}`);
-                
-                // CRÍTICO: Sempre definir como 'in-progress' se há steps disponíveis
-                const updateData: any = {
-                  current_node: task.next_node_id,
-                  current_step: currentStep,
-                  status: 'in-progress', // SEMPRE in-progress para steps disponíveis
-                  next_step_available_at: null, // CRÍTICO: Limpar delay
-                  updated_at: new Date().toISOString(),
-                  completed_steps: nextStepIndex // Atualizar progresso
-                };
-                
-                // Se não há mais steps, marcar como completado
-                if (!hasMoreSteps) {
-                  updateData.status = 'completed';
-                  updateData.completed_at = new Date().toISOString();
-                  updateData.current_node = null;
-                  console.log(`🏁 Execução será marcada como concluída`);
+                // CRÍTICO: Não marcar o FormStart como completed! Ele deve aparecer como disponível
+                if (currentStep.steps && currentStep.steps[nextStepIndex]) {
+                  currentStep.steps[nextStepIndex].completed = false; // Formstart deve estar incompleto
+                  currentStep.steps[nextStepIndex].availableAt = new Date().toISOString();
+                  delete currentStep.steps[nextStepIndex].completedAt; // Remover completedAt se existir
+                  console.log(`📱 FormStart (step ${nextStepIndex}) disponibilizado para o paciente`);
                 }
                 
-                console.log(`📝 Atualizando execução com:`, {
+                // Verificar se há mais steps após o FormStart
+                const hasMoreSteps = nextStepIndex < currentSteps.length - 1;
+                console.log(`📊 FormStart posicionado no index ${nextStepIndex}, hasMoreSteps=${hasMoreSteps}`);
+                
+                // CRÍTICO: Definir current_node como o FormStart e status como in-progress
+                const updateData: any = {
+                  current_node: task.next_node_id, // O FormStart node
+                  current_step: currentStep,
+                  status: 'in-progress', // Em progresso aguardando interação do paciente
+                  next_step_available_at: null, // Sem delay - disponível imediatamente
+                  updated_at: new Date().toISOString(),
+                  completed_steps: currentStepIndex + 1 // Contar apenas os steps realmente completados
+                };
+                
+                console.log(`📝 Atualizando execução para mostrar FormStart:`, {
                   status: updateData.status,
                   currentNode: updateData.current_node,
                   stepIndex: nextStepIndex,
-                  hasMoreSteps,
+                  formStartCompleted: false,
                   nextStepAvailableAt: updateData.next_step_available_at
                 });
                 
@@ -166,7 +166,7 @@ serve(async (req) => {
                 }
                 
                 console.log(`✅ Execução atualizada com sucesso:`, updateResult);
-                console.log(`✅ Execução avançada para node ${task.next_node_id}, stepIndex=${nextStepIndex}, status=${updateData.status}, hasMoreSteps=${hasMoreSteps}`);
+                console.log(`✅ FormStart (${task.next_node_id}) disponibilizado no step ${nextStepIndex}, status=${updateData.status}`);
               }
               
             } catch (sendError) {
