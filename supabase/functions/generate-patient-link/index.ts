@@ -76,7 +76,7 @@ serve(async (req) => {
       .single();
       
     // Gerar o link do paciente - usar domínio personalizado do FitClub
-    const baseUrl = 'https://fitclub.app'; // Domínio personalizado do FitClub
+    const baseUrl = 'https://fitclub.app.br'; // Domínio personalizado do FitClub
     const patientLink = `${baseUrl}/patient-dashboard?execution=${executionId}`;
     
     console.log('🏥 App:', appSettings?.app_name || 'FitClub');
