@@ -23,6 +23,10 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { forcedExecution = false } = body;
 
+    // Gerar ID único para esta instância de processamento
+    const processingInstanceId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.log('🔧 Processing Instance ID:', processingInstanceId);
+
     // Buscar tasks que precisam ser processadas (delay expirado)
     const currentTime = new Date().toISOString();
     console.log('⏰ Hora atual para comparação:', currentTime);
@@ -31,29 +35,57 @@ serve(async (req) => {
       console.log('🔥 EXECUÇÃO FORÇADA: Processando todas as tasks pendentes independente do horário');
     }
     
-    // Buscar tasks com base no modo de execução
+    // Buscar tasks não processadas e aplicar lock otimista
     let query = supabase
       .from('delay_tasks')
       .select('*')
-      .eq('processed', false);
+      .eq('processed', false)
+      .is('processing_started_at', null); // Apenas tasks não sendo processadas
 
     if (!forcedExecution) {
       query = query.lte('trigger_at', currentTime);
     }
 
-    const { data: pendingTasks, error: tasksError } = await query;
+    const { data: availableTasks, error: tasksError } = await query;
 
     if (tasksError) {
       throw new Error(`Erro ao buscar tasks: ${tasksError.message}`);
     }
 
-    console.log(`📋 Encontradas ${pendingTasks?.length || 0} tasks para processar`);
+    console.log(`📋 Encontradas ${availableTasks?.length || 0} tasks disponíveis para processar`);
 
     let processedCount = 0;
     let errorCount = 0;
+    let lockedTasks: any[] = [];
 
-    if (pendingTasks && pendingTasks.length > 0) {
-      for (const task of pendingTasks) {
+    // Aplicar lock otimista nas tasks encontradas
+    if (availableTasks && availableTasks.length > 0) {
+      for (const task of availableTasks) {
+        const { data: lockedTask, error: lockError } = await supabase
+          .from('delay_tasks')
+          .update({
+            processing_started_at: currentTime,
+            processing_instance_id: processingInstanceId
+          })
+          .eq('id', task.id)
+          .eq('processed', false)
+          .is('processing_started_at', null) // Verificar se ainda não foi bloqueada
+          .select('*')
+          .single();
+
+        if (!lockError && lockedTask) {
+          lockedTasks.push(lockedTask);
+          console.log(`🔒 Task ${task.id} bloqueada para processamento`);
+        } else {
+          console.log(`⚠️ Task ${task.id} já foi bloqueada por outra instância`);
+        }
+      }
+    }
+
+    console.log(`🔒 ${lockedTasks.length} tasks bloqueadas com sucesso para processamento`);
+
+    if (lockedTasks.length > 0) {
+      for (const task of lockedTasks) {
         try {
           // Verificar se a execução ainda está ativa e buscar dados completos
           const { data: execution } = await supabase
@@ -283,7 +315,9 @@ serve(async (req) => {
       success: true, 
       processedCount,
       errorCount,
-      totalTasks: pendingTasks?.length || 0
+      totalTasks: lockedTasks.length,
+      availableTasks: availableTasks?.length || 0,
+      processingInstanceId
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

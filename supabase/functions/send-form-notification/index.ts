@@ -158,8 +158,23 @@ serve(async (req) => {
 
     console.log('✅ Dados coletados, enviando WhatsApp via', whatsappSettings.provider);
 
-    // Gerar link para continuar o fluxo - usar URL da aplicação
-    const continueLink = `https://oilnybhaboefqyhjrmvl.lovable.app/patient-dashboard?execution=${executionId}`;
+    // Gerar link seguro usando a função generate-patient-link
+    console.log('🔗 Gerando link seguro para o paciente...');
+    const { data: linkResult, error: linkError } = await supabase.functions.invoke('generate-patient-link', {
+      body: {
+        executionId,
+        patientId
+      }
+    });
+
+    if (linkError || !linkResult?.success) {
+      console.error('❌ Erro ao gerar link do paciente:', linkError);
+      // Fallback para link direto se a função de geração falhar
+      var continueLink = `https://oilnybhaboefqyhjrmvl.lovable.app/patient-dashboard?execution=${executionId}`;
+    } else {
+      var continueLink = linkResult.link;
+      console.log('✅ Link seguro gerado:', continueLink);
+    }
     
     // Inicializar o serviço de templates
     const templateService = new WhatsAppTemplateService(supabase);

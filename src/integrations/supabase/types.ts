@@ -205,6 +205,8 @@ export type Database = {
           patient_id: string
           processed: boolean
           processed_at: string | null
+          processing_instance_id: string | null
+          processing_started_at: string | null
           trigger_at: string
         }
         Insert: {
@@ -217,6 +219,8 @@ export type Database = {
           patient_id: string
           processed?: boolean
           processed_at?: string | null
+          processing_instance_id?: string | null
+          processing_started_at?: string | null
           trigger_at: string
         }
         Update: {
@@ -229,6 +233,8 @@ export type Database = {
           patient_id?: string
           processed?: boolean
           processed_at?: string | null
+          processing_instance_id?: string | null
+          processing_started_at?: string | null
           trigger_at?: string
         }
         Relationships: [
