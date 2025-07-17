@@ -145,41 +145,16 @@ const FlowExecution = () => {
     <MobileErrorBoundary>
       <div className="h-screen bg-white dark:bg-[#0E0E0E] flow-execution-container flex flex-col">
         {/* Header - 10% da altura da tela */}
-        <div className="h-[10vh] min-h-[60px] flex items-center justify-between px-4 sm:px-6 border-b border-border bg-card shrink-0">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/my-flows')}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white bg-transparent dark:bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-sm px-2 py-1"
-          >
-            <ArrowLeft className="h-3 w-3 mr-1" />
-            Voltar aos Formulários
-          </Button>
-          
-          <div className="flex items-center gap-2">
-            {canGoBack && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goBack}
-                className="text-xs px-2 py-1"
-              >
-                <ArrowLeft className="h-3 w-3 mr-1" />
-                Editar Anterior
-              </Button>
-            )}
-            
+        <div className="h-[10vh] min-h-[60px] flex items-center justify-center px-4 sm:px-6 border-b border-border bg-white dark:bg-[#0E0E0E] shrink-0">
             {execution && (
-              <div className="text-right">
-                <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 truncate max-w-[200px]">
-                  {execution.flow_name}
-                </h1>
-              </div>
+              <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 text-center">
+                {execution.flow_name}
+              </h1>
             )}
-          </div>
         </div>
 
         {/* Conteúdo Principal - 90% da altura da tela */}
-        <div className="h-[90vh] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div className="h-[90vh] flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-white dark:bg-[#0E0E0E] relative">
           <div className="w-full max-w-2xl">
 
             {isLoading && (
@@ -256,6 +231,30 @@ const FlowExecution = () => {
               />
             )}
           </div>
+
+          {/* Botões Flutuantes */}
+          {!isLoading && !error && currentStep && (
+            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex gap-3 z-50">
+              {canGoBack && (
+                <Button
+                  variant="outline"
+                  onClick={goBack}
+                  className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 shadow-lg hover:shadow-xl transition-shadow"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Anterior
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => navigate('/my-flows')}
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 shadow-lg hover:shadow-xl transition-shadow"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar aos Formulários
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </MobileErrorBoundary>
