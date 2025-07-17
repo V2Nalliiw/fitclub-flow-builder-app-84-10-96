@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
@@ -80,7 +81,7 @@ class WhatsAppTemplateService {
     
     switch (templateName) {
       case 'novo_formulario':
-        return `📋 *${variables.form_name || 'Formulário'}*\n\nOlá${variables.patient_name ? ` ${variables.patient_name}` : ''}! Você tem um formulário para preencher.\n\n🔗 Acesse o link: ${variables.form_url || '#'}\n\n_Responda assim que possível._`;
+        return `📋 *${variables.form_name || 'Formulário'}*\n\nOlá${variables.patient_name ? ` ${variables.patient_name}` : ''}! Você tem um formulário para preencher.\n\n🔗 Acesse o app: ${variables.form_url || 'https://fitclub.app.br'}\n\n_Responda assim que possível._`;
       
       default:
         return variables.message || 'Mensagem não disponível';
@@ -158,23 +159,8 @@ serve(async (req) => {
 
     console.log('✅ Dados coletados, enviando WhatsApp via', whatsappSettings.provider);
 
-    // Gerar link seguro usando a função generate-patient-link
-    console.log('🔗 Gerando link seguro para o paciente...');
-    const { data: linkResult, error: linkError } = await supabase.functions.invoke('generate-patient-link', {
-      body: {
-        executionId,
-        patientId
-      }
-    });
-
-    if (linkError || !linkResult?.success) {
-      console.error('❌ Erro ao gerar link do paciente:', linkError);
-      // Fallback para link direto se a função de geração falhar
-      var continueLink = `https://oilnybhaboefqyhjrmvl.lovable.app/patient-dashboard?execution=${executionId}`;
-    } else {
-      var continueLink = linkResult.link;
-      console.log('✅ Link seguro gerado:', continueLink);
-    }
+    // 🎯 CORREÇÃO: Sempre usar o domínio do FitClub e apontar para o dashboard
+    const continueLink = 'https://fitclub.app.br/';
     
     // Inicializar o serviço de templates
     const templateService = new WhatsAppTemplateService(supabase);

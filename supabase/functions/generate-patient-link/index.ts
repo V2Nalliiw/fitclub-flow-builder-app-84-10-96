@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
@@ -69,26 +70,18 @@ serve(async (req) => {
       );
     }
 
-    // Buscar configurações do app para obter domínio personalizado
-    const { data: appSettings } = await supabase
-      .from('app_settings')
-      .select('app_name')
-      .single();
-      
-    // Gerar o link do paciente - usar domínio personalizado do FitClub
-    const baseUrl = 'https://fitclub.app.br'; // Domínio personalizado do FitClub
-    const patientLink = `${baseUrl}/patient-dashboard?execution=${executionId}`;
+    // 🎯 CORREÇÃO: Usar sempre o domínio do FitClub e sempre apontar para o dashboard do paciente
+    const baseUrl = 'https://fitclub.app.br';
+    const patientLink = `${baseUrl}/`;
     
-    console.log('🏥 App:', appSettings?.app_name || 'FitClub');
-    
-    console.log('✅ Link gerado:', patientLink);
+    console.log('✅ Link gerado para dashboard do paciente:', patientLink);
     
     // Criar registro de acesso para auditoria (opcional)
     const accessData = {
       execution_id: executionId,
       patient_id: patientId,
-      files: [], // Vazio por enquanto, pode ser usado para documentos no futuro
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 dias
+      files: [],
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       metadata: {
         generated_at: new Date().toISOString(),
         flow_name: execution.flow_name,

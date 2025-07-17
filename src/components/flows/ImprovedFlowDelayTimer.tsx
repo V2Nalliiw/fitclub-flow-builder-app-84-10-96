@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Clock, CheckCircle2, ArrowRight } from 'lucide-react';
@@ -131,9 +132,9 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
       description: "Redirecionando para página inicial...",
     });
 
-    // Redirecionamento para página inicial após pequeno delay
+    // 🎯 CORREÇÃO: Redirecionar sempre para o dashboard do paciente
     setTimeout(() => {
-      console.log('🔄 DelayTimer: Redirecionando para página inicial');
+      console.log('🔄 DelayTimer: Redirecionando para dashboard do paciente');
       window.location.href = '/';
     }, 3000);
   };
@@ -167,7 +168,7 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
               </h3>
               
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Redirecionando automaticamente para a próxima etapa...
+                Redirecionando automaticamente para o dashboard...
               </p>
 
               <div className="flex items-center justify-center space-x-2">
@@ -203,7 +204,7 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
 
               <div className="bg-amber-500/10 dark:bg-amber-500/20 rounded-lg p-4">
                 <p className="text-amber-700 dark:text-amber-300 font-medium">
-                  ⏰ A próxima etapa será liberada automaticamente na página inicial
+                  ⏰ A próxima etapa será liberada automaticamente no dashboard
                 </p>
               </div>
             </>
