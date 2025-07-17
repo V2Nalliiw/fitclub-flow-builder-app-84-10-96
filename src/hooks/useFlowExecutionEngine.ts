@@ -72,6 +72,8 @@ export const useFlowExecutionEngine = () => {
   }, []);
 
   const processStartNode = async (executionId: string, step: ExecutionStep, nodeData: any) => {
+    console.log('🚀 FlowEngine: Processando nó de início do fluxo');
+    
     await supabase
       .from('flow_executions')
       .update({
@@ -81,7 +83,42 @@ export const useFlowExecutionEngine = () => {
       })
       .eq('id', executionId);
 
-    console.log('Nó de início processado');
+    // Buscar dados da execução para obter o patient_id
+    const { data: execution } = await supabase
+      .from('flow_executions')
+      .select('patient_id, flow_name')
+      .eq('id', executionId)
+      .single();
+
+    if (execution) {
+      console.log('📱 FlowEngine: Enviando notificação de início do fluxo via WhatsApp');
+
+      try {
+        // 🎯 USAR LINK FIXO DO FITCLUB para o início do fluxo
+        console.log('📱 FlowEngine: Enviando notificação de início do fluxo...');
+        
+        const { data: response, error } = await supabase.functions.invoke('send-whatsapp', {
+          body: {
+            patientId: (execution as any).patient_id,
+            executionId: executionId,
+            message: `🎯 Seu fluxo "${(execution as any).flow_name}" foi iniciado!\n\n📱 Acesse o app: https://fitclub.app.br/\n\n_Continue quando estiver pronto._`,
+            continueLink: 'https://fitclub.app.br/'
+          }
+        });
+
+        if (error) {
+          console.error('❌ FlowEngine: Erro na Edge Function de notificação:', error);
+        } else {
+          console.log('✅ FlowEngine: Notificação de início do fluxo enviada com sucesso:', response);
+        }
+      } catch (error) {
+        console.error('❌ FlowEngine: Erro ao chamar Edge Function de notificação:', error);
+      }
+    } else {
+      console.error('❌ FlowEngine: Execução não encontrada');
+    }
+
+    console.log('🚀 FlowEngine: Nó de início processado');
   };
 
   const processFormStartNode = async (executionId: string, step: ExecutionStep, nodeData: any) => {
