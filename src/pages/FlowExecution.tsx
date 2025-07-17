@@ -234,6 +234,8 @@ const FlowExecution = () => {
               isLoading={isSubmitting}
               canGoBack={canGoBack}
               calculatorResult={currentStep.calculatorResult}
+              calculatorResults={execution?.current_step?.calculatorResults || {}}
+              questionResponses={execution?.current_step?.userResponses || {}}
             />
           )}
         </div>

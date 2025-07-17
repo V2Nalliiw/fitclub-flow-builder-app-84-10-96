@@ -238,10 +238,14 @@ export const useFlowProcessor = () => {
       let nextStepIndex = stepIndex + 1;
       let nextStep = null;
       let nextAvailableAt = null;
-      let newStatus = 'completed';
+      let newStatus = 'in-progress'; // Default to in-progress, only set to completed when truly done
 
       if (nextStepIndex < updatedSteps.length) {
         nextStep = updatedSteps[nextStepIndex];
+      } else {
+        // Only mark as completed if we've truly reached the end
+        newStatus = 'completed';
+        console.log('🏁 Fim do fluxo atingido - marcando como completed');
       }
 
       // 🎯 CORREÇÃO: Detectar sequência Delay -> FormStart corretamente

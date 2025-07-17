@@ -237,6 +237,21 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
     console.log('📍 Índice da condição:', conditionIndex);
     setEvaluatedCondition(matchedCondition);
     
+    // 🚨 CRITICAL FIX: Se nenhuma condição foi encontrada, não devemos prosseguir
+    if (conditionIndex === -1) {
+      console.error('❌ CRITICAL: Nenhuma condição atendida! Fluxo não pode continuar.');
+      console.error('❌ Dados disponíveis:', { calculatorResults, questionResponses, calculatorResult });
+      console.error('❌ Condições configuradas:', {
+        compositeConditions: step.compositeConditions,
+        conditions: step.conditions,
+        condicoesEspeciais: step.condicoesEspeciais
+      });
+      
+      // Mostrar erro para o usuário ao invés de terminar o fluxo
+      alert('Erro: Não foi possível avaliar as condições. Verifique se todos os dados necessários foram fornecidos.');
+      return;
+    }
+    
     const responseData = {
       nodeId: step.nodeId,
       nodeType: 'conditions',
