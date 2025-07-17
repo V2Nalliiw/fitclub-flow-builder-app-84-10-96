@@ -26,9 +26,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0E0E0E] flex flex-col w-full">
-      {/* Top Bar */}
+      {/* Top Bar - 10% da altura da tela */}
       <header className={cn(
-        "h-16 border-b border-border bg-card px-6 flex items-center justify-between relative z-30",
+        "h-[10vh] min-h-[50px] border-b border-border bg-card px-4 flex items-center justify-between relative z-30",
         !isDesktop && isFlowsPage && "fixed top-0 left-0 right-0"
       )}>
         {/* Desktop Navigation */}
@@ -37,11 +37,11 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         ) : isTablet ? (
           /* Tablet - Menu minimalista centralizado no topo */
           <>
-            <div className="py-2">
+            <div className="py-1">
               <img 
                 src={currentLogo}
                 alt="Logo" 
-                className="h-12 w-auto max-w-[160px] object-contain"
+                className="h-8 w-auto max-w-[120px] object-contain"
               />
             </div>
             
@@ -49,10 +49,11 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <div className="relative">
                 <Button 
                   variant="ghost" 
-                  size="icon"
+                  size="sm"
                   onClick={() => setNotificationsOpen(!notificationsOpen)}
+                  className="h-8 w-8 p-1"
                 >
-                  <Bell className="h-4 w-4" />
+                  <Bell className="h-3 w-3" />
                 </Button>
                 
                 {notificationsOpen && (
@@ -67,11 +68,11 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         ) : (
           /* Mobile - manter como estava */
           <>
-            <div className="py-2">
+            <div className="py-1">
               <img 
                 src={currentLogo}
                 alt="Logo" 
-                className="h-12 w-auto max-w-[160px] object-contain"
+                className="h-8 w-auto max-w-[120px] object-contain"
               />
             </div>
             
@@ -79,10 +80,11 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <div className="relative">
                 <Button 
                   variant="ghost" 
-                  size="icon"
+                  size="sm"
                   onClick={() => setNotificationsOpen(!notificationsOpen)}
+                  className="h-8 w-8 p-1"
                 >
-                  <Bell className="h-4 w-4" />
+                  <Bell className="h-3 w-3" />
                 </Button>
                 
                 {notificationsOpen && (
@@ -97,16 +99,21 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         )}
       </header>
 
-      {/* Main Content */}
+      {/* Main Content - 80% da altura para mobile/tablet, resto para desktop */}
       <main className={cn(
-        "flex-1 transition-all duration-300 animate-fade-in",
-        !isDesktop && isFlowsPage ? "pt-0" : isMobile ? "pb-20" : "pb-6"
+        "transition-all duration-300 animate-fade-in",
+        !isDesktop && isFlowsPage ? "pt-0" : "",
+        isMobile || isTablet ? "h-[80vh] overflow-y-auto" : "flex-1 pb-6"
       )}>
         {children}
       </main>
 
-      {/* Mobile Navigation - Show only on mobile */}
-      {isMobile && <MobileNavigation />}
+      {/* Mobile Navigation - Show only on mobile - 10% da altura */}
+      {(isMobile || isTablet) && (
+        <div className="h-[10vh] min-h-[50px] shrink-0">
+          <MobileNavigation />
+        </div>
+      )}
       
       {/* Drawer Menu - Show on mobile and tablet only */}
       {!isDesktop && <MobileDrawer />}

@@ -65,7 +65,7 @@ const FlowExecution = () => {
   if (isLoading) {
     return (
       <MobileErrorBoundary>
-        <div className="min-h-screen max-h-screen bg-white dark:bg-[#0E0E0E] flow-execution-container flex items-center justify-center p-4 sm:p-6">
+        <div className="h-screen bg-white dark:bg-[#0E0E0E] flow-execution-container flex items-center justify-center p-4 sm:p-6">
           <div className="text-center">
             <LoadingSpinner />
             <p className="text-muted-foreground mt-4">Carregando formulário...</p>
@@ -78,7 +78,7 @@ const FlowExecution = () => {
   if (error) {
     return (
       <MobileErrorBoundary>
-        <div className="min-h-screen max-h-screen bg-white dark:bg-[#0E0E0E] flow-execution-container flex items-center justify-center p-4 sm:p-6">
+        <div className="h-screen bg-white dark:bg-[#0E0E0E] flow-execution-container flex items-center justify-center p-4 sm:p-6">
           <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] dark:border-gray-800 flow-step-card">
             <CardHeader className="text-center">
               <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -118,7 +118,7 @@ const FlowExecution = () => {
   if (!currentStep) {
     return (
       <MobileErrorBoundary>
-        <div className="min-h-screen max-h-screen bg-white dark:bg-[#0E0E0E] flow-execution-container flex items-center justify-center p-4 sm:p-6">
+        <div className="h-screen bg-white dark:bg-[#0E0E0E] flow-execution-container flex items-center justify-center p-4 sm:p-6">
           <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] dark:border-gray-800 flow-step-card">
             <CardContent className="py-16 text-center">
               <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
@@ -143,101 +143,119 @@ const FlowExecution = () => {
 
   return (
     <MobileErrorBoundary>
-      <div className="min-h-screen max-h-screen bg-white dark:bg-[#0E0E0E] flow-execution-container overflow-y-auto">
-        <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col h-screen justify-center space-y-6">
-          <div className="flex items-center justify-between mb-4 sm:mb-8">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/my-flows')}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white bg-transparent dark:bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar aos Formulários
-            </Button>
+      <div className="h-screen bg-white dark:bg-[#0E0E0E] flow-execution-container flex flex-col">
+        {/* Header - 10% da altura da tela */}
+        <div className="h-[10vh] min-h-[60px] flex items-center justify-between px-4 sm:px-6 border-b border-border bg-card shrink-0">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/my-flows')}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white bg-transparent dark:bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-sm px-2 py-1"
+          >
+            <ArrowLeft className="h-3 w-3 mr-1" />
+            Voltar aos Formulários
+          </Button>
+          
+          <div className="flex items-center gap-2">
+            {canGoBack && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goBack}
+                className="text-xs px-2 py-1"
+              >
+                <ArrowLeft className="h-3 w-3 mr-1" />
+                Editar Anterior
+              </Button>
+            )}
             
             {execution && (
               <div className="text-right">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 truncate max-w-[200px]">
                   {execution.flow_name}
                 </h1>
-                {/* Não mostrar progresso fixo, será calculado dinamicamente */}
               </div>
             )}
           </div>
+        </div>
 
-          {isLoading && (
-            <div className="text-center">
-              <LoadingSpinner />
-              <p className="text-muted-foreground mt-4">Carregando formulário...</p>
-            </div>
-          )}
+        {/* Conteúdo Principal - 90% da altura da tela */}
+        <div className="h-[90vh] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="w-full max-w-2xl">
 
-          {error && (
-            <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] dark:border-gray-800 flow-step-card">
-              <CardHeader className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <AlertTriangle className="h-8 w-8 text-white" />
-                </div>
-                <CardTitle className="text-xl text-gray-900 dark:text-gray-100">
-                  Erro ao carregar formulário
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 text-center">
-                <p className="text-gray-600 dark:text-gray-400">
-                  {error}
-                </p>
-                <div className="space-y-2">
+            {isLoading && (
+              <div className="text-center">
+                <LoadingSpinner />
+                <p className="text-muted-foreground mt-4">Carregando formulário...</p>
+              </div>
+            )}
+
+            {error && (
+              <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] dark:border-gray-800 flow-step-card">
+                <CardHeader className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AlertTriangle className="h-8 w-8 text-white" />
+                  </div>
+                  <CardTitle className="text-xl text-gray-900 dark:text-gray-100">
+                    Erro ao carregar formulário
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 text-center">
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {error}
+                  </p>
+                  <div className="space-y-2">
+                    <Button 
+                      onClick={() => navigate('/my-flows')}
+                      className="w-full bg-[#5D8701] hover:bg-[#4a6e01] text-white"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Voltar aos Formulários
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => window.location.reload()}
+                      className="w-full"
+                    >
+                      Tentar Novamente
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {!isLoading && !error && !currentStep && (
+              <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] dark:border-gray-800 flow-step-card">
+                <CardContent className="py-16 text-center">
+                  <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                    Formulário Concluído
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    Você completou todas as etapas deste formulário.
+                  </p>
                   <Button 
                     onClick={() => navigate('/my-flows')}
-                    className="w-full bg-[#5D8701] hover:bg-[#4a6e01] text-white"
+                    className="bg-[#5D8701] hover:bg-[#4a6e01] text-white"
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Voltar aos Formulários
                   </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => window.location.reload()}
-                    className="w-full"
-                  >
-                    Tentar Novamente
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                </CardContent>
+              </Card>
+            )}
 
-          {!isLoading && !error && !currentStep && (
-            <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] dark:border-gray-800 flow-step-card">
-              <CardContent className="py-16 text-center">
-                <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                  Formulário Concluído
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  Você completou todas as etapas deste formulário.
-                </p>
-                <Button 
-                  onClick={() => navigate('/my-flows')}
-                  className="bg-[#5D8701] hover:bg-[#4a6e01] text-white"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Voltar aos Formulários
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {!isLoading && !error && currentStep && (
-            <FlowStepRenderer
-              step={currentStep}
-              onComplete={handleStepComplete}
-              onGoBack={canGoBack ? goBack : undefined}
-              isLoading={isSubmitting}
-              canGoBack={canGoBack}
-              calculatorResult={currentStep.calculatorResult}
-              calculatorResults={execution?.current_step?.calculatorResults || {}}
-              questionResponses={execution?.current_step?.userResponses || {}}
-            />
-          )}
+            {!isLoading && !error && currentStep && (
+              <FlowStepRenderer
+                step={currentStep}
+                onComplete={handleStepComplete}
+                onGoBack={canGoBack ? goBack : undefined}
+                isLoading={isSubmitting}
+                canGoBack={canGoBack}
+                calculatorResult={currentStep.calculatorResult}
+                calculatorResults={execution?.current_step?.calculatorResults || {}}
+                questionResponses={execution?.current_step?.userResponses || {}}
+              />
+            )}
+          </div>
         </div>
       </div>
     </MobileErrorBoundary>
