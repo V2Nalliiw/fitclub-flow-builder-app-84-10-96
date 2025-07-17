@@ -65,7 +65,7 @@ export const AuthForm = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:bg-none dark:bg-[#0E0E0E] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0E0E0E] p-4">
       <Card className="w-full max-w-md relative">
         <div className="absolute top-4 right-4">
           <ThemeToggle />

@@ -207,7 +207,7 @@ export const FlowDelayTimer: React.FC<FlowDelayTimerProps> = ({
   }, [availableAt, isExpired, isProgressing, executionId]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-white dark:bg-[#0E0E0E] flex items-center justify-center p-6">
       <Card className="w-full max-w-md bg-white/95 dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in">
         <CardContent className="p-8 text-center">
           <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">
