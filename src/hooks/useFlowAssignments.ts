@@ -358,9 +358,8 @@ export const useFlowAssignments = () => {
 
               whatsappService.setConfig(config);
 
-              // Construir URL completa para o dashboard do paciente
-              const baseUrl = window.location.origin;
-              const patientDashboardUrl = `${baseUrl}/patient-dashboard`;
+              // Usar URL fixa do FitClub para o dashboard do paciente
+              const patientDashboardUrl = 'https://fitclub.app.br/dashboard';
               
               console.log('🌐 executeFirstNode: URL do dashboard:', patientDashboardUrl);
 
@@ -391,7 +390,7 @@ export const useFlowAssignments = () => {
               // Se todos os templates falharam, usar mensagem simples
               if (!result.success) {
                 console.log('📝 executeFirstNode: Templates falharam, usando mensagem simples');
-                const fallbackMessage = `🚀 *Novo Fluxo Iniciado*\n\nOlá ${patient.name || 'Paciente'}! Um novo fluxo "${execution.flow_name || 'Fluxo'}" foi iniciado para você.\n\n📱 Acesse: ${patientDashboardUrl}`;
+                const fallbackMessage = `🚀 *Novo Fluxo Iniciado*\n\nOlá ${patient.name || 'Paciente'}! Um novo fluxo "${execution.flow_name || 'Fluxo'}" foi iniciado para você.\n\n📱 Acesse: https://fitclub.app.br/dashboard`;
                 result = await sendMessage(patient.phone, fallbackMessage);
                 console.log('📊 executeFirstNode: Resultado mensagem simples:', result);
               }
