@@ -83,6 +83,18 @@ export const useFlowExecution = (executionId: string) => {
           setCurrentStep(null); // Flow completed
           setCanGoBack(false);
         }
+      } else if (data.current_node && currentStepData?.steps) {
+        // Fallback: se currentStepIndex não está consistente, usar current_node para encontrar o step
+        const steps = currentStepData.steps;
+        const currentNodeStep = steps.find(step => step.nodeId === data.current_node);
+        if (currentNodeStep) {
+          setCurrentStep(currentNodeStep);
+          const stepIndex = steps.findIndex(step => step.nodeId === data.current_node);
+          setCanGoBack(stepIndex > 0);
+        } else {
+          setCurrentStep(null);
+          setCanGoBack(false);
+        }
       } else {
         setCurrentStep(null);
         setCanGoBack(false);
