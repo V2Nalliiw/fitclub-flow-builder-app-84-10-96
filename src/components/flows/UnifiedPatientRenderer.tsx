@@ -355,8 +355,8 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
 
   if (showResult) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
-        <Card className="w-full max-w-lg bg-white/95 dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
+        <Card className="w-full max-w-lg bg-white dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in dark:border-gray-800">
           <CardContent className="p-8 text-center">
             <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 className="h-10 w-10 text-white" />
@@ -402,8 +402,8 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
   // FormStart com mensagem de boas-vindas acolhedora
   if (step.nodeType === 'formStart') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
-        <Card className="w-full max-w-lg bg-white/95 dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
+        <Card className="w-full max-w-lg bg-white dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in dark:border-gray-800">
           <CardContent className="p-8 text-center">
             <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <Heart className="h-10 w-10 text-white" />
@@ -459,8 +459,8 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
   // FlowEnd - final definitivo do tratamento (não usado mais aqui)
   if (step.nodeType === 'flowEnd' || step.nodeType === 'end') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
-        <Card className="w-full max-w-md bg-white/95 dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
+        <Card className="w-full max-w-md bg-white dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in dark:border-gray-800">
           <CardContent className="p-8 text-center">
             <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 className="h-10 w-10 text-white" />
@@ -584,8 +584,8 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
 
   if (!currentField) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
-        <Card className="w-full max-w-lg bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-0 shadow-xl animate-fade-in">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
+        <Card className="w-full max-w-lg bg-white dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in dark:border-gray-800">
           <CardContent className="p-8 text-center">
             <p className="text-gray-600 dark:text-gray-400">
               Nenhum campo encontrado para este tipo de etapa.
@@ -604,8 +604,8 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
-      <Card className="w-full max-w-lg bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-0 shadow-xl animate-fade-in">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
+      <Card className="w-full max-w-lg bg-white dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in dark:border-gray-800">
         <CardContent className="p-8">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
