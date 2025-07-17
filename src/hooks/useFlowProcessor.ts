@@ -331,6 +331,18 @@ export const useFlowProcessor = () => {
         console.log('🎯 Condição avaliada:', response?.condition);
         console.log('🎯 ID da condição:', response?.conditionId);
         console.log('🎯 Label da condição:', response?.conditionLabel);
+        console.log('🎯 Índice da condição:', response?.conditionIndex);
+        
+        // Para nós de condições, precisamos atualizar as respostas com a condição escolhida
+        if (completedStep.nodeType === 'conditions' && response?.condition) {
+          // Armazenar dados da condição avaliada
+          updatedUserResponses[`${stepId}_condition_result`] = {
+            condition: response.condition,
+            conditionIndex: response.conditionIndex,
+            conditionLabel: response.conditionLabel,
+            conditionId: response.conditionId
+          };
+        }
         
         // Buscar nodes e edges originais do fluxo
         const { data: flowData } = await supabase

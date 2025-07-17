@@ -200,29 +200,55 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
     });
     
     let matchedCondition = null;
+    let conditionIndex = -1;
     
     // Try composite conditions first (new format)
     if (step.compositeConditions && step.compositeConditions.length > 0) {
       console.log('🔍 Avaliando condições compostas:', step.compositeConditions);
-      matchedCondition = evaluateCompositeConditions(step.compositeConditions);
-      console.log('✅ Resultado das condições compostas:', matchedCondition);
+      for (let i = 0; i < step.compositeConditions.length; i++) {
+        const condition = step.compositeConditions[i];
+        const result = evaluateCompositeConditions([condition]);
+        if (result) {
+          matchedCondition = condition;
+          conditionIndex = i;
+          console.log(`✅ Condição composta ${i} atendida:`, condition.label);
+          break;
+        }
+      }
     }
     
     // Fallback to legacy conditions
     if (!matchedCondition && step.conditions && step.conditions.length > 0) {
       console.log('🔄 Tentando condições legadas:', step.conditions);
-      matchedCondition = evaluateConditions(calculatorResult || 0, step.conditions);
-      console.log('✅ Resultado das condições legadas:', matchedCondition);
+      for (let i = 0; i < step.conditions.length; i++) {
+        const condition = step.conditions[i];
+        const result = evaluateConditions(calculatorResult || 0, [condition]);
+        if (result) {
+          matchedCondition = condition;
+          conditionIndex = i;
+          console.log(`✅ Condição legada ${i} atendida:`, condition.label || condition.campo);
+          break;
+        }
+      }
     }
     
     // Try special conditions (advanced format)
     if (!matchedCondition && step.condicoesEspeciais && step.condicoesEspeciais.length > 0) {
       console.log('🔄 Tentando condições especiais:', step.condicoesEspeciais);
-      matchedCondition = evaluateConditions(calculatorResult || 0, step.condicoesEspeciais);
-      console.log('✅ Resultado das condições especiais:', matchedCondition);
+      for (let i = 0; i < step.condicoesEspeciais.length; i++) {
+        const condition = step.condicoesEspeciais[i];
+        const result = evaluateConditions(calculatorResult || 0, [condition]);
+        if (result) {
+          matchedCondition = condition;
+          conditionIndex = i;
+          console.log(`✅ Condição especial ${i} atendida:`, condition.label || condition.campo);
+          break;
+        }
+      }
     }
 
     console.log('🎯 Condição final escolhida:', matchedCondition);
+    console.log('📍 Índice da condição:', conditionIndex);
     setEvaluatedCondition(matchedCondition);
     
     const responseData = {
@@ -231,6 +257,7 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
       condition: matchedCondition,
       conditionId: matchedCondition?.id,
       conditionLabel: matchedCondition?.label,
+      conditionIndex: conditionIndex, // Para o processador saber qual caminho seguir
       allData: {
         calculatorResult,
         questionResponses,
@@ -239,7 +266,7 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
       timestamp: new Date().toISOString()
     };
     
-    console.log('📤 Enviando resposta:', responseData);
+    console.log('📤 Enviando resposta com índice da condição:', responseData);
     onComplete(responseData);
   };
 

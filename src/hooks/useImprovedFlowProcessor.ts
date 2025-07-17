@@ -28,6 +28,7 @@ interface FlowStep {
   formula?: string;
   resultLabel?: string;
   conditions?: any[];
+  compositeConditions?: any[];
   calculatorResult?: number;
   nomenclatura?: string;
   prefixo?: string;
@@ -66,40 +67,33 @@ export const useImprovedFlowProcessor = () => {
       
       // Pular nós de início e fim
       if (node.type !== 'start' && node.type !== 'end') {
-        // Para nós condicionais, avaliar condições
-        if (node.type === 'conditions') {
-          const shouldInclude = evaluateConditions(
-            node.data.conditions || [], 
-            userResponses, 
-            calculatorResults
-          );
-          
-          console.log(`  🎯 Condições avaliadas: ${shouldInclude}`);
-          
-          if (!shouldInclude) {
-            // Condição não atendida, pular este nó
-            const nextEdges = edges.filter(edge => edge.source === nodeId);
-            nextEdges.forEach(edge => traverseFlow(edge.target, depth + 1));
-            return;
-          }
-        }
+        // SEMPRE incluir nós de condições como steps visíveis
+        // A avaliação acontecerá quando o paciente interagir com o ConditionsStepRenderer
 
-        // Para FormEnd, verificar se é o caminho correto baseado nas condições
+        // Para FormEnd, só incluir se houver dados suficientes para avaliar condições
+        // ou se for a primeira passagem (construção inicial)
         if (node.type === 'formEnd') {
           const conditionsEdge = edges.find(edge => edge.target === nodeId);
           if (conditionsEdge) {
             const conditionsNode = nodes.find(n => n.id === conditionsEdge.source);
             if (conditionsNode?.type === 'conditions') {
-              const shouldInclude = evaluateConditions(
-                conditionsNode.data.conditions || [], 
-                userResponses, 
-                calculatorResults
-              );
-              
-              console.log(`  🎯 FormEnd ${nodeId}: Condição ${shouldInclude ? 'ATENDIDA' : 'NÃO ATENDIDA'}`);
-              
-              if (!shouldInclude) {
-                console.log(`  ❌ FormEnd ${nodeId} rejeitado por condições`);
+              // Se houver respostas/resultados de cálculo, avaliar condições
+              if (Object.keys(userResponses).length > 0 || Object.keys(calculatorResults).length > 0) {
+                const shouldInclude = evaluateConditions(
+                  conditionsNode.data.conditions || [], 
+                  userResponses, 
+                  calculatorResults
+                );
+                
+                console.log(`  🎯 FormEnd ${nodeId}: Condição ${shouldInclude ? 'ATENDIDA' : 'NÃO ATENDIDA'}`);
+                
+                if (!shouldInclude) {
+                  console.log(`  ❌ FormEnd ${nodeId} rejeitado por condições`);
+                  return;
+                }
+              } else {
+                // Se não há dados para avaliar, pular FormEnd na construção inicial
+                console.log(`  ⏸️ FormEnd ${nodeId} pulado - sem dados para avaliar condições`);
                 return;
               }
             }
@@ -128,6 +122,7 @@ export const useImprovedFlowProcessor = () => {
           formula: node.data.formula,
           resultLabel: node.data.resultLabel,
           conditions: node.data.conditions,
+          compositeConditions: node.data.compositeConditions,
           nomenclatura: node.data.nomenclatura,
           prefixo: node.data.prefixo,
           sufixo: node.data.sufixo,
@@ -150,90 +145,99 @@ export const useImprovedFlowProcessor = () => {
       const nextEdges = edges.filter(edge => edge.source === nodeId);
       
       if (node.type === 'conditions') {
-        // Para nós de condições, seguir apenas UM caminho baseado na avaliação
-        const conditionMet = evaluateConditions(
-          node.data.condicoesEspeciais || node.data.conditions || [], 
-          userResponses, 
-          calculatorResults
-        );
-        
-        console.log(`  🎯 Conditions ${nodeId}: ${conditionMet ? 'ATENDIDA' : 'NÃO ATENDIDA'}`);
-        console.log(`  📊 Edges disponíveis: ${nextEdges.length}`);
-        console.log(`  📝 Dados das condições:`, node.data.condicoesEspeciais || node.data.conditions);
-        
-        // Verificar se há condições compostas (novo formato)
-        if (node.data.compositeConditions && node.data.compositeConditions.length > 0) {
-          console.log(`  🔍 Avaliando condições compostas para nó ${nodeId}:`, node.data.compositeConditions);
-          let targetEdge = null;
+        // Se há dados suficientes para avaliar condições (após responses/cálculos)
+        if (Object.keys(userResponses).length > 0 || Object.keys(calculatorResults).length > 0) {
+          // Para nós de condições, seguir apenas UM caminho baseado na avaliação
+          const conditionMet = evaluateConditions(
+            node.data.condicoesEspeciais || node.data.conditions || [], 
+            userResponses, 
+            calculatorResults
+          );
           
-          // Avaliar cada condição composta para encontrar a primeira que bate
-          for (let i = 0; i < node.data.compositeConditions.length; i++) {
-            const condition = node.data.compositeConditions[i];
-            const conditionResult = evaluateCompositeCondition(condition, userResponses, calculatorResults);
+          console.log(`  🎯 Conditions ${nodeId}: ${conditionMet ? 'ATENDIDA' : 'NÃO ATENDIDA'}`);
+          console.log(`  📊 Edges disponíveis: ${nextEdges.length}`);
+          console.log(`  📝 Dados das condições:`, node.data.condicoesEspeciais || node.data.conditions);
+          
+          // Verificar se há condições compostas (novo formato)
+          if (node.data.compositeConditions && node.data.compositeConditions.length > 0) {
+            console.log(`  🔍 Avaliando condições compostas para nó ${nodeId}:`, node.data.compositeConditions);
+            let targetEdge = null;
             
-            console.log(`    🔍 Condição composta ${i}: ${condition.label} = ${conditionResult}`);
+            // Avaliar cada condição composta para encontrar a primeira que bate
+            for (let i = 0; i < node.data.compositeConditions.length; i++) {
+              const condition = node.data.compositeConditions[i];
+              const conditionResult = evaluateCompositeCondition(condition, userResponses, calculatorResults);
+              
+              console.log(`    🔍 Condição composta ${i}: ${condition.label} = ${conditionResult}`);
+              
+              if (conditionResult && nextEdges[i]) {
+                targetEdge = nextEdges[i];
+                console.log(`    ✅ Seguindo caminho da condição composta ${i}: ${targetEdge.target}`);
+                break;
+              }
+            }
             
-            if (conditionResult && nextEdges[i]) {
-              targetEdge = nextEdges[i];
-              console.log(`    ✅ Seguindo caminho da condição composta ${i}: ${targetEdge.target}`);
-              break;
+            // Se nenhuma condição foi atendida, usar o último edge como fallback
+            if (!targetEdge && nextEdges.length > 0) {
+              targetEdge = nextEdges[nextEdges.length - 1];
+              console.log(`    🔄 Nenhuma condição composta atendida, usando fallback: ${targetEdge.target}`);
+            }
+            
+            if (targetEdge) {
+              traverseFlow(targetEdge.target, depth + 1);
             }
           }
-          
-          // Se nenhuma condição foi atendida, usar o último edge como fallback
-          if (!targetEdge && nextEdges.length > 0) {
-            targetEdge = nextEdges[nextEdges.length - 1];
-            console.log(`    🔄 Nenhuma condição composta atendida, usando fallback: ${targetEdge.target}`);
-          }
-          
-          if (targetEdge) {
-            traverseFlow(targetEdge.target, depth + 1);
-          }
-        }
-        // Usar nova lógica de condições especiais (formato legado)
-        else if (node.data.condicoesEspeciais && node.data.condicoesEspeciais.length > 0) {
-          let targetEdge = null;
-          
-          // Avaliar cada condição especial para encontrar a primeira que bate
-          for (let i = 0; i < node.data.condicoesEspeciais.length; i++) {
-            const condition = node.data.condicoesEspeciais[i];
-            const conditionResult = evaluateSpecialCondition(condition, userResponses, calculatorResults);
+          // Usar nova lógica de condições especiais (formato legado)
+          else if (node.data.condicoesEspeciais && node.data.condicoesEspeciais.length > 0) {
+            let targetEdge = null;
             
-            console.log(`    🔍 Condição especial ${i}: ${condition.label} = ${conditionResult}`);
-            
-            if (conditionResult && nextEdges[i]) {
-              targetEdge = nextEdges[i];
-              console.log(`    ✅ Seguindo caminho da condição especial ${i}: ${targetEdge.target}`);
-              break;
+            // Avaliar cada condição especial para encontrar a primeira que bate
+            for (let i = 0; i < node.data.condicoesEspeciais.length; i++) {
+              const condition = node.data.condicoesEspeciais[i];
+              const conditionResult = evaluateSpecialCondition(condition, userResponses, calculatorResults);
+              
+              console.log(`    🔍 Condição especial ${i}: ${condition.label} = ${conditionResult}`);
+              
+              if (conditionResult && nextEdges[i]) {
+                targetEdge = nextEdges[i];
+                console.log(`    ✅ Seguindo caminho da condição especial ${i}: ${targetEdge.target}`);
+                break;
+              }
             }
-          }
-          
-          // Se nenhuma condição foi atendida, usar o último edge como fallback
-          if (!targetEdge && nextEdges.length > 0) {
-            targetEdge = nextEdges[nextEdges.length - 1];
-            console.log(`    🔄 Nenhuma condição atendida, usando fallback: ${targetEdge.target}`);
-          }
-          
-          if (targetEdge) {
-            traverseFlow(targetEdge.target, depth + 1);
+            
+            // Se nenhuma condição foi atendida, usar o último edge como fallback
+            if (!targetEdge && nextEdges.length > 0) {
+              targetEdge = nextEdges[nextEdges.length - 1];
+              console.log(`    🔄 Nenhuma condições especiais atendida, usando fallback: ${targetEdge.target}`);
+            }
+            
+            if (targetEdge) {
+              traverseFlow(targetEdge.target, depth + 1);
+            }
+          } else {
+            // Estratégia original para condições simples
+            let targetEdge = null;
+            
+            if (conditionMet && nextEdges.length > 0) {
+              targetEdge = nextEdges[0];
+              console.log(`  ✅ Seguindo caminho TRUE: ${targetEdge.target}`);
+            } else if (!conditionMet && nextEdges.length > 1) {
+              targetEdge = nextEdges[1];
+              console.log(`  ❌ Seguindo caminho FALSE: ${targetEdge.target}`);
+            } else if (nextEdges.length > 0) {
+              targetEdge = nextEdges[0];
+              console.log(`  🔄 Fallback: ${targetEdge.target}`);
+            }
+            
+            if (targetEdge) {
+              traverseFlow(targetEdge.target, depth + 1);
+            }
           }
         } else {
-          // Estratégia original para condições simples
-          let targetEdge = null;
-          
-          if (conditionMet && nextEdges.length > 0) {
-            targetEdge = nextEdges[0];
-            console.log(`  ✅ Seguindo caminho TRUE: ${targetEdge.target}`);
-          } else if (!conditionMet && nextEdges.length > 1) {
-            targetEdge = nextEdges[1];
-            console.log(`  ❌ Seguindo caminho FALSE: ${targetEdge.target}`);
-          } else if (nextEdges.length > 0) {
-            targetEdge = nextEdges[0];
-            console.log(`  🔄 Fallback: ${targetEdge.target}`);
-          }
-          
-          if (targetEdge) {
-            traverseFlow(targetEdge.target, depth + 1);
+          // Se não há dados suficientes, apenas seguir primeiro caminho (construção inicial)
+          console.log(`  ⏸️ Conditions ${nodeId}: Sem dados para avaliar, seguindo primeiro caminho`);
+          if (nextEdges.length > 0) {
+            traverseFlow(nextEdges[0].target, depth + 1);
           }
         }
       } else {
