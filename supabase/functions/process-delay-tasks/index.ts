@@ -86,6 +86,13 @@ serve(async (req) => {
             console.log(`📱 CRÍTICO: Enviando WhatsApp para FormStart na execução ${task.execution_id}`);
             
             try {
+              console.log(`🚀 INVOKING send-form-notification para task ${task.id}...`);
+              console.log(`📋 Parâmetros da invocação:`, {
+                patientId: task.patient_id,
+                formName: task.form_name,
+                executionId: task.execution_id
+              });
+              
               // Chamar a edge function send-form-notification
               const { data: notificationResult, error: notificationError } = await supabase.functions.invoke('send-form-notification', {
                 body: {
@@ -96,12 +103,21 @@ serve(async (req) => {
               });
 
               if (notificationError) {
-                console.error(`❌ CRÍTICO: Erro ao enviar notificação para task ${task.id}:`, notificationError);
+                console.error(`❌ CRÍTICO: Erro ao invocar send-form-notification para task ${task.id}:`, {
+                  error: notificationError,
+                  details: notificationError.message || 'Unknown error',
+                  context: notificationError.context
+                });
                 errorCount++;
                 continue;
               }
 
-              console.log(`✅ SUCESSO: Notificação WhatsApp enviada para task ${task.id}`, notificationResult);
+              console.log(`✅ SUCESSO: send-form-notification invocada para task ${task.id}`, {
+                result: notificationResult,
+                success: notificationResult?.success,
+                patientName: notificationResult?.patientName,
+                formName: notificationResult?.formName
+              });
 
               // CRÍTICO: Após enviar notificação, atualizar execução corretamente
               console.log(`🔄 Posicionando execução NO FormStart (não além dele)`);

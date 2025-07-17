@@ -179,21 +179,55 @@ serve(async (req) => {
     let whatsappResponse;
     
     if (whatsappSettings.provider === 'meta') {
-      console.log('📱 Enviando via Meta WhatsApp API...');
+      console.log('📱 Enviando via Meta WhatsApp API usando template oficial...');
       
-      whatsappResponse = await fetch(`https://graph.facebook.com/v17.0/${whatsappSettings.phone_number}/messages`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${whatsappSettings.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to: profile.phone,
-          type: 'text',
-          text: { body: message }
-        }),
-      });
+      // Primeiro tenta usar template oficial novo_formulario
+      try {
+        whatsappResponse = await fetch(`https://graph.facebook.com/v17.0/${whatsappSettings.phone_number}/messages`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${whatsappSettings.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: profile.phone,
+            type: 'template',
+            template: {
+              name: 'novo_formulario',
+              language: { code: 'pt_BR' },
+              components: [
+                {
+                  type: 'body',
+                  parameters: [
+                    { type: 'text', text: profile.name },
+                    { type: 'text', text: continueLink }
+                  ]
+                }
+              ]
+            }
+          }),
+        });
+
+        console.log('✅ Template oficial novo_formulario enviado');
+      } catch (templateError) {
+        console.warn('⚠️ Falha no template oficial, usando fallback de texto:', templateError);
+        
+        // Fallback para mensagem de texto simples
+        whatsappResponse = await fetch(`https://graph.facebook.com/v17.0/${whatsappSettings.phone_number}/messages`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${whatsappSettings.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: profile.phone,
+            type: 'text',
+            text: { body: message }
+          }),
+        });
+      }
       
     } else if (whatsappSettings.provider === 'evolution') {
       console.log('📱 Enviando via Evolution API...');
