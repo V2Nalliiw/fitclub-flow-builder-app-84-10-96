@@ -366,13 +366,19 @@ input:focus, textarea:focus, select:focus {
   }
 }
 
+/* Patient form flow dark mode background - Force #0E0E0E */
+.dark .patient-flow-container,
+.dark .flow-execution-container {
+  background-color: #0E0E0E !important;
+}
+
 /* Patient Dashboard specific gradients */
 .patient-gradient-bg {
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
 .dark .patient-gradient-bg {
-  background: #0E0E0E;
+  background: #0E0E0E !important;
 }
 
 .patient-card-gradient {
@@ -380,24 +386,29 @@ input:focus, textarea:focus, select:focus {
 }
 
 .dark .patient-card-gradient {
-  background: #0E0E0E;
+  background: #0E0E0E !important;
 }
 
 /* Form dark mode styling */
 .dark .form-card {
-  background: #0E0E0E;
+  background: #0E0E0E !important;
   border-color: #1E1E1E;
 }
 
 .dark .form-input {
-  background-color: #0E0E0E;
+  background-color: #0E0E0E !important;
   border-color: #1E1E1E;
   color: #f8fafc;
 }
 
 .dark .form-input:focus {
-  background-color: #0E0E0E;
+  background-color: #0E0E0E !important;
   border-color: #5D8701;
+}
+
+/* Flow step cards in dark mode */
+.dark .flow-step-card {
+  background-color: #0E0E0E !important;
 }
 
 /* Responsive improvements for mobile */
