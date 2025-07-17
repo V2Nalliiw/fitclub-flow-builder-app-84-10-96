@@ -152,33 +152,60 @@ export const useImprovedFlowProcessor = () => {
       if (node.type === 'conditions') {
         // Para nós de condições, seguir apenas UM caminho baseado na avaliação
         const conditionMet = evaluateConditions(
-          node.data.conditions || [], 
+          node.data.condicoesEspeciais || node.data.conditions || [], 
           userResponses, 
           calculatorResults
         );
         
         console.log(`  🎯 Conditions ${nodeId}: ${conditionMet ? 'ATENDIDA' : 'NÃO ATENDIDA'}`);
         console.log(`  📊 Edges disponíveis: ${nextEdges.length}`);
+        console.log(`  📝 Dados das condições:`, node.data.condicoesEspeciais || node.data.conditions);
         
-        // Estratégia específica: primeiro edge = TRUE, segundo edge = FALSE
-        let targetEdge = null;
-        
-        if (conditionMet && nextEdges.length > 0) {
-          // Condição atendida - seguir primeiro edge
-          targetEdge = nextEdges[0];
-          console.log(`  ✅ Seguindo caminho TRUE: ${targetEdge.target}`);
-        } else if (!conditionMet && nextEdges.length > 1) {
-          // Condição não atendida - seguir segundo edge
-          targetEdge = nextEdges[1];
-          console.log(`  ❌ Seguindo caminho FALSE: ${targetEdge.target}`);
-        } else if (nextEdges.length > 0) {
-          // Fallback
-          targetEdge = nextEdges[0];
-          console.log(`  🔄 Fallback: ${targetEdge.target}`);
-        }
-        
-        if (targetEdge) {
-          traverseFlow(targetEdge.target, depth + 1);
+        // Usar nova lógica de condições especiais
+        if (node.data.condicoesEspeciais && node.data.condicoesEspeciais.length > 0) {
+          let targetEdge = null;
+          
+          // Avaliar cada condição especial para encontrar a primeira que bate
+          for (let i = 0; i < node.data.condicoesEspeciais.length; i++) {
+            const condition = node.data.condicoesEspeciais[i];
+            const conditionResult = evaluateSpecialCondition(condition, userResponses, calculatorResults);
+            
+            console.log(`    🔍 Condição ${i}: ${condition.label} = ${conditionResult}`);
+            
+            if (conditionResult && nextEdges[i]) {
+              targetEdge = nextEdges[i];
+              console.log(`    ✅ Seguindo caminho da condição ${i}: ${targetEdge.target}`);
+              break;
+            }
+          }
+          
+          // Se nenhuma condição foi atendida, usar o último edge como fallback
+          if (!targetEdge && nextEdges.length > 0) {
+            targetEdge = nextEdges[nextEdges.length - 1];
+            console.log(`    🔄 Nenhuma condição atendida, usando fallback: ${targetEdge.target}`);
+          }
+          
+          if (targetEdge) {
+            traverseFlow(targetEdge.target, depth + 1);
+          }
+        } else {
+          // Estratégia original para condições simples
+          let targetEdge = null;
+          
+          if (conditionMet && nextEdges.length > 0) {
+            targetEdge = nextEdges[0];
+            console.log(`  ✅ Seguindo caminho TRUE: ${targetEdge.target}`);
+          } else if (!conditionMet && nextEdges.length > 1) {
+            targetEdge = nextEdges[1];
+            console.log(`  ❌ Seguindo caminho FALSE: ${targetEdge.target}`);
+          } else if (nextEdges.length > 0) {
+            targetEdge = nextEdges[0];
+            console.log(`  🔄 Fallback: ${targetEdge.target}`);
+          }
+          
+          if (targetEdge) {
+            traverseFlow(targetEdge.target, depth + 1);
+          }
         }
       } else {
         // Para outros tipos de nó, seguir todos os caminhos
@@ -245,9 +272,81 @@ export const useImprovedFlowProcessor = () => {
     });
   }, []);
 
+  const evaluateSpecialCondition = useCallback((
+    condition: any, 
+    userResponses: Record<string, any>, 
+    calculatorResults: Record<string, number>
+  ) => {
+    const { campo, operador, valor, valorFinal, tipo } = condition;
+    let compareValue: any;
+
+    // Buscar valor nas respostas ou resultados
+    if (calculatorResults[campo] !== undefined) {
+      compareValue = calculatorResults[campo];
+    } else if (userResponses[campo] !== undefined) {
+      compareValue = userResponses[campo];
+    } else {
+      const allData = { ...userResponses, ...calculatorResults };
+      if (allData[campo] !== undefined) {
+        compareValue = allData[campo];
+      } else {
+        console.warn(`❌ Campo ${campo} não encontrado para condição especial`);
+        return false;
+      }
+    }
+
+    console.log(`  🎯 Condição especial: ${campo} ${operador} ${valor} | Valor atual: ${compareValue} | Tipo: ${tipo}`);
+
+    if (tipo === 'numerico') {
+      const numValue = typeof compareValue === 'number' ? compareValue : parseFloat(compareValue);
+      const conditionValue = typeof valor === 'number' ? valor : parseFloat(valor as string);
+      
+      if (isNaN(numValue) || isNaN(conditionValue)) {
+        return false;
+      }
+
+      switch (operador) {
+        case 'igual':
+          return numValue === conditionValue;
+        case 'maior':
+          return numValue > conditionValue;
+        case 'menor':
+          return numValue < conditionValue;
+        case 'maior_igual':
+          return numValue >= conditionValue;
+        case 'menor_igual':
+          return numValue <= conditionValue;
+        case 'diferente':
+          return numValue !== conditionValue;
+        case 'entre':
+          return valorFinal !== undefined && 
+                 numValue >= conditionValue && 
+                 numValue <= valorFinal;
+        default:
+          return false;
+      }
+    } else {
+      // Tipo pergunta
+      const strValue = String(compareValue).toLowerCase();
+      const conditionValue = String(valor).toLowerCase();
+
+      switch (operador) {
+        case 'igual':
+          return strValue === conditionValue;
+        case 'diferente':
+          return strValue !== conditionValue;
+        case 'contem':
+          return strValue.includes(conditionValue);
+        default:
+          return false;
+      }
+    }
+  }, []);
+
   return {
     buildFlowSteps,
     evaluateConditions,
+    evaluateSpecialCondition,
     processing
   };
 };

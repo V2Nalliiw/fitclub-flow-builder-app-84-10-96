@@ -327,6 +327,7 @@ export const useFlowProcessor = () => {
       // Recalcular steps baseado nas respostas atuais (para fluxos condicionais)
       if (completedStep.nodeType === 'conditions' || completedStep.nodeType === 'calculator') {
         console.log('🔄 Recalculando fluxo condicional baseado nas respostas...');
+        console.log('📊 Respostas atuais para recálculo:', { updatedUserResponses, updatedCalculatorResults });
         
         // Buscar nodes e edges originais do fluxo
         const { data: flowData } = await supabase
@@ -350,18 +351,32 @@ export const useFlowProcessor = () => {
               updatedCalculatorResults
             );
             
+            console.log('🎯 Novos steps calculados:', newSteps.map(s => `${s.nodeType}:${s.title}`));
+            
             // Manter steps já completados e adicionar novos steps baseados nas condições
             const completedStepsIds = updatedSteps.filter((s: any) => s.completed).map((s: any) => s.nodeId);
             const mergedSteps = newSteps.map((newStep: any) => {
               const existingStep = updatedSteps.find((s: any) => s.nodeId === newStep.nodeId);
               if (existingStep && completedStepsIds.includes(newStep.nodeId)) {
-                return existingStep;
+                // Manter step completado mas atualizar dados se necessário
+                return { ...existingStep, ...newStep, completed: true, response: existingStep.response };
               }
               return newStep;
             });
             
-            console.log('📋 Steps recalculados:', mergedSteps);
+            console.log('📋 Steps finais após merge:', mergedSteps.map(s => `${s.nodeType}:${s.title} (${s.completed ? 'DONE' : 'PENDING'})`));
             updatedSteps.splice(0, updatedSteps.length, ...mergedSteps);
+            
+            // Atualizar nextStepIndex para apontar para o próximo step não completado
+            nextStepIndex = mergedSteps.findIndex((s: any) => !s.completed);
+            if (nextStepIndex !== -1) {
+              nextStep = mergedSteps[nextStepIndex];
+              console.log('🎯 Próximo step após recálculo:', nextStep);
+            } else {
+              nextStep = null;
+              nextStepIndex = mergedSteps.length;
+              console.log('🎯 Todos os steps completados após recálculo');
+            }
           }
         }
       }

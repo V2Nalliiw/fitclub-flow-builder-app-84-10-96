@@ -109,12 +109,20 @@ export const SpecialConditionsStepRenderer: React.FC<SpecialConditionsStepRender
   };
 
   const handleContinue = () => {
+    console.log('🎯 ConditionsRenderer: Completando com condição avaliada:', {
+      evaluatedCondition,
+      evaluationResult,
+      conditionMet: evaluatedCondition !== null
+    });
+
     onComplete({
       nodeId: step.nodeId,
       nodeType: step.nodeType,
       evaluatedCondition: evaluatedCondition,
       result: evaluationResult,
       conditionMet: evaluatedCondition !== null,
+      conditionId: evaluatedCondition?.id,
+      conditionLabel: evaluatedCondition?.label,
       timestamp: new Date().toISOString()
     });
   };
