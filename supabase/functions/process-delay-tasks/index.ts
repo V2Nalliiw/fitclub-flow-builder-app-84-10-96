@@ -128,11 +128,11 @@ serve(async (req) => {
                 const hasMoreSteps = nextStepIndex < currentSteps.length - 1;
                 console.log(`📊 Próximo step: index=${nextStepIndex}, hasMoreSteps=${hasMoreSteps}`);
                 
-                // CRÍTICO: Sempre definir como 'em-andamento' se há steps disponíveis
+                // CRÍTICO: Sempre definir como 'in-progress' se há steps disponíveis
                 const updateData: any = {
                   current_node: task.next_node_id,
                   current_step: currentStep,
-                  status: 'em-andamento', // SEMPRE em-andamento para steps disponíveis
+                  status: 'in-progress', // SEMPRE in-progress para steps disponíveis
                   next_step_available_at: null, // CRÍTICO: Limpar delay
                   updated_at: new Date().toISOString(),
                   completed_steps: nextStepIndex // Atualizar progresso
@@ -140,7 +140,7 @@ serve(async (req) => {
                 
                 // Se não há mais steps, marcar como completado
                 if (!hasMoreSteps) {
-                  updateData.status = 'concluido';
+                  updateData.status = 'completed';
                   updateData.completed_at = new Date().toISOString();
                   updateData.current_node = null;
                   console.log(`🏁 Execução será marcada como concluída`);
@@ -201,11 +201,11 @@ serve(async (req) => {
               const hasMoreSteps = nextStepIndex < currentSteps.length - 1;
               console.log(`📊 Próximo step: index=${nextStepIndex}, hasMoreSteps=${hasMoreSteps}`);
               
-              // CRÍTICO: Sempre definir como 'em-andamento' se há steps disponíveis
+              // CRÍTICO: Sempre definir como 'in-progress' se há steps disponíveis
               const updateData: any = {
                 current_node: task.next_node_id,
                 current_step: currentStep,
-                status: 'em-andamento', // SEMPRE em-andamento para steps disponíveis
+                status: 'in-progress', // SEMPRE in-progress para steps disponíveis
                 next_step_available_at: null, // CRÍTICO: Limpar delay
                 updated_at: new Date().toISOString(),
                 completed_steps: nextStepIndex // Atualizar progresso
@@ -213,7 +213,7 @@ serve(async (req) => {
               
               // Se não há mais steps, marcar como completado
               if (!hasMoreSteps) {
-                updateData.status = 'concluido';
+                updateData.status = 'completed';
                 updateData.completed_at = new Date().toISOString();
                 updateData.current_node = null;
                 console.log(`🏁 Execução será marcada como concluída`);
