@@ -10,7 +10,7 @@ const Index = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0E0E0E]">
         <LoadingSpinner size="lg" />
       </div>
     );

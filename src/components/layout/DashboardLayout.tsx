@@ -25,7 +25,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const isFlowsPage = location.pathname === '/flows';
 
   return (
-    <div className="min-h-screen bg-background flex flex-col w-full">
+    <div className="min-h-screen bg-white dark:bg-[#0E0E0E] flex flex-col w-full">
       {/* Top Bar */}
       <header className={cn(
         "h-16 border-b border-border bg-card px-6 flex items-center justify-between relative z-30",
