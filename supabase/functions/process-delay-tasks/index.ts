@@ -103,7 +103,7 @@ serve(async (req) => {
 
               console.log(`✅ SUCESSO: Notificação WhatsApp enviada para task ${task.id}`, notificationResult);
 
-              // Após enviar notificação com sucesso, avançar o flow para o próximo step
+              // CRÍTICO: Após enviar notificação, atualizar execução corretamente
               console.log(`🔄 Avançando execução para o próximo step (FormStart)`);
               
               if (execution?.current_step) {
@@ -111,10 +111,13 @@ serve(async (req) => {
                 const currentStepIndex = currentStep.currentStepIndex || 0;
                 const currentSteps = currentStep.steps || [];
                 
+                console.log(`📊 Estado atual: stepIndex=${currentStepIndex}, totalSteps=${currentSteps.length}`);
+                
                 // Marcar o step de delay atual como completed
                 if (currentStep.steps && currentStep.steps[currentStepIndex]) {
                   currentStep.steps[currentStepIndex].completed = true;
                   currentStep.steps[currentStepIndex].completedAt = new Date().toISOString();
+                  console.log(`✅ Step ${currentStepIndex} marcado como concluído`);
                 }
                 
                 // Avançar para o próximo step (FormStart)
@@ -123,29 +126,40 @@ serve(async (req) => {
                 
                 // Verificar se há mais steps após este
                 const hasMoreSteps = nextStepIndex < currentSteps.length - 1;
-                const executionStatus = hasMoreSteps ? 'in-progress' : 'completed';
+                console.log(`📊 Próximo step: index=${nextStepIndex}, hasMoreSteps=${hasMoreSteps}`);
                 
-              // Atualizar status baseado se há mais steps  
-              const updateData: any = {
-                current_node: task.next_node_id,
-                current_step: currentStep,
-                status: 'em-andamento', // Sempre manter em-andamento para permitir acesso
-                next_step_available_at: null,
-                updated_at: new Date().toISOString()
-              };
+                // CRÍTICO: Sempre definir como 'em-andamento' se há steps disponíveis
+                const updateData: any = {
+                  current_node: task.next_node_id,
+                  current_step: currentStep,
+                  status: 'em-andamento', // SEMPRE em-andamento para steps disponíveis
+                  next_step_available_at: null, // CRÍTICO: Limpar delay
+                  updated_at: new Date().toISOString(),
+                  completed_steps: nextStepIndex // Atualizar progresso
+                };
                 
                 // Se não há mais steps, marcar como completado
                 if (!hasMoreSteps) {
+                  updateData.status = 'concluido';
                   updateData.completed_at = new Date().toISOString();
                   updateData.current_node = null;
+                  console.log(`🏁 Execução será marcada como concluída`);
                 }
+                
+                console.log(`📝 Atualizando execução com:`, {
+                  status: updateData.status,
+                  currentNode: updateData.current_node,
+                  stepIndex: nextStepIndex,
+                  hasMoreSteps,
+                  nextStepAvailableAt: updateData.next_step_available_at
+                });
                 
                 await supabase
                   .from('flow_executions')
                   .update(updateData)
                   .eq('id', task.execution_id);
                   
-                console.log(`✅ Execução avançada para node ${task.next_node_id}, step index ${nextStepIndex}, status: ${executionStatus}, hasMoreSteps: ${hasMoreSteps}`);
+                console.log(`✅ Execução atualizada: node=${task.next_node_id}, stepIndex=${nextStepIndex}, status=${updateData.status}, hasMoreSteps=${hasMoreSteps}`);
               }
               
             } catch (sendError) {
@@ -163,10 +177,13 @@ serve(async (req) => {
               const currentStepIndex = currentStep.currentStepIndex || 0;
               const currentSteps = currentStep.steps || [];
               
+              console.log(`📊 Processando nó ${task.next_node_type}: stepIndex=${currentStepIndex}, totalSteps=${currentSteps.length}`);
+              
               // Marcar o step de delay atual como completed
               if (currentStep.steps && currentStep.steps[currentStepIndex]) {
                 currentStep.steps[currentStepIndex].completed = true;
                 currentStep.steps[currentStepIndex].completedAt = new Date().toISOString();
+                console.log(`✅ Step ${currentStepIndex} marcado como concluído`);
               }
               
               // Avançar para o próximo step
@@ -175,29 +192,40 @@ serve(async (req) => {
               
               // Verificar se há mais steps após este
               const hasMoreSteps = nextStepIndex < currentSteps.length - 1;
-              const executionStatus = hasMoreSteps ? 'in-progress' : 'completed';
+              console.log(`📊 Próximo step: index=${nextStepIndex}, hasMoreSteps=${hasMoreSteps}`);
               
-              // Atualizar status baseado se há mais steps
+              // CRÍTICO: Sempre definir como 'em-andamento' se há steps disponíveis
               const updateData: any = {
                 current_node: task.next_node_id,
                 current_step: currentStep,
-                status: executionStatus,
-                next_step_available_at: null,
-                updated_at: new Date().toISOString()
+                status: 'em-andamento', // SEMPRE em-andamento para steps disponíveis
+                next_step_available_at: null, // CRÍTICO: Limpar delay
+                updated_at: new Date().toISOString(),
+                completed_steps: nextStepIndex // Atualizar progresso
               };
               
               // Se não há mais steps, marcar como completado
               if (!hasMoreSteps) {
+                updateData.status = 'concluido';
                 updateData.completed_at = new Date().toISOString();
                 updateData.current_node = null;
+                console.log(`🏁 Execução será marcada como concluída`);
               }
+              
+              console.log(`📝 Atualizando execução com:`, {
+                status: updateData.status,
+                currentNode: updateData.current_node,
+                stepIndex: nextStepIndex,
+                hasMoreSteps,
+                nextStepAvailableAt: updateData.next_step_available_at
+              });
               
               await supabase
                 .from('flow_executions')
                 .update(updateData)
                 .eq('id', task.execution_id);
                 
-              console.log(`✅ Execução avançada para node ${task.next_node_id} (tipo: ${task.next_node_type}), status: ${executionStatus}, hasMoreSteps: ${hasMoreSteps}`);
+              console.log(`✅ Execução atualizada: node=${task.next_node_id} (tipo: ${task.next_node_type}), stepIndex=${nextStepIndex}, status=${updateData.status}, hasMoreSteps=${hasMoreSteps}`);
             }
           }
 

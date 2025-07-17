@@ -27,13 +27,22 @@ const PatientDashboard = () => {
     return () => clearInterval(interval);
   }, [refetch]);
 
-  // Encontrar qualquer execução em andamento
+  // Encontrar qualquer execução disponível para continuar
   const availableExecution = executions?.find(e => {
     const isInProgress = e.status === 'em-andamento';
     const hasCurrentStep = e.current_step && typeof e.current_step === 'object';
     const isNotCompleted = e.status !== 'concluido';
+    const noDelayActive = !e.next_step_available_at || new Date(e.next_step_available_at) <= new Date();
     
-    return isInProgress && hasCurrentStep && isNotCompleted;
+    console.log(`🔍 Verificando execução ${e.id}:`, {
+      status: e.status,
+      hasCurrentStep,
+      isNotCompleted,
+      noDelayActive,
+      nextStepAvailableAt: e.next_step_available_at
+    });
+    
+    return isInProgress && hasCurrentStep && isNotCompleted && noDelayActive;
   });
 
   const hasActiveForm = availableExecution !== undefined;
