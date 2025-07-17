@@ -65,7 +65,7 @@ const FlowExecution = () => {
   if (isLoading) {
     return (
       <MobileErrorBoundary>
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:bg-[#0E0E0E] flow-execution-container flex items-center justify-center p-6">
+        <div className="min-h-screen max-h-screen dark:bg-[#0E0E0E] bg-gray-50 flow-execution-container flex items-center justify-center p-4 sm:p-6">
           <div className="text-center">
             <LoadingSpinner />
             <p className="text-muted-foreground mt-4">Carregando formulário...</p>
@@ -78,8 +78,8 @@ const FlowExecution = () => {
   if (error) {
     return (
       <MobileErrorBoundary>
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:bg-[#0E0E0E] flow-execution-container flex items-center justify-center p-6">
-          <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] backdrop-blur-sm flow-step-card">
+        <div className="min-h-screen max-h-screen dark:bg-[#0E0E0E] bg-gray-50 flow-execution-container flex items-center justify-center p-4 sm:p-6">
+          <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] dark:border-gray-800 flow-step-card">
             <CardHeader className="text-center">
               <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <AlertTriangle className="h-8 w-8 text-white" />
@@ -93,13 +93,13 @@ const FlowExecution = () => {
                 {error}
               </p>
               <div className="space-y-2">
-                <Button 
-                  onClick={() => navigate('/my-flows')}
-                  className="w-full bg-primary-gradient hover:opacity-90 text-white"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Voltar aos Formulários
-                </Button>
+                  <Button 
+                    onClick={() => navigate('/my-flows')}
+                    className="w-full bg-[#5D8701] hover:bg-[#4a6e01] text-white"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Voltar aos Formulários
+                  </Button>
                 <Button 
                   variant="outline"
                   onClick={() => window.location.reload()}
@@ -118,8 +118,8 @@ const FlowExecution = () => {
   if (!currentStep) {
     return (
       <MobileErrorBoundary>
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:bg-[#0E0E0E] flow-execution-container flex items-center justify-center p-6">
-          <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] backdrop-blur-sm flow-step-card">
+        <div className="min-h-screen max-h-screen dark:bg-[#0E0E0E] bg-gray-50 flow-execution-container flex items-center justify-center p-4 sm:p-6">
+          <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] dark:border-gray-800 flow-step-card">
             <CardContent className="py-16 text-center">
               <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Formulário Concluído
@@ -129,7 +129,7 @@ const FlowExecution = () => {
               </p>
               <Button 
                 onClick={() => navigate('/my-flows')}
-                className="bg-primary-gradient hover:opacity-90 text-white"
+                className="bg-[#5D8701] hover:bg-[#4a6e01] text-white"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Voltar aos Formulários
@@ -143,13 +143,13 @@ const FlowExecution = () => {
 
   return (
     <MobileErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:bg-[#0E0E0E] flow-execution-container p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <div className="flex items-center justify-between mb-8">
+      <div className="min-h-screen max-h-screen dark:bg-[#0E0E0E] bg-gray-50 flow-execution-container overflow-y-auto">
+        <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col min-h-screen justify-center space-y-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-8">
             <Button
               variant="ghost"
               onClick={() => navigate('/my-flows')}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white bg-transparent dark:bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar aos Formulários
@@ -173,7 +173,7 @@ const FlowExecution = () => {
           )}
 
           {error && (
-            <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] backdrop-blur-sm flow-step-card">
+            <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] dark:border-gray-800 flow-step-card">
               <CardHeader className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <AlertTriangle className="h-8 w-8 text-white" />
@@ -189,7 +189,7 @@ const FlowExecution = () => {
                 <div className="space-y-2">
                   <Button 
                     onClick={() => navigate('/my-flows')}
-                    className="w-full bg-primary-gradient hover:opacity-90 text-white"
+                    className="w-full bg-[#5D8701] hover:bg-[#4a6e01] text-white"
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Voltar aos Formulários
@@ -207,7 +207,7 @@ const FlowExecution = () => {
           )}
 
           {!isLoading && !error && !currentStep && (
-            <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] backdrop-blur-sm flow-step-card">
+            <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] dark:border-gray-800 flow-step-card">
               <CardContent className="py-16 text-center">
                 <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Formulário Concluído
@@ -217,7 +217,7 @@ const FlowExecution = () => {
                 </p>
                 <Button 
                   onClick={() => navigate('/my-flows')}
-                  className="bg-primary-gradient hover:opacity-90 text-white"
+                  className="bg-[#5D8701] hover:bg-[#4a6e01] text-white"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Voltar aos Formulários

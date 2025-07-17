@@ -381,6 +381,41 @@ input:focus, textarea:focus, select:focus {
   background: #0E0E0E !important;
 }
 
+/* Dark mode scrollbars */
+.dark ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #0E0E0E;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #444444;
+}
+
+/* Dark mode input autofill styles */
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #0E0E0E inset !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  background-color: #0E0E0E !important;
+}
+
+.dark input {
+  background-color: #0E0E0E !important;
+  border-color: #1E1E1E;
+  color: #f8fafc !important;
+}
+
 .patient-card-gradient {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%);
 }

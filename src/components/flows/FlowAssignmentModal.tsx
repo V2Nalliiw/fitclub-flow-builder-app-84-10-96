@@ -52,10 +52,10 @@ export const FlowAssignmentModal = ({ flow, isOpen, onClose }: FlowAssignmentMod
         <div className="space-y-4">
           <div>
             <Label htmlFor="flow-name">Fluxo Selecionado</Label>
-            <div className="mt-1 p-3 bg-gray-50 rounded-md">
-              <p className="font-medium">{flow?.name}</p>
+            <div className="mt-1 p-3 bg-gray-50 dark:bg-[#0E0E0E] dark:border-gray-800 border rounded-md">
+              <p className="font-medium text-gray-900 dark:text-gray-100">{flow?.name}</p>
               {flow?.description && (
-                <p className="text-sm text-gray-600 mt-1">{flow.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{flow.description}</p>
               )}
             </div>
           </div>
