@@ -159,7 +159,7 @@ serve(async (req) => {
 
     console.log('✅ Dados coletados, enviando WhatsApp via', whatsappSettings.provider);
 
-    // 🎯 CORREÇÃO: Sempre usar o domínio do FitClub e apontar para o dashboard
+    // 🎯 SEMPRE usar o domínio fixo do FitClub
     const continueLink = 'https://fitclub.app.br/';
     
     // Inicializar o serviço de templates
