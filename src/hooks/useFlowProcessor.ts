@@ -243,9 +243,10 @@ export const useFlowProcessor = () => {
       if (nextStepIndex < updatedSteps.length) {
         nextStep = updatedSteps[nextStepIndex];
       } else {
-        // Only mark as completed if we've truly reached the end
-        newStatus = 'completed';
-        console.log('🏁 Fim do fluxo atingido - marcando como completed');
+        // DON'T mark as completed yet - let the recalculation process handle this
+        // for conditional flows, especially after conditions nodes
+        nextStep = null;
+        console.log('🔄 Aparentemente chegou ao fim, mas aguardando recálculo para fluxos condicionais...');
       }
 
       // 🎯 CORREÇÃO: Detectar sequência Delay -> FormStart corretamente
@@ -396,7 +397,8 @@ export const useFlowProcessor = () => {
             } else {
               nextStep = null;
               nextStepIndex = mergedSteps.length;
-              console.log('🎯 Todos os steps completados após recálculo');
+              newStatus = 'completed'; // Agora sim podemos marcar como completo
+              console.log('🏁 Todos os steps completados após recálculo - fluxo finalizado');
             }
           }
         }
