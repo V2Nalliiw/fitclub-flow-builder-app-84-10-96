@@ -70,8 +70,7 @@ export const useImprovedFlowProcessor = () => {
         // SEMPRE incluir nós de condições como steps visíveis
         // A avaliação acontecerá quando o paciente interagir com o ConditionsStepRenderer
 
-        // Para FormEnd, só incluir se houver dados suficientes para avaliar condições
-        // ou se for a primeira passagem (construção inicial)
+        // Para FormEnd, avaliar condições de forma mais robusta
         if (node.type === 'formEnd') {
           const conditionsEdge = edges.find(edge => edge.target === nodeId);
           if (conditionsEdge) {
@@ -79,22 +78,40 @@ export const useImprovedFlowProcessor = () => {
             if (conditionsNode?.type === 'conditions') {
               // Se houver respostas/resultados de cálculo, avaliar condições
               if (Object.keys(userResponses).length > 0 || Object.keys(calculatorResults).length > 0) {
+                console.log(`  🔍 Avaliando condições para FormEnd ${nodeId}`);
+                console.log(`  📊 UserResponses disponíveis:`, userResponses);
+                console.log(`  📊 CalculatorResults disponíveis:`, calculatorResults);
+                
+                // Criar dados completos para avaliação incluindo resultado das condições
+                const enhancedData = { ...userResponses, ...calculatorResults };
+                
+                // Verificar se há resultado de condição armazenado
+                const conditionResultKey = `${conditionsNode.id}_condition_result`;
+                if (userResponses[conditionResultKey]) {
+                  const conditionResult = userResponses[conditionResultKey];
+                  enhancedData['resultado'] = conditionResult.conditionLabel;
+                  enhancedData['condition_index'] = conditionResult.conditionIndex;
+                  enhancedData['condition_id'] = conditionResult.conditionId;
+                  console.log(`  🎯 Resultado da condição encontrado:`, conditionResult);
+                }
+                
+                // Avaliar condições do FormEnd usando dados completos
                 const shouldInclude = evaluateConditions(
-                  conditionsNode.data.conditions || [], 
-                  userResponses, 
+                  node.data.conditions || [], 
+                  enhancedData, 
                   calculatorResults
                 );
                 
                 console.log(`  🎯 FormEnd ${nodeId}: Condição ${shouldInclude ? 'ATENDIDA' : 'NÃO ATENDIDA'}`);
+                console.log(`  📝 Condições do FormEnd:`, node.data.conditions);
                 
                 if (!shouldInclude) {
                   console.log(`  ❌ FormEnd ${nodeId} rejeitado por condições`);
                   return;
                 }
               } else {
-                // Se não há dados para avaliar, pular FormEnd na construção inicial
-                console.log(`  ⏸️ FormEnd ${nodeId} pulado - sem dados para avaliar condições`);
-                return;
+                // Se não há dados para avaliar, incluir FormEnd na construção inicial
+                console.log(`  ✅ FormEnd ${nodeId} incluído - construção inicial sem dados`);
               }
             }
           }

@@ -349,6 +349,17 @@ export const useFlowProcessor = () => {
             conditionLabel: response.conditionLabel,
             conditionId: response.conditionId
           };
+          
+          // Também armazenar o resultado diretamente para compatibilidade
+          updatedUserResponses['resultado'] = response.conditionLabel;
+          updatedUserResponses['condition_index'] = response.conditionIndex;
+          updatedUserResponses['condition_id'] = response.conditionId;
+          
+          console.log('🎯 Dados da condição armazenados:', {
+            resultado: response.conditionLabel,
+            conditionIndex: response.conditionIndex,
+            conditionId: response.conditionId
+          });
         }
         
         // Buscar nodes e edges originais do fluxo
@@ -394,11 +405,33 @@ export const useFlowProcessor = () => {
             if (nextStepIndex !== -1) {
               nextStep = mergedSteps[nextStepIndex];
               console.log('🎯 Próximo step após recálculo:', nextStep);
+              console.log('🔍 Detalhes do próximo step:', {
+                nodeType: nextStep.nodeType,
+                title: nextStep.title,
+                nodeId: nextStep.nodeId,
+                completed: nextStep.completed
+              });
             } else {
               nextStep = null;
               nextStepIndex = mergedSteps.length;
-              newStatus = 'completed'; // Agora sim podemos marcar como completo
-              console.log('🏁 Todos os steps completados após recálculo - fluxo finalizado');
+              
+              // Verificar se realmente não há mais steps para processar
+              const pendingSteps = mergedSteps.filter((s: any) => !s.completed);
+              console.log('🔍 Steps pendentes após recálculo:', pendingSteps.map(s => `${s.nodeType}:${s.title}`));
+              
+              if (pendingSteps.length === 0) {
+                newStatus = 'completed';
+                console.log('🏁 Todos os steps completados após recálculo - fluxo finalizado');
+              } else {
+                console.log('⚠️ Ainda há steps pendentes, mas não foram encontrados no índice');
+                // Encontrar o primeiro step pendente manualmente
+                const firstPendingStep = pendingSteps[0];
+                if (firstPendingStep) {
+                  nextStepIndex = mergedSteps.findIndex((s: any) => s.nodeId === firstPendingStep.nodeId);
+                  nextStep = mergedSteps[nextStepIndex];
+                  console.log('🔄 Encontrado step pendente manualmente:', nextStep);
+                }
+              }
             }
           }
         }
