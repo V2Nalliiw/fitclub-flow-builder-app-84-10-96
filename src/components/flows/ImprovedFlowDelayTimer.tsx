@@ -108,19 +108,34 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
     };
   }, [step.availableAt, isExpired, executionId]);
 
-  const handleTimeExpired = () => {
-    console.log('⏰ DelayTimer: Redirecionando para página inicial');
+  const handleTimeExpired = async () => {
+    console.log('⏰ DelayTimer: Tempo expirado, forçando processamento do delay...');
+
+    try {
+      // Forçar processamento da delay task
+      const { data, error } = await supabase.functions.invoke('process-delay-tasks', {
+        body: { forcedExecution: true }
+      });
+
+      if (error) {
+        console.error('❌ Erro ao forçar processamento:', error);
+      } else {
+        console.log('✅ Processamento forçado executado:', data);
+      }
+    } catch (error) {
+      console.error('❌ Erro na chamada forçada:', error);
+    }
 
     toast({
       title: "Tempo Concluído! ⏰",
       description: "Redirecionando para página inicial...",
     });
 
-    // Redirecionamento imediato para página inicial
+    // Redirecionamento para página inicial após pequeno delay
     setTimeout(() => {
       console.log('🔄 DelayTimer: Redirecionando para página inicial');
       window.location.href = '/';
-    }, 2000);
+    }, 3000);
   };
 
   const formatTime = (seconds: number) => {

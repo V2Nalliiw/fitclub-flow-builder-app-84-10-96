@@ -154,12 +154,19 @@ serve(async (req) => {
                   nextStepAvailableAt: updateData.next_step_available_at
                 });
                 
-                await supabase
+                const { data: updateResult, error: updateError } = await supabase
                   .from('flow_executions')
                   .update(updateData)
-                  .eq('id', task.execution_id);
-                  
-                console.log(`✅ Execução atualizada: node=${task.next_node_id}, stepIndex=${nextStepIndex}, status=${updateData.status}, hasMoreSteps=${hasMoreSteps}`);
+                  .eq('id', task.execution_id)
+                  .select('status, next_step_available_at, completed_steps');
+                
+                if (updateError) {
+                  console.error(`❌ CRÍTICO: Erro ao atualizar execução ${task.execution_id}:`, updateError);
+                  throw new Error(`Erro ao atualizar execução: ${updateError.message}`);
+                }
+                
+                console.log(`✅ Execução atualizada com sucesso:`, updateResult);
+                console.log(`✅ Execução avançada para node ${task.next_node_id}, stepIndex=${nextStepIndex}, status=${updateData.status}, hasMoreSteps=${hasMoreSteps}`);
               }
               
             } catch (sendError) {
@@ -220,11 +227,18 @@ serve(async (req) => {
                 nextStepAvailableAt: updateData.next_step_available_at
               });
               
-              await supabase
+              const { data: updateResult, error: updateError } = await supabase
                 .from('flow_executions')
                 .update(updateData)
-                .eq('id', task.execution_id);
-                
+                .eq('id', task.execution_id)
+                .select('status, next_step_available_at, completed_steps');
+              
+              if (updateError) {
+                console.error(`❌ CRÍTICO: Erro ao atualizar execução ${task.execution_id}:`, updateError);
+                throw new Error(`Erro ao atualizar execução: ${updateError.message}`);
+              }
+              
+              console.log(`✅ Execução atualizada com sucesso:`, updateResult);
               console.log(`✅ Execução atualizada: node=${task.next_node_id} (tipo: ${task.next_node_type}), stepIndex=${nextStepIndex}, status=${updateData.status}, hasMoreSteps=${hasMoreSteps}`);
             }
           }
