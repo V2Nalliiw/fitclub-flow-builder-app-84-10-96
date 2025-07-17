@@ -328,6 +328,9 @@ export const useFlowProcessor = () => {
       if (completedStep.nodeType === 'conditions' || completedStep.nodeType === 'calculator') {
         console.log('🔄 Recalculando fluxo condicional baseado nas respostas...');
         console.log('📊 Respostas atuais para recálculo:', { updatedUserResponses, updatedCalculatorResults });
+        console.log('🎯 Condição avaliada:', response?.condition);
+        console.log('🎯 ID da condição:', response?.conditionId);
+        console.log('🎯 Label da condição:', response?.conditionLabel);
         
         // Buscar nodes e edges originais do fluxo
         const { data: flowData } = await supabase

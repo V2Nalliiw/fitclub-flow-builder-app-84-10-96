@@ -161,8 +161,37 @@ export const useImprovedFlowProcessor = () => {
         console.log(`  📊 Edges disponíveis: ${nextEdges.length}`);
         console.log(`  📝 Dados das condições:`, node.data.condicoesEspeciais || node.data.conditions);
         
-        // Usar nova lógica de condições especiais
-        if (node.data.condicoesEspeciais && node.data.condicoesEspeciais.length > 0) {
+        // Verificar se há condições compostas (novo formato)
+        if (node.data.compositeConditions && node.data.compositeConditions.length > 0) {
+          console.log(`  🔍 Avaliando condições compostas para nó ${nodeId}:`, node.data.compositeConditions);
+          let targetEdge = null;
+          
+          // Avaliar cada condição composta para encontrar a primeira que bate
+          for (let i = 0; i < node.data.compositeConditions.length; i++) {
+            const condition = node.data.compositeConditions[i];
+            const conditionResult = evaluateCompositeCondition(condition, userResponses, calculatorResults);
+            
+            console.log(`    🔍 Condição composta ${i}: ${condition.label} = ${conditionResult}`);
+            
+            if (conditionResult && nextEdges[i]) {
+              targetEdge = nextEdges[i];
+              console.log(`    ✅ Seguindo caminho da condição composta ${i}: ${targetEdge.target}`);
+              break;
+            }
+          }
+          
+          // Se nenhuma condição foi atendida, usar o último edge como fallback
+          if (!targetEdge && nextEdges.length > 0) {
+            targetEdge = nextEdges[nextEdges.length - 1];
+            console.log(`    🔄 Nenhuma condição composta atendida, usando fallback: ${targetEdge.target}`);
+          }
+          
+          if (targetEdge) {
+            traverseFlow(targetEdge.target, depth + 1);
+          }
+        }
+        // Usar nova lógica de condições especiais (formato legado)
+        else if (node.data.condicoesEspeciais && node.data.condicoesEspeciais.length > 0) {
           let targetEdge = null;
           
           // Avaliar cada condição especial para encontrar a primeira que bate
@@ -170,11 +199,11 @@ export const useImprovedFlowProcessor = () => {
             const condition = node.data.condicoesEspeciais[i];
             const conditionResult = evaluateSpecialCondition(condition, userResponses, calculatorResults);
             
-            console.log(`    🔍 Condição ${i}: ${condition.label} = ${conditionResult}`);
+            console.log(`    🔍 Condição especial ${i}: ${condition.label} = ${conditionResult}`);
             
             if (conditionResult && nextEdges[i]) {
               targetEdge = nextEdges[i];
-              console.log(`    ✅ Seguindo caminho da condição ${i}: ${targetEdge.target}`);
+              console.log(`    ✅ Seguindo caminho da condição especial ${i}: ${targetEdge.target}`);
               break;
             }
           }
@@ -343,10 +372,76 @@ export const useImprovedFlowProcessor = () => {
     }
   }, []);
 
+  const evaluateCompositeCondition = useCallback((
+    condition: any, 
+    userResponses: Record<string, any>, 
+    calculatorResults: Record<string, number>
+  ) => {
+    if (!condition.rules || condition.rules.length === 0) {
+      console.log('❌ Condição composta sem regras');
+      return false;
+    }
+
+    console.log('🔍 Avaliando condição composta:', condition);
+    console.log('📊 Dados disponíveis:', { userResponses, calculatorResults });
+
+    const results = condition.rules.map((rule: any) => {
+      const { sourceType, sourceField, operator, value, valueEnd } = rule;
+      let compareValue: any;
+
+      if (sourceType === 'calculation') {
+        compareValue = calculatorResults[sourceField];
+        console.log(`📊 Valor do cálculo '${sourceField}':`, compareValue);
+      } else if (sourceType === 'question') {
+        compareValue = userResponses[sourceField];
+        console.log(`❓ Resposta da pergunta '${sourceField}':`, compareValue);
+      }
+
+      if (compareValue === undefined || compareValue === null) {
+        console.warn(`⚠️ Campo ${sourceField} não encontrado para avaliação da regra composta`);
+        return false;
+      }
+
+      console.log(`🔢 Comparando: ${compareValue} ${operator} ${value}`);
+
+      switch (operator) {
+        case 'equal':
+          return compareValue === value;
+        case 'not_equal':
+          return compareValue !== value;
+        case 'greater':
+          return parseFloat(compareValue) > parseFloat(value);
+        case 'less':
+          return parseFloat(compareValue) < parseFloat(value);
+        case 'greater_equal':
+          return parseFloat(compareValue) >= parseFloat(value);
+        case 'less_equal':
+          return parseFloat(compareValue) <= parseFloat(value);
+        case 'between':
+          return parseFloat(compareValue) >= parseFloat(value) && parseFloat(compareValue) <= parseFloat(valueEnd);
+        case 'contains':
+          return String(compareValue).includes(String(value));
+        case 'in':
+          return Array.isArray(value) ? value.includes(compareValue) : false;
+        default:
+          console.warn(`⚠️ Operador desconhecido na condição composta: ${operator}`);
+          return false;
+      }
+    });
+
+    const finalResult = condition.logic === 'AND' ? 
+      results.every(r => r) : 
+      results.some(r => r);
+
+    console.log(`🎯 Resultado final da condição composta '${condition.label}': ${finalResult} (lógica: ${condition.logic})`);
+    return finalResult;
+  }, []);
+
   return {
     buildFlowSteps,
     evaluateConditions,
     evaluateSpecialCondition,
+    evaluateCompositeCondition,
     processing
   };
 };

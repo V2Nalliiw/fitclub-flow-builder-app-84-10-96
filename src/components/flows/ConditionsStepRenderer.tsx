@@ -94,100 +94,153 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
 
   // Evaluate composite conditions (new format)
   const evaluateCompositeConditions = (conditions: any[]): any | null => {
-    if (!conditions || conditions.length === 0) return null;
+    if (!conditions || conditions.length === 0) {
+      console.log('❌ Nenhuma condição composta para avaliar');
+      return null;
+    }
     
-    console.log('Evaluating composite conditions:', conditions);
+    console.log('🔍 Avaliando condições compostas:', conditions);
+    console.log('📊 Dados disponíveis para comparação:', {
+      calculatorResults,
+      questionResponses,
+      calculatorResult
+    });
     
     for (const condition of conditions) {
-      if (!condition.rules || condition.rules.length === 0) continue;
+      console.log('🧪 Testando condição:', condition);
+      
+      if (!condition.rules || condition.rules.length === 0) {
+        console.log('⚠️ Condição sem regras, pulando...');
+        continue;
+      }
       
       const results = condition.rules.map((rule: any) => {
         const { sourceType, sourceField, operator, value, valueEnd } = rule;
         let compareValue: any;
 
+        console.log(`🔍 Avaliando regra: sourceType=${sourceType}, sourceField=${sourceField}, operator=${operator}, value=${value}`);
+
         if (sourceType === 'calculation') {
           compareValue = calculatorResults[sourceField];
+          console.log(`📊 Valor do cálculo '${sourceField}':`, compareValue);
         } else if (sourceType === 'question') {
           compareValue = questionResponses[sourceField];
+          console.log(`❓ Resposta da pergunta '${sourceField}':`, compareValue);
         }
 
-        if (compareValue === undefined) {
-          console.warn(`Field ${sourceField} not found for rule evaluation`);
+        if (compareValue === undefined || compareValue === null) {
+          console.warn(`⚠️ Campo ${sourceField} não encontrado para avaliação da regra`);
           return false;
         }
 
-        console.log(`Evaluating rule: ${sourceField} ${operator} ${value} (current: ${compareValue})`);
+        console.log(`🔢 Comparando: ${compareValue} ${operator} ${value}`);
 
+        let result = false;
         switch (operator) {
           case 'equal':
-            return compareValue === value;
+            result = compareValue === value;
+            break;
           case 'not_equal':
-            return compareValue !== value;
+            result = compareValue !== value;
+            break;
           case 'greater':
-            return parseFloat(compareValue) > parseFloat(value);
+            result = parseFloat(compareValue) > parseFloat(value);
+            break;
           case 'less':
-            return parseFloat(compareValue) < parseFloat(value);
+            result = parseFloat(compareValue) < parseFloat(value);
+            break;
           case 'greater_equal':
-            return parseFloat(compareValue) >= parseFloat(value);
+            result = parseFloat(compareValue) >= parseFloat(value);
+            break;
           case 'less_equal':
-            return parseFloat(compareValue) <= parseFloat(value);
+            result = parseFloat(compareValue) <= parseFloat(value);
+            break;
           case 'between':
-            return parseFloat(compareValue) >= parseFloat(value) && parseFloat(compareValue) <= parseFloat(valueEnd);
+            result = parseFloat(compareValue) >= parseFloat(value) && parseFloat(compareValue) <= parseFloat(valueEnd);
+            break;
           case 'contains':
-            return String(compareValue).includes(String(value));
+            result = String(compareValue).includes(String(value));
+            break;
           case 'in':
-            return Array.isArray(value) ? value.includes(compareValue) : false;
+            result = Array.isArray(value) ? value.includes(compareValue) : false;
+            break;
           default:
-            return false;
+            console.warn(`⚠️ Operador desconhecido: ${operator}`);
+            result = false;
         }
+        
+        console.log(`✅ Resultado da regra: ${result}`);
+        return result;
       });
 
       const finalResult = condition.logic === 'AND' ? 
         results.every(r => r) : 
         results.some(r => r);
 
-      console.log(`Composite condition result: ${finalResult}`);
+      console.log(`🎯 Resultado final da condição '${condition.label}': ${finalResult} (lógica: ${condition.logic})`);
+      console.log(`📋 Resultados individuais:`, results);
       
       if (finalResult) {
+        console.log(`✅ Condição atendida: ${condition.label}`);
         return condition;
       }
     }
     
+    console.log('❌ Nenhuma condição composta foi atendida');
     return null;
   };
 
   const handleComplete = () => {
+    console.log('🎯 ConditionsStepRenderer: Iniciando avaliação de condições');
+    console.log('📊 Dados disponíveis:', {
+      calculatorResult,
+      questionResponses,
+      calculatorResults,
+      step: step
+    });
+    
     let matchedCondition = null;
     
     // Try composite conditions first (new format)
     if (step.compositeConditions && step.compositeConditions.length > 0) {
+      console.log('🔍 Avaliando condições compostas:', step.compositeConditions);
       matchedCondition = evaluateCompositeConditions(step.compositeConditions);
+      console.log('✅ Resultado das condições compostas:', matchedCondition);
     }
     
     // Fallback to legacy conditions
     if (!matchedCondition && step.conditions && step.conditions.length > 0) {
+      console.log('🔄 Tentando condições legadas:', step.conditions);
       matchedCondition = evaluateConditions(calculatorResult || 0, step.conditions);
+      console.log('✅ Resultado das condições legadas:', matchedCondition);
     }
     
     // Try special conditions (advanced format)
     if (!matchedCondition && step.condicoesEspeciais && step.condicoesEspeciais.length > 0) {
+      console.log('🔄 Tentando condições especiais:', step.condicoesEspeciais);
       matchedCondition = evaluateConditions(calculatorResult || 0, step.condicoesEspeciais);
+      console.log('✅ Resultado das condições especiais:', matchedCondition);
     }
 
-    console.log('Final matched condition:', matchedCondition);
+    console.log('🎯 Condição final escolhida:', matchedCondition);
     setEvaluatedCondition(matchedCondition);
     
-    onComplete({
+    const responseData = {
       nodeId: step.nodeId,
       nodeType: 'conditions',
       condition: matchedCondition,
+      conditionId: matchedCondition?.id,
+      conditionLabel: matchedCondition?.label,
       allData: {
         calculatorResult,
         questionResponses,
         calculatorResults
       },
       timestamp: new Date().toISOString()
-    });
+    };
+    
+    console.log('📤 Enviando resposta:', responseData);
+    onComplete(responseData);
   };
 
   return (
