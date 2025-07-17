@@ -420,8 +420,16 @@ export const useFlowProcessor = () => {
               console.log('🔍 Steps pendentes após recálculo:', pendingSteps.map(s => `${s.nodeType}:${s.title}`));
               
               if (pendingSteps.length === 0) {
-                newStatus = 'completed';
-                console.log('🏁 Todos os steps completados após recálculo - fluxo finalizado');
+                // Só marcar como completed se não há nenhum step pendente
+                // Verificar se há steps que podem ser disponibilizados (como FormStart após delay)
+                const hasDelayedSteps = mergedSteps.some((s: any) => s.nodeType === 'formStart' && s.availableAt);
+                if (hasDelayedSteps) {
+                  newStatus = 'pending';
+                  console.log('⏸️ Há FormStart com delay - mantendo status pending');
+                } else {
+                  newStatus = 'completed';
+                  console.log('🏁 Todos os steps completados após recálculo - fluxo finalizado');
+                }
               } else {
                 console.log('⚠️ Ainda há steps pendentes, mas não foram encontrados no índice');
                 // Encontrar o primeiro step pendente manualmente

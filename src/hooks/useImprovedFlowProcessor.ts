@@ -70,44 +70,35 @@ export const useImprovedFlowProcessor = () => {
         // SEMPRE incluir nós de condições como steps visíveis
         // A avaliação acontecerá quando o paciente interagir com o ConditionsStepRenderer
 
-        // Para FormEnd, avaliar condições de forma mais robusta
+        // Para FormEnd, aplicar lógica simplificada - aceitar se é o FormEnd correto baseado na condição
         if (node.type === 'formEnd') {
           const conditionsEdge = edges.find(edge => edge.target === nodeId);
           if (conditionsEdge) {
             const conditionsNode = nodes.find(n => n.id === conditionsEdge.source);
             if (conditionsNode?.type === 'conditions') {
-              // Se houver respostas/resultados de cálculo, avaliar condições
+              // Se houver respostas/resultados de cálculo, verificar se é o FormEnd correto
               if (Object.keys(userResponses).length > 0 || Object.keys(calculatorResults).length > 0) {
-                console.log(`  🔍 Avaliando condições para FormEnd ${nodeId}`);
-                console.log(`  📊 UserResponses disponíveis:`, userResponses);
-                console.log(`  📊 CalculatorResults disponíveis:`, calculatorResults);
-                
-                // Criar dados completos para avaliação incluindo resultado das condições
-                const enhancedData = { ...userResponses, ...calculatorResults };
+                console.log(`  🔍 Verificando FormEnd ${nodeId} para condições`);
                 
                 // Verificar se há resultado de condição armazenado
                 const conditionResultKey = `${conditionsNode.id}_condition_result`;
-                if (userResponses[conditionResultKey]) {
-                  const conditionResult = userResponses[conditionResultKey];
-                  enhancedData['resultado'] = conditionResult.conditionLabel;
-                  enhancedData['condition_index'] = conditionResult.conditionIndex;
-                  enhancedData['condition_id'] = conditionResult.conditionId;
-                  console.log(`  🎯 Resultado da condição encontrado:`, conditionResult);
-                }
+                const conditionResult = userResponses[conditionResultKey];
                 
-                // Avaliar condições do FormEnd usando dados completos
-                const shouldInclude = evaluateConditions(
-                  node.data.conditions || [], 
-                  enhancedData, 
-                  calculatorResults
-                );
-                
-                console.log(`  🎯 FormEnd ${nodeId}: Condição ${shouldInclude ? 'ATENDIDA' : 'NÃO ATENDIDA'}`);
-                console.log(`  📝 Condições do FormEnd:`, node.data.conditions);
-                
-                if (!shouldInclude) {
-                  console.log(`  ❌ FormEnd ${nodeId} rejeitado por condições`);
-                  return;
+                if (conditionResult) {
+                  // Encontrar o índice da condição no edge
+                  const edgeIndex = edges.filter(e => e.source === conditionsNode.id).findIndex(e => e.target === nodeId);
+                  const expectedConditionIndex = conditionResult.conditionIndex;
+                  
+                  console.log(`  🎯 FormEnd ${nodeId}: EdgeIndex=${edgeIndex}, ExpectedIndex=${expectedConditionIndex}`);
+                  
+                  if (edgeIndex !== expectedConditionIndex) {
+                    console.log(`  ❌ FormEnd ${nodeId} não é o caminho correto - pulando`);
+                    return;
+                  }
+                  
+                  console.log(`  ✅ FormEnd ${nodeId} é o caminho correto da condição`);
+                } else {
+                  console.log(`  ⚠️ FormEnd ${nodeId} - resultado da condição não encontrado`);
                 }
               } else {
                 // Se não há dados para avaliar, incluir FormEnd na construção inicial
@@ -259,6 +250,10 @@ export const useImprovedFlowProcessor = () => {
         }
       } else {
         // Para outros tipos de nó, seguir todos os caminhos
+        // Exceção: FormEnd deve continuar para delay e próximo FormStart
+        if (node.type === 'formEnd') {
+          console.log(`  🔄 FormEnd ${nodeId}: Seguindo para próximas etapas (delay/formStart)`);
+        }
         nextEdges.forEach(edge => traverseFlow(edge.target, depth + 1));
       }
     };
