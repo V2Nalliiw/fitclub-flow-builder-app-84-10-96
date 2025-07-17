@@ -94,25 +94,71 @@ export const useFlowExecutionEngine = () => {
       console.log('📱 FlowEngine: Enviando notificação de início do fluxo via WhatsApp');
 
       try {
-        // 🎯 USAR LINK FIXO DO FITCLUB para o início do fluxo
-        console.log('📱 FlowEngine: Enviando notificação de início do fluxo...');
+        // 🎯 ENVIAR MENSAGEM DIRETAMENTE COM LINK FIXO DO FITCLUB
+        console.log('📱 FlowEngine: Enviando notificação de início com link fixo...');
         
-        const { data: response, error } = await supabase.functions.invoke('send-whatsapp', {
-          body: {
-            patientId: (execution as any).patient_id,
-            executionId: executionId,
-            message: `🎯 Seu fluxo "${(execution as any).flow_name}" foi iniciado!\n\n📱 Acesse o app: https://fitclub.app.br/\n\n_Continue quando estiver pronto._`,
-            continueLink: 'https://fitclub.app.br/'
-          }
-        });
+        // Buscar dados do paciente
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name, phone, clinic_id')
+          .eq('user_id', (execution as any).patient_id)
+          .single();
 
-        if (error) {
-          console.error('❌ FlowEngine: Erro na Edge Function de notificação:', error);
-        } else {
-          console.log('✅ FlowEngine: Notificação de início do fluxo enviada com sucesso:', response);
+        if (profile?.phone) {
+          // Buscar configurações do WhatsApp
+          const { data: whatsappSettings } = await supabase
+            .from('whatsapp_settings')
+            .select('*')
+            .eq('clinic_id', profile.clinic_id)
+            .eq('is_active', true)
+            .single();
+
+          if (whatsappSettings) {
+            const message = `🎯 Seu fluxo "${(execution as any).flow_name}" foi iniciado!\n\n📱 Acesse o app: https://fitclub.app.br/\n\n_Continue quando estiver pronto._`;
+            
+            let whatsappResponse;
+            
+            if (whatsappSettings.provider === 'meta') {
+              // Enviar via Meta WhatsApp API
+              whatsappResponse = await fetch(`https://graph.facebook.com/v17.0/${whatsappSettings.phone_number}/messages`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${whatsappSettings.access_token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  messaging_product: 'whatsapp',
+                  to: profile.phone,
+                  type: 'text',
+                  text: { body: message }
+                }),
+              });
+            } else if (whatsappSettings.provider === 'evolution') {
+              // Enviar via Evolution API
+              const evolutionUrl = `${whatsappSettings.base_url}/message/sendText/${whatsappSettings.session_name}`;
+              
+              whatsappResponse = await fetch(evolutionUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'apikey': whatsappSettings.api_key || '',
+                },
+                body: JSON.stringify({
+                  number: profile.phone,
+                  text: message
+                }),
+              });
+            }
+
+            if (whatsappResponse?.ok) {
+              console.log('✅ FlowEngine: Notificação de início do fluxo enviada com sucesso');
+            } else {
+              console.error('❌ FlowEngine: Erro ao enviar notificação WhatsApp');
+            }
+          }
         }
       } catch (error) {
-        console.error('❌ FlowEngine: Erro ao chamar Edge Function de notificação:', error);
+        console.error('❌ FlowEngine: Erro ao enviar notificação de início:', error);
       }
     } else {
       console.error('❌ FlowEngine: Execução não encontrada');
