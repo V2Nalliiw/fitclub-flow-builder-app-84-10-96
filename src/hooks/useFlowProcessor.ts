@@ -193,9 +193,11 @@ export const useFlowProcessor = () => {
       let updatedCalculatorResults = { ...currentCalculatorResults };
       
       if (response?.nodeType === 'calculator') {
-        // Store calculator result
+        // Store calculator result with consistent naming
         if (response?.result !== undefined) {
           updatedCalculatorResults[stepId] = response.result;
+          // Store with formula_result key for conditions evaluation
+          updatedCalculatorResults['formula_result'] = response.result;
           completedStep.calculatorResult = response.result;
         }
         

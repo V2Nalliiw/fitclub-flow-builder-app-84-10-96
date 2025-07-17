@@ -24,17 +24,10 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
 }) => {
   const [evaluatedCondition, setEvaluatedCondition] = useState<any>(null);
 
-  console.log('=== DEBUGGING CONDIÇÕES ===');
-  console.log('Step:', step);
-  console.log('Calculator Result:', calculatorResult);
-  console.log('Question Responses:', questionResponses);
-  console.log('Calculator Results:', calculatorResults);
 
   // Evaluate legacy conditions (for backwards compatibility)
   const evaluateConditions = (result: number, conditions: any[]): any | null => {
     if (!conditions || conditions.length === 0) return null;
-    
-    console.log('Evaluating legacy conditions:', conditions);
     
     for (const condition of conditions) {
       const { campo, operador, valor, valorFinal } = condition;
@@ -43,16 +36,11 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
       // Look for value in calculator results first (by nomenclatura)
       if (calculatorResults[campo] !== undefined) {
         compareValue = calculatorResults[campo];
-        console.log(`Found in calculatorResults: ${campo} = ${compareValue}`);
       } else if (questionResponses[campo] !== undefined) {
         compareValue = questionResponses[campo];
-        console.log(`Found in questionResponses: ${campo} = ${compareValue}`);
       } else {
-        console.warn(`Field ${campo} not found in any data source`);
         continue;
       }
-
-      console.log(`Evaluating: ${campo} ${operador} ${valor} (current: ${compareValue})`);
 
       let conditionMet = false;
       
@@ -81,8 +69,6 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
         default:
           conditionMet = false;
       }
-
-      console.log(`Condition result: ${conditionMet}`);
       
       if (conditionMet) {
         return condition;
@@ -325,22 +311,26 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {step.descricao && (
-          <p className="text-gray-600 dark:text-gray-300 text-center">{step.descricao}</p>
-        )}
-        
-        {/* Clean result display */}
-        {displayValue && (
+        {/* Clean condition result display - no number repetition */}
+        {applicableCondition && (
           <div className="text-center space-y-4">
             <div className="bg-primary/10 dark:bg-primary/20 border border-primary/20 rounded-lg p-6">
-              <div className="text-4xl font-bold text-primary mb-2">
-                {displayValue}
+              <div className="text-2xl font-bold text-primary mb-3">
+                {applicableCondition.label}
               </div>
-              {applicableCondition && (
-                <div className="text-lg font-semibold text-primary/80">
-                  {applicableCondition.label}
+              {step.descricao && (
+                <div className="text-sm text-primary/70">
+                  {step.descricao}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+        
+        {!applicableCondition && (
+          <div className="text-center p-6 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div className="text-gray-600 dark:text-gray-400">
+              Processando condições...
             </div>
           </div>
         )}

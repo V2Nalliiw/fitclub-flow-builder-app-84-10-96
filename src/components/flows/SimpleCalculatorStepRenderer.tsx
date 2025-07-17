@@ -95,30 +95,6 @@ export const SimpleCalculatorStepRenderer: React.FC<SimpleCalculatorStepRenderer
           </h3>
         </div>
 
-        {/* Mostrar a operação */}
-        {step.operacao && (
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-            <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Operação:</div>
-            <div className="font-mono text-sm bg-white dark:bg-gray-900 p-2 rounded border">
-              {step.operacao}
-            </div>
-          </div>
-        )}
-
-        {/* Mostrar valores usados */}
-        {step.camposReferenciados && step.camposReferenciados.length > 0 && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-            <div className="text-sm text-blue-600 dark:text-blue-400 mb-2">Valores utilizados:</div>
-            <div className="space-y-1">
-              {step.camposReferenciados.map((campo, index) => (
-                <div key={index} className="flex justify-between text-sm">
-                  <span className="font-medium">{campo}:</span>
-                  <span>{calculatorResults[campo] ?? 'N/A'}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Resultado */}
         <div className="text-center p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800">
