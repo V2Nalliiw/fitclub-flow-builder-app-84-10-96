@@ -28,7 +28,22 @@ function createInstallButton() {
     box-shadow: 0 4px 12px rgba(93, 135, 1, 0.3);
     display: none;
     font-family: system-ui, -apple-system, sans-serif;
+    transition: all 0.3s ease;
   `;
+  
+  installButton.addEventListener('mouseenter', () => {
+    if (installButton) {
+      installButton.style.transform = 'translateY(-2px)';
+      installButton.style.boxShadow = '0 6px 16px rgba(93, 135, 1, 0.4)';
+    }
+  });
+  
+  installButton.addEventListener('mouseleave', () => {
+    if (installButton) {
+      installButton.style.transform = 'translateY(0)';
+      installButton.style.boxShadow = '0 4px 12px rgba(93, 135, 1, 0.3)';
+    }
+  });
   
   installButton.addEventListener('click', async () => {
     if (deferredPrompt) {
@@ -49,12 +64,14 @@ function createInstallButton() {
 function showInstallButton() {
   if (installButton) {
     installButton.style.display = 'block';
+    console.log('[PWA] Install button shown');
   }
 }
 
 function hideInstallButton() {
   if (installButton) {
     installButton.style.display = 'none';
+    console.log('[PWA] Install button hidden');
   }
 }
 
@@ -64,15 +81,15 @@ if ('serviceWorker' in navigator) {
     // Register service worker
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
-        console.log('SW registered successfully:', registration);
+        console.log('[PWA] SW registered successfully:', registration);
         
         // Check for updates
         registration.addEventListener('updatefound', () => {
-          console.log('SW update found');
+          console.log('[PWA] SW update found');
         });
       })
       .catch((registrationError) => {
-        console.log('SW registration failed:', registrationError);
+        console.log('[PWA] SW registration failed:', registrationError);
       });
 
     // Create install button
@@ -82,7 +99,7 @@ if ('serviceWorker' in navigator) {
 
 // Handle PWA install prompt
 window.addEventListener('beforeinstallprompt', (e) => {
-  console.log('PWA install prompt triggered');
+  console.log('[PWA] Install prompt triggered');
   
   // Prevent Chrome 67 and earlier from automatically showing the prompt
   e.preventDefault();
@@ -94,12 +111,12 @@ window.addEventListener('beforeinstallprompt', (e) => {
   showInstallButton();
   
   // Log that install is available
-  console.log('PWA install prompt available - showing install button');
+  console.log('[PWA] Install prompt available - showing install button');
 });
 
 // Handle app installed
 window.addEventListener('appinstalled', (e) => {
-  console.log('PWA was installed successfully');
+  console.log('[PWA] App was installed successfully');
   hideInstallButton();
   deferredPrompt = null;
 });
@@ -109,13 +126,13 @@ window.addEventListener('DOMContentLoaded', () => {
   // Hide install button if already in standalone mode
   if (window.matchMedia('(display-mode: standalone)').matches || 
       (window.navigator as any).standalone === true) {
-    console.log('App is running in standalone mode');
+    console.log('[PWA] App is running in standalone mode');
     hideInstallButton();
   }
   
   // Also check for iOS standalone
   if ('standalone' in window.navigator && (window.navigator as any).standalone) {
-    console.log('App is running in iOS standalone mode');
+    console.log('[PWA] App is running in iOS standalone mode');
     hideInstallButton();
   }
 });

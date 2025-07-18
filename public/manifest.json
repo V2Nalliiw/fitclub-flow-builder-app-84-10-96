@@ -4,7 +4,7 @@
   "short_name": "FitClub",
   "description": "Plataforma inteligente para emagrecimento saudável e sustentável. Construtor de fluxos para clínicas e acompanhamento de pacientes.",
   "start_url": "/?utm_source=pwa",
-  "id": "fitclub-app-v4",
+  "id": "fitclub-app-v5",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui", "browser"],
   "background_color": "#ffffff",
@@ -15,6 +15,18 @@
   "categories": ["health", "fitness", "medical", "productivity", "lifestyle"],
   "prefer_related_applications": false,
   "icons": [
+    {
+      "src": "/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png",
+      "sizes": "16x16",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png",
       "sizes": "48x48",
@@ -97,19 +109,6 @@
       "short_name": "Home",
       "description": "Acessar painel principal",
       "url": "/dashboard",
-      "icons": [
-        {
-          "src": "/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "Perfil",
-      "short_name": "Perfil",
-      "description": "Gerenciar meu perfil",
-      "url": "/profile",
       "icons": [
         {
           "src": "/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png",

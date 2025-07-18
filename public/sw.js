@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'fitclub-emagrecimento-v4';
+const CACHE_NAME = 'fitclub-emagrecimento-v5';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',
@@ -10,11 +10,11 @@ const urlsToCache = [
 
 // Install event
 self.addEventListener('install', (event) => {
-  console.log('[SW] Install event v4');
+  console.log('[SW] Install event v5');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('[SW] Caching app shell v4');
+        console.log('[SW] Caching app shell v5');
         return cache.addAll(urlsToCache);
       })
       .catch((error) => {
@@ -63,7 +63,7 @@ self.addEventListener('fetch', (event) => {
 
 // Activate event
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activate event v4');
+  console.log('[SW] Activate event v5');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(

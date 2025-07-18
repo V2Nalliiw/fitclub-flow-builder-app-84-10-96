@@ -1,71 +1,35 @@
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FitClub - Emagrecimento Inteligente</title>
-    <meta name="description" content="Plataforma inteligente para emagrecimento saudável e sustentável. Construtor de fluxos para clínicas e acompanhamento de pacientes." />
-    <meta name="author" content="FitClub" />
-    <meta name="keywords" content="emagrecimento, saúde, fitness, nutrição, clínica, pacientes" />
-
-    <!-- Standard Favicon -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     
-    <!-- PNG Favicons - Different sizes -->
-    <link rel="icon" type="image/png" sizes="16x16" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png">
-    <link rel="icon" type="image/png" sizes="48x48" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png">
-
+    <!-- Favicon - Multiple formats for better compatibility -->
+    <link rel="icon" type="image/png" sizes="16x16" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png" />
+    <link rel="shortcut icon" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png" />
+    
     <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" sizes="57x57" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png">
-    <link rel="apple-touch-icon" sizes="60x60" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png">
-
-    <!-- Theme Colors -->
-    <meta name="theme-color" content="#5D8701" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#4A6B01" media="(prefers-color-scheme: dark)">
-    <meta name="msapplication-TileColor" content="#5D8701">
-    <meta name="msapplication-TileImage" content="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png" />
     
-    <!-- PWA Manifest with cache busting -->
-    <link rel="manifest" href="/manifest.json?v=4" crossorigin="use-credentials">
-
-    <!-- Apple PWA Meta Tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="FitClub">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="FitClub">
-
-    <!-- Additional PWA meta tags -->
-    <meta name="format-detection" content="telephone=no">
-    <meta name="msapplication-tap-highlight" content="no">
-    <meta name="mobile-web-app-status-bar-style" content="black">
-    <link rel="mask-icon" href="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png" color="#5D8701">
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="FitClub - Emagrecimento Inteligente" />
-    <meta property="og:description" content="Plataforma inteligente para emagrecimento saudável e sustentável. Construtor de fluxos para clínicas e acompanhamento de pacientes." />
-    <meta property="og:image" content="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png" />
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="FitClub - Emagrecimento Inteligente" />
-    <meta name="twitter:description" content="Plataforma inteligente para emagrecimento saudável e sustentável." />
-    <meta name="twitter:image" content="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png" />
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#5D8701" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="FitClub" />
+    <meta name="application-name" content="FitClub" />
+    <meta name="msapplication-TileColor" content="#5D8701" />
+    <meta name="msapplication-TileImage" content="/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <title>FitClub - Emagrecimento Inteligente</title>
   </head>
-
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
