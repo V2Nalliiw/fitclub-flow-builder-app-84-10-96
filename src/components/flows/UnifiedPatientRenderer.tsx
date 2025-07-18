@@ -355,7 +355,7 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
 
   if (showResult) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-white dark:bg-[#0E0E0E] flex items-center justify-center p-6">
         <Card className="w-full max-w-lg bg-white dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in dark:border-gray-800">
           <CardContent className="p-8 text-center">
             <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -402,7 +402,7 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
   // FormStart com mensagem de boas-vindas acolhedora
   if (step.nodeType === 'formStart') {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-white dark:bg-[#0E0E0E] flex items-center justify-center p-6">
         <Card className="w-full max-w-lg bg-white dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in dark:border-gray-800">
           <CardContent className="p-8 text-center">
             <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -459,7 +459,7 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
   // FlowEnd - final definitivo do tratamento (não usado mais aqui)
   if (step.nodeType === 'flowEnd' || step.nodeType === 'end') {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-white dark:bg-[#0E0E0E] flex items-center justify-center p-6">
         <Card className="w-full max-w-md bg-white dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in dark:border-gray-800">
           <CardContent className="p-8 text-center">
             <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -584,7 +584,7 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
 
   if (!currentField) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-white dark:bg-[#0E0E0E] flex items-center justify-center p-6">
         <Card className="w-full max-w-lg bg-white dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in dark:border-gray-800">
           <CardContent className="p-8 text-center">
             <p className="text-gray-600 dark:text-gray-400">
@@ -604,7 +604,7 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-white dark:bg-[#0E0E0E] flex items-center justify-center p-6">
       <Card className="w-full max-w-lg bg-white dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in dark:border-gray-800">
         <CardContent className="p-8">
           <div className="text-center mb-8">
