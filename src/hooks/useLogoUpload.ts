@@ -2,15 +2,20 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 
 export const useLogoUpload = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
 
   const uploadAppLogo = async (file: File): Promise<string | null> => {
     if (!user || user.role !== 'super_admin') {
-      toast.error('Apenas super administradores podem alterar o logo do app');
+      toast({
+        title: "Erro",
+        description: "Apenas super administradores podem alterar o logo do app",
+        variant: "destructive",
+      });
       return null;
     }
 
@@ -39,12 +44,19 @@ export const useLogoUpload = () => {
         .from('app-logo')
         .getPublicUrl(filePath);
 
-      toast.success('Logo do app enviado com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: "Logo do app enviado com sucesso!",
+      });
       return publicUrl;
 
     } catch (error: any) {
       console.error('Erro no upload do logo:', error);
-      toast.error('Erro ao enviar logo: ' + error.message);
+      toast({
+        title: "Erro",
+        description: "Erro ao enviar logo: " + error.message,
+        variant: "destructive",
+      });
       return null;
     } finally {
       setUploading(false);
@@ -53,7 +65,11 @@ export const useLogoUpload = () => {
 
   const uploadClinicLogo = async (file: File, clinicId: string): Promise<string | null> => {
     if (!user) {
-      toast.error('Você precisa estar logado para fazer upload');
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para fazer upload",
+        variant: "destructive",
+      });
       return null;
     }
 
@@ -82,12 +98,19 @@ export const useLogoUpload = () => {
         .from('user-avatars')
         .getPublicUrl(filePath);
 
-      toast.success('Logo da clínica enviado com sucesso!');
+      toast({
+        title: "Sucesso",
+        description: "Logo da clínica enviado com sucesso!",
+      });
       return publicUrl;
 
     } catch (error: any) {
       console.error('Erro no upload do logo da clínica:', error);
-      toast.error('Erro ao enviar logo: ' + error.message);
+      toast({
+        title: "Erro",
+        description: "Erro ao enviar logo: " + error.message,
+        variant: "destructive",
+      });
       return null;
     } finally {
       setUploading(false);
