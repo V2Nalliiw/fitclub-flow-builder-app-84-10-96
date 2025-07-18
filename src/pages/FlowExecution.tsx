@@ -143,29 +143,28 @@ const FlowExecution = () => {
 
   return (
     <MobileErrorBoundary>
-      <div className="h-screen bg-white dark:bg-[#0E0E0E] flow-execution-container flex flex-col">
-        {/* Header - 10% da altura da tela */}
-        <div className="h-[10vh] min-h-[60px] flex items-center justify-center px-4 sm:px-6 bg-white dark:bg-[#0E0E0E] shrink-0">
-            {execution && (
-              <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 text-center">
-                {execution.flow_name}
-              </h1>
-            )}
+      <div className="min-h-screen bg-white dark:bg-[#0E0E0E] flow-execution-container">
+        {/* Header Fixo - Nome do Fluxo */}
+        <div className="fixed top-0 left-0 right-0 z-40 h-16 bg-white dark:bg-[#0E0E0E] border-b border-gray-200 dark:border-gray-800 flex items-center justify-center">
+          {execution && (
+            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 text-center">
+              {execution.flow_name}
+            </h1>
+          )}
         </div>
 
-        {/* Conteúdo Principal - 90% da altura da tela */}
-        <div className="h-[90vh] flex items-center justify-center p-4 sm:p-6 bg-white dark:bg-[#0E0E0E] relative">
-          <div className="w-full max-w-2xl">
-
+        {/* Espaçamento para o header fixo + Conteúdo Principal Centralizado */}
+        <div className="pt-16 min-h-screen flex items-center justify-center p-4 sm:p-6">
+          <div className="w-full max-w-2xl flex items-center justify-center">
             {isLoading && (
-              <div className="text-center">
+              <div className="text-center bg-white dark:bg-[#0E0E0E] rounded-lg shadow-xl p-8 border border-gray-200 dark:border-gray-800">
                 <LoadingSpinner />
                 <p className="text-muted-foreground mt-4">Carregando formulário...</p>
               </div>
             )}
 
             {error && (
-              <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] dark:border-gray-800 flow-step-card">
+              <Card className="max-w-md mx-auto shadow-xl border-0 bg-white dark:bg-[#0E0E0E] dark:border-gray-800 flow-step-card">
                 <CardHeader className="text-center">
                   <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <AlertTriangle className="h-8 w-8 text-white" />
@@ -199,7 +198,7 @@ const FlowExecution = () => {
             )}
 
             {!isLoading && !error && !currentStep && (
-              <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] dark:border-gray-800 flow-step-card">
+              <Card className="max-w-md mx-auto shadow-xl border-0 bg-white dark:bg-[#0E0E0E] dark:border-gray-800 flow-step-card">
                 <CardContent className="py-16 text-center">
                   <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                     Formulário Concluído
