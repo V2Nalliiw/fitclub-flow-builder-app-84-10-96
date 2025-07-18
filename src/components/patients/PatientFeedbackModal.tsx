@@ -1,8 +1,9 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { FileText, Calendar, User } from 'lucide-react';
-import { format } from 'date-fns';
+import { Separator } from '@/components/ui/separator';
+import { FileText, Calendar, User, Calculator } from 'lucide-react';
+import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { usePatientResponses } from '@/hooks/usePatientResponses';
 
@@ -22,6 +23,22 @@ const formatResponseValue = (value: any): string => {
   return String(value);
 };
 
+const groupResponsesByDate = (responses: any[]) => {
+  const grouped: { [key: string]: any[] } = {};
+  
+  responses.forEach(response => {
+    if (response.completedAt) {
+      const date = format(parseISO(response.completedAt), 'yyyy-MM-dd');
+      if (!grouped[date]) {
+        grouped[date] = [];
+      }
+      grouped[date].push(response);
+    }
+  });
+  
+  return Object.entries(grouped).sort(([a], [b]) => b.localeCompare(a));
+};
+
 export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
   isOpen,
   onClose,
@@ -32,106 +49,147 @@ export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
   if (!patient) return null;
 
   const completedResponses = responses.filter(r => r.status === 'completed');
+  const groupedByDate = groupResponsesByDate(completedResponses);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] bg-white">
-        <DialogHeader className="border-b pb-4">
-          <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-gray-900">
-            <User className="h-5 w-5" />
-            Ficha de Respostas do Paciente
+      <DialogContent className="max-w-5xl max-h-[95vh] bg-white dark:bg-[#0B0B0B] flex flex-col">
+        <DialogHeader className="border-b border-gray-200 dark:border-gray-800 pb-4 flex-shrink-0">
+          <DialogTitle className="flex items-center gap-3 text-xl font-bold text-gray-900 dark:text-white">
+            <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            Ficha Médica - {patient.name}
           </DialogTitle>
+          <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+            Total de formulários respondidos: {completedResponses.length}
+          </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="flex-1 p-6">
           {loading ? (
             <div className="flex items-center justify-center p-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-              <span className="ml-3 text-gray-600">Carregando respostas...</span>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600 dark:text-gray-400">Carregando histórico médico...</span>
+            </div>
+          ) : completedResponses.length === 0 ? (
+            <div className="text-center py-12">
+              <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Nenhuma Ficha Disponível</h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Este paciente ainda não completou nenhum formulário médico.
+              </p>
             </div>
           ) : (
-            <div className="space-y-6 p-4">
+            <div className="space-y-8">
               {/* Informações do Paciente */}
-              <div className="border-b pb-4">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Informações do Paciente</h2>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-medium text-gray-700">Nome:</span>
-                    <span className="ml-2 text-gray-900">{patient.name}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-700">Email:</span>
-                    <span className="ml-2 text-gray-900">{patient.email}</span>
-                  </div>
-                  {patient.phone && (
+              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+                <h2 className="text-lg font-bold text-blue-900 dark:text-blue-100 mb-4 flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Dados do Paciente
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <div>
-                      <span className="font-medium text-gray-700">Telefone:</span>
-                      <span className="ml-2 text-gray-900">{patient.phone}</span>
+                      <span className="font-semibold text-blue-800 dark:text-blue-200">Nome Completo:</span>
+                      <div className="text-gray-900 dark:text-gray-100 ml-2">{patient.name}</div>
                     </div>
-                  )}
-                  <div>
-                    <span className="font-medium text-gray-700">Total de Formulários:</span>
-                    <span className="ml-2 text-gray-900">{responses.length}</span>
+                    <div>
+                      <span className="font-semibold text-blue-800 dark:text-blue-200">Email:</span>
+                      <div className="text-gray-900 dark:text-gray-100 ml-2">{patient.email}</div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {patient.phone && (
+                      <div>
+                        <span className="font-semibold text-blue-800 dark:text-blue-200">Telefone:</span>
+                        <div className="text-gray-900 dark:text-gray-100 ml-2">{patient.phone}</div>
+                      </div>
+                    )}
+                    <div>
+                      <span className="font-semibold text-blue-800 dark:text-blue-200">Total de Formulários:</span>
+                      <div className="text-gray-900 dark:text-gray-100 ml-2">{completedResponses.length}</div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Formulários Respondidos */}
-              {completedResponses.length === 0 ? (
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">Nenhum formulário foi completado ainda.</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Formulários Respondidos ({completedResponses.length})
-                  </h2>
-                  
-                  {completedResponses.map((response, index) => (
-                    <div key={response.id} className="border border-gray-200 rounded-lg p-4">
+              {/* Fichas por Data */}
+              {groupedByDate.map(([dateKey, dateResponses]) => (
+                <div key={dateKey} className="space-y-4">
+                  <div className="flex items-center gap-3 py-2">
+                    <Calendar className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                      {format(parseISO(dateKey), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    </h2>
+                    <div className="h-px bg-gray-300 dark:bg-gray-700 flex-1"></div>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      {dateResponses.length} formulário{dateResponses.length > 1 ? 's' : ''}
+                    </span>
+                  </div>
+
+                  {dateResponses.map((response, responseIndex) => (
+                    <div key={response.id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
                       {/* Cabeçalho do Formulário */}
-                      <div className="border-b border-gray-100 pb-3 mb-4">
-                        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                          <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
-                            #{index + 1}
-                          </span>
-                          {response.flowName || 'Formulário'}
-                        </h3>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            {response.completedAt ? 
-                              format(new Date(response.completedAt), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR }) :
-                              'Data não disponível'
-                            }
+                      <div className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 rounded-t-lg">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <FileText className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                            <h3 className="font-semibold text-gray-900 dark:text-white">
+                              {response.flowName}
+                            </h3>
+                            <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs px-2 py-1 rounded-full">
+                              Completo
+                            </span>
                           </div>
-                          <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">
-                            Completo
-                          </span>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {format(parseISO(response.completedAt), 'HH:mm', { locale: ptBR })}
+                          </div>
                         </div>
                       </div>
 
-                      {/* Respostas */}
-                      <div className="space-y-3">
-                        <h4 className="font-medium text-gray-800 text-sm">Respostas:</h4>
-                        {response.allSteps && Array.isArray(response.allSteps) && response.allSteps.length > 0 ? (
-                          <div className="space-y-2">
-                            {response.allSteps.map((step, stepIndex) => (
-                              <div key={stepIndex} className="bg-gray-50 p-3 rounded border-l-4 border-gray-200">
-                                <div className="font-medium text-gray-700 text-sm mb-1">
+                      {/* Conteúdo do Formulário */}
+                      <div className="p-6 space-y-6">
+                        {response.allSteps && response.allSteps.length > 0 ? (
+                          <div className="space-y-4">
+                            {/* Perguntas e Respostas */}
+                            {response.allSteps.filter((step: any) => step.type !== 'calculator').map((step: any, stepIndex: number) => (
+                              <div key={stepIndex} className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 py-2">
+                                <div className="font-medium text-gray-800 dark:text-gray-200 mb-1">
                                   {step.title}
                                 </div>
-                                <div className="text-gray-900 text-sm leading-relaxed">
+                                <div className="text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-800 p-3 rounded">
                                   {formatResponseValue(step.response)}
                                 </div>
                               </div>
                             ))}
+
+                            {/* Cálculos */}
+                            {response.allSteps.filter((step: any) => step.type === 'calculator').length > 0 && (
+                              <div className="mt-6">
+                                <div className="flex items-center gap-2 mb-4">
+                                  <Calculator className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                                  <h4 className="font-semibold text-gray-800 dark:text-gray-200">Cálculos e Resultados</h4>
+                                </div>
+                                <div className="space-y-3">
+                                  {response.allSteps.filter((step: any) => step.type === 'calculator').map((calc: any, calcIndex: number) => (
+                                    <div key={calcIndex} className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 p-4 rounded-lg">
+                                      <div className="font-medium text-orange-800 dark:text-orange-200 mb-1">
+                                        {calc.title}
+                                      </div>
+                                      <div className="text-lg font-bold text-orange-900 dark:text-orange-100">
+                                        {formatResponseValue(calc.response)}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ) : (
-                          <div className="bg-gray-50 p-3 rounded border-l-4 border-gray-200">
-                            <div className="text-gray-900 text-sm leading-relaxed">
+                          <div className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 py-2">
+                            <div className="font-medium text-gray-800 dark:text-gray-200 mb-1">
+                              Resposta Principal
+                            </div>
+                            <div className="text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-800 p-3 rounded">
                               {formatResponseValue(response.response)}
                             </div>
                           </div>
@@ -140,7 +198,7 @@ export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
                     </div>
                   ))}
                 </div>
-              )}
+              ))}
             </div>
           )}
         </ScrollArea>
