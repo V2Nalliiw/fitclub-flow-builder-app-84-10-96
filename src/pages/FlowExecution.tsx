@@ -121,7 +121,7 @@ const FlowExecution = () => {
   return <MobileErrorBoundary>
       <div className="min-h-screen bg-white dark:bg-[#0B0B0B] flow-execution-container">
         {/* Nome do Fluxo Fixo no Topo */}
-        {execution && <div className="fixed top-0 left-0 right-0 z-[60] bg-white/80 dark:bg-[#0B0B0B]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 py-4">
+        {execution && <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[60]">
             <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 text-center">
               {execution.flow_name}
             </h1>
