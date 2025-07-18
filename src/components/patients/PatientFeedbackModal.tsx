@@ -13,6 +13,41 @@ interface PatientFeedbackModalProps {
   patient: any;
 }
 
+const extractImportantData = (step: any): { question: string; answer: string } | null => {
+  if (!step.response || typeof step.response !== 'object') {
+    return null;
+  }
+
+  const response = step.response;
+  
+  // Para nó calculadora: extrair pergunta do campo calculo e resposta
+  if (step.type === 'calculator' && response.calculo && response.calculo.pergunta) {
+    const question = response.calculo.pergunta;
+    const answer = response.calculo.resposta || response.response || '-';
+    return { question, answer: String(answer) };
+  }
+  
+  // Para nó pergunta: extrair pergunta e opção de resposta escolhida
+  if (step.type === 'question' && response.Pergunta) {
+    const question = response.Pergunta.pergunta;
+    let answer = '-';
+    
+    // Verificar se tem opções de resposta e qual foi escolhida
+    if (response.Pergunta.opcoes_resposta && response.response) {
+      const selectedOption = response.Pergunta.opcoes_resposta.find((opt: any) => 
+        opt.valor === response.response || opt.texto === response.response
+      );
+      answer = selectedOption ? selectedOption.texto : String(response.response);
+    } else if (response.response) {
+      answer = String(response.response);
+    }
+    
+    return { question, answer };
+  }
+  
+  return null;
+};
+
 const formatResponseValue = (value: any): string => {
   if (value === null || value === undefined) return '-';
   if (typeof value === 'string' && value.trim() === '') return '-';
@@ -20,29 +55,6 @@ const formatResponseValue = (value: any): string => {
   if (typeof value === 'number') return value.toString();
   if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
   if (Array.isArray(value)) return value.join(', ');
-  
-  // Se for um objeto JSON complexo, tentar extrair informações úteis
-  if (typeof value === 'object') {
-    // Verificar se tem respostas específicas
-    if (value.fieldResponses && Object.keys(value.fieldResponses).length > 0) {
-      return Object.entries(value.fieldResponses)
-        .map(([key, val]: [string, any]) => `${key}: ${val}`)
-        .join('; ');
-    }
-    if (value.questionResponses && Object.keys(value.questionResponses).length > 0) {
-      return Object.entries(value.questionResponses)
-        .map(([key, val]: [string, any]) => `${key}: ${val}`)
-        .join('; ');
-    }
-    if (value.calculatorResults && Object.keys(value.calculatorResults).length > 0) {
-      return Object.entries(value.calculatorResults)
-        .map(([key, val]: [string, any]) => `${key}: ${val}`)
-        .join('; ');
-    }
-    // Se não tem dados úteis, não mostrar
-    return '-';
-  }
-  
   return String(value);
 };
 
@@ -173,61 +185,64 @@ export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
                       <div className="p-6 space-y-6">
                         {response.allSteps && response.allSteps.length > 0 ? (
                           <div className="space-y-4">
-                            {/* Filtrar apenas steps com respostas válidas */}
+                            {/* Extrair apenas dados importantes (perguntas de calculadora e perguntas com opções) */}
                             {response.allSteps
-                              .filter((step: any) => {
-                                const formattedResponse = formatResponseValue(step.response);
-                                return formattedResponse !== '-' && 
-                                       formattedResponse !== 'null' && 
-                                       step.type !== 'formStart' && 
-                                       step.type !== 'formEnd' &&
-                                       step.title && 
-                                       step.title !== 'Formulário';
-                              })
-                              .map((step: any, stepIndex: number) => {
-                                if (step.type === 'calculator') {
+                              .map((step: any) => extractImportantData(step))
+                              .filter((data: any) => data !== null)
+                              .map((data: any, stepIndex: number) => {
+                                const originalStep = response.allSteps.find((step: any) => {
+                                  const stepData = extractImportantData(step);
+                                  return stepData && stepData.question === data.question;
+                                });
+                                
+                                if (originalStep?.type === 'calculator') {
                                   return (
                                     <div key={stepIndex} className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 p-4 rounded-lg">
                                       <div className="flex items-center gap-2 mb-2">
                                         <Calculator className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                                         <div className="font-medium text-orange-800 dark:text-orange-200">
-                                          {step.title}
+                                          Cálculo
                                         </div>
                                       </div>
-                                      <div className="text-lg font-bold text-orange-900 dark:text-orange-100">
-                                        {formatResponseValue(step.response)}
+                                      <div className="space-y-2">
+                                        <div>
+                                          <span className="font-semibold text-orange-700 dark:text-orange-300">Pergunta:</span>
+                                          <div className="text-orange-900 dark:text-orange-100 ml-2">{data.question}</div>
+                                        </div>
+                                        <div>
+                                          <span className="font-semibold text-orange-700 dark:text-orange-300">Resposta:</span>
+                                          <div className="text-lg font-bold text-orange-900 dark:text-orange-100 ml-2">{data.answer}</div>
+                                        </div>
                                       </div>
                                     </div>
                                   );
                                 } else {
                                   return (
                                     <div key={stepIndex} className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 py-2">
-                                      <div className="font-medium text-gray-800 dark:text-gray-200 mb-2">
-                                        {step.title}
-                                      </div>
-                                      <div className="text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-800 p-3 rounded">
-                                        {formatResponseValue(step.response)}
+                                      <div className="space-y-2">
+                                        <div>
+                                          <span className="font-semibold text-gray-700 dark:text-gray-300">Pergunta:</span>
+                                          <div className="text-gray-900 dark:text-gray-100 ml-2">{data.question}</div>
+                                        </div>
+                                        <div>
+                                          <span className="font-semibold text-gray-700 dark:text-gray-300">Resposta:</span>
+                                          <div className="text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-800 p-3 rounded ml-2">
+                                            {data.answer}
+                                          </div>
+                                        </div>
                                       </div>
                                     </div>
                                   );
                                 }
                               })}
                             
-                            {/* Se não há respostas válidas nos steps, mostrar a resposta principal */}
-                            {response.allSteps.filter((step: any) => {
-                              const formattedResponse = formatResponseValue(step.response);
-                              return formattedResponse !== '-' && 
-                                     formattedResponse !== 'null' && 
-                                     step.type !== 'formStart' && 
-                                     step.type !== 'formEnd';
-                            }).length === 0 && (
-                              <div className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 py-2">
-                                <div className="font-medium text-gray-800 dark:text-gray-200 mb-2">
-                                  Informações do Formulário
-                                </div>
-                                <div className="text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-800 p-3 rounded">
-                                  {formatResponseValue(response.response)}
-                                </div>
+                            {/* Se não há dados importantes extraídos, mostrar mensagem */}
+                            {response.allSteps
+                              .map((step: any) => extractImportantData(step))
+                              .filter((data: any) => data !== null).length === 0 && (
+                              <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+                                <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                <p>Nenhum dado médico relevante encontrado neste formulário.</p>
                               </div>
                             )}
                           </div>
