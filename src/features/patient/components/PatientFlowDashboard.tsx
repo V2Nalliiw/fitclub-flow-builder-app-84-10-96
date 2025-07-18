@@ -84,7 +84,7 @@ const FlowCard: React.FC<FlowCardProps> = ({ execution, onAction, getTimeUntilAv
   const progressPercentage = Math.min(execution.progresso || 0, 100);
 
   return (
-    <Card className="hover:shadow-md transition-shadow border-2 border-gray-300 dark:border-gray-600">
+    <Card className="hover:shadow-md transition-shadow border-2" style={{ borderColor: 'hsl(var(--border))' }}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold">{execution.flow_name}</CardTitle>
@@ -218,7 +218,7 @@ export const PatientFlowDashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Resumo */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-2 border-gray-300 dark:border-gray-600">
+        <Card className="border-2" style={{ borderColor: 'hsl(var(--border))' }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Formulários Hoje</CardTitle>
             <BookOpen className="h-4 w-4 text-primary" />
@@ -228,7 +228,7 @@ export const PatientFlowDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-gray-300 dark:border-gray-600">
+        <Card className="border-2" style={{ borderColor: 'hsl(var(--border))' }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Em Progresso</CardTitle>
             <Clock className="h-4 w-4 text-orange-500" />
@@ -238,7 +238,7 @@ export const PatientFlowDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-gray-300 dark:border-gray-600">
+        <Card className="border-2" style={{ borderColor: 'hsl(var(--border))' }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Completados</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
@@ -302,7 +302,7 @@ export const PatientFlowDashboard: React.FC = () => {
 
       {/* Estado Vazio */}
       {executions.length === 0 && (
-        <Card className="border-2 border-gray-300 dark:border-gray-600">
+        <Card className="border-2" style={{ borderColor: 'hsl(var(--border))' }}>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">Nenhum formulário encontrado</h3>

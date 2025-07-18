@@ -98,9 +98,24 @@ export const usePatientFlows = () => {
           }
         }
 
-        // Garantir que completed_steps nunca exceda total_steps
-        const safeCompletedSteps = Math.min(execution.completed_steps || 0, execution.total_steps || 0);
-        const safeProgress = Math.min(execution.progress || 0, 100);
+        // Garantir que completed_steps nunca exceda total_steps e recalcular progresso
+        const rawCompletedSteps = execution.completed_steps || 0;
+        const totalSteps = execution.total_steps || 1; // Evitar divisão por zero
+        const safeCompletedSteps = Math.min(rawCompletedSteps, totalSteps);
+        
+        // Recalcular progresso baseado nos valores seguros
+        const recalculatedProgress = totalSteps > 0 ? Math.round((safeCompletedSteps / totalSteps) * 100) : 0;
+        const safeProgress = Math.min(recalculatedProgress, 100);
+
+        console.log('🔧 usePatientFlows: Corrigindo progresso:', {
+          executionId: execution.id,
+          rawProgress: execution.progress,
+          rawCompletedSteps,
+          totalSteps,
+          safeCompletedSteps,
+          recalculatedProgress,
+          safeProgress
+        });
 
         return {
           id: execution.id,
@@ -114,7 +129,7 @@ export const usePatientFlows = () => {
           completed_at: execution.completed_at || undefined,
           next_step_available_at: execution.next_step_available_at || undefined,
           current_step: currentStep || { type: 'unknown', title: 'Carregando...', description: '' },
-          total_steps: execution.total_steps,
+          total_steps: totalSteps,
           completed_steps: safeCompletedSteps,
         };
       });
