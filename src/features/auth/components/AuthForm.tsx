@@ -72,16 +72,22 @@ export const AuthForm = () => {
         </div>
         
         <CardHeader className="text-center pb-2">
-          <div className="mx-auto mb-4">
+          <div className="mx-auto mb-6">
             <img 
               src="/lovable-uploads/09cb65b5-4986-4722-af8b-77c3ee47d7d5.png" 
               alt="FitClub" 
-              className="h-16 mx-auto"
+              className="h-10 mx-auto"
             />
           </div>
-          <CardTitle>
-            {mode === 'login' ? 'Entrar' : 'Criar Conta'}
+          <CardTitle className="text-xl font-medium text-gray-800 dark:text-gray-100">
+            {mode === 'login' ? 'Bem-vindo de volta!' : 'Junte-se a nós'}
           </CardTitle>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+            {mode === 'login' 
+              ? 'Acesse sua conta para continuar' 
+              : 'Crie sua conta e comece hoje mesmo'
+            }
+          </p>
         </CardHeader>
 
         <CardContent className="space-y-6">
