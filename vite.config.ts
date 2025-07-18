@@ -20,7 +20,8 @@ export default defineConfig(({ mode }) => ({
         enabled: true
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024 // 5 MB
       },
       includeAssets: ['lovable-uploads/4a192a68-e744-4c66-9d8d-375a3dca82fb.png'],
       manifest: {
