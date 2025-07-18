@@ -154,8 +154,6 @@ export const AuthForm = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="patient">Paciente</SelectItem>
-                    <SelectItem value="clinic">Clínica</SelectItem>
-                    <SelectItem value="super_admin">Administrador</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
