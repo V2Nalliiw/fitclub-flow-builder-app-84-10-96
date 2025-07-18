@@ -15,65 +15,28 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === 'development' && componentTagger(),
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       devOptions: {
         enabled: true
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024 // 10MB
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
       },
-      includeAssets: ['lovable-uploads/1806cbe5-c5a5-4b48-8ce8-83881e8f3acb.png'],
+      includeAssets: ['lovable-uploads/4a192a68-e744-4c66-9d8d-375a3dca82fb.png'],
       manifest: {
-        id: 'fitclub-app',
         name: 'FitClub - Emagrecimento Inteligente',
         short_name: 'FitClub',
         description: 'Plataforma inteligente para emagrecimento saudável e sustentável',
         theme_color: '#10b981',
         background_color: '#ffffff',
         display: 'standalone',
-        orientation: 'portrait',
-        scope: '/',
         start_url: '/',
-        categories: ['health', 'fitness', 'medical'],
         icons: [
           {
-            src: 'lovable-uploads/1806cbe5-c5a5-4b48-8ce8-83881e8f3acb.png',
-            sizes: '192x192',
+            src: 'lovable-uploads/4a192a68-e744-4c66-9d8d-375a3dca82fb.png',
+            sizes: '144x144',
             type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: 'lovable-uploads/1806cbe5-c5a5-4b48-8ce8-83881e8f3acb.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: 'lovable-uploads/1806cbe5-c5a5-4b48-8ce8-83881e8f3acb.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'maskable'
-          },
-          {
-            src: 'lovable-uploads/1806cbe5-c5a5-4b48-8ce8-83881e8f3acb.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable'
-          }
-        ],
-        shortcuts: [
-          {
-            name: 'Dashboard',
-            short_name: 'Dashboard',
-            description: 'Acesso rápido ao dashboard',
-            url: '/',
-            icons: [
-              {
-                src: 'lovable-uploads/1806cbe5-c5a5-4b48-8ce8-83881e8f3acb.png',
-                sizes: '192x192'
-              }
-            ]
+            purpose: 'any maskable'
           }
         ]
       }
