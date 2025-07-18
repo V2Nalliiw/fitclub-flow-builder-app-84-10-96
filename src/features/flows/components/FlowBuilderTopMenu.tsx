@@ -47,7 +47,7 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
         <span className="text-xs text-gray-500">{nodeCount} nós</span>
       </div>
 
-      <div className="flex items-center space-x-0.5">
+      <div className="flex items-center space-x-1.5">
         {/* Nós de Controle de Fluxo */}
         
         <Button

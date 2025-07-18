@@ -35,7 +35,7 @@ export const Dashboard = () => {
 
   // Dashboard para clínicas e super_admin
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen bg-white dark:bg-[#0E0E0E] p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">

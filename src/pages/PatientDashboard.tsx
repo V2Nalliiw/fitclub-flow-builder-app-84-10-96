@@ -63,6 +63,9 @@ const PatientDashboard = () => {
     }
   }, [flowsLoading, availableExecution, navigate]);
 
+  // Limite o progresso a 100%
+  const progressPercentage = Math.min(availableExecution?.progresso || 0, 100);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:bg-none dark:bg-[#0E0E0E] p-4 md:p-6">
       <div className="max-w-6xl mx-auto space-y-6 md:space-y-8">
@@ -81,7 +84,7 @@ const PatientDashboard = () => {
 
         {/* Status dos Formulários */}
         {hasNoForms ? (
-          <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-white dark:bg-[#0E0E0E] border border-gray-200 dark:border-[#1A1A1A] shadow-lg">
             <CardContent className="text-center py-12">
               <div className="w-20 h-20 bg-gradient-to-r from-[#5D8701] to-[#4a6e01] rounded-full flex items-center justify-center mx-auto mb-6">
                 <FileText className="h-10 w-10 text-white" />
@@ -98,7 +101,7 @@ const PatientDashboard = () => {
             </CardContent>
           </Card>
         ) : hasActiveForm ? (
-          <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg overflow-hidden">
+          <Card className="bg-white dark:bg-[#0E0E0E] border border-gray-200 dark:border-[#1A1A1A] shadow-lg overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#5D8701] to-[#4a6e01]"></div>
             <CardHeader className="pb-4">
               <div className="flex items-start justify-between">
@@ -113,7 +116,7 @@ const PatientDashboard = () => {
                 <div className="text-right">
                   <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Progresso</div>
                   <div className="text-2xl font-bold text-[#5D8701]">
-                    {availableExecution?.progresso || 0}%
+                    {progressPercentage}%
                   </div>
                 </div>
               </div>
@@ -134,7 +137,7 @@ const PatientDashboard = () => {
               <div className="w-full bg-gray-200 dark:bg-[#1A1A1A] rounded-full h-2 mb-6">
                 <div 
                   className="bg-gradient-to-r from-[#5D8701] to-[#4a6e01] h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${availableExecution?.progresso || 0}%` }}
+                  style={{ width: `${progressPercentage}%` }}
                 ></div>
               </div>
 
@@ -149,7 +152,7 @@ const PatientDashboard = () => {
             </CardContent>
           </Card>
         ) : (
-          <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-white dark:bg-[#0E0E0E] border border-gray-200 dark:border-[#1A1A1A] shadow-lg">
             <CardContent className="text-center py-12">
               <div className="w-20 h-20 bg-gradient-to-r from-[#5D8701] to-[#4a6e01] rounded-full flex items-center justify-center mx-auto mb-6">
                 <Calendar className="h-10 w-10 text-white" />
@@ -172,7 +175,7 @@ const PatientDashboard = () => {
         )}
 
         {/* Link para Meus Formulários */}
-        <Card className="bg-white/90 dark:bg-none dark:bg-[#0E0E0E]/90 backdrop-blur-sm border-0 shadow-lg">
+        <Card className="bg-white dark:bg-[#0E0E0E] border border-gray-200 dark:border-[#1A1A1A] shadow-lg">
           <CardContent className="p-4">
             <Button 
               onClick={() => navigate('/my-flows')}
