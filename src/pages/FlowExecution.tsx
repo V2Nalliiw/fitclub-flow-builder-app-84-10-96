@@ -10,15 +10,29 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, AlertTriangle, FileText } from 'lucide-react';
 import { MobileErrorBoundary } from '@/components/ui/mobile-error-boundary';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-
 const FlowExecution = () => {
-  const { executionId } = useParams<{ executionId: string }>();
+  const {
+    executionId
+  } = useParams<{
+    executionId: string;
+  }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { execution, currentStep, isLoading, error, completeStep, canGoBack, goBack } = useFlowExecution(executionId!);
-  const { completeStep: completePatientStep } = usePatientFlows();
+  const {
+    user
+  } = useAuth();
+  const {
+    execution,
+    currentStep,
+    isLoading,
+    error,
+    completeStep,
+    canGoBack,
+    goBack
+  } = useFlowExecution(executionId!);
+  const {
+    completeStep: completePatientStep
+  } = usePatientFlows();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   useEffect(() => {
     // Add meta tag to prevent Google Translate interference on mobile
     const metaTag = document.createElement('meta');
@@ -34,19 +48,16 @@ const FlowExecution = () => {
       }
     };
   }, []);
-
   useEffect(() => {
     if (!user) {
       navigate('/login');
       return;
     }
-
     if (execution && execution.status === 'concluido') {
       // Redirect to my-flows if the flow is already completed
       navigate('/my-flows');
     }
   }, [user, navigate, execution]);
-
   const handleStepComplete = async (response: any) => {
     setIsSubmitting(true);
     try {
@@ -62,23 +73,18 @@ const FlowExecution = () => {
       setIsSubmitting(false);
     }
   };
-
   if (isLoading) {
-    return (
-      <MobileErrorBoundary>
+    return <MobileErrorBoundary>
         <div className="h-screen bg-white dark:bg-[#0B0B0B] flow-execution-container flex items-center justify-center p-4 sm:p-6">
           <div className="text-center">
             <LoadingSpinner />
             <p className="text-muted-foreground mt-4">Carregando formulário...</p>
           </div>
         </div>
-      </MobileErrorBoundary>
-    );
+      </MobileErrorBoundary>;
   }
-
   if (error) {
-    return (
-      <MobileErrorBoundary>
+    return <MobileErrorBoundary>
         <div className="h-screen bg-white dark:bg-[#0B0B0B] flow-execution-container flex items-center justify-center p-4 sm:p-6">
           <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0B0B0B] dark:border-gray-800 flow-step-card">
             <CardHeader className="text-center">
@@ -94,80 +100,52 @@ const FlowExecution = () => {
                 {error}
               </p>
               <div className="space-y-2">
-                  <Button 
-                    onClick={() => navigate('/my-flows')}
-                    className="w-full bg-[#5D8701] hover:bg-[#4a6e01] text-white"
-                  >
+                  <Button onClick={() => navigate('/my-flows')} className="w-full bg-[#5D8701] hover:bg-[#4a6e01] text-white">
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Voltar aos Formulários
                   </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => window.location.reload()}
-                  className="w-full"
-                >
+                <Button variant="outline" onClick={() => window.location.reload()} className="w-full">
                   Tentar Novamente
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
-      </MobileErrorBoundary>
-    );
+      </MobileErrorBoundary>;
   }
-
   if (!currentStep) {
     // Redireciona automaticamente sem mostrar mensagem de conclusão
     navigate('/my-flows');
     return null;
   }
-
-  return (
-    <MobileErrorBoundary>
+  return <MobileErrorBoundary>
       <div className="min-h-screen bg-white dark:bg-[#0B0B0B] flow-execution-container">
         {/* Nome do Fluxo Fixo no Topo */}
-        {execution && (
-          <div className="fixed top-0 left-0 right-0 z-[60] bg-white/80 dark:bg-[#0B0B0B]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 py-4">
+        {execution && <div className="fixed top-0 left-0 right-0 z-[60] bg-white/80 dark:bg-[#0B0B0B]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 py-4">
             <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 text-center">
               {execution.flow_name}
             </h1>
-          </div>
-        )}
+          </div>}
         
         {/* Botão Dark Mode Flutuante */}
-        {!isLoading && !error && currentStep && (
-          <div className="fixed top-4 right-4 z-[60]">
+        {!isLoading && !error && currentStep && <div className="fixed top-4 right-4 z-[60]">
             <ThemeToggle />
-          </div>
-        )}
+          </div>}
         
         {/* Botão Meus Fluxos para Mobile e Tablet */}
-        {!isLoading && !error && currentStep && (
-          <div className="fixed top-4 left-4 z-[60] xl:hidden">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/my-flows')}
-              className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-300 dark:border-gray-600 shadow-lg hover:shadow-xl transition-all"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Meus Fluxos
-            </Button>
-          </div>
-        )}
+        {!isLoading && !error && currentStep && <div className="fixed top-4 left-4 z-[60] xl:hidden">
+            
+          </div>}
         
         {/* Espaçamento para o header fixo */}
         <div className="pt-20">
           <div className="w-full max-w-2xl mx-auto">
-            {isLoading && (
-              <div className="text-center bg-white dark:bg-[#0B0B0B] rounded-lg shadow-xl p-8 border border-gray-200 dark:border-gray-800">
+            {isLoading && <div className="text-center bg-white dark:bg-[#0B0B0B] rounded-lg shadow-xl p-8 border border-gray-200 dark:border-gray-800">
                 <LoadingSpinner />
                 <p className="text-muted-foreground mt-4">Carregando formulário...</p>
-              </div>
-            )}
+              </div>}
 
-            {error && (
-              <Card className="max-w-md mx-auto shadow-xl border-0 bg-white dark:bg-[#0B0B0B] dark:border-gray-800 flow-step-card">
+            {error && <Card className="max-w-md mx-auto shadow-xl border-0 bg-white dark:bg-[#0B0B0B] dark:border-gray-800 flow-step-card">
                 <CardHeader className="text-center">
                   <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <AlertTriangle className="h-8 w-8 text-white" />
@@ -181,69 +159,36 @@ const FlowExecution = () => {
                     {error}
                   </p>
                   <div className="space-y-2">
-                    <Button 
-                      onClick={() => navigate('/my-flows')}
-                      className="w-full bg-[#5D8701] hover:bg-[#4a6e01] text-white"
-                    >
+                    <Button onClick={() => navigate('/my-flows')} className="w-full bg-[#5D8701] hover:bg-[#4a6e01] text-white">
                       <ArrowLeft className="h-4 w-4 mr-2" />
                       Voltar aos Formulários
                     </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => window.location.reload()}
-                      className="w-full"
-                    >
+                    <Button variant="outline" onClick={() => window.location.reload()} className="w-full">
                       Tentar Novamente
                     </Button>
                   </div>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
 
-            {!isLoading && !error && currentStep && (
-              <div className="w-full">
-                <FlowStepRenderer
-                  step={currentStep}
-                  onComplete={handleStepComplete}
-                  onGoBack={canGoBack ? goBack : undefined}
-                  isLoading={isSubmitting}
-                  canGoBack={canGoBack}
-                  calculatorResult={currentStep.calculatorResult}
-                  calculatorResults={execution?.current_step?.calculatorResults || {}}
-                  questionResponses={execution?.current_step?.userResponses || {}}
-                />
-              </div>
-            )}
+            {!isLoading && !error && currentStep && <div className="w-full">
+                <FlowStepRenderer step={currentStep} onComplete={handleStepComplete} onGoBack={canGoBack ? goBack : undefined} isLoading={isSubmitting} canGoBack={canGoBack} calculatorResult={currentStep.calculatorResult} calculatorResults={execution?.current_step?.calculatorResults || {}} questionResponses={execution?.current_step?.userResponses || {}} />
+              </div>}
           </div>
 
           {/* Botões Flutuantes */}
-          {!isLoading && !error && currentStep && (
-            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex gap-3 z-50">
-              {canGoBack && (
-                <Button
-                  variant="outline"
-                  onClick={goBack}
-                  className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 shadow-lg hover:shadow-xl transition-shadow"
-                >
+          {!isLoading && !error && currentStep && <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex gap-3 z-50">
+              {canGoBack && <Button variant="outline" onClick={goBack} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 shadow-lg hover:shadow-xl transition-shadow">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Anterior
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                onClick={() => navigate('/my-flows')}
-                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 shadow-lg hover:shadow-xl transition-shadow"
-              >
+                </Button>}
+              <Button variant="outline" onClick={() => navigate('/my-flows')} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 shadow-lg hover:shadow-xl transition-shadow">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Voltar aos Formulários
               </Button>
-            </div>
-          )}
+            </div>}
         </div>
       </div>
-    </MobileErrorBoundary>
-  );
+    </MobileErrorBoundary>;
 };
-
 export default FlowExecution;
