@@ -84,38 +84,66 @@ export const PatientResponsesTimeline: React.FC<PatientResponsesTimelineProps> =
     
     // Se for um objeto, extrair apenas o valor útil
     if (typeof value === 'object') {
-      // Verificar se tem propriedades indesejadas que não devem ser renderizadas
-      if (value.nodeId && value.nodeType && value.timestamp) {
-        return 'Processado'; // Para objetos de controle interno
+      // Verificação mais robusta para objetos de controle interno
+      const controlKeys = ['nodeId', 'nodeType', 'timestamp', 'formCompleted', 'whatsappStatus', '_internal', 'metadata'];
+      const hasControlKeys = controlKeys.some(key => key in value);
+      
+      if (hasControlKeys) {
+        return 'Processado pelo sistema'; // Para objetos de controle interno
       }
       
-      if (value.result !== undefined) return `Resultado: ${value.result}`;
-      if (value.selected) return value.selected;
-      if (value.value !== undefined) return value.value;
-      if (value.answer !== undefined) return value.answer;
+      // Se for um array, processar cada item
+      if (Array.isArray(value)) {
+        const validItems = value.filter(item => 
+          item !== null && item !== undefined && 
+          (typeof item !== 'object' || !controlKeys.some(key => key in item))
+        );
+        return validItems.length > 0 ? validItems.join(', ') : 'Lista vazia';
+      }
       
-      // Para outros objetos, tentar extrair uma representação útil
+      // Verificar propriedades específicas de resposta
+      if (value.result !== undefined) return `${value.result}`;
+      if (value.selected !== undefined) return `${value.selected}`;
+      if (value.value !== undefined) return `${value.value}`;
+      if (value.answer !== undefined) return `${value.answer}`;
+      if (value.response !== undefined) return `${value.response}`;
+      
+      // Para outros objetos, extrair apenas chaves importantes
       const keys = Object.keys(value);
       if (keys.length === 0) return 'Vazio';
       
-      // Se for um array, juntá-lo como string
-      if (Array.isArray(value)) {
-        return value.join(', ');
-      }
-      
-      // Para outros objetos, mostrar apenas chaves importantes
+      // Filtrar chaves importantes (não são de controle)
       const importantKeys = keys.filter(key => 
-        !['nodeId', 'nodeType', 'timestamp', 'formCompleted', 'whatsappStatus'].includes(key)
+        !controlKeys.includes(key) && 
+        !key.startsWith('_') && 
+        value[key] !== null && 
+        value[key] !== undefined &&
+        typeof value[key] !== 'function'
       );
       
       if (importantKeys.length > 0) {
-        return importantKeys.map(key => `${key}: ${value[key]}`).join(', ');
+        const formatted = importantKeys
+          .slice(0, 3) // Limitar a 3 propriedades para não sobrecarregar
+          .map(key => {
+            const val = value[key];
+            if (typeof val === 'object') {
+              return `${key}: [objeto]`;
+            }
+            return `${key}: ${val}`;
+          })
+          .join(', ');
+        
+        return formatted + (importantKeys.length > 3 ? '...' : '');
       }
       
-      return 'Objeto processado';
+      return 'Dados processados';
     }
     
-    return String(value);
+    // Para valores primitivos
+    if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
+    if (typeof value === 'number') return value.toString();
+    
+    return String(value).trim() || 'Resposta vazia';
   };
 
   const renderStepDetails = (steps: FormStep[]) => {
