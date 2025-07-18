@@ -154,8 +154,8 @@ export const ImprovedFlowDelayTimer: React.FC<ImprovedFlowDelayTimerProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
-      <Card className="w-full max-w-md bg-white dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in dark:border-gray-800">
+    <div className="min-h-screen bg-white dark:bg-[#0B0B0B] flex items-center justify-center p-6">
+      <Card className="w-full max-w-md bg-white dark:bg-[#0B0B0B] backdrop-blur-sm border-0 shadow-xl animate-fade-in dark:border-gray-800">
         <CardContent className="p-8 text-center">
           {isExpired ? (
             <>
