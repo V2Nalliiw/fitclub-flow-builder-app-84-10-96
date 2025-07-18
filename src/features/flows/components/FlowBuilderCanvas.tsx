@@ -175,7 +175,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         onNodeClick={onNodeClick}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        fitView
+        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
         className="bg-gray-50 dark:bg-none dark:bg-[#0E0E0E]"
         defaultEdgeOptions={{
           animated: true,

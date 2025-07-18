@@ -72,10 +72,10 @@ export const TabletFlowMenu = ({
     setIsOpen(false);
   };
 
-  // Desktop: menu inline original
+  // Desktop: menu fixo com largura total
   if (isDesktop) {
     return (
-      <div className="fixed top-[calc(4rem+15px)] left-1/2 transform -translate-x-1/2 z-50 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border border-gray-200 dark:border-[#1A1A1A] rounded-full shadow-lg px-6 py-3">
+      <div className="fixed top-12 left-0 right-0 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-b border-gray-200 dark:border-[#1A1A1A] shadow-sm px-6 py-3">
         <div className="flex items-center gap-3">
           {/* Campo Nome do Fluxo */}
           <Input
