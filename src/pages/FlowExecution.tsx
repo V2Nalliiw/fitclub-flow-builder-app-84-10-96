@@ -53,7 +53,7 @@ const FlowExecution = () => {
   }, []);
   useEffect(() => {
     if (!user) {
-      navigate('/login');
+      navigate('/');
       return;
     }
     if (execution && execution.status === 'concluido') {

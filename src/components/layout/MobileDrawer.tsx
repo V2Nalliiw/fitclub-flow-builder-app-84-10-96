@@ -116,6 +116,7 @@ export const MobileDrawer = () => {
               onClick={() => {
                 logout();
                 setOpen(false);
+                window.location.href = '/';
               }}
               className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-destructive hover:bg-destructive/10 mt-4"
             >

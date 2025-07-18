@@ -48,7 +48,7 @@ export const Sidebar = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const getNavigationItems = () => {
