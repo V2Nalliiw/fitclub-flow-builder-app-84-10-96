@@ -159,8 +159,8 @@ serve(async (req) => {
 
     console.log('✅ Dados coletados, enviando WhatsApp via', whatsappSettings.provider);
 
-    // 🎯 SEMPRE usar o domínio fixo do FitClub com dashboard
-    const continueLink = 'https://fitclub.app.br/dashboard';
+    // 🎯 SEMPRE usar o domínio fixo do FitClub
+    const continueLink = 'https://fitclub.app.br/';
     
     // Inicializar o serviço de templates
     const templateService = new WhatsAppTemplateService(supabase);
