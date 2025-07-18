@@ -16,38 +16,10 @@ export default defineConfig(({ mode }) => ({
     mode === 'development' && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico'],
-      devOptions: {
-        enabled: true
-      },
       workbox: {
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,gif,webp,woff,woff2,ttf,eot}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/oilnybhaboefqyhjrmvl\.supabase\.co\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'supabase-api-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 // 24 hours
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/.*\.(?:png|jpg|jpeg|svg|gif|webp)$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'images-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-              }
-            }
-          }
-        ]
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
       },
+      includeAssets: ['favicon.ico'],
       manifest: {
         name: 'FitClub - Emagrecimento Inteligente',
         short_name: 'FitClub',
@@ -57,19 +29,12 @@ export default defineConfig(({ mode }) => ({
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
-        start_url: '/?utm_source=pwa',
+        start_url: '/',
         icons: [
           {
-            src: '/favicon.ico',
-            sizes: '192x192',
-            type: 'image/x-icon',
-            purpose: 'any'
-          },
-          {
-            src: '/favicon.ico',
+            src: 'favicon.ico',
             sizes: '512x512',
-            type: 'image/x-icon',
-            purpose: 'any'
+            type: 'image/png'
           }
         ]
       }
