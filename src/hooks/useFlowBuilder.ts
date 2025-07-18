@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useNodesState, useEdgesState, addEdge, Connection, Edge, Node } from '@xyflow/react';
 import { FlowNode } from '@/types/flow';
+import { useFlowDraftManager } from './useFlowDraftManager';
 
 const initialNodes: Node[] = [
   {
@@ -20,6 +21,7 @@ export const useFlowBuilder = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { saveFlowFromBuilder, updateFlowFromBuilder, flows } = useFlows();
+  const { scheduleAutoSave, loadDraft, clearDraft, hasDraft } = useFlowDraftManager();
   
   const [flowName, setFlowName] = useState('');
   const [flowDescription, setFlowDescription] = useState('');
@@ -31,11 +33,15 @@ export const useFlowBuilder = () => {
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showDraftDialog, setShowDraftDialog] = useState(false);
+  const [draftData, setDraftData] = useState<any>(null);
 
-  // Carregar fluxo para edição se especificado na URL
+  // Verificar draft ao carregar componente (apenas para novos fluxos)
   useEffect(() => {
     const editId = searchParams.get('edit');
+    
     if (editId && flows.length > 0) {
+      // Carregando fluxo existente para edição
       const flowToEdit = flows.find(f => f.id === editId);
       if (flowToEdit) {
         setEditingFlowId(editId);
@@ -44,8 +50,44 @@ export const useFlowBuilder = () => {
         setNodes(flowToEdit.nodes || initialNodes);
         setEdges(flowToEdit.edges || []);
       }
+    } else if (!editId) {
+      // Novo fluxo - verificar se há draft
+      if (hasDraft()) {
+        const draft = loadDraft();
+        if (draft) {
+          setDraftData(draft);
+          setShowDraftDialog(true);
+        }
+      }
     }
-  }, [searchParams, flows, setNodes, setEdges]);
+  }, [searchParams, flows, setNodes, setEdges, hasDraft, loadDraft]);
+
+  // Auto-save para novos fluxos (não edição)
+  useEffect(() => {
+    if (!editingFlowId) {
+      scheduleAutoSave(flowName, flowDescription, nodes, edges);
+    }
+  }, [flowName, flowDescription, nodes, edges, editingFlowId, scheduleAutoSave]);
+
+  // Funções para gerenciar draft
+  const handleLoadDraft = useCallback(() => {
+    if (draftData) {
+      setFlowName(draftData.flowName);
+      setFlowDescription(draftData.flowDescription);
+      setNodes(draftData.nodes);
+      setEdges(draftData.edges);
+      toast.success('Rascunho carregado com sucesso!');
+    }
+    setShowDraftDialog(false);
+    setDraftData(null);
+  }, [draftData, setNodes, setEdges]);
+
+  const handleStartFresh = useCallback(() => {
+    clearDraft();
+    setShowDraftDialog(false);
+    setDraftData(null);
+    toast.info('Começando um novo fluxo');
+  }, [clearDraft]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -327,9 +369,10 @@ export const useFlowBuilder = () => {
       } else {
         console.log('Criando novo fluxo');
         await saveFlowFromBuilder(flowData);
+        // Limpar draft após salvar com sucesso
+        clearDraft();
         toast.success('Fluxo salvo com sucesso!');
       }
-
 
     } catch (error) {
       console.error('Erro ao salvar fluxo:', error);
@@ -337,7 +380,7 @@ export const useFlowBuilder = () => {
     } finally {
       setIsSaving(false);
     }
-  }, [flowName, flowDescription, nodes, edges, editingFlowId, saveFlowFromBuilder, updateFlowFromBuilder, navigate]);
+  }, [flowName, flowDescription, nodes, edges, editingFlowId, saveFlowFromBuilder, updateFlowFromBuilder, clearDraft]);
 
   const resetFlow = useCallback(() => {
     setFlowName('');
@@ -345,49 +388,10 @@ export const useFlowBuilder = () => {
     setNodes(initialNodes);
     setEdges([]);
     setEditingFlowId(null);
-  }, [setNodes, setEdges]);
+    clearDraft(); // Limpar draft ao resetar
+  }, [setNodes, setEdges, clearDraft]);
 
-  const canSave = flowName.trim().length > 0 && nodes.length > 0;
-
-  return {
-    flowName,
-    setFlowName,
-    flowDescription,
-    setFlowDescription,
-    nodes,
-    setNodes,
-    edges,
-    setEdges,
-    onNodesChange,
-    onEdgesChange,
-    onConnect,
-    selectedNode,
-    setSelectedNode,
-    isConfigModalOpen,
-    setIsConfigModalOpen,
-    isPreviewModalOpen,
-    isLoading,
-    addNode,
-    deleteNode,
-    duplicateNode,
-    clearAllNodes,
-    autoArrangeNodes,
-    onNodeDoubleClick,
-    onNodeClick,
-    handleNodeConfigSave,
-    openPreview,
-    closePreview,
-    saveFlow,
-    resetFlow,
-    exportTemplate,
-    importTemplate,
-    isSaving,
-    canSave,
-    editingFlowId,
-    isEditing: !!editingFlowId,
-  };
-
-  async function exportTemplate() {
+  const exportTemplate = async () => {
     try {
       const templateData = {
         name: flowName || 'Modelo de Fluxo',
@@ -428,9 +432,9 @@ export const useFlowBuilder = () => {
       console.error('Erro ao exportar modelo:', error);
       toast.error('Erro ao exportar modelo');
     }
-  }
+  };
 
-  async function importTemplate() {
+  const importTemplate = async () => {
     try {
       const input = document.createElement('input');
       input.type = 'file';
@@ -470,5 +474,50 @@ export const useFlowBuilder = () => {
       console.error('Erro ao importar modelo:', error);
       toast.error('Erro ao importar modelo');
     }
-  }
+  };
+
+  const canSave = flowName.trim().length > 0 && nodes.length > 0;
+
+  return {
+    flowName,
+    setFlowName,
+    flowDescription,
+    setFlowDescription,
+    nodes,
+    setNodes,
+    edges,
+    setEdges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    selectedNode,
+    setSelectedNode,
+    isConfigModalOpen,
+    setIsConfigModalOpen,
+    isPreviewModalOpen,
+    isLoading,
+    addNode,
+    deleteNode,
+    duplicateNode,
+    clearAllNodes,
+    autoArrangeNodes,
+    onNodeDoubleClick,
+    onNodeClick,
+    handleNodeConfigSave,
+    openPreview,
+    closePreview,
+    saveFlow,
+    resetFlow,
+    exportTemplate,
+    importTemplate,
+    isSaving,
+    canSave,
+    editingFlowId,
+    isEditing: !!editingFlowId,
+    // Novos campos para gerenciar draft
+    showDraftDialog,
+    draftData,
+    handleLoadDraft,
+    handleStartFresh,
+  };
 };

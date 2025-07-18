@@ -30,6 +30,7 @@ import { SimpleCalculatorNodeConfig } from './SimpleCalculatorNodeConfig';
 
 import { TabletFlowMenu } from '@/components/layout/components/TabletFlowMenu';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
+import { DraftRecoveryDialog } from '@/components/flows/DraftRecoveryDialog';
 
 const nodeTypes = {
   start: StartNode,
@@ -82,6 +83,10 @@ export const FlowBuilder = () => {
     isSaving,
     canSave,
     isEditing,
+    showDraftDialog,
+    draftData,
+    handleLoadDraft,
+    handleStartFresh,
   } = useFlowBuilder();
 
   // Modificar onNodeDoubleClick para abrir o modal correto
@@ -395,6 +400,15 @@ export const FlowBuilder = () => {
         nodes={nodes}
         edges={edges}
         flowName={flowName}
+      />
+
+      {/* Dialog de Recuperação de Draft */}
+      <DraftRecoveryDialog
+        isOpen={showDraftDialog}
+        onLoadDraft={handleLoadDraft}
+        onStartFresh={handleStartFresh}
+        draftTimestamp={draftData?.timestamp || Date.now()}
+        draftName={draftData?.flowName}
       />
     </div>
   );
