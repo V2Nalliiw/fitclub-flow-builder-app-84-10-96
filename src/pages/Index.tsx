@@ -1,6 +1,6 @@
 
 import { useAuth } from "@/contexts/AuthContext";
-import { LoginForm } from "@/features/auth/components/LoginForm";
+import { AuthForm } from "@/features/auth/components/AuthForm";
 import { Dashboard } from "@/features/dashboard/components/Dashboard";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -17,7 +17,7 @@ const Index = () => {
   }
 
   if (!user) {
-    return <LoginForm />;
+    return <AuthForm />;
   }
 
   return (

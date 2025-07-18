@@ -2,6 +2,7 @@
 import { FlowsList } from '@/components/flows/FlowsList';
 import { useAuth } from '@/contexts/AuthContext';
 import { MobileErrorBoundary } from '@/components/ui/mobile-error-boundary';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useEffect } from 'react';
 
 const MyFlows = () => {
@@ -24,9 +25,11 @@ const MyFlows = () => {
   }, []);
 
   return (
-    <MobileErrorBoundary>
-      <FlowsList />
-    </MobileErrorBoundary>
+    <DashboardLayout>
+      <MobileErrorBoundary>
+        <FlowsList />
+      </MobileErrorBoundary>
+    </DashboardLayout>
   );
 };
 

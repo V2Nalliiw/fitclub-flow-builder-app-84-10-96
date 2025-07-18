@@ -26,7 +26,7 @@ export const MobileNavigation = () => {
       case 'patient':
         return [
           { icon: Home, label: 'Início', href: '/dashboard' },
-          { icon: FileText, label: 'Meus Formulários', href: '/forms' },
+          { icon: GitBranch, label: 'Meus Fluxos', href: '/my-flows' },
           { icon: User, label: 'Perfil', href: '/profile' },
         ];
       default:
