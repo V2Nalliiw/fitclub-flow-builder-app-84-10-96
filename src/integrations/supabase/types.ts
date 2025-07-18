@@ -574,6 +574,118 @@ export type Database = {
           },
         ]
       }
+      team_invitations: {
+        Row: {
+          accepted_at: string | null
+          clinic_id: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invitation_token: string
+          invited_by: string
+          name: string
+          permissions: Json | null
+          role: Database["public"]["Enums"]["team_role"]
+          status: string
+          updated_at: string
+          whatsapp_phone: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          clinic_id: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          invitation_token: string
+          invited_by: string
+          name: string
+          permissions?: Json | null
+          role?: Database["public"]["Enums"]["team_role"]
+          status?: string
+          updated_at?: string
+          whatsapp_phone?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          clinic_id?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invitation_token?: string
+          invited_by?: string
+          name?: string
+          permissions?: Json | null
+          role?: Database["public"]["Enums"]["team_role"]
+          status?: string
+          updated_at?: string
+          whatsapp_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invitations_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_members: {
+        Row: {
+          clinic_id: string
+          created_at: string
+          id: string
+          invited_by: string | null
+          is_active: boolean | null
+          joined_at: string | null
+          permissions: Json | null
+          role: Database["public"]["Enums"]["team_role"]
+          updated_at: string
+          user_id: string
+          whatsapp_phone: string | null
+          whatsapp_verified: boolean | null
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          is_active?: boolean | null
+          joined_at?: string | null
+          permissions?: Json | null
+          role?: Database["public"]["Enums"]["team_role"]
+          updated_at?: string
+          user_id: string
+          whatsapp_phone?: string | null
+          whatsapp_verified?: boolean | null
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          is_active?: boolean | null
+          joined_at?: string | null
+          permissions?: Json | null
+          role?: Database["public"]["Enums"]["team_role"]
+          updated_at?: string
+          user_id?: string
+          whatsapp_phone?: string | null
+          whatsapp_verified?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_settings: {
         Row: {
           access_token: string | null
@@ -697,9 +809,13 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      has_team_permission: {
+        Args: { _user_id: string; _clinic_id: string; _permission: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      team_role: "admin" | "manager" | "professional" | "assistant" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -826,6 +942,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      team_role: ["admin", "manager", "professional", "assistant", "viewer"],
+    },
   },
 } as const
