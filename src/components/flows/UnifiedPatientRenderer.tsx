@@ -605,8 +605,9 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
   }
 
   return (
-    <Card className="w-full max-w-2xl bg-white dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-2xl animate-fade-in dark:border-gray-800 max-h-[80vh] overflow-hidden">
-      <CardContent className="p-8 max-h-[80vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <Card className="w-full max-w-2xl bg-white dark:bg-[#0B0B0B] backdrop-blur-sm border-0 shadow-2xl animate-fade-in dark:border-gray-800 max-h-[90vh] overflow-hidden">
+      <CardContent className="p-8 max-h-[85vh] overflow-y-auto">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <Heart className="h-8 w-8 text-white" />
@@ -812,5 +813,6 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
           </div>
         </CardContent>
       </Card>
+    </div>
   );
 };
