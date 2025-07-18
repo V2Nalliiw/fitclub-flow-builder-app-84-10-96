@@ -188,7 +188,7 @@ export const usePatientFlows = () => {
       });
 
       const newCompletedSteps = execution.completed_steps + 1;
-      const newProgress = Math.round((newCompletedSteps / execution.total_steps) * 100);
+      const newProgress = Math.min(Math.round((newCompletedSteps / execution.total_steps) * 100), 100);
       const isFormCompleted = newProgress >= 100;
       const newStatus = isFormCompleted ? 'completed' : execution.status;
 
