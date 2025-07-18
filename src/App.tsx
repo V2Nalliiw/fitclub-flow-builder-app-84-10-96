@@ -55,7 +55,7 @@ const ProtectedRoute = ({
   allowedRoles = ['super_admin', 'clinic', 'patient'] 
 }: { 
   children: React.ReactNode;
-  allowedRoles?: ('super_admin' | 'clinic' | 'patient')[];
+  allowedRoles?: ('super_admin' | 'clinic' | 'patient' | 'admin' | 'manager' | 'professional' | 'assistant' | 'viewer')[];
 }) => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
