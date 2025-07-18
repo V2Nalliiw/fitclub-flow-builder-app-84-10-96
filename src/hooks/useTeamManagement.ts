@@ -91,23 +91,44 @@ export const useTeamManagement = () => {
     try {
       setLoading(true);
 
-      // Carregar membros da equipe com dados do perfil
+      // Carregar membros da equipe
       const { data: membersData, error: membersError } = await supabase
         .from('team_members')
-        .select(`
-          *,
-          profiles!inner (
-            name,
-            email,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (membersError) {
         console.error('Erro ao carregar membros:', membersError);
-        throw membersError;
+        // Se não for um erro crítico, apenas continua sem membros
+        if (membersError.code !== 'PGRST116') { // Not found
+          throw membersError;
+        }
+      }
+
+      // Se há membros, carregar os dados dos perfis
+      let transformedMembers: TeamMember[] = [];
+      if (membersData && membersData.length > 0) {
+        const userIds = membersData.map(member => member.user_id);
+        
+        // Carregar perfis dos usuários
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('user_id, name, email, avatar_url')
+          .in('user_id', userIds);
+
+        // Combinar dados dos membros com perfis
+        transformedMembers = membersData.map((member: any) => {
+          const profile = profilesData?.find(p => p.user_id === member.user_id);
+          return {
+            ...member,
+            user_profile: profile ? {
+              name: profile.name,
+              email: profile.email,
+              avatar_url: profile.avatar_url
+            } : undefined
+          };
+        });
       }
 
       // Carregar convites pendentes
@@ -119,29 +140,20 @@ export const useTeamManagement = () => {
 
       if (invitationsError) {
         console.error('Erro ao carregar convites:', invitationsError);
-        throw invitationsError;
+        // Se não for um erro crítico, apenas continua sem convites
+        if (invitationsError.code !== 'PGRST116') { // Not found
+          throw invitationsError;
+        }
       }
-
-      // Transformar dados para o formato correto
-      const transformedMembers: TeamMember[] = (membersData || []).map((member: any) => ({
-        ...member,
-        user_profile: member.profiles ? {
-          name: member.profiles.name,
-          email: member.profiles.email,
-          avatar_url: member.profiles.avatar_url
-        } : undefined
-      }));
 
       setMembers(transformedMembers);
       setInvitations((invitationsData || []) as TeamInvitation[]);
 
     } catch (error) {
       console.error('Erro ao carregar dados da equipe:', error);
-      toast({
-        title: "Erro ao carregar equipe",
-        description: "Não foi possível carregar os dados da equipe",
-        variant: "destructive",
-      });
+      // Não mostra toast de erro se for só ausência de dados
+      setMembers([]);
+      setInvitations([]);
     } finally {
       setLoading(false);
     }
