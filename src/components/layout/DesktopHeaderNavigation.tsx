@@ -161,12 +161,12 @@ export const DesktopHeaderNavigation = () => {
 
   return (
     <div className="flex items-center justify-between w-full">
-      {/* Logo à esquerda */}
-      <div className="flex items-center py-2">
+      {/* Logo à esquerda - menor */}
+      <div className="flex items-center py-1">
         <img 
           src={currentLogo}
           alt="Logo" 
-          className="h-12 w-auto max-w-[200px] object-contain"
+          className="h-6 w-auto max-w-[80px] object-contain"
         />
       </div>
 
@@ -177,15 +177,15 @@ export const DesktopHeaderNavigation = () => {
           <Button
             key={item.title}
             variant={location.pathname === item.url ? "secondary" : "ghost"}
-            size="icon"
+            size="sm"
             onClick={() => navigate(item.url)}
             className={cn(
-              "h-10 w-10",
+              "h-8 w-8 p-1",
               location.pathname === item.url && "bg-primary/10 text-primary"
             )}
             title={item.title}
           >
-            <item.icon className="h-5 w-5" />
+            <item.icon className="h-4 w-4" />
           </Button>
         ))}
 
@@ -196,8 +196,9 @@ export const DesktopHeaderNavigation = () => {
         <div className="relative">
           <Button 
             variant="ghost" 
-            size="icon"
+            size="sm"
             onClick={() => setNotificationsOpen(!notificationsOpen)}
+            className="h-8 w-8 p-1"
           >
             <Bell className="h-4 w-4" />
           </Button>
@@ -212,10 +213,10 @@ export const DesktopHeaderNavigation = () => {
         {/* Menu do usuário (avatar) - terceiro da direita para esquerda */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-              <Avatar className="h-8 w-8">
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0">
+              <Avatar className="h-6 w-6">
                 <AvatarImage src={user?.avatar_url || ""} alt={user?.name || "User"} />
-                <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
+                <AvatarFallback className="text-xs">{user?.name?.charAt(0) || "U"}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>

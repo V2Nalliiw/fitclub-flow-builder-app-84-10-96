@@ -26,11 +26,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0E0E0E] flex flex-col w-full">
-      {/* Top Bar - 10% da altura da tela */}
-      <header className={cn(
-        "h-[10vh] min-h-[50px] border-b border-border bg-card px-4 flex items-center justify-between relative z-30",
-        !isDesktop && isFlowsPage && "fixed top-0 left-0 right-0"
-      )}>
+      {/* Top Bar - Header Fixo Fino para todos os usuários */}
+      <header className="fixed top-0 left-0 right-0 z-50 h-12 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 px-4 flex items-center justify-between">
         {/* Desktop Navigation */}
         {isDesktop ? (
           <DesktopHeaderNavigation />
@@ -41,7 +38,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <img 
                 src={currentLogo}
                 alt="Logo" 
-                className="h-8 w-auto max-w-[120px] object-contain"
+                className="h-6 w-auto max-w-[80px] object-contain"
               />
             </div>
             
@@ -72,7 +69,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <img 
                 src={currentLogo}
                 alt="Logo" 
-                className="h-8 w-auto max-w-[120px] object-contain"
+                className="h-6 w-auto max-w-[80px] object-contain"
               />
             </div>
             
@@ -99,11 +96,10 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         )}
       </header>
 
-      {/* Main Content - 80% da altura para mobile/tablet, resto para desktop */}
+      {/* Main Content - Com espaçamento para header fixo */}
       <main className={cn(
-        "transition-all duration-300 animate-fade-in",
-        !isDesktop && isFlowsPage ? "pt-0" : "",
-        isMobile || isTablet ? "h-[80vh] overflow-y-auto" : "flex-1 pb-6"
+        "pt-12 transition-all duration-300 animate-fade-in",
+        isMobile || isTablet ? "pb-[10vh] min-h-[calc(100vh-3rem)]" : "flex-1 pb-6"
       )}>
         {children}
       </main>
