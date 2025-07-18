@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'fitclub-emagrecimento-v2';
+const CACHE_NAME = 'fitclub-emagrecimento-v3';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',
