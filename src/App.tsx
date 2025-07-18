@@ -29,6 +29,14 @@ import MyFlows from "@/pages/MyFlows";
 import FlowExecution from "@/pages/FlowExecution";
 import ConteudoFormulario from "@/pages/ConteudoFormulario";
 import NotFound from "@/pages/NotFound";
+import Help from "@/pages/Help";
+import HelpSuperAdmin from "@/pages/help/HelpSuperAdmin";
+import HelpClinic from "@/pages/help/HelpClinic";
+import HelpPatient from "@/pages/help/HelpPatient";
+import HelpProfessional from "@/pages/help/HelpProfessional";
+import HelpManager from "@/pages/help/HelpManager";
+import HelpAssistant from "@/pages/help/HelpAssistant";
+import HelpViewer from "@/pages/help/HelpViewer";
 
 import { RealtimeNotificationProvider } from "@/components/notifications/RealtimeNotificationProvider";
 import { usePatientFlows } from "@/hooks/usePatientFlows";
@@ -270,6 +278,72 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute allowedRoles={['super_admin']}>
             <Permissions />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Help Pages - Todos os usuários */}
+      <Route 
+        path="/help" 
+        element={
+          <ProtectedRoute>
+            <Help />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/help/super-admin" 
+        element={
+          <ProtectedRoute allowedRoles={['super_admin']}>
+            <HelpSuperAdmin />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/help/clinic" 
+        element={
+          <ProtectedRoute allowedRoles={['clinic', 'admin']}>
+            <HelpClinic />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/help/manager" 
+        element={
+          <ProtectedRoute allowedRoles={['manager']}>
+            <HelpManager />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/help/professional" 
+        element={
+          <ProtectedRoute allowedRoles={['professional']}>
+            <HelpProfessional />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/help/assistant" 
+        element={
+          <ProtectedRoute allowedRoles={['assistant']}>
+            <HelpAssistant />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/help/viewer" 
+        element={
+          <ProtectedRoute allowedRoles={['viewer']}>
+            <HelpViewer />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/help/patient" 
+        element={
+          <ProtectedRoute allowedRoles={['patient']}>
+            <HelpPatient />
           </ProtectedRoute>
         } 
       />
