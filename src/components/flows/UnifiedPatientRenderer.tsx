@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowRight, CheckCircle2, Heart, FileText, Clock, Send, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -604,9 +605,8 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0E0E0E] flex items-center justify-center p-6">
-      <Card className="w-full max-w-lg bg-white dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in dark:border-gray-800">
-        <CardContent className="p-8">
+    <Card className="w-full max-w-2xl bg-white dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-2xl animate-fade-in dark:border-gray-800 max-h-[80vh] overflow-hidden">
+      <CardContent className="p-8 max-h-[80vh] overflow-y-auto">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <Heart className="h-8 w-8 text-white" />
@@ -699,20 +699,77 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
               {/* Múltipla escolha */}
               {currentField.questionType === 'multipla-escolha' && (
                 <div className="space-y-4">
-                  <div className="space-y-3">
-                    {currentField.opcoes.map((opcao: string) => (
-                      <div key={opcao} className="flex items-center space-x-3 p-4 border-2 border-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                        <Checkbox
-                          id={opcao}
-                          onCheckedChange={(checked) => handleMultipleChoiceChange(opcao, checked as boolean)}
-                          className="w-5 h-5"
-                        />
-                        <Label htmlFor={opcao} className="text-base font-medium cursor-pointer flex-1">
-                          {opcao}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
+                  {currentField.opcoes.length > 6 ? (
+                    // Select para muitas opções
+                    <div className="space-y-3">
+                      <Select onValueChange={(value) => {
+                        const currentValues = responses[currentField.nomenclatura] || [];
+                        if (!currentValues.includes(value)) {
+                          const newValues = [...currentValues, value];
+                          setResponses(prev => ({
+                            ...prev,
+                            [currentField.nomenclatura]: newValues
+                          }));
+                        }
+                      }}>
+                        <SelectTrigger className="w-full border-2 border-gray-200 focus:border-blue-500 rounded-xl py-4">
+                          <SelectValue placeholder="Selecione uma opção..." />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[200px] overflow-y-auto">
+                          {currentField.opcoes.map((opcao: string) => (
+                            <SelectItem 
+                              key={opcao} 
+                              value={opcao}
+                              disabled={responses[currentField.nomenclatura]?.includes(opcao)}
+                            >
+                              {opcao}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      
+                      {/* Mostrar seleções atuais */}
+                      {responses[currentField.nomenclatura]?.length > 0 && (
+                        <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-xl">
+                          <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">Selecionados:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {responses[currentField.nomenclatura].map((opcao: string) => (
+                              <span 
+                                key={opcao}
+                                className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-sm cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-300 transition-colors"
+                                onClick={() => {
+                                  const newValues = responses[currentField.nomenclatura].filter((v: string) => v !== opcao);
+                                  setResponses(prev => ({
+                                    ...prev,
+                                    [currentField.nomenclatura]: newValues
+                                  }));
+                                }}
+                                title="Clique para remover"
+                              >
+                                {opcao} ×
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    // Checkboxes para poucas opções
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                      {currentField.opcoes.map((opcao: string) => (
+                        <div key={opcao} className="flex items-center space-x-3 p-4 border-2 border-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                          <Checkbox
+                            id={opcao}
+                            onCheckedChange={(checked) => handleMultipleChoiceChange(opcao, checked as boolean)}
+                            className="w-5 h-5"
+                          />
+                          <Label htmlFor={opcao} className="text-base font-medium cursor-pointer flex-1">
+                            {opcao}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   
                   <Button
                     onClick={() => {
@@ -755,6 +812,5 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
           </div>
         </CardContent>
       </Card>
-    </div>
   );
 };
