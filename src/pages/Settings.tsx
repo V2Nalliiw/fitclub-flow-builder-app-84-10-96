@@ -98,10 +98,10 @@ export const Settings = () => {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Configurações</h1>
-        <p className="text-muted-foreground">
+    <div className="container mx-auto p-4 md:py-6 space-y-4 md:space-y-6 max-w-4xl">
+      <div className="space-y-2">
+        <h1 className="text-2xl md:text-3xl font-bold">Configurações</h1>
+        <p className="text-sm md:text-base text-muted-foreground">
           {user?.role === 'super_admin' ? 'Gerencie as configurações do app' : 'Gerencie as configurações da clínica'}
         </p>
       </div>
@@ -238,8 +238,8 @@ export const Settings = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex-1">
                 <Label>Novo Paciente</Label>
                 <p className="text-sm text-muted-foreground">Quando um novo paciente se cadastrar</p>
               </div>
@@ -251,8 +251,8 @@ export const Settings = () => {
 
             <Separator />
 
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex-1">
                 <Label>Lembrete de Consulta</Label>
                 <p className="text-sm text-muted-foreground">Lembretes de consultas agendadas</p>
               </div>
@@ -264,8 +264,8 @@ export const Settings = () => {
 
             <Separator />
 
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex-1">
                 <Label>Fluxo Concluído</Label>
                 <p className="text-sm text-muted-foreground">Quando um paciente completar um fluxo</p>
               </div>
@@ -277,8 +277,8 @@ export const Settings = () => {
 
             <Separator />
 
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex-1">
                 <Label>Atualizações do Sistema</Label>
                 <p className="text-sm text-muted-foreground">Notificações sobre atualizações</p>
               </div>
