@@ -12,7 +12,7 @@ if ('serviceWorker' in navigator) {
         
         // Check for updates
         registration.addEventListener('updatefound', () => {
-          console.log('[PWA] SW update found - v8');
+          console.log('[PWA] SW update found - v9');
           const newWorker = registration.installing;
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
