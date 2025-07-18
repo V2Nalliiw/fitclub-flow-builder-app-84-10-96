@@ -81,7 +81,7 @@ class WhatsAppTemplateService {
     
     switch (templateName) {
       case 'novo_formulario':
-        return `📋 *${variables.form_name || 'Formulário'}*\n\nOlá${variables.patient_name ? ` ${variables.patient_name}` : ''}! Você tem um formulário para preencher.\n\n🔗 Acesse o app: ${variables.form_url || 'https://fitclub.app.br'}\n\n_Responda assim que possível._`;
+        return `📋 *${variables.form_name || 'Formulário'}*\n\nOlá${variables.patient_name ? ` ${variables.patient_name}` : ''}! Você tem um formulário para preencher.\n\n🔗 Acesse o app: https://fitclub.app.br/\n\n_Responda assim que possível._`;
       
       default:
         return variables.message || 'Mensagem não disponível';

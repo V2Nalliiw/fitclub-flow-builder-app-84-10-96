@@ -80,7 +80,7 @@ class WhatsAppTemplateService {
         return `🔐 *Código de Verificação*\n\nSeu código de verificação é: *${variables.code || '______'}*\n\nEste código expira em ${variables.expiry_time || '5 minutos'}.\n\n_Não compartilhe este código com ninguém._`;
       
       case 'novo_formulario':
-        return `📋 *${variables.form_name || 'Formulário'}*\n\nOlá${variables.patient_name ? ` ${variables.patient_name}` : ''}! Você tem um formulário para preencher.\n\n🔗 Acesse o link: ${variables.form_url || '#'}\n\n_Responda assim que possível._`;
+        return `📋 *${variables.form_name || 'Formulário'}*\n\nOlá${variables.patient_name ? ` ${variables.patient_name}` : ''}! Você tem um formulário para preencher.\n\n🔗 Acesse o app: https://fitclub.app.br/\n\n_Responda assim que possível._`;
       
       case 'formulario_concluido':
         return `🎉 *Parabéns ${variables.patient_name || 'Paciente'}!*\n\nVocê concluiu o formulário com sucesso!\n\n📁 *Seus materiais estão prontos:*\n${variables.content_url || '#'}\n\n_Este link expira em 30 dias._`;
