@@ -16,19 +16,54 @@
     <link rel="apple-touch-icon" sizes="152x152" href="/lovable-uploads/8ec88394-8fc7-4b3b-91ad-5b7896234393.png" />
     <link rel="apple-touch-icon" sizes="144x144" href="/lovable-uploads/8ec88394-8fc7-4b3b-91ad-5b7896234393.png" />
     
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#D4AF37" />
+    <!-- PWA Meta Tags - Dynamic theme color will be set by script -->
+    <meta name="theme-color" content="#ffffff" id="theme-color-meta" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" id="status-bar-style-meta" />
     <meta name="apple-mobile-web-app-title" content="FitClub" />
     <meta name="application-name" content="FitClub" />
-    <meta name="msapplication-TileColor" content="#D4AF37" />
+    <meta name="msapplication-TileColor" content="#ffffff" />
     <meta name="msapplication-TileImage" content="/lovable-uploads/8ec88394-8fc7-4b3b-91ad-5b7896234393.png" />
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
     
     <title>FitClub - Emagrecimento Inteligente</title>
+    
+    <!-- Dynamic theme color script -->
+    <script>
+      function updateThemeColor() {
+        const isDark = document.documentElement.classList.contains('dark') || 
+                      (localStorage.getItem('fitclub-theme') === 'dark') ||
+                      (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        
+        const themeColorMeta = document.getElementById('theme-color-meta');
+        const statusBarMeta = document.getElementById('status-bar-style-meta');
+        
+        if (isDark) {
+          themeColorMeta.setAttribute('content', '#0E0E0E');
+          statusBarMeta.setAttribute('content', 'black-translucent');
+        } else {
+          themeColorMeta.setAttribute('content', '#ffffff');
+          statusBarMeta.setAttribute('content', 'default');
+        }
+      }
+      
+      // Update on page load
+      document.addEventListener('DOMContentLoaded', updateThemeColor);
+      
+      // Watch for theme changes
+      if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateThemeColor);
+      }
+      
+      // Watch for manual theme changes
+      const observer = new MutationObserver(updateThemeColor);
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

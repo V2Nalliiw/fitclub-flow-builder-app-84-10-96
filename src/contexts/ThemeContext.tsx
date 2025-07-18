@@ -23,6 +23,21 @@ interface ThemeProviderProps {
   children: React.ReactNode;
 }
 
+const updatePWAThemeColor = (theme: Theme) => {
+  const themeColorMeta = document.getElementById('theme-color-meta');
+  const statusBarMeta = document.getElementById('status-bar-style-meta');
+  
+  if (themeColorMeta && statusBarMeta) {
+    if (theme === 'dark') {
+      themeColorMeta.setAttribute('content', '#0E0E0E');
+      statusBarMeta.setAttribute('content', 'black-translucent');
+    } else {
+      themeColorMeta.setAttribute('content', '#ffffff');
+      statusBarMeta.setAttribute('content', 'default');
+    }
+  }
+};
+
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const [theme, setThemeState] = useState<Theme>(() => {
     const stored = localStorage.getItem('fitclub-theme');
@@ -36,6 +51,9 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     } else {
       document.documentElement.classList.remove('dark');
     }
+    
+    // Update PWA theme color when theme changes
+    updatePWAThemeColor(theme);
   }, [theme]);
 
   const toggleTheme = () => {

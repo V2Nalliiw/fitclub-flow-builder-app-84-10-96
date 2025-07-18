@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'fitclub-emagrecimento-v6';
+const CACHE_NAME = 'fitclub-emagrecimento-v7';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',
@@ -10,18 +10,17 @@ const urlsToCache = [
 
 // Install event
 self.addEventListener('install', (event) => {
-  console.log('[SW] Install event v6');
+  console.log('[SW] Install event v7');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('[SW] Caching app shell v6');
+        console.log('[SW] Caching app shell v7');
         return cache.addAll(urlsToCache);
       })
       .catch((error) => {
         console.error('[SW] Error caching files:', error);
       })
   );
-  // Skip waiting to activate immediately
   self.skipWaiting();
 });
 
@@ -30,18 +29,15 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Return cached version or fetch from network
         if (response) {
           return response;
         }
         
         return fetch(event.request).then((response) => {
-          // Check if valid response
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
 
-          // Clone the response
           const responseToCache = response.clone();
 
           caches.open(CACHE_NAME)
@@ -60,7 +56,7 @@ self.addEventListener('fetch', (event) => {
 
 // Activate event
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activate event v6');
+  console.log('[SW] Activate event v7');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -73,7 +69,6 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  // Take control of all clients
   return self.clients.claim();
 });
 

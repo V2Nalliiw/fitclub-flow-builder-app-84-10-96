@@ -4,11 +4,11 @@
   "short_name": "FitClub",
   "description": "Plataforma inteligente para emagrecimento saudável e sustentável. Construtor de fluxos para clínicas e acompanhamento de pacientes.",
   "start_url": "/?utm_source=pwa",
-  "id": "fitclub-app-v6",
+  "id": "fitclub-app-v7",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui", "browser"],
   "background_color": "#ffffff",
-  "theme_color": "#D4AF37",
+  "theme_color": "#ffffff",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "pt-BR",
@@ -87,7 +87,15 @@
       "src": "/lovable-uploads/8ec88394-8fc7-4b3b-91ad-5b7896234393.png",
       "sizes": "1280x720",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "FitClub Dashboard"
+    },
+    {
+      "src": "/lovable-uploads/8ec88394-8fc7-4b3b-91ad-5b7896234393.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "FitClub Mobile"
     }
   ],
   "shortcuts": [
