@@ -5,107 +5,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- Favicon - Novo ícone atualizado -->
-    <link rel="icon" type="image/png" sizes="16x16" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" />
-    <link rel="icon" type="image/png" sizes="48x48" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" />
-    <link rel="shortcut icon" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" />
+    <!-- Favicon básico - o PWA vai adicionar os outros -->
+    <link rel="icon" type="image/png" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" />
     
-    <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" />
-    <link rel="apple-touch-icon" sizes="152x152" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" />
-    <link rel="apple-touch-icon" sizes="144x144" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" />
-    <link rel="apple-touch-icon" sizes="120x120" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" />
-    <link rel="apple-touch-icon" sizes="114x114" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" />
-    <link rel="apple-touch-icon" sizes="76x76" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" />
-    <link rel="apple-touch-icon" sizes="72x72" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" />
-    <link rel="apple-touch-icon" sizes="60x60" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" />
-    <link rel="apple-touch-icon" sizes="57x57" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" />
-    
-    <!-- Apple Splash Screens -->
-    <link rel="apple-touch-startup-image" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
-    <link rel="apple-touch-startup-image" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
-    <link rel="apple-touch-startup-image" href="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
-    
-    <!-- PWA Meta Tags - Dynamic theme color will be set by script -->
-    <meta name="theme-color" content="#ffffff" id="theme-color-meta" />
+    <!-- PWA Meta Tags básicos -->
+    <meta name="theme-color" content="#ffffff" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" id="status-bar-style-meta" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="FitClub" />
     <meta name="application-name" content="FitClub" />
     
-    <!-- Windows/Microsoft -->
-    <meta name="msapplication-TileColor" content="#ffffff" />
-    <meta name="msapplication-TileImage" content="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" />
-    <meta name="msapplication-config" content="/browserconfig.xml" />
-    
-    <!-- Android -->
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="format-detection" content="telephone=no" />
-    
-    <!-- SEO and Social -->
+    <!-- SEO -->
     <meta name="description" content="Plataforma inteligente para emagrecimento saudável e sustentável. Construtor de fluxos para clínicas e acompanhamento de pacientes." />
     <meta name="keywords" content="emagrecimento, saúde, fitness, clínica, pacientes, fluxos" />
-    <meta name="author" content="FitClub" />
-    
-    <!-- Open Graph -->
-    <meta property="og:title" content="FitClub - Emagrecimento Inteligente" />
-    <meta property="og:description" content="Plataforma inteligente para emagrecimento saudável e sustentável" />
-    <meta property="og:image" content="/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png" />
-    <meta property="og:type" content="website" />
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json" />
     
     <title>FitClub - Emagrecimento Inteligente</title>
-    
-    <!-- Enhanced theme color script -->
-    <script>
-      function updateThemeColor() {
-        const isDark = document.documentElement.classList.contains('dark') || 
-                      (localStorage.getItem('fitclub-theme') === 'dark') ||
-                      (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        
-        const themeColorMeta = document.getElementById('theme-color-meta');
-        const statusBarMeta = document.getElementById('status-bar-style-meta');
-        
-        if (themeColorMeta && statusBarMeta) {
-          if (isDark) {
-            themeColorMeta.setAttribute('content', '#0E0E0E');
-            statusBarMeta.setAttribute('content', 'black-translucent');
-          } else {
-            themeColorMeta.setAttribute('content', '#ffffff');
-            statusBarMeta.setAttribute('content', 'default');
-          }
-        }
-      }
-      
-      // Update on page load
-      document.addEventListener('DOMContentLoaded', updateThemeColor);
-      
-      // Watch for theme changes
-      if (window.matchMedia) {
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateThemeColor);
-      }
-      
-      // Watch for manual theme changes
-      if (typeof MutationObserver !== 'undefined') {
-        const observer = new MutationObserver(updateThemeColor);
-        observer.observe(document.documentElement, {
-          attributes: true,
-          attributeFilter: ['class']
-        });
-      }
-      
-      // PWA install detection
-      let deferredPrompt;
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        // Pode mostrar um botão de instalação customizado aqui
-        console.log('[PWA] Install prompt available');
-      });
-    </script>
   </head>
   <body>
     <div id="root"></div>

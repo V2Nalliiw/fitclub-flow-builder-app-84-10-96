@@ -15,10 +15,13 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === 'development' && componentTagger(),
     VitePWA({
-      registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png'],
+      devOptions: {
+        enabled: true
+      },
       workbox: {
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,gif,webp,woff,woff2,ttf,eot}'],
         runtimeCaching: [
           {
@@ -60,13 +63,25 @@ export default defineConfig(({ mode }) => ({
             src: '/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
           },
           {
             src: '/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
+          },
+          {
+            src: '/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: '/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       }
