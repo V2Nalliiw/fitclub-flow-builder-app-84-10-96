@@ -15,14 +15,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useForm } from 'react-hook-form';
-import { CreateInvitationData } from '@/hooks/useTeamManagement';
+import { CreateInvitationData, CreateUserData } from '@/hooks/useTeamManagement';
 import { useToast } from '@/hooks/use-toast';
 
 interface InviteMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onInvite: (data: CreateInvitationData) => Promise<void>;
+  onCreateUser: (data: CreateUserData) => Promise<void>;
   roleLabels: Record<string, string>;
   permissionLabels: Record<string, string>;
 }
@@ -31,11 +34,14 @@ export const InviteMemberDialog = ({
   open, 
   onOpenChange, 
   onInvite, 
+  onCreateUser,
   roleLabels,
   permissionLabels 
 }: InviteMemberDialogProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [createDirectly, setCreateDirectly] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState('');
   
   const {
     register,
@@ -44,18 +50,33 @@ export const InviteMemberDialog = ({
     setValue,
     watch,
     formState: { errors }
-  } = useForm<CreateInvitationData>();
+  } = useForm<any>();
+
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789@#$%&';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setGeneratedPassword(password);
+    setValue('temporaryPassword', password);
+  };
 
   const watchedRole = watch('role');
 
-  const onSubmit = async (data: CreateInvitationData) => {
+  const onSubmit = async (data: CreateInvitationData | CreateUserData) => {
     try {
       setLoading(true);
-      await onInvite(data);
+      if (createDirectly) {
+        await onCreateUser(data as CreateUserData);
+      } else {
+        await onInvite(data as CreateInvitationData);
+      }
       reset();
+      setGeneratedPassword('');
       onOpenChange(false);
     } catch (error) {
-      console.error('Erro ao enviar convite:', error);
+      console.error('Erro ao processar solicitação:', error);
     } finally {
       setLoading(false);
     }
@@ -63,17 +84,51 @@ export const InviteMemberDialog = ({
 
   const handleClose = () => {
     reset();
+    setGeneratedPassword('');
+    setCreateDirectly(false);
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Convidar Novo Membro</DialogTitle>
+          <DialogTitle>
+            {createDirectly ? 'Criar Novo Usuário' : 'Convidar Novo Membro'}
+          </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-6">
+          {/* Toggle entre convite e criação direta */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Modo de Adição</CardTitle>
+              <CardDescription>
+                Escolha como adicionar o novo membro à equipe
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium">
+                    {createDirectly ? 'Criar usuário diretamente' : 'Enviar convite por email'}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {createDirectly 
+                      ? 'Cria conta imediatamente com senha provisória'
+                      : 'Usuário deve aceitar convite e criar própria conta'
+                    }
+                  </p>
+                </div>
+                <Switch
+                  checked={createDirectly}
+                  onCheckedChange={setCreateDirectly}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nome Completo</Label>
             <Input
@@ -85,7 +140,7 @@ export const InviteMemberDialog = ({
               })}
             />
             {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
+              <p className="text-sm text-destructive">{String(errors.name?.message || '')}</p>
             )}
           </div>
 
@@ -104,21 +159,54 @@ export const InviteMemberDialog = ({
               })}
             />
             {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
+              <p className="text-sm text-destructive">{String(errors.email?.message || '')}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="whatsapp_phone">WhatsApp (opcional)</Label>
-            <Input
-              id="whatsapp_phone"
-              placeholder="Ex: +5511999999999"
-              {...register('whatsapp_phone')}
-            />
-            <p className="text-xs text-muted-foreground">
-              Formato: +55 + DDD + número (apenas números)
-            </p>
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="whatsapp_phone">WhatsApp (opcional)</Label>
+              <Input
+                id="whatsapp_phone"
+                placeholder="Ex: +5511999999999"
+                {...register('whatsapp_phone')}
+              />
+              <p className="text-xs text-muted-foreground">
+                Formato: +55 + DDD + número (apenas números)
+              </p>
+            </div>
+
+            {/* Campo de senha para criação direta */}
+            {createDirectly && (
+              <div className="space-y-2">
+                <Label htmlFor="temporaryPassword">Senha Provisória</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="temporaryPassword"
+                    type="text"
+                    placeholder="Senha gerada automaticamente"
+                    value={generatedPassword}
+                    {...register('temporaryPassword', { 
+                      required: createDirectly ? 'Senha é obrigatória' : false 
+                    })}
+                    readOnly
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={generatePassword}
+                    className="whitespace-nowrap"
+                  >
+                    Gerar
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  O usuário deve trocar a senha no primeiro login
+                </p>
+                {errors.temporaryPassword && (
+                  <p className="text-sm text-destructive">{String(errors.temporaryPassword?.message || '')}</p>
+                )}
+              </div>
+            )}
 
           <div className="space-y-2">
             <Label htmlFor="role">Cargo</Label>
@@ -138,7 +226,7 @@ export const InviteMemberDialog = ({
               </SelectContent>
             </Select>
             {errors.role && (
-              <p className="text-sm text-destructive">{errors.role.message}</p>
+              <p className="text-sm text-destructive">{String(errors.role?.message || '')}</p>
             )}
           </div>
 
@@ -165,10 +253,14 @@ export const InviteMemberDialog = ({
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Enviando...' : 'Enviar Convite'}
+              {loading 
+                ? (createDirectly ? 'Criando...' : 'Enviando...') 
+                : (createDirectly ? 'Criar Usuário' : 'Enviar Convite')
+              }
             </Button>
           </div>
-        </form>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

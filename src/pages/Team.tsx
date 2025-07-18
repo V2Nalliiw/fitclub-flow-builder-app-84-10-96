@@ -18,6 +18,7 @@ const Team = () => {
     invitations,
     loading,
     createInvitation,
+    createUser,
     updateMemberRole,
     updateMemberPermissions,
     deactivateMember,
@@ -43,7 +44,7 @@ const Team = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto p-4 md:p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -184,6 +185,7 @@ const Team = () => {
         open={inviteDialogOpen}
         onOpenChange={setInviteDialogOpen}
         onInvite={createInvitation}
+        onCreateUser={createUser}
         roleLabels={ROLE_LABELS}
         permissionLabels={PERMISSION_LABELS}
       />

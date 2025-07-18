@@ -49,6 +49,15 @@ export interface CreateInvitationData {
   whatsapp_phone?: string;
 }
 
+export interface CreateUserData {
+  email: string;
+  name: string;
+  role: 'admin' | 'manager' | 'professional' | 'assistant' | 'viewer';
+  permissions?: Record<string, boolean>;
+  whatsapp_phone?: string;
+  temporaryPassword: string;
+}
+
 const ROLE_LABELS = {
   admin: 'Administrador',
   manager: 'Gerente',
@@ -137,6 +146,43 @@ export const useTeamManagement = () => {
       setLoading(false);
     }
   }, [user?.id, toast]);
+
+  const createUser = useCallback(async (data: CreateUserData) => {
+    if (!user?.id) return;
+
+    try {
+      console.log('Criando usuário diretamente:', data);
+
+      const { data: result, error } = await supabase.functions.invoke('create-team-user', {
+        body: data
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (!result?.success) {
+        throw new Error(result?.error || 'Erro ao criar usuário');
+      }
+
+      toast({
+        title: "Usuário criado",
+        description: `Usuário ${data.name} foi criado com sucesso`,
+      });
+
+      // Recarregar dados
+      await loadTeamData();
+
+    } catch (error: any) {
+      console.error('Erro ao criar usuário:', error);
+      toast({
+        title: "Erro ao criar usuário",
+        description: error.message || "Não foi possível criar o usuário",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  }, [user?.id, toast, loadTeamData]);
 
   const createInvitation = useCallback(async (data: CreateInvitationData) => {
     if (!user?.id) return;
@@ -359,6 +405,7 @@ export const useTeamManagement = () => {
     invitations,
     loading,
     createInvitation,
+    createUser,
     updateMemberRole,
     updateMemberPermissions,
     deactivateMember,
