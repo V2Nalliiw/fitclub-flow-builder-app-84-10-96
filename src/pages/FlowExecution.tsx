@@ -219,16 +219,18 @@ const FlowExecution = () => {
             )}
 
             {!isLoading && !error && currentStep && (
-              <FlowStepRenderer
-                step={currentStep}
-                onComplete={handleStepComplete}
-                onGoBack={canGoBack ? goBack : undefined}
-                isLoading={isSubmitting}
-                canGoBack={canGoBack}
-                calculatorResult={currentStep.calculatorResult}
-                calculatorResults={execution?.current_step?.calculatorResults || {}}
-                questionResponses={execution?.current_step?.userResponses || {}}
-              />
+              <div className="w-full">
+                <FlowStepRenderer
+                  step={currentStep}
+                  onComplete={handleStepComplete}
+                  onGoBack={canGoBack ? goBack : undefined}
+                  isLoading={isSubmitting}
+                  canGoBack={canGoBack}
+                  calculatorResult={currentStep.calculatorResult}
+                  calculatorResults={execution?.current_step?.calculatorResults || {}}
+                  questionResponses={execution?.current_step?.userResponses || {}}
+                />
+              </div>
             )}
           </div>
 
