@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Users, GitBranch, User, Building2 } from 'lucide-react';
+import { Home, Users, GitBranch, User, Building2, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -26,6 +26,7 @@ export const MobileNavigation = () => {
       case 'patient':
         return [
           { icon: Home, label: 'Início', href: '/dashboard' },
+          { icon: FileText, label: 'Meus Fluxos', href: '/my-flows' },
           { icon: User, label: 'Perfil', href: '/profile' },
         ];
       default:
