@@ -196,7 +196,17 @@ const FlowExecution = () => {
         {(isMobile || isTablet) && (
           <div className="fixed bottom-0 left-0 right-0 z-40">
             <div className="backdrop-blur-md bg-card/80 border-t border-border/50">
-              <MobileNavigation />
+              <nav className="flex items-center justify-around px-2 py-2" style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/my-flows')}
+                  className="flex flex-col items-center justify-center p-3 rounded-lg transition-colors min-w-[60px] min-h-[60px] touch-manipulation hover:bg-accent hover:text-accent-foreground active:scale-95"
+                >
+                  <FileText className="h-5 w-5 mb-1" />
+                  <span className="text-xs font-medium">Formulários</span>
+                </Button>
+              </nav>
             </div>
           </div>
         )}
