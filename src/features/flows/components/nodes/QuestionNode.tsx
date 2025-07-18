@@ -51,7 +51,7 @@ export const QuestionNode: React.FC<QuestionNodeProps> = ({ data, selected, id, 
     <div className={`group relative transition-all duration-200 ${
       selected ? 'scale-105' : ''
     }`}>
-      <div className={`w-48 min-h-32 rounded-xl bg-white dark:bg-none dark:bg-[#0E0E0E]/90 border border-gray-200 dark:border-[#1A1A1A] shadow-sm transition-all duration-200 relative overflow-visible ${
+      <div className={`min-w-48 w-auto h-auto min-h-32 rounded-xl bg-white dark:bg-none dark:bg-[#0E0E0E]/90 border border-gray-200 dark:border-[#1A1A1A] shadow-sm transition-all duration-200 relative overflow-visible ${
         selected 
           ? 'border-[#5D8701] shadow-[0_0_0_2px_rgba(93,135,1,0.2)]' 
           : 'border-gray-200 dark:border-[#1A1A1A]'

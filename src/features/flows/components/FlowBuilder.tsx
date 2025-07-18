@@ -318,7 +318,7 @@ export const FlowBuilder = () => {
       )}
 
       {/* Canvas - altura ajustada baseado no breakpoint */}
-      <div className={isDesktop ? "h-[calc(100vh-80px)]" : "h-screen"}>
+      <div className={isDesktop ? "h-[calc(100vh-62px)]" : "h-screen"}>
         <FlowBuilderCanvas
           nodes={enhancedNodes}
           edges={edges}
