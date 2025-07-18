@@ -55,7 +55,6 @@ export const TabletFlowMenu = ({
     { type: 'end' as FlowNode['type'], label: 'Fim', icon: Square, color: 'text-red-500' },
     { type: 'formStart' as FlowNode['type'], label: 'Form Start', icon: FileText, color: 'text-blue-500' },
     { type: 'formEnd' as FlowNode['type'], label: 'Form End', icon: CheckSquare, color: 'text-purple-500' },
-    { type: 'question' as FlowNode['type'], label: 'Pergunta', icon: MessageCircle, color: 'text-amber-500' },
     { type: 'delay' as FlowNode['type'], label: 'Aguardar', icon: Clock, color: 'text-orange-500' },
     { type: 'calculator' as FlowNode['type'], label: 'Calculadora', icon: Calculator, color: 'text-green-500' },
     { type: 'conditions' as FlowNode['type'], label: 'Condições', icon: GitBranch, color: 'text-indigo-500' },
@@ -154,10 +153,10 @@ export const TabletFlowMenu = ({
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button
-          className="fixed top-20 left-4 z-50 bg-[#5D8701] hover:bg-[#4a6e01] text-white dark:bg-[#5D8701] dark:hover:bg-[#4a6e01] h-14 w-14 p-0 rounded-full shadow-lg"
+          className="fixed top-20 left-4 z-50 bg-[#5D8701] hover:bg-[#4a6e01] text-white dark:bg-[#5D8701] dark:hover:bg-[#4a6e01] h-12 w-12 p-0 rounded-full shadow-lg"
           title="Abrir menu de ferramentas"
         >
-          <Plus className="h-6 w-6" />
+          <Plus className="h-5 w-5" />
         </Button>
       </SheetTrigger>
       

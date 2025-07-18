@@ -94,15 +94,6 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           <CheckCircle className="h-3 w-3 text-primary" />
         </Button>
         
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddNode('question')}
-          title="Pergunta"
-          className="h-7 w-7 p-0"
-        >
-          <MessageCircle className="h-3 w-3 text-muted-foreground" />
-        </Button>
 
         {/* Separador */}
         <div className="w-px h-4 bg-gray-300 mx-0.5" />

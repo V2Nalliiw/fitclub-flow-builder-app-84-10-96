@@ -9,7 +9,7 @@ const initialNodes: Node[] = [
   {
     id: '1',
     type: 'start',
-    position: { x: 250, y: 25 },
+    position: { x: 250, y: 100 },
     data: { label: 'Início do Fluxo' },
   },
 ];
