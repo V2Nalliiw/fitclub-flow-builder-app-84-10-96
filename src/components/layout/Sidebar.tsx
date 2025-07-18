@@ -1,18 +1,14 @@
 import {
   LayoutDashboard,
-  FileText,
   User,
   GitBranch,
   Workflow,
   Settings,
   Users,
-  Activity,
   LucideIcon,
   Cog,
   MessagesSquare,
-  Calendar,
   HelpCircle,
-  Plus,
   Building2,
 } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
@@ -69,11 +65,6 @@ export const Sidebar = () => {
     if (user.role === 'patient') {
       return [
         ...baseItems,
-        {
-          title: "Meus Formulários",
-          url: "/my-flows",
-          icon: FileText,
-        },
         {
           title: "Perfil",
           url: "/profile",
