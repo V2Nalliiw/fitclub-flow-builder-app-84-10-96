@@ -1,154 +1,136 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuTrigger,
-  DropdownMenuSeparator
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, UserMinus, Settings, MessageCircle } from 'lucide-react';
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog';
+import { MoreVertical, User, Phone, Mail, Shield, Settings, UserMinus } from 'lucide-react';
 import { TeamMember } from '@/hooks/useTeamManagement';
 
 interface TeamMemberCardProps {
   member: TeamMember;
   roleLabels: Record<string, string>;
-  onUpdateRole: (memberId: string, role: TeamMember['role']) => void;
-  onUpdatePermissions: (memberId: string, permissions: Record<string, boolean>) => void;
-  onDeactivate: (memberId: string) => void;
+  onUpdateRole: (memberId: string, role: TeamMember['role']) => Promise<void>;
+  onUpdatePermissions: (memberId: string, permissions: Record<string, boolean>) => Promise<void>;
+  onDeactivate: (memberId: string) => Promise<void>;
 }
 
-const getRoleColor = (role: string) => {
-  switch (role) {
-    case 'admin':
-      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-    case 'manager':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-    case 'professional':
-      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-    case 'assistant':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-    case 'viewer':
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-    default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-  }
-};
+export const TeamMemberCard = ({ 
+  member, 
+  roleLabels, 
+  onUpdateRole, 
+  onUpdatePermissions, 
+  onDeactivate 
+}: TeamMemberCardProps) => {
+  const [permissionsOpen, setPermissionsOpen] = useState(false);
 
-export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
-  member,
-  roleLabels,
-  onUpdateRole,
-  onUpdatePermissions,
-  onDeactivate
-}) => {
-  const handleRoleChange = (newRole: TeamMember['role']) => {
-    onUpdateRole(member.id, newRole);
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const handleDeactivate = () => {
-    if (window.confirm(`Tem certeza que deseja remover ${member.user_profile?.name} da equipe?`)) {
-      onDeactivate(member.id);
+  const getRoleBadgeVariant = (role: string) => {
+    switch (role) {
+      case 'admin': return 'destructive';
+      case 'manager': return 'default';
+      case 'professional': return 'secondary';
+      case 'assistant': return 'outline';
+      case 'viewer': return 'outline';
+      default: return 'outline';
     }
   };
 
   return (
-    <Card className="border-2" style={{ borderColor: 'hsl(var(--border))' }}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={member.user_profile?.avatar_url} />
-              <AvatarFallback>
-                {member.user_profile?.name?.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className="font-semibold text-lg">{member.user_profile?.name}</h3>
-              <p className="text-sm text-muted-foreground">{member.user_profile?.email}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Badge className={getRoleColor(member.role)}>
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="flex items-center space-x-3">
+          <Avatar>
+            <AvatarImage src={member.user_profile?.avatar_url} />
+            <AvatarFallback>
+              {member.user_profile?.name ? getInitials(member.user_profile.name) : <User className="h-4 w-4" />}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h4 className="font-semibold">{member.user_profile?.name || 'Nome não disponível'}</h4>
+            <Badge variant={getRoleBadgeVariant(member.role)} className="text-xs">
               {roleLabels[member.role]}
             </Badge>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                
-                <DropdownMenuItem onClick={() => {}}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Editar Permissões
-                </DropdownMenuItem>
-                
-                {member.whatsapp_phone && (
-                  <DropdownMenuItem onClick={() => {}}>
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    WhatsApp
-                  </DropdownMenuItem>
-                )}
-                
-                <DropdownMenuSeparator />
-                
-                <DropdownMenuLabel>Alterar Cargo</DropdownMenuLabel>
-                {Object.entries(roleLabels).map(([role, label]) => (
-                  <DropdownMenuItem 
-                    key={role}
-                    onClick={() => handleRoleChange(role as TeamMember['role'])}
-                    disabled={member.role === role}
-                  >
-                    {label}
-                  </DropdownMenuItem>
-                ))}
-                
-                <DropdownMenuSeparator />
-                
-                <DropdownMenuItem 
-                  onClick={handleDeactivate}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <UserMinus className="h-4 w-4 mr-2" />
-                  Remover da Equipe
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <Dialog open={permissionsOpen} onOpenChange={setPermissionsOpen}>
+              <DialogTrigger asChild>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Gerenciar Permissões
+                </DropdownMenuItem>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Permissões de {member.user_profile?.name}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Funcionalidade de gerenciamento de permissões será implementada.
+                  </p>
+                </div>
+              </DialogContent>
+            </Dialog>
+            
+            <DropdownMenuSeparator />
+            
+            <DropdownMenuItem 
+              onClick={() => onDeactivate(member.id)}
+              className="text-destructive"
+            >
+              <UserMinus className="h-4 w-4 mr-2" />
+              Remover da Equipe
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </CardHeader>
       
       <CardContent>
-        <div className="space-y-3">
+        <div className="space-y-2">
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Mail className="h-3 w-3 mr-2" />
+            {member.user_profile?.email || 'Email não disponível'}
+          </div>
+          
           {member.whatsapp_phone && (
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">WhatsApp:</span>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm">{member.whatsapp_phone}</span>
-                {member.whatsapp_verified && (
-                  <Badge variant="outline" className="text-xs">
-                    Verificado
-                  </Badge>
-                )}
-              </div>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Phone className="h-3 w-3 mr-2" />
+              {member.whatsapp_phone}
+              {member.whatsapp_verified && (
+                <Badge variant="outline" className="ml-2 text-xs">
+                  Verificado
+                </Badge>
+              )}
             </div>
           )}
           
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Membro desde:</span>
-            <span className="text-sm">
-              {new Date(member.joined_at || member.created_at).toLocaleDateString('pt-BR')}
-            </span>
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Shield className="h-3 w-3 mr-2" />
+            Membro desde {new Date(member.created_at).toLocaleDateString('pt-BR')}
           </div>
         </div>
       </CardContent>

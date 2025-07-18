@@ -1,125 +1,159 @@
 import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, Mail, X, Copy } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { MoreVertical, User, Mail, Phone, Calendar, X } from 'lucide-react';
 import { TeamInvitation } from '@/hooks/useTeamManagement';
-import { useToast } from '@/hooks/use-toast';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface TeamInvitationCardProps {
   invitation: TeamInvitation;
   roleLabels: Record<string, string>;
-  onCancel: (invitationId: string) => void;
+  onCancel: (invitationId: string) => Promise<void>;
 }
 
-export const TeamInvitationCard: React.FC<TeamInvitationCardProps> = ({
-  invitation,
-  roleLabels,
-  onCancel
-}) => {
-  const { toast } = useToast();
+export const TeamInvitationCard = ({ 
+  invitation, 
+  roleLabels, 
+  onCancel 
+}: TeamInvitationCardProps) => {
+  
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
 
-  const handleCancel = () => {
-    if (window.confirm(`Tem certeza que deseja cancelar o convite para ${invitation.email}?`)) {
-      onCancel(invitation.id);
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'pending': return 'default';
+      case 'accepted': return 'secondary';
+      case 'expired': return 'destructive';
+      case 'cancelled': return 'outline';
+      default: return 'outline';
     }
   };
 
-  const copyInviteLink = () => {
-    const inviteUrl = `${window.location.origin}/team/invite/${invitation.invitation_token}`;
-    navigator.clipboard.writeText(inviteUrl);
-    toast({
-      title: "Link copiado",
-      description: "Link do convite foi copiado para a área de transferência",
-    });
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Pendente';
+      case 'accepted': return 'Aceito';
+      case 'expired': return 'Expirado';
+      case 'cancelled': return 'Cancelado';
+      default: return status;
+    }
+  };
+
+  const getRoleBadgeVariant = (role: string) => {
+    switch (role) {
+      case 'admin': return 'destructive';
+      case 'manager': return 'default';
+      case 'professional': return 'secondary';
+      case 'assistant': return 'outline';
+      case 'viewer': return 'outline';
+      default: return 'outline';
+    }
   };
 
   const isExpired = new Date(invitation.expires_at) < new Date();
-  const daysUntilExpiry = Math.ceil(
-    (new Date(invitation.expires_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-  );
 
   return (
-    <Card className="border-2" style={{ borderColor: 'hsl(var(--border))' }}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-full">
-              <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="flex items-center space-x-3">
+          <Avatar>
+            <AvatarFallback>
+              {getInitials(invitation.name)}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h4 className="font-semibold">{invitation.name}</h4>
+            <div className="flex items-center space-x-2">
+              <Badge variant={getRoleBadgeVariant(invitation.role)} className="text-xs">
+                {roleLabels[invitation.role]}
+              </Badge>
+              <Badge 
+                variant={getStatusBadgeVariant(isExpired ? 'expired' : invitation.status)} 
+                className="text-xs"
+              >
+                {isExpired ? 'Expirado' : getStatusLabel(invitation.status)}
+              </Badge>
             </div>
-            <div>
-              <h3 className="font-semibold text-lg">{invitation.name}</h3>
-              <p className="text-sm text-muted-foreground">{invitation.email}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Badge variant="outline">
-              {roleLabels[invitation.role]}
-            </Badge>
-            
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={handleCancel}
-              className="text-destructive hover:text-destructive"
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </div>
         </div>
+        
+        {invitation.status === 'pending' && !isExpired && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem 
+                onClick={() => onCancel(invitation.id)}
+                className="text-destructive"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Cancelar Convite
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </CardHeader>
       
       <CardContent>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Status:</span>
-            <div className="flex items-center space-x-2">
-              <Clock className="h-4 w-4 text-yellow-500" />
-              <span className="text-sm">
-                {isExpired ? 'Expirado' : 'Pendente'}
-              </span>
-            </div>
+        <div className="space-y-2">
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Mail className="h-3 w-3 mr-2" />
+            {invitation.email}
           </div>
           
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              {isExpired ? 'Expirou em:' : 'Expira em:'}
-            </span>
-            <span className="text-sm">
-              {isExpired 
-                ? new Date(invitation.expires_at).toLocaleDateString('pt-BR')
-                : `${daysUntilExpiry} dias`
-              }
-            </span>
-          </div>
-
           {invitation.whatsapp_phone && (
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">WhatsApp:</span>
-              <span className="text-sm">{invitation.whatsapp_phone}</span>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Phone className="h-3 w-3 mr-2" />
+              {invitation.whatsapp_phone}
             </div>
           )}
           
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Enviado em:</span>
-            <span className="text-sm">
-              {new Date(invitation.created_at).toLocaleDateString('pt-BR')}
-            </span>
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Calendar className="h-3 w-3 mr-2" />
+            Enviado {formatDistanceToNow(new Date(invitation.created_at), { 
+              addSuffix: true, 
+              locale: ptBR 
+            })}
           </div>
-
-          <div className="pt-2 border-t">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={copyInviteLink}
-              className="w-full"
-            >
-              <Copy className="h-4 w-4 mr-2" />
-              Copiar Link do Convite
-            </Button>
+          
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Calendar className="h-3 w-3 mr-2" />
+            Expira {formatDistanceToNow(new Date(invitation.expires_at), { 
+              addSuffix: true, 
+              locale: ptBR 
+            })}
           </div>
         </div>
+        
+        {invitation.status === 'pending' && !isExpired && (
+          <div className="mt-4 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+            <p className="text-xs text-blue-700 dark:text-blue-300">
+              Aguardando {invitation.name} aceitar o convite
+            </p>
+          </div>
+        )}
+        
+        {isExpired && (
+          <div className="mt-4 p-2 bg-red-50 dark:bg-red-900/20 rounded-md">
+            <p className="text-xs text-red-700 dark:text-red-300">
+              Este convite expirou. Envie um novo convite se necessário.
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

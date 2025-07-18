@@ -1,13 +1,23 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, UserPlus } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useForm } from 'react-hook-form';
 import { CreateInvitationData } from '@/hooks/useTeamManagement';
+import { useToast } from '@/hooks/use-toast';
 
 interface InviteMemberDialogProps {
   open: boolean;
@@ -17,35 +27,32 @@ interface InviteMemberDialogProps {
   permissionLabels: Record<string, string>;
 }
 
-export const InviteMemberDialog: React.FC<InviteMemberDialogProps> = ({
-  open,
-  onOpenChange,
-  onInvite,
+export const InviteMemberDialog = ({ 
+  open, 
+  onOpenChange, 
+  onInvite, 
   roleLabels,
-  permissionLabels
-}) => {
+  permissionLabels 
+}: InviteMemberDialogProps) => {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<CreateInvitationData>({
-    email: '',
-    name: '',
-    role: 'viewer',
-    permissions: {},
-    whatsapp_phone: ''
-  });
+  
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors }
+  } = useForm<CreateInvitationData>();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const watchedRole = watch('role');
 
+  const onSubmit = async (data: CreateInvitationData) => {
     try {
-      await onInvite(formData);
-      setFormData({
-        email: '',
-        name: '',
-        role: 'viewer',
-        permissions: {},
-        whatsapp_phone: ''
-      });
+      setLoading(true);
+      await onInvite(data);
+      reset();
       onOpenChange(false);
     } catch (error) {
       console.error('Erro ao enviar convite:', error);
@@ -54,133 +61,113 @@ export const InviteMemberDialog: React.FC<InviteMemberDialogProps> = ({
     }
   };
 
-  const handlePermissionChange = (permission: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      permissions: {
-        ...prev.permissions,
-        [permission]: checked
-      }
-    }));
+  const handleClose = () => {
+    reset();
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <UserPlus className="h-5 w-5" />
-            <span>Convidar Novo Membro</span>
-          </DialogTitle>
+          <DialogTitle>Convidar Novo Membro</DialogTitle>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome Completo *</Label>
-              <Input
-                id="name"
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Ex: João Silva"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="joao@clinica.com"
-                required
-              />
-            </div>
+        
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome Completo</Label>
+            <Input
+              id="name"
+              placeholder="Digite o nome completo"
+              {...register('name', { 
+                required: 'Nome é obrigatório',
+                minLength: { value: 2, message: 'Nome deve ter pelo menos 2 caracteres' }
+              })}
+            />
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name.message}</p>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="role">Cargo *</Label>
-              <Select 
-                value={formData.role} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, role: value as CreateInvitationData['role'] }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um cargo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(roleLabels).map(([role, label]) => (
-                    <SelectItem key={role} value={role}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="whatsapp">WhatsApp (opcional)</Label>
-              <Input
-                id="whatsapp"
-                type="tel"
-                value={formData.whatsapp_phone}
-                onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_phone: e.target.value }))}
-                placeholder="(11) 99999-9999"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Digite o email"
+              {...register('email', { 
+                required: 'Email é obrigatório',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Email inválido'
+                }
+              })}
+            />
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email.message}</p>
+            )}
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Permissões Específicas</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Selecione as permissões específicas para este membro. Os cargos Admin e Manager têm acesso total automaticamente.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(permissionLabels).map(([permission, label]) => (
-                  <div key={permission} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={permission}
-                      checked={formData.permissions?.[permission] || false}
-                      onCheckedChange={(checked) => handlePermissionChange(permission, !!checked)}
-                      disabled={formData.role === 'admin' || formData.role === 'manager'}
-                    />
-                    <Label 
-                      htmlFor={permission} 
-                      className="text-sm font-normal cursor-pointer"
-                    >
-                      {label}
-                    </Label>
-                  </div>
+          <div className="space-y-2">
+            <Label htmlFor="whatsapp_phone">WhatsApp (opcional)</Label>
+            <Input
+              id="whatsapp_phone"
+              placeholder="Ex: +5511999999999"
+              {...register('whatsapp_phone')}
+            />
+            <p className="text-xs text-muted-foreground">
+              Formato: +55 + DDD + número (apenas números)
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="role">Cargo</Label>
+            <Select 
+              onValueChange={(value) => setValue('role', value as any)}
+              defaultValue="viewer"
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o cargo" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(roleLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
                 ))}
-              </div>
-              
-              {(formData.role === 'admin' || formData.role === 'manager') && (
-                <p className="text-xs text-muted-foreground mt-4">
-                  Este cargo tem acesso total a todas as funcionalidades.
-                </p>
-              )}
-            </CardContent>
-          </Card>
+              </SelectContent>
+            </Select>
+            {errors.role && (
+              <p className="text-sm text-destructive">{errors.role.message}</p>
+            )}
+          </div>
 
-          <DialogFooter>
+          {watchedRole && (
+            <div className="bg-muted p-3 rounded-md">
+              <h4 className="font-medium text-sm mb-2">Permissões do Cargo</h4>
+              <p className="text-xs text-muted-foreground">
+                {watchedRole === 'admin' && 'Acesso total ao sistema, incluindo gerenciamento de equipe e configurações.'}
+                {watchedRole === 'manager' && 'Gerenciamento de pacientes, fluxos e análises. Acesso limitado às configurações.'}
+                {watchedRole === 'professional' && 'Gerenciamento de pacientes e execução de fluxos. Acesso às suas próprias atividades.'}
+                {watchedRole === 'assistant' && 'Suporte na execução de atividades e acesso limitado aos dados dos pacientes.'}
+                {watchedRole === 'viewer' && 'Apenas visualização de dados. Não pode fazer alterações no sistema.'}
+              </p>
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-2 pt-4">
             <Button 
               type="button" 
               variant="outline" 
-              onClick={() => onOpenChange(false)}
+              onClick={handleClose}
+              disabled={loading}
             >
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Enviar Convite
+              {loading ? 'Enviando...' : 'Enviar Convite'}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
