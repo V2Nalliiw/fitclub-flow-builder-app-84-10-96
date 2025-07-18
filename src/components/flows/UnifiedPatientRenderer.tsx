@@ -619,7 +619,7 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
             </p>
           </div>
 
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-8">
+          <div className="w-full bg-border dark:bg-gray-700 rounded-full h-2 mb-8">
             <div 
               className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${((currentFieldIndex + 1) / allFields.length) * 100}%` }}
@@ -757,7 +757,7 @@ export const UnifiedPatientRenderer: React.FC<UnifiedPatientRendererProps> = ({
                     // Checkboxes para poucas opções
                     <div className="space-y-3 max-h-[400px] overflow-y-auto">
                       {currentField.opcoes.map((opcao: string) => (
-                        <div key={opcao} className="flex items-center space-x-3 p-4 border-2 border-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                        <div key={opcao} className="flex items-center space-x-3 p-4 border-2 border-gray-200 rounded-xl hover:bg-white dark:hover:bg-gray-800/50 transition-colors">
                           <Checkbox
                             id={opcao}
                             onCheckedChange={(checked) => handleMultipleChoiceChange(opcao, checked as boolean)}

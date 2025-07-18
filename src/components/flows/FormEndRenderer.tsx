@@ -286,7 +286,7 @@ export const FormEndRenderer: React.FC<FormEndRendererProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0E0E0E] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-white dark:bg-[#0E0E0E] flex items-center justify-center p-6">
       <Card className="w-full max-w-md bg-white dark:bg-[#0E0E0E] backdrop-blur-sm border-0 shadow-xl animate-fade-in dark:border-gray-800">
         <CardContent className="p-8 text-center">
           <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -302,7 +302,7 @@ export const FormEndRenderer: React.FC<FormEndRendererProps> = ({
           </p>
 
           {step.mensagemFinal && (
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
+            <div className="bg-muted/30 dark:bg-gray-800 rounded-lg p-4 mb-6">
               <p className="text-gray-700 dark:text-gray-300 text-sm">
                 {step.mensagemFinal}
               </p>
