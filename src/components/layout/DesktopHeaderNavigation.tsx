@@ -100,11 +100,6 @@ export const DesktopHeaderNavigation = () => {
         icon: Users,
       },
       {
-        title: "Formulários",
-        url: "/forms",
-        icon: FileText,
-      },
-      {
         title: "Equipe",
         url: "/team",
         icon: UserPlus,
