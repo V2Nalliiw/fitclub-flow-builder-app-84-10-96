@@ -8,11 +8,7 @@ import {
   User, 
   Building2, 
   GitBranch,
-  UserCog,
   Palette,
-  BarChart3,
-  Shield,
-  FileText,
   ChevronUp,
   X
 } from 'lucide-react';
