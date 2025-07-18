@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => ({
     mode === 'development' && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png'],
+      includeAssets: ['favicon.ico'],
       devOptions: {
         enabled: true
       },
@@ -60,28 +60,16 @@ export default defineConfig(({ mode }) => ({
         start_url: '/?utm_source=pwa',
         icons: [
           {
-            src: '/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png',
+            src: '/favicon.ico',
             sizes: '192x192',
-            type: 'image/png',
+            type: 'image/x-icon',
             purpose: 'any'
           },
           {
-            src: '/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png',
+            src: '/favicon.ico',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/x-icon',
             purpose: 'any'
-          },
-          {
-            src: '/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'maskable'
-          },
-          {
-            src: '/lovable-uploads/79c845c0-bba5-4d91-9afc-1ad0fff984fa.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable'
           }
         ]
       }
