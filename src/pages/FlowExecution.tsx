@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import { MobileErrorBoundary } from '@/components/ui/mobile-error-boundary';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const FlowExecution = () => {
   const { executionId } = useParams<{ executionId: string }>();
@@ -116,29 +117,9 @@ const FlowExecution = () => {
   }
 
   if (!currentStep) {
-    return (
-      <MobileErrorBoundary>
-        <div className="h-screen bg-white dark:bg-[#0B0B0B] flow-execution-container flex items-center justify-center p-4 sm:p-6">
-          <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0B0B0B] dark:border-gray-800 flow-step-card">
-            <CardContent className="py-16 text-center">
-              <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                Formulário Concluído
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Você completou todas as etapas deste formulário.
-              </p>
-              <Button 
-                onClick={() => navigate('/my-flows')}
-                className="bg-[#5D8701] hover:bg-[#4a6e01] text-white"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Voltar aos Formulários
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </MobileErrorBoundary>
-    );
+    // Redireciona automaticamente sem mostrar mensagem de conclusão
+    navigate('/my-flows');
+    return null;
   }
 
   return (
@@ -146,10 +127,17 @@ const FlowExecution = () => {
       <div className="min-h-screen bg-white dark:bg-[#0B0B0B] flow-execution-container">
         {/* Nome do Fluxo Fixo no Topo */}
         {execution && (
-          <div className="fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-[#0B0B0B]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 py-4">
+          <div className="fixed top-0 left-0 right-0 z-[60] bg-white/80 dark:bg-[#0B0B0B]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 py-4">
             <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 text-center">
               {execution.flow_name}
             </h1>
+          </div>
+        )}
+        
+        {/* Botão Dark Mode Flutuante */}
+        {!isLoading && !error && currentStep && (
+          <div className="fixed top-4 right-4 z-[60]">
+            <ThemeToggle />
           </div>
         )}
         
@@ -197,25 +185,6 @@ const FlowExecution = () => {
               </Card>
             )}
 
-            {!isLoading && !error && !currentStep && (
-              <Card className="max-w-md mx-auto shadow-xl border-0 bg-white dark:bg-[#0B0B0B] dark:border-gray-800 flow-step-card">
-                <CardContent className="py-16 text-center">
-                  <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                    Formulário Concluído
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    Você completou todas as etapas deste formulário.
-                  </p>
-                  <Button 
-                    onClick={() => navigate('/my-flows')}
-                    className="bg-[#5D8701] hover:bg-[#4a6e01] text-white"
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Voltar aos Formulários
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
 
             {!isLoading && !error && currentStep && (
               <div className="w-full">
