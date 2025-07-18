@@ -1,4 +1,3 @@
-
 import { FlowBuilder } from '@/features/flows/components/FlowBuilder';
 
 const FlowBuilderPage = () => {
