@@ -48,6 +48,9 @@ export const usePatientResponses = (patientId?: string) => {
         return;
       }
 
+      console.log('🔍 Execuções encontradas:', executions);
+      console.log('🔍 Primeira execução current_step:', executions?.[0]?.current_step);
+
       // Transform executions to detailed responses format - Simplificado
       const transformedResponses: PatientResponse[] = (executions || []).map((execution) => {
         const currentStep = execution.current_step as any;
@@ -55,11 +58,14 @@ export const usePatientResponses = (patientId?: string) => {
         // Extrair todas as perguntas e respostas de forma mais simples
         const allSteps: FormStep[] = [];
         
-        const extractQuestionAndAnswer = (obj: any, parentTitle?: string): void => {
+        const extractQuestionAndAnswer = (obj: any, path: string = 'root'): void => {
           if (!obj || typeof obj !== 'object') return;
           
-          // Extrair de campos de calculadora
+          console.log(`🔍 Verificando objeto em ${path}:`, obj);
+          
+          // Extrair de campos de calculadora - múltiplos formatos
           if (obj.calculatorFields && Array.isArray(obj.calculatorFields)) {
+            console.log('✅ Encontrou calculatorFields:', obj.calculatorFields);
             obj.calculatorFields.forEach((field: any, index: number) => {
               if (field.pergunta && field.resposta !== undefined) {
                 allSteps.push({
@@ -76,6 +82,7 @@ export const usePatientResponses = (patientId?: string) => {
           
           // Extrair de campos de perguntas da calculadora
           if (obj.calculatorQuestionFields && Array.isArray(obj.calculatorQuestionFields)) {
+            console.log('✅ Encontrou calculatorQuestionFields:', obj.calculatorQuestionFields);
             obj.calculatorQuestionFields.forEach((field: any, index: number) => {
               if (field.pergunta && field.opcaoEscolhida !== undefined) {
                 allSteps.push({
@@ -90,8 +97,28 @@ export const usePatientResponses = (patientId?: string) => {
             });
           }
           
+          // Verificar por outras propriedades de calculadora
+          const calculatorKeys = ['calculo', 'calculation', 'calculator', 'result', 'resultado'];
+          calculatorKeys.forEach(key => {
+            if (obj[key] && typeof obj[key] === 'object') {
+              console.log(`✅ Encontrou ${key}:`, obj[key]);
+              const calc = obj[key];
+              if (calc.pergunta && calc.resposta !== undefined) {
+                allSteps.push({
+                  id: `${key}-${allSteps.length}`,
+                  title: calc.pergunta,
+                  type: 'calculator',
+                  response: calc.resposta,
+                  status: 'completed',
+                  completedAt: execution.completed_at
+                });
+              }
+            }
+          });
+          
           // Extrair perguntas diretas
           if (obj.pergunta && obj.resposta !== undefined) {
+            console.log('✅ Encontrou pergunta direta:', obj.pergunta);
             allSteps.push({
               id: `direct-question-${allSteps.length}`,
               title: obj.pergunta,
@@ -104,6 +131,7 @@ export const usePatientResponses = (patientId?: string) => {
           
           // Extrair de questionários médicos
           if (obj.Pergunta && obj.response !== undefined) {
+            console.log('✅ Encontrou Pergunta médica:', obj.Pergunta);
             const question = obj.Pergunta.pergunta || obj.Pergunta.question || 'Pergunta';
             let answer = obj.response;
             
@@ -127,19 +155,45 @@ export const usePatientResponses = (patientId?: string) => {
             });
           }
           
+          // Verificar qualquer objeto que tenha estrutura de pergunta/resposta
+          if (typeof obj === 'object') {
+            Object.keys(obj).forEach(key => {
+              if (key.toLowerCase().includes('pergunta') && obj[key]) {
+                console.log(`✅ Encontrou pergunta em ${key}:`, obj[key]);
+                // Procurar resposta correspondente
+                const responseKeys = ['resposta', 'response', 'answer', 'valor', 'value'];
+                for (const respKey of responseKeys) {
+                  if (obj[respKey] !== undefined) {
+                    allSteps.push({
+                      id: `${key}-${allSteps.length}`,
+                      title: obj[key],
+                      type: 'extracted_question',
+                      response: obj[respKey],
+                      status: 'completed',
+                      completedAt: execution.completed_at
+                    });
+                    break;
+                  }
+                }
+              }
+            });
+          }
+          
           // Recursivamente extrair de arrays e objetos aninhados
-          Object.values(obj).forEach(value => {
+          Object.entries(obj).forEach(([key, value]) => {
             if (Array.isArray(value)) {
-              value.forEach(item => extractQuestionAndAnswer(item));
-            } else if (typeof value === 'object') {
-              extractQuestionAndAnswer(value);
+              value.forEach((item, index) => extractQuestionAndAnswer(item, `${path}.${key}[${index}]`));
+            } else if (typeof value === 'object' && value !== null) {
+              extractQuestionAndAnswer(value, `${path}.${key}`);
             }
           });
         };
         
         // Extrair perguntas e respostas do currentStep
         if (currentStep) {
+          console.log('🔍 Processando currentStep:', currentStep);
           extractQuestionAndAnswer(currentStep);
+          console.log('🔍 Steps extraídos:', allSteps);
         }
 
         return {
