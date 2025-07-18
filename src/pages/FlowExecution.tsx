@@ -143,76 +143,82 @@ const FlowExecution = () => {
 
   return (
     <MobileErrorBoundary>
-      <div className="h-screen bg-white dark:bg-[#0E0E0E] flow-execution-container">
-        {/* Header Fixo */}
-        <div className="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-[#0E0E0E] flex items-center justify-center px-4 border-b border-gray-200 dark:border-gray-700 z-40">
-          {execution && (
-            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 text-center">
-              {execution.flow_name}
-            </h1>
-          )}
+      <div className="h-screen bg-white dark:bg-[#0E0E0E] flow-execution-container flex flex-col">
+        {/* Header - 10% da altura da tela */}
+        <div className="h-[10vh] min-h-[60px] flex items-center justify-center px-4 sm:px-6 bg-white dark:bg-[#0E0E0E] shrink-0">
+            {execution && (
+              <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 text-center">
+                {execution.flow_name}
+              </h1>
+            )}
         </div>
 
-        {/* Conteúdo Principal - Ocupando toda a tela com padding-top para o header */}
-        <div className="h-screen pt-16 bg-white dark:bg-[#0E0E0E] flex items-center justify-center relative">
+        {/* Conteúdo Principal - 90% da altura da tela */}
+        <div className="h-[90vh] flex items-center justify-center p-4 sm:p-6 bg-white dark:bg-[#0E0E0E] relative">
+          <div className="w-full max-w-2xl">
 
-          {isLoading && (
-            <div className="text-center">
-              <LoadingSpinner />
-              <p className="text-muted-foreground mt-4">Carregando formulário...</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="text-center max-w-md mx-auto px-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertTriangle className="h-8 w-8 text-white" />
+            {isLoading && (
+              <div className="text-center">
+                <LoadingSpinner />
+                <p className="text-muted-foreground mt-4">Carregando formulário...</p>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                Erro ao carregar formulário
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {error}
-              </p>
-              <div className="space-y-2">
-                <Button 
-                  onClick={() => navigate('/my-flows')}
-                  className="w-full bg-[#5D8701] hover:bg-[#4a6e01] text-white"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Voltar aos Formulários
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => window.location.reload()}
-                  className="w-full"
-                >
-                  Tentar Novamente
-                </Button>
-              </div>
-            </div>
-          )}
+            )}
 
-          {!isLoading && !error && !currentStep && (
-            <div className="text-center max-w-md mx-auto px-4">
-              <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                Formulário Concluído
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Você completou todas as etapas deste formulário.
-              </p>
-              <Button 
-                onClick={() => navigate('/my-flows')}
-                className="bg-[#5D8701] hover:bg-[#4a6e01] text-white"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Voltar aos Formulários
-              </Button>
-            </div>
-          )}
+            {error && (
+              <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] dark:border-gray-800 flow-step-card">
+                <CardHeader className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AlertTriangle className="h-8 w-8 text-white" />
+                  </div>
+                  <CardTitle className="text-xl text-gray-900 dark:text-gray-100">
+                    Erro ao carregar formulário
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 text-center">
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {error}
+                  </p>
+                  <div className="space-y-2">
+                    <Button 
+                      onClick={() => navigate('/my-flows')}
+                      className="w-full bg-[#5D8701] hover:bg-[#4a6e01] text-white"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Voltar aos Formulários
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => window.location.reload()}
+                      className="w-full"
+                    >
+                      Tentar Novamente
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-          {!isLoading && !error && currentStep && (
-            <div className="w-full max-w-2xl px-4">
+            {!isLoading && !error && !currentStep && (
+              <Card className="max-w-md mx-auto shadow-lg border-0 bg-white dark:bg-[#0E0E0E] dark:border-gray-800 flow-step-card">
+                <CardContent className="py-16 text-center">
+                  <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                    Formulário Concluído
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    Você completou todas as etapas deste formulário.
+                  </p>
+                  <Button 
+                    onClick={() => navigate('/my-flows')}
+                    className="bg-[#5D8701] hover:bg-[#4a6e01] text-white"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Voltar aos Formulários
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {!isLoading && !error && currentStep && (
               <FlowStepRenderer
                 step={currentStep}
                 onComplete={handleStepComplete}
@@ -223,8 +229,8 @@ const FlowExecution = () => {
                 calculatorResults={execution?.current_step?.calculatorResults || {}}
                 questionResponses={execution?.current_step?.userResponses || {}}
               />
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Botões Flutuantes */}
           {!isLoading && !error && currentStep && (
