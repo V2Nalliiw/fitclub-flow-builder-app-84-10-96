@@ -143,20 +143,19 @@ const FlowExecution = () => {
 
   return (
     <MobileErrorBoundary>
-      <div className="min-h-screen bg-white dark:bg-[#0B0B0B] flow-execution-container p-4 sm:p-6">
-        {/* Conteúdo Principal Centralizado */}
-        <div className="min-h-screen flex flex-col items-center justify-center">
-          {/* Nome do Fluxo Flutuante */}
-          {execution && (
-            <div className="mb-6">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 text-center">
-                {execution.flow_name}
-              </h1>
-            </div>
-          )}
-          
-          {/* Card Principal Flutuante */}
-          <div className="w-full max-w-2xl">
+      <div className="min-h-screen bg-white dark:bg-[#0B0B0B] flow-execution-container">
+        {/* Nome do Fluxo Fixo no Topo */}
+        {execution && (
+          <div className="fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-[#0B0B0B]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 py-4">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 text-center">
+              {execution.flow_name}
+            </h1>
+          </div>
+        )}
+        
+        {/* Espaçamento para o header fixo */}
+        <div className="pt-20">
+          <div className="w-full max-w-2xl mx-auto">
             {isLoading && (
               <div className="text-center bg-white dark:bg-[#0B0B0B] rounded-lg shadow-xl p-8 border border-gray-200 dark:border-gray-800">
                 <LoadingSpinner />

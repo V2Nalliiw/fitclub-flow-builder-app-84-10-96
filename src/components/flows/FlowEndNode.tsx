@@ -24,8 +24,8 @@ export const FlowEndNode: React.FC<FlowEndNodeProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0E0E0E] flex items-center justify-center p-6">
-      <Card className="w-full max-w-md bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-0 shadow-xl animate-fade-in">
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <Card className="w-full max-w-md bg-white/95 dark:bg-[#0B0B0B]/95 backdrop-blur-sm border-0 shadow-xl animate-fade-in">
         <CardContent className="p-8 text-center">
           <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <Trophy className="h-10 w-10 text-white" />

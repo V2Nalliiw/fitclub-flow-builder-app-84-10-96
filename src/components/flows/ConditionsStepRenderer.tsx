@@ -378,7 +378,7 @@ export const ConditionsStepRenderer: React.FC<ConditionsStepRendererProps> = ({
   const applicableCondition = getApplicableCondition();
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0B0B0B] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
