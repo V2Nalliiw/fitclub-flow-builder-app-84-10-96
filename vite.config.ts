@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024 // 5 MB
       },
-      includeAssets: ['lovable-uploads/4a192a68-e744-4c66-9d8d-375a3dca82fb.png'],
+      includeAssets: ['lovable-uploads/90973242-2117-408c-8564-774f9f6f4f30.png'],
       manifest: {
         name: 'FitClub - Emagrecimento Inteligente',
         short_name: 'FitClub',
@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => ({
         start_url: '/',
         icons: [
           {
-            src: 'lovable-uploads/4a192a68-e744-4c66-9d8d-375a3dca82fb.png',
+            src: 'lovable-uploads/90973242-2117-408c-8564-774f9f6f4f30.png',
             sizes: '144x144',
             type: 'image/png',
             purpose: 'any maskable'
