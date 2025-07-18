@@ -5,7 +5,7 @@ const urlsToCache = [
   '/static/js/bundle.js',
   '/static/css/main.css',
   '/manifest.json',
-  '/lovable-uploads/f205f390-c668-44cc-9a73-ee3d49cb0a6c.png'
+  '/lovable-uploads/3807eac2-74da-4414-ac7a-528b35d3fb69.png'
 ];
 
 // Install event
