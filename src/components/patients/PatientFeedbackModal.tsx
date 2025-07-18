@@ -15,11 +15,34 @@ interface PatientFeedbackModalProps {
 
 const formatResponseValue = (value: any): string => {
   if (value === null || value === undefined) return '-';
+  if (typeof value === 'string' && value.trim() === '') return '-';
   if (typeof value === 'string') return value;
   if (typeof value === 'number') return value.toString();
   if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
   if (Array.isArray(value)) return value.join(', ');
-  if (typeof value === 'object') return JSON.stringify(value, null, 2);
+  
+  // Se for um objeto JSON complexo, tentar extrair informações úteis
+  if (typeof value === 'object') {
+    // Verificar se tem respostas específicas
+    if (value.fieldResponses && Object.keys(value.fieldResponses).length > 0) {
+      return Object.entries(value.fieldResponses)
+        .map(([key, val]: [string, any]) => `${key}: ${val}`)
+        .join('; ');
+    }
+    if (value.questionResponses && Object.keys(value.questionResponses).length > 0) {
+      return Object.entries(value.questionResponses)
+        .map(([key, val]: [string, any]) => `${key}: ${val}`)
+        .join('; ');
+    }
+    if (value.calculatorResults && Object.keys(value.calculatorResults).length > 0) {
+      return Object.entries(value.calculatorResults)
+        .map(([key, val]: [string, any]) => `${key}: ${val}`)
+        .join('; ');
+    }
+    // Se não tem dados úteis, não mostrar
+    return '-';
+  }
+  
   return String(value);
 };
 
@@ -53,7 +76,7 @@ export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[95vh] bg-white dark:bg-[#0B0B0B] flex flex-col">
+      <DialogContent className="max-w-5xl h-[95vh] bg-white dark:bg-[#0B0B0B] flex flex-col overflow-hidden">
         <DialogHeader className="border-b border-gray-200 dark:border-gray-800 pb-4 flex-shrink-0">
           <DialogTitle className="flex items-center gap-3 text-xl font-bold text-gray-900 dark:text-white">
             <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -150,44 +173,68 @@ export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
                       <div className="p-6 space-y-6">
                         {response.allSteps && response.allSteps.length > 0 ? (
                           <div className="space-y-4">
-                            {/* Perguntas e Respostas */}
-                            {response.allSteps.filter((step: any) => step.type !== 'calculator').map((step: any, stepIndex: number) => (
-                              <div key={stepIndex} className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 py-2">
-                                <div className="font-medium text-gray-800 dark:text-gray-200 mb-1">
-                                  {step.title}
-                                </div>
-                                <div className="text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-800 p-3 rounded">
-                                  {formatResponseValue(step.response)}
-                                </div>
-                              </div>
-                            ))}
-
-                            {/* Cálculos */}
-                            {response.allSteps.filter((step: any) => step.type === 'calculator').length > 0 && (
-                              <div className="mt-6">
-                                <div className="flex items-center gap-2 mb-4">
-                                  <Calculator className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                                  <h4 className="font-semibold text-gray-800 dark:text-gray-200">Cálculos e Resultados</h4>
-                                </div>
-                                <div className="space-y-3">
-                                  {response.allSteps.filter((step: any) => step.type === 'calculator').map((calc: any, calcIndex: number) => (
-                                    <div key={calcIndex} className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 p-4 rounded-lg">
-                                      <div className="font-medium text-orange-800 dark:text-orange-200 mb-1">
-                                        {calc.title}
+                            {/* Filtrar apenas steps com respostas válidas */}
+                            {response.allSteps
+                              .filter((step: any) => {
+                                const formattedResponse = formatResponseValue(step.response);
+                                return formattedResponse !== '-' && 
+                                       formattedResponse !== 'null' && 
+                                       step.type !== 'formStart' && 
+                                       step.type !== 'formEnd' &&
+                                       step.title && 
+                                       step.title !== 'Formulário';
+                              })
+                              .map((step: any, stepIndex: number) => {
+                                if (step.type === 'calculator') {
+                                  return (
+                                    <div key={stepIndex} className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 p-4 rounded-lg">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <Calculator className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                                        <div className="font-medium text-orange-800 dark:text-orange-200">
+                                          {step.title}
+                                        </div>
                                       </div>
                                       <div className="text-lg font-bold text-orange-900 dark:text-orange-100">
-                                        {formatResponseValue(calc.response)}
+                                        {formatResponseValue(step.response)}
                                       </div>
                                     </div>
-                                  ))}
+                                  );
+                                } else {
+                                  return (
+                                    <div key={stepIndex} className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 py-2">
+                                      <div className="font-medium text-gray-800 dark:text-gray-200 mb-2">
+                                        {step.title}
+                                      </div>
+                                      <div className="text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-800 p-3 rounded">
+                                        {formatResponseValue(step.response)}
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                              })}
+                            
+                            {/* Se não há respostas válidas nos steps, mostrar a resposta principal */}
+                            {response.allSteps.filter((step: any) => {
+                              const formattedResponse = formatResponseValue(step.response);
+                              return formattedResponse !== '-' && 
+                                     formattedResponse !== 'null' && 
+                                     step.type !== 'formStart' && 
+                                     step.type !== 'formEnd';
+                            }).length === 0 && (
+                              <div className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 py-2">
+                                <div className="font-medium text-gray-800 dark:text-gray-200 mb-2">
+                                  Informações do Formulário
+                                </div>
+                                <div className="text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-800 p-3 rounded">
+                                  {formatResponseValue(response.response)}
                                 </div>
                               </div>
                             )}
                           </div>
                         ) : (
                           <div className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 py-2">
-                            <div className="font-medium text-gray-800 dark:text-gray-200 mb-1">
-                              Resposta Principal
+                            <div className="font-medium text-gray-800 dark:text-gray-200 mb-2">
+                              Informações do Formulário
                             </div>
                             <div className="text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-800 p-3 rounded">
                               {formatResponseValue(response.response)}
