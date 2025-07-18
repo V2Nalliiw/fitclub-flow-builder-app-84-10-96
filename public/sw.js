@@ -1,20 +1,20 @@
 
-const CACHE_NAME = 'fitclub-emagrecimento-v5';
+const CACHE_NAME = 'fitclub-emagrecimento-v6';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',
   '/static/css/main.css',
   '/manifest.json',
-  '/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png'
+  '/lovable-uploads/8ec88394-8fc7-4b3b-91ad-5b7896234393.png'
 ];
 
 // Install event
 self.addEventListener('install', (event) => {
-  console.log('[SW] Install event v5');
+  console.log('[SW] Install event v6');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('[SW] Caching app shell v5');
+        console.log('[SW] Caching app shell v6');
         return cache.addAll(urlsToCache);
       })
       .catch((error) => {
@@ -32,11 +32,9 @@ self.addEventListener('fetch', (event) => {
       .then((response) => {
         // Return cached version or fetch from network
         if (response) {
-          console.log('[SW] Serving from cache:', event.request.url);
           return response;
         }
         
-        console.log('[SW] Fetching from network:', event.request.url);
         return fetch(event.request).then((response) => {
           // Check if valid response
           if (!response || response.status !== 200 || response.type !== 'basic') {
@@ -56,14 +54,13 @@ self.addEventListener('fetch', (event) => {
       })
       .catch((error) => {
         console.error('[SW] Fetch error:', error);
-        // You can return a fallback page here
       })
   );
 });
 
 // Activate event
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activate event v5');
+  console.log('[SW] Activate event v6');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -89,7 +86,6 @@ self.addEventListener('sync', (event) => {
 });
 
 function doBackgroundSync() {
-  // Implement background sync logic here
   return Promise.resolve();
 }
 
@@ -101,8 +97,8 @@ self.addEventListener('push', (event) => {
     
     const options = {
       body: data.body || 'Nova notificação do FitClub',
-      icon: '/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png',
-      badge: '/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png',
+      icon: '/lovable-uploads/8ec88394-8fc7-4b3b-91ad-5b7896234393.png',
+      badge: '/lovable-uploads/8ec88394-8fc7-4b3b-91ad-5b7896234393.png',
       tag: 'fitclub-notification',
       renotify: true,
       requireInteraction: true,
