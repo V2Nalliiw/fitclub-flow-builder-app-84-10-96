@@ -49,6 +49,7 @@ function App() {
               <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<Index />} />
+                  <Route path="/dashboard" element={<Index />} />
                   <Route path="/flow-builder" element={<FlowBuilder />} />
                   <Route path="/my-flows" element={<MyFlows />} />
                   <Route path="/patients" element={<Patients />} />
