@@ -19,8 +19,12 @@ export const Patients = () => {
         <HybridPatientInvitationDialog />
       </div>
 
-      <Tabs defaultValue="invitations" className="space-y-6">
+      <Tabs defaultValue="patients" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="patients" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">Pacientes Ativos</span>
+          </TabsTrigger>
           <TabsTrigger value="invitations" className="flex items-center gap-2">
             <Mail className="h-4 w-4" />
             <span className="hidden sm:inline">Convites</span>
@@ -29,11 +33,24 @@ export const Patients = () => {
             <Bell className="h-4 w-4" />
             <span className="hidden sm:inline">Notificações</span>
           </TabsTrigger>
-          <TabsTrigger value="patients" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Pacientes Ativos</span>
-          </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="patients" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Pacientes Ativos
+              </CardTitle>
+              <CardDescription>
+                Lista de pacientes ativos em sua clínica
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PatientsActiveList />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="invitations" className="space-y-6">
           <Card>
@@ -71,23 +88,6 @@ export const Patients = () => {
                   Os convites internos aparecem como notificações no dashboard dos pacientes
                 </p>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="patients" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Pacientes Ativos
-              </CardTitle>
-              <CardDescription>
-                Lista de pacientes ativos em sua clínica
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PatientsActiveList />
             </CardContent>
           </Card>
         </TabsContent>

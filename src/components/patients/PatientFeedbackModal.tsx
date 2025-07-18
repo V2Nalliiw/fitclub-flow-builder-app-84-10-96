@@ -136,7 +136,15 @@ export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
                       <span className="ml-3 text-gray-500">Carregando histórico de respostas...</span>
                     </div>
                   ) : (
-                    <PatientResponsesTimeline responses={responses} />
+                    <PatientResponsesTimeline 
+                      responses={responses} 
+                      patient={patient ? {
+                        name: patient.name,
+                        email: patient.email,
+                        phone: patient.phone,
+                        created_at: patient.created_at
+                      } : undefined}
+                    />
                   )}
                 </ScrollArea>
               </CardContent>

@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { CheckCircle, MessageSquare, Calendar, ChevronDown, ChevronRight, Clock, BarChart3, FileText } from 'lucide-react';
+import { CheckCircle, MessageSquare, Calendar, ChevronDown, ChevronRight, Clock, BarChart3, FileText, Download, Printer } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useReactToPrint } from 'react-to-print';
+import { PatientResponseReport } from './PatientResponseReport';
 
 interface FormStep {
   id: string;
@@ -32,6 +34,12 @@ interface Response {
 
 interface PatientResponsesTimelineProps {
   responses: Response[];
+  patient?: {
+    name: string;
+    email: string;
+    phone?: string;
+    created_at: string;
+  };
 }
 
 const getStatusBadge = (status: string, progress: number, completedSteps: number, totalSteps: number) => {
@@ -52,9 +60,16 @@ const getStatusIcon = (status: string) => {
 };
 
 export const PatientResponsesTimeline: React.FC<PatientResponsesTimelineProps> = ({
-  responses
+  responses,
+  patient
 }) => {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const reportRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: reportRef,
+    documentTitle: `Relatorio_Respostas_${patient?.name?.replace(/\s+/g, '_') || 'Paciente'}_${format(new Date(), 'dd-MM-yyyy')}`,
+  });
 
   const toggleExpanded = (id: string) => {
     setExpandedItems(prev => 
@@ -64,31 +79,62 @@ export const PatientResponsesTimeline: React.FC<PatientResponsesTimelineProps> =
     );
   };
 
+  const formatResponseValue = (value: any) => {
+    if (value === null || value === undefined) return 'Não respondido';
+    if (typeof value === 'object') {
+      if (value.result !== undefined) return `Resultado: ${value.result}`;
+      if (value.selected) return value.selected;
+      if (value.value !== undefined) return value.value;
+      return JSON.stringify(value, null, 2);
+    }
+    return String(value);
+  };
+
   const renderStepDetails = (steps: FormStep[]) => {
     if (!steps || steps.length === 0) return null;
 
     return (
       <div className="space-y-3 mt-4">
-        <h5 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <FileText className="h-4 w-4" />
-          Respostas Detalhadas:
-        </h5>
+        <div className="flex items-center justify-between">
+          <h5 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Respostas Detalhadas ({steps.length} itens):
+          </h5>
+          {patient && (
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handlePrint}
+                className="flex items-center gap-2 text-xs"
+              >
+                <Printer className="h-3 w-3" />
+                Imprimir Relatório
+              </Button>
+            </div>
+          )}
+        </div>
         {steps.map((step, index) => (
           <div key={step.id} className="bg-gray-50 dark:bg-[#0E0E0E]/30 rounded-lg p-3 border-l-2 border-gray-300 dark:border-gray-600">
             <div className="flex items-start justify-between mb-2">
               <h6 className="font-medium text-sm text-gray-800 dark:text-gray-200">
-                {step.title}
+                {index + 1}. {step.title}
               </h6>
-              <Badge 
-                variant={step.status === 'completed' ? 'secondary' : 'outline'} 
-                className={step.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200' : ''}
-              >
-                {step.status === 'completed' ? 'Respondido' : 'Pendente'}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  {step.type}
+                </Badge>
+                <Badge 
+                  variant={step.status === 'completed' ? 'secondary' : 'outline'} 
+                  className={step.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200' : ''}
+                >
+                  {step.status === 'completed' ? 'Respondido' : 'Pendente'}
+                </Badge>
+              </div>
             </div>
-            {step.response && (
+            {step.response !== null && step.response !== undefined && (
               <div className="text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-[#0E0E0E]/50 p-2 rounded border">
-                <strong>Resposta:</strong> {typeof step.response === 'object' ? JSON.stringify(step.response) : step.response}
+                <strong>Resposta:</strong> {formatResponseValue(step.response)}
               </div>
             )}
             {step.completedAt && (
@@ -103,7 +149,34 @@ export const PatientResponsesTimeline: React.FC<PatientResponsesTimelineProps> =
   };
 
   return (
-    <div className="space-y-4">
+    <>
+      {/* Hidden Report Component for Printing */}
+      <div style={{ display: 'none' }}>
+        {patient && (
+          <PatientResponseReport
+            ref={reportRef}
+            patient={patient}
+            responses={responses}
+            clinicName="Clínica"
+          />
+        )}
+      </div>
+      
+      {/* Action Buttons */}
+      {patient && responses.length > 0 && (
+        <div className="flex justify-end gap-2 mb-4">
+          <Button
+            variant="outline"
+            onClick={handlePrint}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Baixar Relatório Completo
+          </Button>
+        </div>
+      )}
+      
+      <div className="space-y-4">
       {responses.map((response, index) => {
         const StatusIcon = getStatusIcon(response.status);
         const isExpanded = expandedItems.includes(response.id);
@@ -227,6 +300,7 @@ export const PatientResponsesTimeline: React.FC<PatientResponsesTimelineProps> =
           </p>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 };

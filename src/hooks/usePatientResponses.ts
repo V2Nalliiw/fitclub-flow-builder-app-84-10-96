@@ -52,27 +52,69 @@ export const usePatientResponses = (patientId?: string) => {
       const transformedResponses: PatientResponse[] = (executions || []).map((execution) => {
         const currentStep = execution.current_step as any;
         
-        // Extrair todas as etapas e respostas se disponível no current_step
+        // Extrair todas as etapas e respostas de forma mais robusta
         const allSteps: FormStep[] = [];
         
         if (currentStep && typeof currentStep === 'object') {
-          // Se current_step contém um array de steps
+          // Processar steps aninhados
           if (currentStep.steps && Array.isArray(currentStep.steps)) {
             currentStep.steps.forEach((step: any, index: number) => {
+              // Extrair informações do step
+              const stepTitle = step.title || step.question || step.label || `Etapa ${index + 1}`;
+              const stepType = step.type || step.nodeType || 'response';
+              
+              // Extrair resposta de diferentes formatos
+              let stepResponse = null;
+              if (step.response !== undefined) stepResponse = step.response;
+              else if (step.value !== undefined) stepResponse = step.value;
+              else if (step.answer !== undefined) stepResponse = step.answer;
+              else if (step.result !== undefined) stepResponse = step.result;
+              else if (step.selected !== undefined) stepResponse = step.selected;
+              
               allSteps.push({
                 id: step.id || `step-${index}`,
-                title: step.title || step.question || `Etapa ${index + 1}`,
-                type: step.type || 'response',
-                response: step.response || step.value || step.answer,
-                status: step.response ? 'completed' : 'pending',
-                completedAt: step.completedAt || execution.completed_at
+                title: stepTitle,
+                type: stepType,
+                response: stepResponse,
+                status: stepResponse !== null && stepResponse !== undefined ? 'completed' : 'pending',
+                completedAt: step.completedAt || step.timestamp || execution.completed_at
               });
             });
-          } else if (currentStep.title || currentStep.question) {
-            // Etapa única
+          }
+          
+          // Processar múltiplas estruturas de dados possíveis
+          if (currentStep.responses && Array.isArray(currentStep.responses)) {
+            currentStep.responses.forEach((resp: any, index: number) => {
+              allSteps.push({
+                id: resp.id || `response-${index}`,
+                title: resp.question || resp.title || `Resposta ${index + 1}`,
+                type: resp.type || 'response',
+                response: resp.answer || resp.value || resp.response,
+                status: 'completed',
+                completedAt: resp.timestamp || execution.completed_at
+              });
+            });
+          }
+          
+          // Processar dados de calculadora
+          if (currentStep.calculations && Array.isArray(currentStep.calculations)) {
+            currentStep.calculations.forEach((calc: any, index: number) => {
+              allSteps.push({
+                id: calc.id || `calc-${index}`,
+                title: calc.name || `Cálculo ${index + 1}`,
+                type: 'calculator',
+                response: calc.result || calc.value,
+                status: 'completed',
+                completedAt: execution.completed_at
+              });
+            });
+          }
+          
+          // Se não há steps, mas há dados diretos no currentStep
+          if (allSteps.length === 0 && (currentStep.title || currentStep.question || currentStep.response)) {
             allSteps.push({
               id: currentStep.id || execution.id,
-              title: currentStep.title || currentStep.question || 'Resposta',
+              title: currentStep.title || currentStep.question || 'Resposta Principal',
               type: currentStep.type || 'response',
               response: currentStep.response || currentStep.value || currentStep.answer,
               status: currentStep.response ? 'completed' : 'pending',
