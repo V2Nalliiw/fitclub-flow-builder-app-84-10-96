@@ -83,12 +83,12 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
     },
   }));
 
-  const canvasHeight = isFullscreen || isMobile ? '100vh' : 'calc(100vh - 4rem)';
+  const canvasHeight = isFullscreen || isMobile ? '100vh' : '100%';
   const canvasWidth = '100%';
 
   return (
     <div 
-      className="relative bg-gray-50 dark:bg-none dark:bg-[#0E0E0E]"
+      className="relative bg-gray-50 dark:bg-none dark:bg-[#0E0E0E] w-full h-full overflow-hidden"
       style={{ 
         height: canvasHeight,
         width: canvasWidth

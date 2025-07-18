@@ -282,7 +282,7 @@ export const FlowBuilder = () => {
   }));
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-none dark:bg-[#0E0E0E]">
+    <div className="h-screen w-full bg-gray-50 dark:bg-none dark:bg-[#0E0E0E] overflow-hidden">
       {/* Top Menu - apenas no desktop */}
       {isDesktop && (
         <FlowBuilderTopMenu
@@ -318,7 +318,7 @@ export const FlowBuilder = () => {
       )}
 
       {/* Canvas - altura ajustada baseado no breakpoint */}
-      <div className={isDesktop ? "h-[calc(100vh-96px)]" : "h-screen"}>
+      <div className={isDesktop ? "h-[calc(100vh-80px)]" : "h-screen"}>
         <FlowBuilderCanvas
           nodes={enhancedNodes}
           edges={edges}

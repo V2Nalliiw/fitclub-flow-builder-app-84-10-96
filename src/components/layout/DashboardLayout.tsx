@@ -25,7 +25,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const isFlowsPage = location.pathname === '/flows';
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0E0E0E] flex flex-col w-full">
+    <div className="min-h-screen bg-white dark:bg-[#0E0E0E] flex flex-col w-full overflow-hidden">
       {/* Top Bar - Header Fixo Fino para todos os usuários */}
       <header className="fixed top-0 left-0 right-0 z-50 h-12 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 px-4 flex items-center justify-between">
         {/* Desktop Navigation */}
@@ -98,8 +98,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
       {/* Main Content - Com espaçamento para header fixo */}
       <main className={cn(
-        "pt-12 transition-all duration-300 animate-fade-in",
-        isMobile || isTablet ? "pb-[10vh] min-h-[calc(100vh-3rem)]" : "flex-1 pb-6"
+        "transition-all duration-300 animate-fade-in",
+        isFlowsPage && isDesktop ? "pt-12 h-screen" : "pt-12",
+        isMobile || isTablet ? "pb-[10vh] min-h-[calc(100vh-3rem)]" : isFlowsPage ? "h-screen" : "flex-1 pb-6"
       )}>
         {children}
       </main>
