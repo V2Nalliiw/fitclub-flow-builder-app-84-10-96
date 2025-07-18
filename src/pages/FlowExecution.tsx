@@ -145,7 +145,7 @@ const FlowExecution = () => {
     <MobileErrorBoundary>
       <div className="h-screen bg-white dark:bg-[#0E0E0E] flow-execution-container flex flex-col">
         {/* Header - 10% da altura da tela */}
-        <div className="h-[10vh] min-h-[60px] flex items-center justify-center px-4 sm:px-6 border-b border-border bg-white dark:bg-[#0E0E0E] shrink-0">
+        <div className="h-[10vh] min-h-[60px] flex items-center justify-center px-4 sm:px-6 bg-white dark:bg-[#0E0E0E] shrink-0">
             {execution && (
               <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 text-center">
                 {execution.flow_name}
@@ -154,7 +154,7 @@ const FlowExecution = () => {
         </div>
 
         {/* Conteúdo Principal - 90% da altura da tela */}
-        <div className="h-[90vh] flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-white dark:bg-[#0E0E0E] relative">
+        <div className="h-[90vh] flex items-center justify-center p-4 sm:p-6 bg-white dark:bg-[#0E0E0E] relative">
           <div className="w-full max-w-2xl">
 
             {isLoading && (
