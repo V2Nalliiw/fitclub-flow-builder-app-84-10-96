@@ -101,11 +101,6 @@ export const Sidebar = () => {
           url: "/whatsapp-settings",
           icon: MessagesSquare,
         },
-        {
-          title: "Analytics",
-          url: "/analytics",
-          icon: Activity,
-        },
       ];
     }
 
@@ -126,16 +121,6 @@ export const Sidebar = () => {
         title: "Pacientes",
         url: "/patients",
         icon: Users,
-      },
-      {
-        title: "Formulários",
-        url: "/forms",
-        icon: FileText,
-      },
-      {
-        title: "Analytics",
-        url: "/analytics",
-        icon: Activity,
       },
       {
         title: "WhatsApp",

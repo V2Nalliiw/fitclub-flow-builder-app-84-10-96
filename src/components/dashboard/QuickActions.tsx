@@ -22,26 +22,12 @@ export const QuickActions = () => {
             color: 'text-muted-foreground hover:text-primary'
           },
           {
-            title: 'Ver Relatórios',
-            description: 'Análises e métricas do sistema',
-            icon: BarChart3,
-            action: () => navigate('/analytics'),
-            color: 'text-primary hover:text-primary/80'
-          },
-          {
             title: 'Configurações',
             description: 'Configurações globais do sistema',
             icon: Settings,
             action: () => navigate('/settings'),
             color: 'text-muted-foreground hover:text-primary'
           },
-          {
-            title: 'Gerenciar Permissões',
-            description: 'Controlar acessos e roles',
-            icon: Settings,
-            action: () => navigate('/permissions'),
-            color: 'text-muted-foreground hover:text-primary'
-          }
         ];
 
       case 'clinic':
@@ -67,13 +53,6 @@ export const QuickActions = () => {
             action: () => navigate('/my-flows'),
             color: 'text-muted-foreground hover:text-primary'
           },
-          {
-            title: 'Relatórios',
-            description: 'Análises dos tratamentos',
-            icon: BarChart3,
-            action: () => navigate('/analytics'),
-            color: 'text-muted-foreground hover:text-primary'
-          }
         ];
 
       case 'patient':
@@ -84,13 +63,6 @@ export const QuickActions = () => {
             icon: GitBranch,
             action: () => navigate('/my-flows'),
             color: 'text-muted-foreground hover:text-primary'
-          },
-          {
-            title: 'Formulários',
-            description: 'Preencher formulários pendentes',
-            icon: FileText,
-            action: () => navigate('/forms'),
-            color: 'text-primary hover:text-primary/80'
           },
           {
             title: 'Meu Perfil',
