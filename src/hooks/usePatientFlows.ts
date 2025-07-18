@@ -98,6 +98,10 @@ export const usePatientFlows = () => {
           }
         }
 
+        // Garantir que completed_steps nunca exceda total_steps
+        const safeCompletedSteps = Math.min(execution.completed_steps || 0, execution.total_steps || 0);
+        const safeProgress = Math.min(execution.progress || 0, 100);
+
         return {
           id: execution.id,
           flow_id: execution.flow_id,
@@ -105,13 +109,13 @@ export const usePatientFlows = () => {
           paciente_id: execution.patient_id,
           status: mappedStatus,
           no_atual: execution.current_node,
-          progresso: execution.progress,
+          progresso: safeProgress,
           started_at: execution.started_at,
           completed_at: execution.completed_at || undefined,
           next_step_available_at: execution.next_step_available_at || undefined,
           current_step: currentStep || { type: 'unknown', title: 'Carregando...', description: '' },
           total_steps: execution.total_steps,
-          completed_steps: execution.completed_steps,
+          completed_steps: safeCompletedSteps,
         };
       });
 
@@ -187,13 +191,14 @@ export const usePatientFlows = () => {
         completedSteps: execution.completed_steps
       });
 
-      const newCompletedSteps = execution.completed_steps + 1;
-      const newProgress = Math.min(Math.round((newCompletedSteps / execution.total_steps) * 100), 100);
+      // Garantir que completed_steps nunca exceda total_steps
+      const safeNewCompletedSteps = Math.min(execution.completed_steps + 1, execution.total_steps);
+      const newProgress = Math.min(Math.round((safeNewCompletedSteps / execution.total_steps) * 100), 100);
       const isFormCompleted = newProgress >= 100;
       const newStatus = isFormCompleted ? 'completed' : execution.status;
 
       console.log('📈 usePatientFlows: Calculando novo progresso', {
-        newCompletedSteps,
+        safeNewCompletedSteps,
         newProgress,
         isFormCompleted,
         newStatus
@@ -202,7 +207,7 @@ export const usePatientFlows = () => {
       const { error: updateError } = await supabase
         .from('flow_executions')
         .update({
-          completed_steps: newCompletedSteps,
+          completed_steps: safeNewCompletedSteps,
           progress: newProgress,
           status: newStatus,
           completed_at: isFormCompleted ? new Date().toISOString() : null,
