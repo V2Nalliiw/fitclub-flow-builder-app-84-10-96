@@ -67,13 +67,24 @@ export const FlowAssignmentModal = ({ flow, isOpen, onClose }: FlowAssignmentMod
               onValueChange={setSelectedPatientId}
               disabled={loadingPatients}
             >
-              <SelectTrigger className="mt-1">
+              <SelectTrigger className="mt-1 min-h-[44px] touch-manipulation">
                 <SelectValue placeholder="Escolha um paciente" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent 
+                className="max-h-[200px] overflow-y-auto"
+                position="popper"
+                sideOffset={4}
+              >
                 {patients.map((patient) => (
-                  <SelectItem key={patient.id} value={patient.user_id}>
-                    {patient.name} - {patient.email}
+                  <SelectItem 
+                    key={patient.id} 
+                    value={patient.user_id}
+                    className="min-h-[44px] touch-manipulation cursor-pointer hover:bg-accent focus:bg-accent"
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium">{patient.name}</span>
+                      <span className="text-sm text-muted-foreground">{patient.email}</span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
