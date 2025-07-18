@@ -20,7 +20,7 @@ export const MobileNavigation = () => {
         return [
           { icon: Home, label: 'Dashboard', href: '/dashboard' },
           { icon: Users, label: 'Pacientes', href: '/patients' },
-          { icon: GitBranch, label: 'Fluxos', href: '/flows' },
+          { icon: GitBranch, label: 'Meus Fluxos', href: '/flows' },
           { icon: User, label: 'Perfil', href: '/profile' },
         ];
       case 'patient':
