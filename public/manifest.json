@@ -1,8 +1,8 @@
 
 {
-  "name": "FitClub Flow Builder",
+  "name": "FitClub - Emagrecimento Inteligente",
   "short_name": "FitClub",
-  "description": "Construtor de fluxos para clínicas e pacientes",
+  "description": "Plataforma inteligente para emagrecimento saudável e sustentável. Construtor de fluxos para clínicas e acompanhamento de pacientes.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -10,36 +10,97 @@
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "pt-BR",
-  "categories": ["medical", "productivity", "business"],
+  "categories": ["health", "fitness", "medical", "productivity", "lifestyle"],
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/lovable-uploads/3807eac2-74da-4414-ac7a-528b35d3fb69.png",
+      "src": "/lovable-uploads/bf07eca9-e609-4416-a369-8b4243bdd8fa.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/lovable-uploads/3807eac2-74da-4414-ac7a-528b35d3fb69.png",
+      "src": "/lovable-uploads/bf07eca9-e609-4416-a369-8b4243bdd8fa.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
-    }
-  ],
-  "screenshots": [],
-  "display_override": ["window-controls-overlay", "standalone"],
-  "shortcuts": [
-    {
-      "name": "Criar Fluxo",
-      "short_name": "Novo Fluxo",
-      "description": "Criar um novo fluxo rapidamente",
-      "url": "/flows?action=create"
     },
     {
-      "name": "Pacientes",
-      "short_name": "Pacientes",
-      "description": "Ver lista de pacientes",
-      "url": "/patients"
+      "src": "/lovable-uploads/bf07eca9-e609-4416-a369-8b4243bdd8fa.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/lovable-uploads/bf07eca9-e609-4416-a369-8b4243bdd8fa.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/lovable-uploads/bf07eca9-e609-4416-a369-8b4243bdd8fa.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/lovable-uploads/bf07eca9-e609-4416-a369-8b4243bdd8fa.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
     }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "/lovable-uploads/bf07eca9-e609-4416-a369-8b4243bdd8fa.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "shortcuts": [
+    {
+      "name": "Meus Fluxos",
+      "short_name": "Fluxos",
+      "description": "Ver meus fluxos de emagrecimento",
+      "url": "/my-flows",
+      "icons": [
+        {
+          "src": "/lovable-uploads/bf07eca9-e609-4416-a369-8b4243bdd8fa.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "description": "Acessar painel principal",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/lovable-uploads/bf07eca9-e609-4416-a369-8b4243bdd8fa.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Perfil",
+      "short_name": "Perfil",
+      "description": "Gerenciar meu perfil",
+      "url": "/profile",
+      "icons": [
+        {
+          "src": "/lovable-uploads/bf07eca9-e609-4416-a369-8b4243bdd8fa.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "edge_side_panel": {
+    "preferred_width": 480
+  }
 }
