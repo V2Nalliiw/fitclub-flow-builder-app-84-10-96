@@ -98,9 +98,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
       {/* Main Content - Com espaçamento para header fixo */}
       <main className={cn(
-        "transition-all duration-300 animate-fade-in",
-        isFlowsPage && isDesktop ? "pt-12 h-screen" : "pt-12",
-        isMobile || isTablet ? "pb-[10vh] min-h-[calc(100vh-3rem)]" : isFlowsPage ? "h-screen" : "flex-1 pb-6"
+        "transition-all duration-300 animate-fade-in overflow-hidden",
+        isFlowsPage ? "pt-12 h-screen" : "pt-12",
+        isMobile || isTablet ? "pb-[10vh] h-[calc(100vh-3rem)]" : isFlowsPage ? "h-screen" : "flex-1 pb-6"
       )}>
         {children}
       </main>

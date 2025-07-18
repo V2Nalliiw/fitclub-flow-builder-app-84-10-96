@@ -83,7 +83,7 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
     },
   }));
 
-  const canvasHeight = isFullscreen || isMobile ? '100vh' : '100%';
+  const canvasHeight = '100%';
   const canvasWidth = '100%';
 
   return (
@@ -175,8 +175,8 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
         onNodeClick={onNodeClick}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
-        className="bg-gray-50 dark:bg-none dark:bg-[#0E0E0E]"
+        defaultViewport={{ x: 0, y: 0, zoom: isMobile ? 0.6 : 0.8 }}
+        className="bg-gray-50 dark:bg-none dark:bg-[#0E0E0E] w-full h-full"
         defaultEdgeOptions={{
           animated: true,
           type: 'deleteButton',
@@ -199,12 +199,19 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
           strokeWidth: 2,
           strokeDasharray: '5,5',
         }}
+        fitView
+        fitViewOptions={{
+          padding: isMobile ? 0.3 : 0.1,
+          includeHiddenNodes: false,
+          minZoom: isMobile ? 0.3 : 0.5,
+          maxZoom: isMobile ? 1.5 : 2,
+        }}
       >
         <Controls 
-          position={isMobile ? "bottom-left" : "bottom-right"}
-          className={`bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-xl [&_button]:bg-card/80 [&_button]:border-border [&_button]:text-foreground hover:[&_button]:bg-accent/90 [&_button]:backdrop-blur-sm [&_button]:transition-all [&_button]:duration-200 ${isMobile ? 'scale-90' : ''}`}
-          style={isMobile ? { 
-            bottom: '80px', 
+          position={isMobile || isTablet ? "bottom-left" : "bottom-right"}
+          className={`bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-xl [&_button]:bg-card/80 [&_button]:border-border [&_button]:text-foreground hover:[&_button]:bg-accent/90 [&_button]:backdrop-blur-sm [&_button]:transition-all [&_button]:duration-200 ${isMobile || isTablet ? 'scale-90' : ''}`}
+          style={(isMobile || isTablet) ? { 
+            bottom: '20px', 
             left: '12px',
             zIndex: 10
           } : {}}
@@ -214,12 +221,12 @@ export const FlowBuilderCanvas: React.FC<FlowBuilderCanvasProps> = ({
           nodeColor="hsl(var(--primary)/0.8)"
           nodeBorderRadius={12}
           position={isMobile || isTablet ? "bottom-center" : "bottom-left"}
-          className={`bg-card/95 backdrop-blur-sm border-2 border-border/50 rounded-xl shadow-xl overflow-hidden ${isMobile ? '!w-32 !h-20' : '!w-56 !h-40'}`}
+          className={`bg-card/95 backdrop-blur-sm border-2 border-border/50 rounded-xl shadow-xl overflow-hidden ${isMobile || isTablet ? '!w-32 !h-20' : '!w-56 !h-40'}`}
           maskColor="hsl(var(--background) / 0.7)"
           pannable
           zoomable
           style={(isMobile || isTablet) ? { 
-            bottom: '80px',
+            bottom: '20px',
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 10
