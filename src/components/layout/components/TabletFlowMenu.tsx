@@ -75,17 +75,17 @@ export const TabletFlowMenu = ({
   // Desktop: menu fixo com largura total
   if (isDesktop) {
     return (
-      <div className="fixed top-12 left-0 right-0 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-b border-gray-200 dark:border-[#1A1A1A] shadow-sm px-6 py-3">
-        <div className="flex items-center gap-3">
+      <div className="fixed top-12 left-0 right-0 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-b border-gray-200 dark:border-[#1A1A1A] shadow-sm px-6 py-2">
+        <div className="flex items-center gap-2">
           {/* Campo Nome do Fluxo */}
           <Input
             value={flowName}
             onChange={(e) => onFlowNameChange(e.target.value)}
             placeholder="Nome do fluxo..."
-            className="dark:bg-transparent dark:border-gray-700 dark:text-gray-100 text-sm w-48 h-8 rounded-full px-3"
+            className="dark:bg-transparent dark:border-gray-700 dark:text-gray-100 text-sm w-40 h-7 rounded-full px-3"
           />
 
-          <Separator orientation="vertical" className="h-6 mx-2" />
+          <Separator orientation="vertical" className="h-5 mx-1" />
 
           {/* Botões de Nós agrupados */}
           {nodeTypes.map((nodeType) => {
@@ -96,7 +96,7 @@ export const TabletFlowMenu = ({
                 variant="outline"
                 size="sm"
                 onClick={() => handleAddNode(nodeType.type)}
-                className="dark:bg-transparent dark:border-[#1A1A1A] dark:hover:bg-[#0E0E0E]/50 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
+                className="dark:bg-transparent dark:border-[#1A1A1A] dark:hover:bg-[#0E0E0E]/50 border-gray-200 hover:bg-gray-50 h-7 w-7 p-0 rounded-full"
                 title={nodeType.label}
               >
                 <IconComponent className={`h-4 w-4 ${nodeType.color}`} />
@@ -104,7 +104,7 @@ export const TabletFlowMenu = ({
             );
           })}
 
-          <Separator orientation="vertical" className="h-6 mx-2" />
+          <Separator orientation="vertical" className="h-5 mx-1" />
 
           {/* Botão Visualizar */}
           <Button
@@ -112,7 +112,7 @@ export const TabletFlowMenu = ({
             size="sm"
             onClick={onPreviewFlow}
             title="Visualizar fluxo"
-            className="dark:bg-transparent dark:border-[#1A1A1A] dark:hover:bg-[#0E0E0E]/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-9 w-9 p-0 rounded-full"
+            className="dark:bg-transparent dark:border-[#1A1A1A] dark:hover:bg-[#0E0E0E]/50 dark:text-gray-300 border-gray-200 hover:bg-gray-50 h-7 w-7 p-0 rounded-full"
           >
             <Play className="h-4 w-4" />
           </Button>
@@ -122,7 +122,7 @@ export const TabletFlowMenu = ({
             onClick={onSaveFlow}
             size="sm"
             disabled={!canSave || isSaving}
-            className="bg-[#5D8701] hover:bg-[#4a6e01] text-white dark:bg-[#5D8701] dark:hover:bg-[#4a6e01] h-9 w-9 p-0 rounded-full"
+            className="bg-[#5D8701] hover:bg-[#4a6e01] text-white dark:bg-[#5D8701] dark:hover:bg-[#4a6e01] h-7 w-7 p-0 rounded-full"
             title="Salvar fluxo"
           >
             {isSaving ? (
@@ -132,7 +132,7 @@ export const TabletFlowMenu = ({
             )}
           </Button>
 
-          <Separator orientation="vertical" className="h-6 mx-2" />
+          <Separator orientation="vertical" className="h-5 mx-1" />
 
           {/* Botão Limpar */}
           <Button
@@ -140,7 +140,7 @@ export const TabletFlowMenu = ({
             size="sm"
             onClick={onClearAllNodes}
             title="Limpar todos os nós"
-            className="dark:bg-transparent dark:border-[#1A1A1A] dark:hover:bg-[#0E0E0E]/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-9 w-9 p-0 rounded-full"
+            className="dark:bg-transparent dark:border-[#1A1A1A] dark:hover:bg-[#0E0E0E]/50 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 h-7 w-7 p-0 rounded-full"
           >
             <Eraser className="h-4 w-4" />
           </Button>
