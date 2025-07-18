@@ -32,6 +32,7 @@ export default defineConfig(({ mode }) => ({
         background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
+        id: '/',
         icons: [
           {
             src: 'lovable-uploads/90973242-2117-408c-8564-774f9f6f4f30.png',
