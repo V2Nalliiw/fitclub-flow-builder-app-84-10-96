@@ -51,150 +51,117 @@ export const usePatientResponses = (patientId?: string) => {
       console.log('🔍 Execuções encontradas:', executions);
       console.log('🔍 Primeira execução current_step:', executions?.[0]?.current_step);
 
-      // Transform executions to detailed responses format - Simplificado
+      // Transform executions to detailed responses format - Melhorado
       const transformedResponses: PatientResponse[] = (executions || []).map((execution) => {
         const currentStep = execution.current_step as any;
         
-        // Extrair todas as perguntas e respostas de forma mais simples
+        // Extrair todas as perguntas e respostas
         const allSteps: FormStep[] = [];
         
-        const extractQuestionAndAnswer = (obj: any, path: string = 'root'): void => {
-          if (!obj || typeof obj !== 'object') return;
+        // Se existe steps no currentStep, extrair de lá
+        if (currentStep && currentStep.steps && Array.isArray(currentStep.steps)) {
+          console.log('🔍 Processando steps:', currentStep.steps.length);
           
-          console.log(`🔍 Verificando objeto em ${path}:`, obj);
-          
-          // Extrair de campos de calculadora - múltiplos formatos
-          if (obj.calculatorFields && Array.isArray(obj.calculatorFields)) {
-            console.log('✅ Encontrou calculatorFields:', obj.calculatorFields);
-            obj.calculatorFields.forEach((field: any, index: number) => {
-              if (field.pergunta && field.resposta !== undefined) {
-                allSteps.push({
-                  id: `calc-field-${index}`,
-                  title: field.pergunta,
-                  type: 'calculator',
-                  response: field.resposta,
-                  status: 'completed',
-                  completedAt: execution.completed_at
-                });
-              }
-            });
-          }
-          
-          // Extrair de campos de perguntas da calculadora
-          if (obj.calculatorQuestionFields && Array.isArray(obj.calculatorQuestionFields)) {
-            console.log('✅ Encontrou calculatorQuestionFields:', obj.calculatorQuestionFields);
-            obj.calculatorQuestionFields.forEach((field: any, index: number) => {
-              if (field.pergunta && field.opcaoEscolhida !== undefined) {
-                allSteps.push({
-                  id: `calc-question-${index}`,
-                  title: field.pergunta,
-                  type: 'question',
-                  response: field.opcaoEscolhida,
-                  status: 'completed',
-                  completedAt: execution.completed_at
-                });
-              }
-            });
-          }
-          
-          // Verificar por outras propriedades de calculadora
-          const calculatorKeys = ['calculo', 'calculation', 'calculator', 'result', 'resultado'];
-          calculatorKeys.forEach(key => {
-            if (obj[key] && typeof obj[key] === 'object') {
-              console.log(`✅ Encontrou ${key}:`, obj[key]);
-              const calc = obj[key];
-              if (calc.pergunta && calc.resposta !== undefined) {
-                allSteps.push({
-                  id: `${key}-${allSteps.length}`,
-                  title: calc.pergunta,
-                  type: 'calculator',
-                  response: calc.resposta,
-                  status: 'completed',
-                  completedAt: execution.completed_at
-                });
-              }
-            }
-          });
-          
-          // Extrair perguntas diretas
-          if (obj.pergunta && obj.resposta !== undefined) {
-            console.log('✅ Encontrou pergunta direta:', obj.pergunta);
-            allSteps.push({
-              id: `direct-question-${allSteps.length}`,
-              title: obj.pergunta,
-              type: 'question',
-              response: obj.resposta,
-              status: 'completed',
-              completedAt: execution.completed_at
-            });
-          }
-          
-          // Extrair de questionários médicos
-          if (obj.Pergunta && obj.response !== undefined) {
-            console.log('✅ Encontrou Pergunta médica:', obj.Pergunta);
-            const question = obj.Pergunta.pergunta || obj.Pergunta.question || 'Pergunta';
-            let answer = obj.response;
+          currentStep.steps.forEach((step: any, stepIndex: number) => {
+            console.log(`🔍 Step ${stepIndex}:`, step.nodeType, step.title);
             
-            // Se há opções de resposta, encontrar o texto da opção escolhida
-            if (obj.Pergunta.opcoes_resposta && Array.isArray(obj.Pergunta.opcoes_resposta)) {
-              const selectedOption = obj.Pergunta.opcoes_resposta.find((opt: any) => 
-                opt.valor === obj.response || opt.value === obj.response
-              );
-              if (selectedOption) {
-                answer = selectedOption.texto || selectedOption.text || obj.response;
-              }
-            }
-            
-            allSteps.push({
-              id: `medical-question-${allSteps.length}`,
-              title: question,
-              type: 'medical_question',
-              response: answer,
-              status: 'completed',
-              completedAt: execution.completed_at
-            });
-          }
-          
-          // Verificar qualquer objeto que tenha estrutura de pergunta/resposta
-          if (typeof obj === 'object') {
-            Object.keys(obj).forEach(key => {
-              if (key.toLowerCase().includes('pergunta') && obj[key]) {
-                console.log(`✅ Encontrou pergunta em ${key}:`, obj[key]);
-                // Procurar resposta correspondente
-                const responseKeys = ['resposta', 'response', 'answer', 'valor', 'value'];
-                for (const respKey of responseKeys) {
-                  if (obj[respKey] !== undefined) {
+            // Extrair de calculatorFields e calculatorQuestionFields
+            if (step.calculatorFields && Array.isArray(step.calculatorFields)) {
+              step.calculatorFields.forEach((field: any, fieldIndex: number) => {
+                if (field.pergunta) {
+                  // Buscar resposta correspondente no response
+                  let resposta = null;
+                  
+                  // Verificar diferentes locais onde a resposta pode estar
+                  if (step.response?.fieldResponses?.[field.nomenclatura]) {
+                    resposta = step.response.fieldResponses[field.nomenclatura].value;
+                  } else if (step.response?.calculationResponses?.[field.nomenclatura]) {
+                    resposta = step.response.calculationResponses[field.nomenclatura];
+                  } else if (step.response?.calculatorResults?.[field.nomenclatura]) {
+                    resposta = step.response.calculatorResults[field.nomenclatura];
+                  }
+                  
+                  if (resposta !== null && resposta !== undefined) {
                     allSteps.push({
-                      id: `${key}-${allSteps.length}`,
-                      title: obj[key],
-                      type: 'extracted_question',
-                      response: obj[respKey],
+                      id: `step-${stepIndex}-calc-field-${fieldIndex}`,
+                      title: field.pergunta,
+                      type: 'calculator_field',
+                      response: resposta,
                       status: 'completed',
-                      completedAt: execution.completed_at
+                      completedAt: step.completedAt || execution.completed_at
                     });
-                    break;
                   }
                 }
-              }
-            });
-          }
-          
-          // Recursivamente extrair de arrays e objetos aninhados
-          Object.entries(obj).forEach(([key, value]) => {
-            if (Array.isArray(value)) {
-              value.forEach((item, index) => extractQuestionAndAnswer(item, `${path}.${key}[${index}]`));
-            } else if (typeof value === 'object' && value !== null) {
-              extractQuestionAndAnswer(value, `${path}.${key}`);
+              });
+            }
+            
+            if (step.calculatorQuestionFields && Array.isArray(step.calculatorQuestionFields)) {
+              step.calculatorQuestionFields.forEach((field: any, fieldIndex: number) => {
+                if (field.pergunta) {
+                  // Buscar resposta correspondente
+                  let resposta = null;
+                  
+                  if (step.response?.fieldResponses?.[field.nomenclatura]) {
+                    resposta = step.response.fieldResponses[field.nomenclatura].value;
+                  } else if (step.response?.questionResponses?.[field.nomenclatura]) {
+                    resposta = step.response.questionResponses[field.nomenclatura];
+                  } else if (step.response?.questionResults?.[field.nomenclatura]) {
+                    resposta = step.response.questionResults[field.nomenclatura];
+                  }
+                  
+                  if (resposta !== null && resposta !== undefined) {
+                    allSteps.push({
+                      id: `step-${stepIndex}-question-field-${fieldIndex}`,
+                      title: field.pergunta,
+                      type: 'question_field',
+                      response: resposta,
+                      status: 'completed',
+                      completedAt: step.completedAt || execution.completed_at
+                    });
+                  }
+                }
+              });
+            }
+            
+            // Também extrair resultado da calculadora se existir
+            if (step.calculatorResult !== null && step.calculatorResult !== undefined && step.title) {
+              allSteps.push({
+                id: `step-${stepIndex}-result`,
+                title: `Resultado - ${step.title}`,
+                type: 'calculator_result',
+                response: step.calculatorResult,
+                status: 'completed',
+                completedAt: step.completedAt || execution.completed_at
+              });
             }
           });
-        };
-        
-        // Extrair perguntas e respostas do currentStep
-        if (currentStep) {
-          console.log('🔍 Processando currentStep:', currentStep);
-          extractQuestionAndAnswer(currentStep);
-          console.log('🔍 Steps extraídos:', allSteps);
         }
+        
+        // Também verificar userResponses no currentStep para respostas extras
+        if (currentStep && currentStep.userResponses) {
+          console.log('🔍 Verificando userResponses:', Object.keys(currentStep.userResponses));
+          
+          Object.entries(currentStep.userResponses).forEach(([key, value]: [string, any]) => {
+            // Pular campos que são resultados de condições ou campos especiais
+            if (key.includes('_condition_result') || key === 'condition_id' || key === 'condition_index') {
+              return;
+            }
+            
+            // Adicionar respostas diretas
+            if (typeof value === 'string' || typeof value === 'number') {
+              allSteps.push({
+                id: `user-response-${key}`,
+                title: key.charAt(0).toUpperCase() + key.slice(1).replace(/[_-]/g, ' '),
+                type: 'user_response',
+                response: value,
+                status: 'completed',
+                completedAt: execution.completed_at
+              });
+            }
+          });
+        }
+
+        console.log(`✅ Total de steps extraídos para ${execution.flow_name}:`, allSteps.length);
 
         return {
           id: execution.id,
