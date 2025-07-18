@@ -32,7 +32,7 @@ export const usePatientResponses = (patientId?: string) => {
   const [responseCount, setResponseCount] = useState(0);
 
   const loadPatientResponses = useCallback(async () => {
-    if (!patientId || !user?.clinic_id) return;
+    if (!patientId || !user) return;
 
     setLoading(true);
     try {
@@ -145,7 +145,7 @@ export const usePatientResponses = (patientId?: string) => {
     } finally {
       setLoading(false);
     }
-  }, [patientId, user?.clinic_id]);
+  }, [patientId, user]);
 
   useEffect(() => {
     if (patientId) {
