@@ -154,7 +154,7 @@ export const PatientResponsesTimeline: React.FC<PatientResponsesTimelineProps> =
         <div className="flex items-center justify-between">
           <h5 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
             <FileText className="h-4 w-4" />
-            Respostas Detalhadas ({steps.length} itens):
+            Perguntas e Respostas ({steps.length} itens):
           </h5>
           {patient && (
             <div className="flex gap-2">
@@ -171,33 +171,19 @@ export const PatientResponsesTimeline: React.FC<PatientResponsesTimelineProps> =
           )}
         </div>
         {steps.map((step, index) => (
-          <div key={step.id} className="bg-gray-50 dark:bg-[#0E0E0E]/30 rounded-lg p-3 border-l-2 border-gray-300 dark:border-gray-600">
-            <div className="flex items-start justify-between mb-2">
-              <h6 className="font-medium text-sm text-gray-800 dark:text-gray-200">
-                {index + 1}. {step.title}
-              </h6>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-xs">
-                  {step.type}
-                </Badge>
-                <Badge 
-                  variant={step.status === 'completed' ? 'secondary' : 'outline'} 
-                  className={step.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200' : ''}
-                >
-                  {step.status === 'completed' ? 'Respondido' : 'Pendente'}
-                </Badge>
+          <div key={step.id} className="border-l-4 border-primary/30 pl-4 py-3 bg-gray-50 dark:bg-[#0E0E0E]/30 rounded-r-lg">
+            <div className="space-y-2">
+              <div>
+                <span className="font-semibold text-primary text-sm">Pergunta:</span>
+                <div className="text-gray-800 dark:text-gray-200 mt-1">{step.title}</div>
+              </div>
+              <div>
+                <span className="font-semibold text-primary text-sm">Resposta:</span>
+                <div className="text-gray-700 dark:text-gray-300 bg-white dark:bg-[#0E0E0E]/50 p-3 rounded border mt-1">
+                  {formatResponseValue(step.response)}
+                </div>
               </div>
             </div>
-            {step.response !== null && step.response !== undefined && (
-              <div className="text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-[#0E0E0E]/50 p-2 rounded border">
-                <strong>Resposta:</strong> {formatResponseValue(step.response)}
-              </div>
-            )}
-            {step.completedAt && (
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                Respondido em: {format(new Date(step.completedAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-              </div>
-            )}
           </div>
         ))}
       </div>

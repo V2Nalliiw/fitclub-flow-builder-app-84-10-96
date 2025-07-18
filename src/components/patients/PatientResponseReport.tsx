@@ -209,50 +209,28 @@ export const PatientResponseReport = forwardRef<HTMLDivElement, PatientResponseR
                   <p className="text-gray-700">{response.response}</p>
                 </div>
 
-                {/* Detailed Steps */}
+                {/* Perguntas e Respostas Simplificadas */}
                 {response.allSteps && response.allSteps.length > 0 && (
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                       <FileText className="h-4 w-4" />
-                      Respostas Individuais ({response.allSteps.length} itens)
+                      Perguntas e Respostas ({response.allSteps.length} itens)
                     </h4>
                     <div className="space-y-4">
                       {response.allSteps.map((step, stepIndex) => (
-                        <div key={step.id} className="border border-gray-200 rounded-lg p-4">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              <h5 className="font-medium text-gray-900 mb-1">
-                                {stepIndex + 1}. {step.title}
-                              </h5>
-                              <Badge variant="outline" className="text-xs">
-                                {step.type}
-                              </Badge>
+                        <div key={step.id} className="border-l-4 border-blue-300 pl-4 py-3 bg-blue-50 rounded-r-lg">
+                          <div className="space-y-2">
+                            <div>
+                              <span className="font-semibold text-blue-800">Pergunta:</span>
+                              <div className="text-gray-900 mt-1">{step.title}</div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              {step.status === 'completed' ? (
-                                <CheckCircle className="h-4 w-4 text-green-600" />
-                              ) : (
-                                <Clock className="h-4 w-4 text-yellow-600" />
-                              )}
-                              <span className="text-xs text-gray-500">
-                                {step.status === 'completed' ? 'Respondido' : 'Pendente'}
-                              </span>
+                            <div>
+                              <span className="font-semibold text-blue-800">Resposta:</span>
+                              <div className="text-gray-900 bg-white border border-gray-200 rounded p-3 mt-1">
+                                {formatResponseValue(step.response, step.type)}
+                              </div>
                             </div>
                           </div>
-                          
-                          <div className="bg-white border border-gray-100 rounded p-3">
-                            <p className="text-sm font-medium text-gray-600 mb-1">Resposta:</p>
-                            <p className="text-gray-900">
-                              {formatResponseValue(step.response, step.type)}
-                            </p>
-                          </div>
-                          
-                          {step.completedAt && (
-                            <div className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              Respondido em: {format(new Date(step.completedAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>

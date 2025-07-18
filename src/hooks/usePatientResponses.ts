@@ -48,79 +48,98 @@ export const usePatientResponses = (patientId?: string) => {
         return;
       }
 
-      // Transform executions to detailed responses format
+      // Transform executions to detailed responses format - Simplificado
       const transformedResponses: PatientResponse[] = (executions || []).map((execution) => {
         const currentStep = execution.current_step as any;
         
-        // Extrair todas as etapas e respostas de forma mais robusta
+        // Extrair todas as perguntas e respostas de forma mais simples
         const allSteps: FormStep[] = [];
         
-        if (currentStep && typeof currentStep === 'object') {
-          // Processar steps aninhados
-          if (currentStep.steps && Array.isArray(currentStep.steps)) {
-            currentStep.steps.forEach((step: any, index: number) => {
-              // Extrair informações do step
-              const stepTitle = step.title || step.question || step.label || `Etapa ${index + 1}`;
-              const stepType = step.type || step.nodeType || 'response';
-              
-              // Extrair resposta de diferentes formatos
-              let stepResponse = null;
-              if (step.response !== undefined) stepResponse = step.response;
-              else if (step.value !== undefined) stepResponse = step.value;
-              else if (step.answer !== undefined) stepResponse = step.answer;
-              else if (step.result !== undefined) stepResponse = step.result;
-              else if (step.selected !== undefined) stepResponse = step.selected;
-              
-              allSteps.push({
-                id: step.id || `step-${index}`,
-                title: stepTitle,
-                type: stepType,
-                response: stepResponse,
-                status: stepResponse !== null && stepResponse !== undefined ? 'completed' : 'pending',
-                completedAt: step.completedAt || step.timestamp || execution.completed_at
-              });
+        const extractQuestionAndAnswer = (obj: any, parentTitle?: string): void => {
+          if (!obj || typeof obj !== 'object') return;
+          
+          // Extrair de campos de calculadora
+          if (obj.calculatorFields && Array.isArray(obj.calculatorFields)) {
+            obj.calculatorFields.forEach((field: any, index: number) => {
+              if (field.pergunta && field.resposta !== undefined) {
+                allSteps.push({
+                  id: `calc-field-${index}`,
+                  title: field.pergunta,
+                  type: 'calculator',
+                  response: field.resposta,
+                  status: 'completed',
+                  completedAt: execution.completed_at
+                });
+              }
             });
           }
           
-          // Processar múltiplas estruturas de dados possíveis
-          if (currentStep.responses && Array.isArray(currentStep.responses)) {
-            currentStep.responses.forEach((resp: any, index: number) => {
-              allSteps.push({
-                id: resp.id || `response-${index}`,
-                title: resp.question || resp.title || `Resposta ${index + 1}`,
-                type: resp.type || 'response',
-                response: resp.answer || resp.value || resp.response,
-                status: 'completed',
-                completedAt: resp.timestamp || execution.completed_at
-              });
+          // Extrair de campos de perguntas da calculadora
+          if (obj.calculatorQuestionFields && Array.isArray(obj.calculatorQuestionFields)) {
+            obj.calculatorQuestionFields.forEach((field: any, index: number) => {
+              if (field.pergunta && field.opcaoEscolhida !== undefined) {
+                allSteps.push({
+                  id: `calc-question-${index}`,
+                  title: field.pergunta,
+                  type: 'question',
+                  response: field.opcaoEscolhida,
+                  status: 'completed',
+                  completedAt: execution.completed_at
+                });
+              }
             });
           }
           
-          // Processar dados de calculadora
-          if (currentStep.calculations && Array.isArray(currentStep.calculations)) {
-            currentStep.calculations.forEach((calc: any, index: number) => {
-              allSteps.push({
-                id: calc.id || `calc-${index}`,
-                title: calc.name || `Cálculo ${index + 1}`,
-                type: 'calculator',
-                response: calc.result || calc.value,
-                status: 'completed',
-                completedAt: execution.completed_at
-              });
-            });
-          }
-          
-          // Se não há steps, mas há dados diretos no currentStep
-          if (allSteps.length === 0 && (currentStep.title || currentStep.question || currentStep.response)) {
+          // Extrair perguntas diretas
+          if (obj.pergunta && obj.resposta !== undefined) {
             allSteps.push({
-              id: currentStep.id || execution.id,
-              title: currentStep.title || currentStep.question || 'Resposta Principal',
-              type: currentStep.type || 'response',
-              response: currentStep.response || currentStep.value || currentStep.answer,
-              status: currentStep.response ? 'completed' : 'pending',
+              id: `direct-question-${allSteps.length}`,
+              title: obj.pergunta,
+              type: 'question',
+              response: obj.resposta,
+              status: 'completed',
               completedAt: execution.completed_at
             });
           }
+          
+          // Extrair de questionários médicos
+          if (obj.Pergunta && obj.response !== undefined) {
+            const question = obj.Pergunta.pergunta || obj.Pergunta.question || 'Pergunta';
+            let answer = obj.response;
+            
+            // Se há opções de resposta, encontrar o texto da opção escolhida
+            if (obj.Pergunta.opcoes_resposta && Array.isArray(obj.Pergunta.opcoes_resposta)) {
+              const selectedOption = obj.Pergunta.opcoes_resposta.find((opt: any) => 
+                opt.valor === obj.response || opt.value === obj.response
+              );
+              if (selectedOption) {
+                answer = selectedOption.texto || selectedOption.text || obj.response;
+              }
+            }
+            
+            allSteps.push({
+              id: `medical-question-${allSteps.length}`,
+              title: question,
+              type: 'medical_question',
+              response: answer,
+              status: 'completed',
+              completedAt: execution.completed_at
+            });
+          }
+          
+          // Recursivamente extrair de arrays e objetos aninhados
+          Object.values(obj).forEach(value => {
+            if (Array.isArray(value)) {
+              value.forEach(item => extractQuestionAndAnswer(item));
+            } else if (typeof value === 'object') {
+              extractQuestionAndAnswer(value);
+            }
+          });
+        };
+        
+        // Extrair perguntas e respostas do currentStep
+        if (currentStep) {
+          extractQuestionAndAnswer(currentStep);
         }
 
         return {

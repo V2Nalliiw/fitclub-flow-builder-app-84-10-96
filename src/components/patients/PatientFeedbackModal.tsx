@@ -13,50 +13,16 @@ interface PatientFeedbackModalProps {
   patient: any;
 }
 
-const extractImportantData = (step: any): { question: string; answer: string } | null => {
-  if (!step.response || typeof step.response !== 'object') {
-    return null;
-  }
-
-  const response = step.response;
-  
-  // Para nó calculadora: extrair pergunta do campo calculo e resposta
-  if (step.type === 'calculator' && response.calculo && response.calculo.pergunta) {
-    const question = response.calculo.pergunta;
-    const answer = response.calculo.resposta || response.response || '-';
-    return { question, answer: String(answer) };
-  }
-  
-  // Para nó pergunta: extrair pergunta e opção de resposta escolhida
-  if (step.type === 'question' && response.Pergunta) {
-    const question = response.Pergunta.pergunta;
-    let answer = '-';
-    
-    // Verificar se tem opções de resposta e qual foi escolhida
-    if (response.Pergunta.opcoes_resposta && response.response) {
-      const selectedOption = response.Pergunta.opcoes_resposta.find((opt: any) => 
-        opt.valor === response.response || opt.texto === response.response
-      );
-      answer = selectedOption ? selectedOption.texto : String(response.response);
-    } else if (response.response) {
-      answer = String(response.response);
-    }
-    
-    return { question, answer };
-  }
-  
-  return null;
-};
-
-const formatResponseValue = (value: any): string => {
+// Função simples para formatar as respostas
+const formatSimpleAnswer = (value: any): string => {
   if (value === null || value === undefined) return '-';
   if (typeof value === 'string' && value.trim() === '') return '-';
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number') return value.toString();
   if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
+  if (typeof value === 'number') return value.toString();
   if (Array.isArray(value)) return value.join(', ');
   return String(value);
 };
+
 
 const groupResponsesByDate = (responses: any[]) => {
   const grouped: { [key: string]: any[] } = {};
@@ -181,79 +147,31 @@ export const PatientFeedbackModal: React.FC<PatientFeedbackModalProps> = ({
                         </div>
                       </div>
 
-                      {/* Conteúdo do Formulário */}
-                      <div className="p-6 space-y-6">
+                      {/* Perguntas e Respostas Simplificadas */}
+                      <div className="p-6">
                         {response.allSteps && response.allSteps.length > 0 ? (
-                          <div className="space-y-4">
-                            {/* Extrair apenas dados importantes (perguntas de calculadora e perguntas com opções) */}
-                            {response.allSteps
-                              .map((step: any) => extractImportantData(step))
-                              .filter((data: any) => data !== null)
-                              .map((data: any, stepIndex: number) => {
-                                const originalStep = response.allSteps.find((step: any) => {
-                                  const stepData = extractImportantData(step);
-                                  return stepData && stepData.question === data.question;
-                                });
-                                
-                                if (originalStep?.type === 'calculator') {
-                                  return (
-                                    <div key={stepIndex} className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 p-4 rounded-lg">
-                                      <div className="flex items-center gap-2 mb-2">
-                                        <Calculator className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                                        <div className="font-medium text-orange-800 dark:text-orange-200">
-                                          Cálculo
-                                        </div>
-                                      </div>
-                                      <div className="space-y-2">
-                                        <div>
-                                          <span className="font-semibold text-orange-700 dark:text-orange-300">Pergunta:</span>
-                                          <div className="text-orange-900 dark:text-orange-100 ml-2">{data.question}</div>
-                                        </div>
-                                        <div>
-                                          <span className="font-semibold text-orange-700 dark:text-orange-300">Resposta:</span>
-                                          <div className="text-lg font-bold text-orange-900 dark:text-orange-100 ml-2">{data.answer}</div>
-                                        </div>
-                                      </div>
+                          <div className="space-y-3">
+                            {response.allSteps.map((step: any, stepIndex: number) => (
+                              <div key={step.id || stepIndex} className="border-l-4 border-primary/30 pl-4 py-3 bg-gray-50 dark:bg-gray-800/50 rounded-r-lg">
+                                <div className="space-y-2">
+                                  <div>
+                                    <span className="font-semibold text-primary">Pergunta:</span>
+                                    <div className="text-gray-900 dark:text-gray-100 ml-2 mt-1">{step.title}</div>
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold text-primary">Resposta:</span>
+                                    <div className="text-gray-900 dark:text-gray-100 ml-2 mt-1 bg-white dark:bg-gray-900 p-3 rounded border">
+                                      {formatSimpleAnswer(step.response)}
                                     </div>
-                                  );
-                                } else {
-                                  return (
-                                    <div key={stepIndex} className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 py-2">
-                                      <div className="space-y-2">
-                                        <div>
-                                          <span className="font-semibold text-gray-700 dark:text-gray-300">Pergunta:</span>
-                                          <div className="text-gray-900 dark:text-gray-100 ml-2">{data.question}</div>
-                                        </div>
-                                        <div>
-                                          <span className="font-semibold text-gray-700 dark:text-gray-300">Resposta:</span>
-                                          <div className="text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-800 p-3 rounded ml-2">
-                                            {data.answer}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  );
-                                }
-                              })}
-                            
-                            {/* Se não há dados importantes extraídos, mostrar mensagem */}
-                            {response.allSteps
-                              .map((step: any) => extractImportantData(step))
-                              .filter((data: any) => data !== null).length === 0 && (
-                              <div className="text-center py-6 text-gray-500 dark:text-gray-400">
-                                <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                <p>Nenhum dado médico relevante encontrado neste formulário.</p>
+                                  </div>
+                                </div>
                               </div>
-                            )}
+                            ))}
                           </div>
                         ) : (
-                          <div className="border-l-4 border-blue-200 dark:border-blue-700 pl-4 py-2">
-                            <div className="font-medium text-gray-800 dark:text-gray-200 mb-2">
-                              Informações do Formulário
-                            </div>
-                            <div className="text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-800 p-3 rounded">
-                              {formatResponseValue(response.response)}
-                            </div>
+                          <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+                            <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p>Nenhuma pergunta encontrada neste formulário.</p>
                           </div>
                         )}
                       </div>
