@@ -15,27 +15,65 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === 'development' && componentTagger(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
+      devOptions: {
+        enabled: true
+      },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024 // 10MB
       },
-      includeAssets: ['favicon.ico'],
+      includeAssets: ['lovable-uploads/1806cbe5-c5a5-4b48-8ce8-83881e8f3acb.png'],
       manifest: {
+        id: 'fitclub-app',
         name: 'FitClub - Emagrecimento Inteligente',
         short_name: 'FitClub',
         description: 'Plataforma inteligente para emagrecimento saudável e sustentável',
-        theme_color: '#ffffff',
+        theme_color: '#10b981',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
+        categories: ['health', 'fitness', 'medical'],
         icons: [
           {
-            src: 'favicon.ico',
+            src: 'lovable-uploads/1806cbe5-c5a5-4b48-8ce8-83881e8f3acb.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'lovable-uploads/1806cbe5-c5a5-4b48-8ce8-83881e8f3acb.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'lovable-uploads/1806cbe5-c5a5-4b48-8ce8-83881e8f3acb.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: 'lovable-uploads/1806cbe5-c5a5-4b48-8ce8-83881e8f3acb.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          }
+        ],
+        shortcuts: [
+          {
+            name: 'Dashboard',
+            short_name: 'Dashboard',
+            description: 'Acesso rápido ao dashboard',
+            url: '/',
+            icons: [
+              {
+                src: 'lovable-uploads/1806cbe5-c5a5-4b48-8ce8-83881e8f3acb.png',
+                sizes: '192x192'
+              }
+            ]
           }
         ]
       }

@@ -16,36 +16,75 @@ export const usePWA = (): PWAState => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
+    console.log('[PWA] Inicializando usePWA hook...');
+    
     // Verificar se já está instalado
     const checkInstalled = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
       const isInWebApp = (window.navigator as any).standalone === true;
-      setIsInstalled(isStandalone || isInWebApp);
+      const isInstalled = isStandalone || isInWebApp;
+      
+      console.log('[PWA] Status instalação:', {
+        isStandalone,
+        isInWebApp,
+        isInstalled,
+        displayMode: window.matchMedia('(display-mode: standalone)').media
+      });
+      
+      setIsInstalled(isInstalled);
     };
 
     checkInstalled();
-    window.matchMedia('(display-mode: standalone)').addEventListener('change', checkInstalled);
+    
+    const mediaQuery = window.matchMedia('(display-mode: standalone)');
+    mediaQuery.addEventListener('change', checkInstalled);
 
     // Listener para install prompt
     const handleInstallPrompt = (e: any) => {
+      console.log('[PWA] beforeinstallprompt disparado!', e);
       e.preventDefault();
       deferredPrompt = e;
       setIsInstallable(true);
-      console.log('[PWA] Install prompt ready');
+      
+      // Forçar exibição do banner após um pequeno delay
+      setTimeout(() => {
+        console.log('[PWA] PWA instalável detectado - exibindo banner');
+      }, 1000);
     };
 
+    // Adicionar listeners para diferentes eventos de instalação
     window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+    
+    // Fallback para Safari/iOS
+    const checkIOSInstallable = () => {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isInStandaloneMode = (window.navigator as any).standalone;
+      
+      if (isIOS && !isInStandaloneMode) {
+        console.log('[PWA] iOS detectado - PWA instalável via Add to Home Screen');
+        setIsInstallable(true);
+      }
+    };
+
+    checkIOSInstallable();
 
     // Listener para mudanças de conectividade
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOnline = () => {
+      console.log('[PWA] Conexão online restaurada');
+      setIsOnline(true);
+    };
+    
+    const handleOffline = () => {
+      console.log('[PWA] Conexão offline detectada');
+      setIsOnline(false);
+    };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
     // Listener para quando o app é instalado
     const handleAppInstalled = () => {
-      console.log('[PWA] App was installed');
+      console.log('[PWA] App foi instalado com sucesso!');
       setIsInstallable(false);
       setIsInstalled(true);
       deferredPrompt = null;
@@ -53,8 +92,16 @@ export const usePWA = (): PWAState => {
 
     window.addEventListener('appinstalled', handleAppInstalled);
 
+    // Debug: verificar se o manifest está carregado
+    if ('serviceWorker' in navigator) {
+      console.log('[PWA] Service Worker suportado');
+      navigator.serviceWorker.ready.then(() => {
+        console.log('[PWA] Service Worker registrado e pronto');
+      });
+    }
+
     return () => {
-      window.matchMedia('(display-mode: standalone)').removeEventListener('change', checkInstalled);
+      mediaQuery.removeEventListener('change', checkInstalled);
       window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -63,16 +110,33 @@ export const usePWA = (): PWAState => {
   }, []);
 
   const showInstallPrompt = async () => {
+    console.log('[PWA] Tentando exibir prompt de instalação...', { deferredPrompt });
+    
     if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`[PWA] User choice: ${outcome}`);
-      
-      if (outcome === 'accepted') {
-        setIsInstallable(false);
+      try {
+        const result = await deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`[PWA] Resultado do prompt: ${outcome}`, result);
+        
+        if (outcome === 'accepted') {
+          setIsInstallable(false);
+          console.log('[PWA] Usuário aceitou a instalação');
+        } else {
+          console.log('[PWA] Usuário rejeitou a instalação');
+        }
+        
+        deferredPrompt = null;
+      } catch (error) {
+        console.error('[PWA] Erro ao exibir prompt:', error);
       }
-      
-      deferredPrompt = null;
+    } else {
+      // Fallback para iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        alert('Para instalar este app no iOS:\n1. Toque no botão de compartilhar\n2. Selecione "Adicionar à Tela de Início"');
+      } else {
+        console.log('[PWA] Nenhum prompt disponível');
+      }
     }
   };
 
