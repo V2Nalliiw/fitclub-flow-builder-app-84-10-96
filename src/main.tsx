@@ -12,7 +12,19 @@ if ('serviceWorker' in navigator) {
         
         // Check for updates
         registration.addEventListener('updatefound', () => {
-          console.log('[PWA] SW update found');
+          console.log('[PWA] SW update found - v8');
+          const newWorker = registration.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed') {
+                console.log('[PWA] New content available, reload required');
+                // Force reload to get new content
+                if (navigator.serviceWorker.controller) {
+                  window.location.reload();
+                }
+              }
+            });
+          }
         });
       })
       .catch((registrationError) => {

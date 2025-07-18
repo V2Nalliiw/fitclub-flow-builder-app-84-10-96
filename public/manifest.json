@@ -4,7 +4,7 @@
   "short_name": "FitClub",
   "description": "Plataforma inteligente para emagrecimento saudável e sustentável. Construtor de fluxos para clínicas e acompanhamento de pacientes.",
   "start_url": "/?utm_source=pwa",
-  "id": "fitclub-app-v7",
+  "id": "fitclub-app-v8",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui", "browser"],
   "background_color": "#ffffff",
@@ -82,22 +82,6 @@
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/lovable-uploads/8ec88394-8fc7-4b3b-91ad-5b7896234393.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "FitClub Dashboard"
-    },
-    {
-      "src": "/lovable-uploads/8ec88394-8fc7-4b3b-91ad-5b7896234393.png",
-      "sizes": "750x1334",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "FitClub Mobile"
-    }
-  ],
   "shortcuts": [
     {
       "name": "Meus Fluxos",
@@ -125,8 +109,5 @@
         }
       ]
     }
-  ],
-  "edge_side_panel": {
-    "preferred_width": 480
-  }
+  ]
 }
