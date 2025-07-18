@@ -5,7 +5,7 @@ const urlsToCache = [
   '/static/js/bundle.js',
   '/static/css/main.css',
   '/manifest.json',
-  '/lovable-uploads/bf07eca9-e609-4416-a369-8b4243bdd8fa.png'
+  '/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png'
 ];
 
 // Install event
@@ -101,8 +101,8 @@ self.addEventListener('push', (event) => {
     
     const options = {
       body: data.body || 'Nova notificação do FitClub',
-      icon: '/lovable-uploads/bf07eca9-e609-4416-a369-8b4243bdd8fa.png',
-      badge: '/lovable-uploads/bf07eca9-e609-4416-a369-8b4243bdd8fa.png',
+      icon: '/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png',
+      badge: '/lovable-uploads/36d246e9-737b-4d35-8987-f0872af89bd4.png',
       tag: 'fitclub-notification',
       renotify: true,
       requireInteraction: true,
