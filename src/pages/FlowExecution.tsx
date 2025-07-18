@@ -7,7 +7,7 @@ import { FlowStepRenderer } from '@/components/flows/FlowStepRenderer';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, FileText } from 'lucide-react';
 import { MobileErrorBoundary } from '@/components/ui/mobile-error-boundary';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 
@@ -138,6 +138,21 @@ const FlowExecution = () => {
         {!isLoading && !error && currentStep && (
           <div className="fixed top-4 right-4 z-[60]">
             <ThemeToggle />
+          </div>
+        )}
+        
+        {/* Botão Meus Fluxos para Mobile e Tablet */}
+        {!isLoading && !error && currentStep && (
+          <div className="fixed top-4 left-4 z-[60] xl:hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/my-flows')}
+              className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-300 dark:border-gray-600 shadow-lg hover:shadow-xl transition-all"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Meus Fluxos
+            </Button>
           </div>
         )}
         
