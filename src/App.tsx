@@ -23,7 +23,7 @@ import Customization from "@/pages/Customization";
 import Preferences from "@/pages/Preferences";
 import { Analytics } from "@/pages/Analytics";
 import Permissions from "@/pages/Permissions";
-import { Forms } from "@/pages/Forms";
+
 import { WhatsAppSettings } from "@/pages/WhatsAppSettings";
 import MyFlows from "@/pages/MyFlows";
 import FlowExecution from "@/pages/FlowExecution";
@@ -274,15 +274,6 @@ const AppRoutes = () => {
         } 
       />
       
-      {/* Formulários - Clínicas e super_admin */}
-      <Route 
-        path="/forms" 
-        element={
-          <ProtectedRoute allowedRoles={['clinic', 'super_admin']}>
-            <Forms />
-          </ProtectedRoute>
-        } 
-      />
       
       {/* Flow Execution - Apenas pacientes */}
       <Route 

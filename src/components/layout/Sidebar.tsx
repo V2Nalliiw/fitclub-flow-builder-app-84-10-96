@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  FileText,
   User,
   GitBranch,
   Workflow,
@@ -65,6 +66,11 @@ export const Sidebar = () => {
     if (user.role === 'patient') {
       return [
         ...baseItems,
+        {
+          title: "Meus Formulários",
+          url: "/my-flows",
+          icon: FileText,
+        },
         {
           title: "Perfil",
           url: "/profile",

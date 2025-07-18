@@ -81,12 +81,40 @@ export const PatientResponsesTimeline: React.FC<PatientResponsesTimelineProps> =
 
   const formatResponseValue = (value: any) => {
     if (value === null || value === undefined) return 'Não respondido';
+    
+    // Se for um objeto, extrair apenas o valor útil
     if (typeof value === 'object') {
+      // Verificar se tem propriedades indesejadas que não devem ser renderizadas
+      if (value.nodeId && value.nodeType && value.timestamp) {
+        return 'Processado'; // Para objetos de controle interno
+      }
+      
       if (value.result !== undefined) return `Resultado: ${value.result}`;
       if (value.selected) return value.selected;
       if (value.value !== undefined) return value.value;
-      return JSON.stringify(value, null, 2);
+      if (value.answer !== undefined) return value.answer;
+      
+      // Para outros objetos, tentar extrair uma representação útil
+      const keys = Object.keys(value);
+      if (keys.length === 0) return 'Vazio';
+      
+      // Se for um array, juntá-lo como string
+      if (Array.isArray(value)) {
+        return value.join(', ');
+      }
+      
+      // Para outros objetos, mostrar apenas chaves importantes
+      const importantKeys = keys.filter(key => 
+        !['nodeId', 'nodeType', 'timestamp', 'formCompleted', 'whatsappStatus'].includes(key)
+      );
+      
+      if (importantKeys.length > 0) {
+        return importantKeys.map(key => `${key}: ${value[key]}`).join(', ');
+      }
+      
+      return 'Objeto processado';
     }
+    
     return String(value);
   };
 
