@@ -36,18 +36,18 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
   isEditing,
 }) => {
   return (
-    <div className="bg-white dark:bg-none dark:bg-[#0E0E0E] border-b border-gray-200 dark:border-[#1A1A1A] p-3 flex items-center justify-between">
-      <div className="flex items-center space-x-4">
+    <div className="fixed top-12 left-0 right-0 z-40 bg-white/95 dark:bg-[#0E0E0E]/95 backdrop-blur-sm border-b border-gray-200 dark:border-[#1A1A1A] shadow-sm p-2 flex items-center justify-between">
+      <div className="flex items-center space-x-2">
         <Input
           placeholder="Nome do fluxo"
           value={flowName}
           onChange={(e) => setFlowName(e.target.value)}
-          className="w-64"
+          className="w-48 h-7 text-sm"
         />
-        <span className="text-sm text-gray-500">{nodeCount} nós</span>
+        <span className="text-xs text-gray-500">{nodeCount} nós</span>
       </div>
 
-      <div className="flex items-center space-x-1">
+      <div className="flex items-center space-x-0.5">
         {/* Nós de Controle de Fluxo - Botão início removido */}
         
         <Button
@@ -55,8 +55,9 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           size="sm"
           onClick={() => onAddNode('end')}
           title="Fim"
+          className="h-7 w-7 p-0"
         >
-          <Square className="h-4 w-4 text-muted-foreground" />
+          <Square className="h-3 w-3 text-muted-foreground" />
         </Button>
         
         <Button
@@ -64,12 +65,13 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           size="sm"
           onClick={() => onAddNode('delay')}
           title="Aguardar"
+          className="h-7 w-7 p-0"
         >
-          <Clock className="h-4 w-4 text-muted-foreground" />
+          <Clock className="h-3 w-3 text-muted-foreground" />
         </Button>
 
         {/* Separador */}
-        <div className="w-px h-6 bg-gray-300 mx-1" />
+        <div className="w-px h-4 bg-gray-300 mx-0.5" />
 
         {/* Nós de Formulários */}
         <Button
@@ -77,8 +79,9 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           size="sm"
           onClick={() => onAddNode('formStart')}
           title="Início Form"
+          className="h-7 w-7 p-0"
         >
-          <FileText className="h-4 w-4 text-muted-foreground" />
+          <FileText className="h-3 w-3 text-muted-foreground" />
         </Button>
         
         <Button
@@ -86,8 +89,9 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           size="sm"
           onClick={() => onAddNode('formEnd')}
           title="Fim Form"
+          className="h-7 w-7 p-0"
         >
-          <CheckCircle className="h-4 w-4 text-primary" />
+          <CheckCircle className="h-3 w-3 text-primary" />
         </Button>
         
         <Button
@@ -95,12 +99,13 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           size="sm"
           onClick={() => onAddNode('question')}
           title="Pergunta"
+          className="h-7 w-7 p-0"
         >
-          <MessageCircle className="h-4 w-4 text-muted-foreground" />
+          <MessageCircle className="h-3 w-3 text-muted-foreground" />
         </Button>
 
         {/* Separador */}
-        <div className="w-px h-6 bg-gray-300 mx-1" />
+        <div className="w-px h-4 bg-gray-300 mx-0.5" />
 
         {/* Nós de Lógica e Cálculos */}
         <Button
@@ -108,8 +113,9 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           size="sm"
           onClick={() => onAddNode('calculator')}
           title="Calculadora"
+          className="h-7 w-7 p-0"
         >
-          <Calculator className="h-4 w-4 text-muted-foreground" />
+          <Calculator className="h-3 w-3 text-muted-foreground" />
         </Button>
         
         <Button
@@ -117,12 +123,13 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           size="sm"
           onClick={() => onAddNode('conditions')}
           title="Condições"
+          className="h-7 w-7 p-0"
         >
-          <GitBranch className="h-4 w-4 text-muted-foreground" />
+          <GitBranch className="h-3 w-3 text-muted-foreground" />
         </Button>
 
         {/* Separador */}
-        <div className="w-px h-6 bg-gray-300 mx-1" />
+        <div className="w-px h-4 bg-gray-300 mx-0.5" />
 
         {/* Ações */}
         <Button
@@ -130,8 +137,9 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           size="sm"
           onClick={onAutoArrange}
           title="Organizar"
+          className="h-7 w-7 p-0"
         >
-          <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+          <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
         </Button>
         
         <Button
@@ -139,8 +147,9 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           size="sm"
           onClick={onClearAll}
           title="Apagar todos os nós"
+          className="h-7 w-7 p-0"
         >
-          <Eraser className="h-4 w-4 text-muted-foreground" />
+          <Eraser className="h-3 w-3 text-muted-foreground" />
         </Button>
         
         <Button
@@ -148,8 +157,9 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           size="sm"
           onClick={onPreview}
           title="Visualizar"
+          className="h-7 w-7 p-0"
         >
-          <Eye className="h-4 w-4 text-primary" />
+          <Eye className="h-3 w-3 text-primary" />
         </Button>
         
         <Button
@@ -158,8 +168,9 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           onClick={onSave}
           disabled={!canSave || isSaving}
           title={isEditing ? 'Atualizar Fluxo' : 'Salvar Fluxo'}
+          className="h-7 w-7 p-0"
         >
-          <Save className="h-4 w-4 text-primary" />
+          <Save className="h-3 w-3 text-primary" />
         </Button>
         
         <Button
@@ -167,8 +178,9 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           size="sm"
           onClick={onExportTemplate}
           title="Enviar Modelo"
+          className="h-7 w-7 p-0"
         >
-          <Upload className="h-4 w-4 text-muted-foreground" />
+          <Upload className="h-3 w-3 text-muted-foreground" />
         </Button>
         
         <Button
@@ -176,8 +188,9 @@ export const FlowBuilderTopMenu: React.FC<FlowBuilderTopMenuProps> = ({
           size="sm"
           onClick={onImportTemplate}
           title="Baixar Modelo"
+          className="h-7 w-7 p-0"
         >
-          <Download className="h-4 w-4 text-muted-foreground" />
+          <Download className="h-3 w-3 text-muted-foreground" />
         </Button>
       </div>
     </div>
