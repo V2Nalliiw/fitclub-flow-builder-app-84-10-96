@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, AlertTriangle, FileText } from 'lucide-react';
 import { MobileErrorBoundary } from '@/components/ui/mobile-error-boundary';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { MobileNavigation } from '@/components/layout/MobileNavigation';
+import { useBreakpoints } from '@/hooks/use-breakpoints';
 const FlowExecution = () => {
   const {
     executionId
@@ -32,6 +34,7 @@ const FlowExecution = () => {
   const {
     completeStep: completePatientStep
   } = usePatientFlows();
+  const { isMobile, isTablet } = useBreakpoints();
   const [isSubmitting, setIsSubmitting] = useState(false);
   useEffect(() => {
     // Add meta tag to prevent Google Translate interference on mobile
@@ -138,7 +141,7 @@ const FlowExecution = () => {
           </div>}
         
         {/* Espaçamento para o header fixo */}
-        <div className="pt-20">
+        <div className={`pt-20 ${(isMobile || isTablet) ? 'pb-[15vh]' : ''}`}>
           <div className="w-full max-w-2xl mx-auto">
             {isLoading && <div className="text-center bg-white dark:bg-[#0B0B0B] rounded-lg shadow-xl p-8 border border-gray-200 dark:border-gray-800">
                 <LoadingSpinner />
@@ -172,12 +175,12 @@ const FlowExecution = () => {
 
 
             {!isLoading && !error && currentStep && <div className="w-full">
-                <FlowStepRenderer step={currentStep} onComplete={handleStepComplete} onGoBack={canGoBack ? goBack : undefined} isLoading={isSubmitting} canGoBack={canGoBack} calculatorResult={currentStep.calculatorResult} calculatorResults={execution?.current_step?.calculatorResults || {}} questionResponses={execution?.current_step?.userResponses || {}} />
+                <FlowStepRenderer step={currentStep} onComplete={handleStepComplete} onGoBack={(isMobile || isTablet) ? undefined : (canGoBack ? goBack : undefined)} isLoading={isSubmitting} canGoBack={canGoBack && !(isMobile || isTablet)} calculatorResult={currentStep.calculatorResult} calculatorResults={execution?.current_step?.calculatorResults || {}} questionResponses={execution?.current_step?.userResponses || {}} />
               </div>}
           </div>
 
           {/* Botões Flutuantes */}
-          {!isLoading && !error && currentStep && <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex gap-3 z-50">
+          {!isLoading && !error && currentStep && <div className={`fixed left-1/2 transform -translate-x-1/2 flex gap-3 z-50 ${(isMobile || isTablet) ? 'bottom-[12vh]' : 'bottom-6'}`}>
               {canGoBack && <Button variant="outline" onClick={goBack} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 shadow-lg hover:shadow-xl transition-shadow">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Anterior
@@ -188,6 +191,15 @@ const FlowExecution = () => {
               </Button>
             </div>}
         </div>
+
+        {/* Mobile Navigation com blur - Show only on mobile and tablet */}
+        {(isMobile || isTablet) && (
+          <div className="fixed bottom-0 left-0 right-0 z-40">
+            <div className="backdrop-blur-md bg-card/80 border-t border-border/50">
+              <MobileNavigation />
+            </div>
+          </div>
+        )}
       </div>
     </MobileErrorBoundary>;
 };
